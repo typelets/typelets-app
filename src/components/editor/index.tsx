@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Star, Archive, Trash2, MoreHorizontal } from 'lucide-react';
+import { Star, Archive, Trash2, MoreHorizontal, FolderInput } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -9,10 +9,11 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useEditor, EditorContent } from '@tiptap/react';
-import { createEditorExtensions } from './config/editor-config.ts';
-import { editorStyles } from './config/editor-styles.ts';
-import { EmptyState } from '@/components/editor/Editor/EmptyState.tsx';
-import { Toolbar } from '@/components/editor/Editor/Toolbar.tsx';
+import { createEditorExtensions } from './config/editor-config';
+import { editorStyles } from './config/editor-styles';
+import { EmptyState } from '@/components/editor/Editor/EmptyState';
+import { Toolbar } from '@/components/editor/Editor/Toolbar';
+import MoveNoteModal from '@/components/editor/modals/MoveNoteModal';
 import type { Note, Folder as FolderType } from '@/types/note';
 
 interface NoteEditorProps {
@@ -25,14 +26,15 @@ interface NoteEditorProps {
 }
 
 export default function Index({
-  note,
-  folders,
-  onUpdateNote,
-  onDeleteNote,
-  onArchiveNote,
-  onToggleStar,
-}: NoteEditorProps) {
+                                note,
+                                folders,
+                                onUpdateNote,
+                                onDeleteNote,
+                                onArchiveNote,
+                                onToggleStar,
+                              }: NoteEditorProps) {
   const [title, setTitle] = useState('');
+  const [isMoveModalOpen, setIsMoveModalOpen] = useState(false);
   const contentUpdateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const titleUpdateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastSavedContentRef = useRef<string>('');
@@ -133,6 +135,16 @@ export default function Index({
     [note, onUpdateNote]
   );
 
+  const handleMoveNote = useCallback(
+    (targetFolderId: string | null) => {
+      if (note) {
+        onUpdateNote(note.id, { folderId: targetFolderId });
+        setIsMoveModalOpen(false);
+      }
+    },
+    [note, onUpdateNote]
+  );
+
   useEffect(() => {
     return () => {
       if (contentUpdateTimeoutRef.current) {
@@ -202,19 +214,23 @@ export default function Index({
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={() => onToggleStar(note.id)}>
                   <Star className="mr-2 h-4 w-4" />
-                  {note.starred ? 'Remove from Starred' : 'Add to Starred'}
+                  {note.starred ? 'Remove from Starred' : 'Star'}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setIsMoveModalOpen(true)}>
+                  <FolderInput className="mr-2 h-4 w-4" />
+                  Move
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => onArchiveNote(note.id)}>
                   <Archive className="mr-2 h-4 w-4" />
-                  Archive Note
+                  Archive
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   onClick={() => onDeleteNote(note.id)}
-                  className="text-destructive"
+                  className="text"
                 >
                   <Trash2 className="mr-2 h-4 w-4" />
-                  Move to Trash
+                  Trash
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -268,6 +284,18 @@ export default function Index({
       </div>
 
       <style dangerouslySetInnerHTML={{ __html: editorStyles }} />
+
+      {/* Move Note Modal */}
+      {note && (
+        <MoveNoteModal
+          isOpen={isMoveModalOpen}
+          onClose={() => setIsMoveModalOpen(false)}
+          onMove={handleMoveNote}
+          folders={folders || []}
+          currentFolderId={note.folderId}
+          noteTitle={note.title}
+        />
+      )}
     </div>
   );
 }
