@@ -1,6 +1,35 @@
 # Typelets
 
-A secure, encrypted notes application where your data remains truly private - even we can't read your notes. Built with modern web technologies and client-side encryption.
+<div style="text-align: left;">
+
+[![Version](https://img.shields.io/github/v/release/typelets/typelets-app)](https://github.com/typelets/typelets-app/releases)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![CI](https://github.com/typelets/typelets-app/actions/workflows/release.yml/badge.svg)](https://github.com/typelets/typelets-app/actions)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+
+[![React](https://img.shields.io/badge/React-19-blue?logo=react)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue?logo=typescript)](https://www.typescriptlang.org/)
+[![Vite](https://img.shields.io/badge/Vite-7-646CFF?logo=vite)](https://vitejs.dev/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind-4-38B2AC?logo=tailwind-css)](https://tailwindcss.com/)
+
+[![Node](https://img.shields.io/badge/node-%3E%3D20-brightgreen?logo=node.js)](https://nodejs.org)
+[![pnpm](https://img.shields.io/badge/pnpm-%3E%3D9.15-F69220?logo=pnpm)](https://pnpm.io/)
+[![Docker](https://img.shields.io/badge/Docker-ready-2496ED?logo=docker)](https://www.docker.com/)
+
+</div>
+
+<div style="text-align: left;">
+  <h3>A secure, encrypted notes application where your data remains truly private</h3>
+  <p>Even we can't read your notes - Built with modern web technologies and client-side encryption</p>
+</div>
+
+<div style="text-align: left;">
+  <a href="#-features">Features</a> •
+  <a href="#-security-first">Security</a> •
+  <a href="#-quick-start">Quick Start</a> •
+  <a href="#-docker-deployment">Docker</a> •
+  <a href="#-contributing">Contributing</a>
+</div>
 
 ![Typelets Demo](https://github.com/typelets/typelets-app/blob/main/assets/demo.gif)
 
