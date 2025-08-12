@@ -23,14 +23,6 @@
   <p>Even we can't read your notes - Built with modern web technologies and client-side encryption</p>
 </div>
 
-<div style="text-align: left;">
-  <a href="#-features">Features</a> •
-  <a href="#-security-first">Security</a> •
-  <a href="#-quick-start">Quick Start</a> •
-  <a href="#-docker-deployment">Docker</a> •
-  <a href="#-contributing">Contributing</a>
-</div>
-
 ![Typelets Demo](https://github.com/typelets/typelets-app/blob/main/assets/demo.gif)
 
 ## ✨ Features
