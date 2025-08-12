@@ -1,0 +1,284 @@
+# Typelets
+
+A secure, encrypted notes application where your data remains truly private - even we can't read your notes. Built with modern web technologies and client-side encryption.
+
+![Typelets Demo](https://github.com/typelets/typelets-app/blob/main/assets/demo.gif)
+
+## ✨ Features
+
+- 🔐 **Client-side AES-256-GCM encryption** - Your notes are encrypted before leaving your device
+- 📁 **Nested folder organization** - Create unlimited folder hierarchies
+- 🌙 **Dark/Light mode** - Easy on the eyes, day or night
+- 📝 **Rich text editor** - Powered by TipTap with markdown support
+- ⭐ **Star, archive, and organize** - Keep your important notes accessible
+- 🔍 **Full-text search** - Find notes instantly (searches encrypted data locally)
+- 📱 **Responsive design** - Works seamlessly on desktop and mobile
+- 🔄 **Real-time sync** - Access your notes from anywhere
+
+## 🔒 Security First
+
+Typelets uses industry-standard encryption:
+- **AES-256-GCM** encryption algorithm
+- **250,000 PBKDF2 iterations** for key derivation
+- **Per-note salt** - Each note has a unique encryption key
+- **Zero-knowledge architecture** - Server never sees unencrypted data
+
+Your encryption keys are derived from your user ID and a locally-stored secret. Even if our database is compromised, your notes remain encrypted and unreadable.
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+- Node.js 20+ (LTS recommended)
+- pnpm 9.15.0+
+- A [Clerk](https://clerk.com) account for authentication
+
+### Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/typelets/typelets-app.git
+cd typelets
+
+# Install dependencies
+pnpm install
+
+# Set up environment variables
+cp .env.OLD.example .env.OLD.local
+
+# Start the development server
+pnpm dev
+```
+
+The app will be available at `http://localhost:5173`
+
+### Environment Setup
+
+Edit `.env.local` with your configuration:
+
+```env
+# Required
+VITE_CLERK_PUBLISHABLE_KEY=pk_test_your_clerk_key
+
+# API Configuration (MUST be /api for nginx proxy)
+VITE_API_URL=/api
+
+# Optional
+VITE_APP_NAME=Typelets
+VITE_APP_VERSION=1.0.0
+```
+
+Get your Clerk keys from [dashboard.clerk.com](https://dashboard.clerk.com)
+
+## 🐳 Docker Deployment
+
+### Build and Run Locally
+
+```bash
+# Build Docker image
+docker build -t typelets-app:latest \
+  --build-arg VITE_CLERK_PUBLISHABLE_KEY=your_clerk_key \
+  --build-arg VITE_API_URL=/api \
+  .
+
+# Run with your backend
+docker run -p 80:8080 \
+  -e BACKEND_URL=https://your-api-domain.com \
+  typelets-app:latest
+```
+
+### Deploy to AWS ECR
+
+<details>
+<summary><b>Windows (PowerShell)</b></summary>
+
+```powershell
+# Set your configuration
+$env:AWS_ACCOUNT_ID = (aws sts get-caller-identity --query Account --output text)
+$env:AWS_REGION = "us-east-1"
+$env:ECR_REPOSITORY = "typelets-app"
+$env:VITE_CLERK_PUBLISHABLE_KEY = "pk_live_your_key_here"
+$env:VITE_API_URL = "/api"
+
+# Create ECR repository (first time only)
+aws ecr create-repository `
+  --repository-name $env:ECR_REPOSITORY `
+  --region $env:AWS_REGION `
+  --image-scanning-configuration scanOnPush=true
+
+# Login to ECR
+aws ecr get-login-password --region $env:AWS_REGION | docker login --username AWS --password-stdin "$env:AWS_ACCOUNT_ID.dkr.ecr.$env:AWS_REGION.amazonaws.com"
+
+# Build the Docker image
+docker build -t typelets-app:latest `
+  --build-arg VITE_CLERK_PUBLISHABLE_KEY=$env:VITE_CLERK_PUBLISHABLE_KEY `
+  --build-arg VITE_API_URL=$env:VITE_API_URL `
+  .
+
+# Tag for ECR
+docker tag typelets-app:latest `
+  "$env:AWS_ACCOUNT_ID.dkr.ecr.$env:AWS_REGION.amazonaws.com/${env:ECR_REPOSITORY}:latest"
+
+# Push to ECR
+docker push "$env:AWS_ACCOUNT_ID.dkr.ecr.$env:AWS_REGION.amazonaws.com/${env:ECR_REPOSITORY}:latest"
+```
+</details>
+
+<details>
+<summary><b>Mac/Linux</b></summary>
+
+```bash
+# Set your configuration
+export AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+export AWS_REGION=us-east-1
+export ECR_REPOSITORY=typelets-app
+export VITE_CLERK_PUBLISHABLE_KEY=pk_live_your_key_here
+export VITE_API_URL=/api
+
+# Create ECR repository (first time only)
+aws ecr create-repository \
+  --repository-name $ECR_REPOSITORY \
+  --region $AWS_REGION \
+  --image-scanning-configuration scanOnPush=true
+
+# Login to ECR
+aws ecr get-login-password --region $AWS_REGION | \
+  docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+
+# Build the Docker image
+docker build -t typelets-app:latest \
+  --build-arg VITE_CLERK_PUBLISHABLE_KEY=$VITE_CLERK_PUBLISHABLE_KEY \
+  --build-arg VITE_API_URL=$VITE_API_URL \
+  .
+
+# Tag for ECR
+docker tag typelets-app:latest \
+  $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:latest
+
+# Push to ECR
+docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:latest
+```
+</details>
+
+### Configuration
+
+#### Build Arguments (compile-time)
+
+| Argument | Description | Example |
+|----------|-------------|---------|
+| `VITE_CLERK_PUBLISHABLE_KEY` | Clerk authentication key | `pk_live_xxx` |
+| `VITE_API_URL` | API path for React app (MUST be `/api`) | `/api` |
+
+#### Runtime Environment Variables
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `BACKEND_URL` | Your backend API URL | `https://api.typelets.com` |
+
+### Cloud Deployment Examples
+
+<details>
+<summary><b>AWS ECS</b></summary>
+
+```json
+{
+  "containerDefinitions": [{
+    "name": "typelets-app",
+    "image": "your-ecr-uri:latest",
+    "environment": [
+      {
+        "name": "BACKEND_URL",
+        "value": "https://your-api-domain.com"
+      }
+    ],
+    "portMappings": [{
+      "containerPort": 8080
+    }]
+  }]
+}
+```
+</details>
+
+<details>
+<summary><b>Docker Compose</b></summary>
+
+```yaml
+version: '3.8'
+services:
+  typelets-app:
+    image: typelets-app:latest
+    ports:
+      - "80:8080"
+    environment:
+      - BACKEND_URL=https://your-api-domain.com
+```
+</details>
+
+## 🔧 Development
+
+### Available Scripts
+
+```bash
+# Development
+pnpm dev          # Start dev server
+pnpm build        # Build for production
+pnpm preview      # Preview production build
+
+# Code Quality
+pnpm lint         # Check for linting issues
+pnpm lint:fix     # Auto-fix linting issues
+pnpm format       # Format code with Prettier
+pnpm type-check   # Check TypeScript types
+
+# Docker
+pnpm docker:build # Build Docker image
+pnpm docker:run   # Run container locally
+```
+
+### Project Structure
+
+```
+typelets/
+├── src/
+│   ├── components/     # React components
+│   ├── hooks/          # Custom React hooks
+│   ├── lib/            # Utility functions & services
+│   │   └── encryption/ # Client-side encryption
+│   ├── types/          # TypeScript definitions
+│   └── App.tsx         # Main App component
+├── public/             # Static assets
+├── nginx.conf.template # Nginx configuration
+├── Dockerfile          # Docker configuration
+└── .env.example        # Environment variables template
+```
+
+## 🚀 Tech Stack
+
+- **Framework:** React 19 with TypeScript
+- **Build Tool:** Vite 7
+- **Styling:** Tailwind CSS v4
+- **Editor:** TipTap with code highlighting
+- **Authentication:** Clerk
+- **UI Components:** Radix UI
+- **Encryption:** Web Crypto API with AES-256-GCM
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'feat: add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📝 License
+
+MIT License - see [LICENSE](LICENSE) file for details
+
+## 🙏 Acknowledgments
+
+- [Vite](https://vitejs.dev/)
+- [React](https://react.dev/)
+- [TipTap](https://tiptap.dev/)
+- [Tailwind CSS](https://tailwindcss.com/)
+- [Clerk](https://clerk.com/)
+- [Radix UI](https://www.radix-ui.com/)
