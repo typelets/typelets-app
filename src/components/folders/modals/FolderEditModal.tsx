@@ -41,15 +41,15 @@ interface FolderEditModalProps {
 }
 
 export default function FolderEditModal({
-                                          isOpen,
-                                          folder,
-                                          folders,
-                                          onClose,
-                                          onUpdateFolder,
-                                          onUpdateFolderParent,
-                                          onCreateSubfolder,
-                                          onOpenDeleteModal,
-                                        }: FolderEditModalProps) {
+  isOpen,
+  folder,
+  folders,
+  onClose,
+  onUpdateFolder,
+  onUpdateFolderParent,
+  onCreateSubfolder,
+  onOpenDeleteModal,
+}: FolderEditModalProps) {
   const [name, setName] = useState('');
   const [selectedColor, setSelectedColor] = useState('#6b7280');
   const [selectedParentId, setSelectedParentId] = useState<string | null>(null);
@@ -144,7 +144,7 @@ export default function FolderEditModal({
 
   return (
     <AlertDialog open={isOpen} onOpenChange={onClose}>
-      <AlertDialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+      <AlertDialogContent className="max-h-[90vh] max-w-md overflow-y-auto">
         <AlertDialogHeader>
           <AlertDialogTitle className="flex items-center gap-2">
             <div
@@ -158,7 +158,7 @@ export default function FolderEditModal({
         <div className="space-y-4">
           {/* Folder Name */}
           <div className="space-y-2">
-            <label className="text-xs font-medium tracking-wide uppercase text-muted-foreground">
+            <label className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
               Folder Name
             </label>
             <Input
@@ -173,14 +173,14 @@ export default function FolderEditModal({
 
           {/* Parent Folder */}
           <div className="space-y-2">
-            <label className="text-xs font-medium tracking-wide uppercase text-muted-foreground">
+            <label className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
               Parent Folder
             </label>
             <select
               value={selectedParentId ?? ''}
               onChange={(e) => setSelectedParentId(e.target.value || null)}
               disabled={isSaving}
-              className="h-9 w-full rounded-md border border-border bg-background px-3 py-2 text-sm focus:border-transparent focus:outline-none focus:ring-2 focus:ring-ring"
+              className="border-border bg-background focus:ring-ring h-9 w-full rounded-md border px-3 py-2 text-sm focus:border-transparent focus:ring-2 focus:outline-none"
             >
               <option value="">📁 Root Level (No Parent)</option>
               {availableParentsWithPaths.map((parent) => (
@@ -189,19 +189,20 @@ export default function FolderEditModal({
                 </option>
               ))}
             </select>
-            <div className="text-xs text-muted-foreground">
+            <div className="text-muted-foreground text-xs">
               {selectedParentId === null
                 ? 'This folder will be at the root level'
                 : `This folder will be inside "${
-                  availableParentsWithPaths.find((p) => p.id === selectedParentId)
-                    ?.path ?? 'Unknown'
-                }"`}
+                    availableParentsWithPaths.find(
+                      (p) => p.id === selectedParentId
+                    )?.path ?? 'Unknown'
+                  }"`}
             </div>
           </div>
 
           {/* Color Picker */}
           <div className="space-y-2">
-            <label className="text-xs font-medium tracking-wide uppercase text-muted-foreground">
+            <label className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
               Color
             </label>
             <div className="grid grid-cols-6 gap-2">
@@ -228,10 +229,10 @@ export default function FolderEditModal({
 
           {/* Details */}
           <div className="space-y-2">
-            <label className="text-xs font-medium tracking-wide uppercase text-muted-foreground">
+            <label className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
               Details
             </label>
-            <div className="space-y-1.5 rounded-lg bg-accent/20 p-3 text-xs text-muted-foreground">
+            <div className="bg-accent/20 text-muted-foreground space-y-1.5 rounded-lg p-3 text-xs">
               <div className="flex items-center gap-2">
                 <Hash className="h-3 w-3" />
                 <span className="font-mono">{folder.id}</span>
@@ -247,7 +248,8 @@ export default function FolderEditModal({
                   <FolderIcon className="h-3 w-3" />
                   <span>
                     Currently in &ldquo;
-                    {buildFolderPath(folder.parentId, folders) ?? 'Unknown'}&rdquo;
+                    {buildFolderPath(folder.parentId, folders) ?? 'Unknown'}
+                    &rdquo;
                   </span>
                 </div>
               )}
