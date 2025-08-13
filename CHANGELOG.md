@@ -1,3 +1,11 @@
+# [1.1.0](https://github.com/typelets/typelets-app/compare/v1.0.0...v1.1.0) (2025-08-13)
+
+
+### Features
+
+* add move functionality for notes and folders with tree-view selection ([a434c41](https://github.com/typelets/typelets-app/commit/a434c411386fbe414f12fd10a0561a9867fa368a))
+* add move note to folder functionality with modal interface ([aea639f](https://github.com/typelets/typelets-app/commit/aea639fce0e25bfc6590304f8e56de5e507b87fc))
+
 # 1.0.0 (2025-08-12)
 
 
