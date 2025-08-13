@@ -1,5 +1,11 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Star, Archive, Trash2, MoreHorizontal, FolderInput } from 'lucide-react';
+import {
+  Star,
+  Archive,
+  Trash2,
+  MoreHorizontal,
+  FolderInput,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -26,13 +32,13 @@ interface NoteEditorProps {
 }
 
 export default function Index({
-                                note,
-                                folders,
-                                onUpdateNote,
-                                onDeleteNote,
-                                onArchiveNote,
-                                onToggleStar,
-                              }: NoteEditorProps) {
+  note,
+  folders,
+  onUpdateNote,
+  onDeleteNote,
+  onArchiveNote,
+  onToggleStar,
+}: NoteEditorProps) {
   const [title, setTitle] = useState('');
   const [isMoveModalOpen, setIsMoveModalOpen] = useState(false);
   const contentUpdateTimeoutRef = useRef<NodeJS.Timeout | null>(null);

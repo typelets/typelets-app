@@ -1,16 +1,22 @@
 import { memo } from 'react';
-
-import { MoreHorizontal, ChevronRight, ChevronDown } from 'lucide-react';
-
+import {
+  MoreHorizontal,
+  ChevronRight,
+  ChevronDown,
+  Edit,
+  FolderInput,
+  Trash2,
+  FolderPlus,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import type { Folder } from '@/types/note';
-
-import FolderEditDropdown from './FolderEditDropdown';
 
 interface FolderItemProps {
   folder: Folder;
@@ -23,17 +29,10 @@ interface FolderItemProps {
   onSelect: (folder: Folder) => void;
   onToggleExpansion: (folderId: string) => void;
   onOpenDropdown: (folderId: string | null) => void;
-  onUpdateFolder: (
-    folderId: string,
-    name: string,
-    color: string
-  ) => Promise<void>;
-  onUpdateFolderParent: (
-    folderId: string,
-    parentId: string | null
-  ) => Promise<void>;
+  onEditFolder: (folder: Folder) => void;
+  onMoveFolder: (folder: Folder) => void;
+  onDeleteFolder: (folder: Folder) => void;
   onCreateSubfolder: (parentId: string) => void;
-  onOpenDeleteModal: (folder: Folder) => void;
   dragHandlers: {
     onDragStart: (e: React.DragEvent, index: number) => void;
     onDragOver: (e: React.DragEvent, index: number) => void;
@@ -46,7 +45,6 @@ interface FolderItemProps {
 
 function FolderItem({
   folder,
-  folders,
   index,
   isSelected,
   isDropdownOpen,
@@ -55,10 +53,10 @@ function FolderItem({
   onSelect,
   onToggleExpansion,
   onOpenDropdown,
-  onUpdateFolder,
-  onUpdateFolderParent,
+  onEditFolder,
+  onMoveFolder,
+  onDeleteFolder,
   onCreateSubfolder,
-  onOpenDeleteModal,
   dragHandlers,
 }: FolderItemProps) {
   const hasChildren = folder.hasChildren;
@@ -127,17 +125,49 @@ function FolderItem({
           <DropdownMenuContent
             align="start"
             side="bottom"
-            className="mt-2 -ml-2 p-0"
+            className="w-[160px]"
           >
-            <FolderEditDropdown
-              folder={folder}
-              folders={folders}
-              onClose={() => onOpenDropdown(null)}
-              onUpdateFolder={onUpdateFolder}
-              onUpdateFolderParent={onUpdateFolderParent}
-              onCreateSubfolder={onCreateSubfolder}
-              onOpenDeleteModal={onOpenDeleteModal}
-            />
+            <DropdownMenuItem
+              onClick={() => {
+                onEditFolder(folder);
+                onOpenDropdown(null);
+              }}
+            >
+              <Edit className="mr-2 h-4 w-4" />
+              Edit
+            </DropdownMenuItem>
+
+            <DropdownMenuItem
+              onClick={() => {
+                onMoveFolder(folder);
+                onOpenDropdown(null);
+              }}
+            >
+              <FolderInput className="mr-2 h-4 w-4" />
+              Move
+            </DropdownMenuItem>
+
+            <DropdownMenuItem
+              onClick={() => {
+                onCreateSubfolder(folder.id);
+                onOpenDropdown(null);
+              }}
+            >
+              <FolderPlus className="mr-2 h-4 w-4" />
+              Add
+            </DropdownMenuItem>
+
+            <DropdownMenuSeparator />
+
+            <DropdownMenuItem
+              onClick={() => {
+                onDeleteFolder(folder);
+                onOpenDropdown(null);
+              }}
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              Delete
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
 

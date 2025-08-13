@@ -1,13 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 
-import { Check, FolderIcon } from 'lucide-react';
+import { Check, X } from 'lucide-react';
+import * as Dialog from '@radix-ui/react-dialog';
 
-import {
-  AlertDialog,
-  AlertDialogContent,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog.tsx';
 import { Button } from '@/components/ui/button.tsx';
 import { Input } from '@/components/ui/input.tsx';
 
@@ -78,96 +73,108 @@ export default function CreateFolderModal({
     }
   };
 
+  const handleClose = () => {
+    if (!isCreating) {
+      onClose();
+    }
+  };
+
   return (
-    <AlertDialog open={isOpen} onOpenChange={onClose}>
-      <AlertDialogContent className="max-w-md">
-        <AlertDialogHeader>
-          <AlertDialogTitle className="flex items-center gap-2">
-            <FolderIcon className="h-5 w-5" />
-            {parentFolderName
-              ? `Create Subfolder in "${parentFolderName}"`
-              : 'Create New Folder'}
-          </AlertDialogTitle>
-        </AlertDialogHeader>
-
-        <div className="space-y-4">
-          {parentFolderName && (
-            <div className="bg-accent/20 rounded-lg p-3">
-              <div className="text-muted-foreground text-sm">
-                Creating subfolder in:
-              </div>
-              <div className="font-medium">{parentFolderName}</div>
+    <Dialog.Root open={isOpen} onOpenChange={handleClose}>
+      <Dialog.Portal>
+        <Dialog.Overlay className="fixed inset-0 z-50 bg-black/80" />
+        <Dialog.Content className="bg-background fixed top-[50%] left-[50%] z-50 max-h-[85vh] w-[90vw] max-w-[450px] translate-x-[-50%] translate-y-[-50%] gap-4 overflow-hidden rounded-lg border shadow-lg">
+          {/* Header */}
+          <div className="border-border flex items-center justify-between border-b p-4">
+            <div className="space-y-1">
+              <Dialog.Title className="text-lg font-semibold">
+                Add Folder
+              </Dialog.Title>
+              <Dialog.Description className="text-muted-foreground text-sm">
+                {parentFolderName ? (
+                  <>
+                    Creating a folder in{' '}
+                    <span className="font-bold">{parentFolderName}</span>
+                  </>
+                ) : (
+                  'Create a new folder to organize your notes'
+                )}
+              </Dialog.Description>
             </div>
-          )}
-
-          {/* Folder Name */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Folder Name</label>
-            <Input
-              ref={inputRef}
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Enter folder name..."
-              disabled={isCreating}
-            />
           </div>
 
-          {/* Color Picker */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Color</label>
-            <div className="grid grid-cols-6 gap-2">
-              {FOLDER_COLORS.map((color) => (
-                <button
-                  key={color}
-                  type="button"
-                  onClick={() => setSelectedColor(color)}
+          {/* Content */}
+          <div className="p-4">
+            <div className="space-y-4">
+              {/* Folder Name */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Folder Name</label>
+                <Input
+                  ref={inputRef}
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Enter folder name..."
                   disabled={isCreating}
-                  className={`relative h-10 w-10 rounded-lg border-2 transition-all hover:scale-105 ${
-                    selectedColor === color
-                      ? 'border-foreground scale-105 shadow-lg'
-                      : 'border-border hover:border-foreground/50'
-                  } disabled:opacity-50 disabled:hover:scale-100`}
-                  style={{ backgroundColor: color }}
+                />
+              </div>
+
+              {/* Color Picker */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Color</label>
+                <div className="grid grid-cols-6 gap-2">
+                  {FOLDER_COLORS.map((color) => (
+                    <button
+                      key={color}
+                      type="button"
+                      onClick={() => setSelectedColor(color)}
+                      disabled={isCreating}
+                      className={`relative h-10 w-10 rounded-lg border-2 ${
+                        selectedColor === color
+                          ? 'border-foreground scale-105 shadow-lg'
+                          : 'border-border hover:border-foreground/50'
+                      } disabled:opacity-50`}
+                      style={{ backgroundColor: color }}
+                    >
+                      {selectedColor === color && (
+                        <Check className="absolute inset-0 m-auto h-4 w-4 text-white drop-shadow-sm" />
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="flex justify-end pt-2">
+                <Button
+                  onClick={handleCreate}
+                  disabled={!name.trim() || isCreating}
                 >
-                  {selectedColor === color && (
-                    <Check className="absolute inset-0 m-auto h-4 w-4 text-white drop-shadow-sm" />
+                  {isCreating ? (
+                    <>
+                      <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                      Creating...
+                    </>
+                  ) : (
+                    `Add`
                   )}
-                </button>
-              ))}
+                </Button>
+              </div>
             </div>
           </div>
 
-          {/* Actions */}
-          <div className="flex gap-2 pt-4">
+          <Dialog.Close asChild>
             <Button
               variant="outline"
-              onClick={onClose}
-              disabled={isCreating}
-              className="flex-1"
+              size="icon"
+              className="absolute top-4 right-4"
+              aria-label="Close"
             >
-              Cancel
+              <X className="h-4 w-4" />
             </Button>
-            <Button
-              onClick={handleCreate}
-              disabled={!name.trim() || isCreating}
-              className="flex-1"
-            >
-              {isCreating ? (
-                <>
-                  <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                  Creating...
-                </>
-              ) : (
-                <>
-                  <FolderIcon className="mr-2 h-4 w-4" />
-                  Create {parentFolderName ? 'Subfolder' : 'Folder'}
-                </>
-              )}
-            </Button>
-          </div>
-        </div>
-      </AlertDialogContent>
-    </AlertDialog>
+          </Dialog.Close>
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
   );
 }

@@ -1,18 +1,18 @@
-import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { Folder, ChevronRight, Search, X } from 'lucide-react';
+import * as React from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
+import { X, Folder, ChevronRight, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import type { Folder as FolderType } from '@/types/note';
+import { canMoveToFolder } from '@/utils/folderTree';
 
-interface MoveNoteModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onMove: (folderId: string | null) => void;
+interface MoveFolderModalProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  folder: FolderType | null;
   folders: FolderType[];
-  currentFolderId: string | null;
-  noteTitle: string;
+  onMove: (folderId: string, parentId: string | null) => Promise<void>;
 }
 
 interface FolderNode extends FolderType {
@@ -20,61 +20,67 @@ interface FolderNode extends FolderType {
   level: number;
 }
 
-export default function MoveNoteModal({
-  isOpen,
-  onClose,
-  onMove,
+export default function MoveFolderModal({
+  open,
+  onOpenChange,
+  folder,
   folders,
-  currentFolderId,
-  noteTitle,
-}: MoveNoteModalProps) {
-  const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
-  const [expandedFolders, setExpandedFolders] = useState<Set<string>>(
+  onMove,
+}: MoveFolderModalProps) {
+  const [selectedParentId, setSelectedParentId] = React.useState<string | null>(
+    null
+  );
+  const [expandedFolders, setExpandedFolders] = React.useState<Set<string>>(
     new Set()
   );
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isMoving, setIsMoving] = useState(false);
-  const searchInputRef = useRef<HTMLInputElement>(null);
+  const [searchQuery, setSearchQuery] = React.useState('');
+  const [isMoving, setIsMoving] = React.useState(false);
 
-  useEffect(() => {
-    if (isOpen) {
-      setSelectedFolderId(null);
+  React.useEffect(() => {
+    if (open && folder) {
+      setSelectedParentId(folder.parentId ?? null);
       setSearchQuery('');
       setIsMoving(false);
-      // Focus search input after modal opens
-      setTimeout(() => {
-        searchInputRef.current?.focus();
-      }, 100);
     }
-  }, [isOpen]);
+  }, [open, folder]);
 
-  // Build folder tree structure
-  const folderTree = useMemo(() => {
+  const folderTree = React.useMemo(() => {
+    if (!folder) return [];
+
+    const isDescendant = (parentId: string, childId: string): boolean => {
+      if (parentId === childId) return true;
+      const child = folders.find((f) => f.id === childId);
+      if (!child || !child.parentId) return false;
+      return isDescendant(parentId, child.parentId);
+    };
+
     const buildTree = (
       parentId: string | null = null,
       level = 0
     ): FolderNode[] => {
       return folders
-        .filter((f) => f.parentId === parentId)
-        .map((folder) => ({
-          ...folder,
+        .filter((f) => {
+          if (f.id === folder.id) return false;
+          if (isDescendant(folder.id, f.id)) return false;
+          return f.parentId === parentId;
+        })
+        .map((f) => ({
+          ...f,
           level,
-          children: buildTree(folder.id, level + 1),
+          children: buildTree(f.id, level + 1),
         }))
         .sort((a, b) => a.name.localeCompare(b.name));
     };
 
     return buildTree();
-  }, [folders]);
+  }, [folders, folder]);
 
-  // Flatten tree for display with search filtering
-  const displayFolders = useMemo(() => {
+  const displayFolders = React.useMemo(() => {
     const flattenTree = (
       nodes: FolderNode[],
       result: FolderNode[] = []
     ): FolderNode[] => {
       nodes.forEach((node) => {
-        // Apply search filter
         const matchesSearch =
           searchQuery === '' ||
           node.name.toLowerCase().includes(searchQuery.toLowerCase());
@@ -107,53 +113,51 @@ export default function MoveNoteModal({
   };
 
   const handleMove = async () => {
-    if (isMoving) return;
+    if (!folder || isMoving) return;
+
+    const currentParent = folder.parentId ?? null;
+    const newParent = selectedParentId;
+
+    if (currentParent === newParent) {
+      onOpenChange(false);
+      return;
+    }
+
+    if (newParent !== null && !canMoveToFolder(folder.id, newParent, folders)) {
+      alert('Cannot move folder to its own descendant');
+      return;
+    }
 
     setIsMoving(true);
     try {
-      onMove(selectedFolderId);
-      onClose();
+      await onMove(folder.id, newParent);
+      onOpenChange(false);
     } catch (error) {
-      console.error('Failed to move note:', error);
-    } finally {
+      console.error('Failed to move folder:', error);
       setIsMoving(false);
     }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && selectedFolderId !== undefined) {
-      e.preventDefault();
-      handleMove();
-    }
-  };
-
-  const handleClose = () => {
-    if (!isMoving) {
-      onClose();
-    }
-  };
-
   const hasChildren = (folderId: string) => {
-    return folders.some((f) => f.parentId === folderId);
+    return folders.some((f) => f.parentId === folderId && f.id !== folder?.id);
   };
+
+  if (!folder) return null;
 
   return (
-    <Dialog.Root open={isOpen} onOpenChange={handleClose}>
+    <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-50 bg-black/80" />
         <Dialog.Content className="bg-background fixed top-[50%] left-[50%] z-50 max-h-[85vh] w-[90vw] max-w-[450px] translate-x-[-50%] translate-y-[-50%] gap-4 overflow-hidden rounded-lg border shadow-lg">
           {/* Header */}
           <div className="border-border flex items-center justify-between border-b p-4">
-            <div className="mr-8 space-y-1">
+            <div className="space-y-1">
               <Dialog.Title className="text-lg font-semibold">
-                Move Note
+                Move Folder
               </Dialog.Title>
-              <Dialog.Description className="text-muted-foreground mt-1 text-sm">
+              <Dialog.Description className="text-muted-foreground text-sm">
                 Choose a new location for{' '}
-                <span className="font-bold">
-                  {noteTitle || 'Untitled Note'}
-                </span>
-                .
+                <span className="font-bold">{folder.name}</span>.
               </Dialog.Description>
             </div>
           </div>
@@ -166,11 +170,9 @@ export default function MoveNoteModal({
                 <div className="relative">
                   <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
                   <Input
-                    ref={searchInputRef}
                     placeholder="Search folders..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    onKeyDown={handleKeyDown}
                     className="pl-9"
                     disabled={isMoving}
                   />
@@ -181,49 +183,39 @@ export default function MoveNoteModal({
                 <Label>Select destination</Label>
                 <div className="max-h-[300px] overflow-y-auto rounded-lg border">
                   <div className="p-1">
-                    {/* Root level option */}
                     <Button
                       variant={
-                        selectedFolderId === null ? 'secondary' : 'ghost'
+                        selectedParentId === null ? 'secondary' : 'ghost'
                       }
-                      onClick={() => setSelectedFolderId(null)}
+                      onClick={() => setSelectedParentId(null)}
                       disabled={isMoving}
                       className="h-auto w-full justify-start gap-2 px-3 py-2 font-normal"
                     >
                       <Folder className="h-4 w-4" />
-                      <span className="flex-1 text-left">No Folder (Root)</span>
+                      <span className="flex-1 text-left">Root Level</span>
                     </Button>
 
-                    {/* Folder list */}
-                    {displayFolders.length === 0 && searchQuery && (
-                      <div className="text-muted-foreground py-8 text-center text-sm">
-                        No folders found matching "{searchQuery}"
-                      </div>
-                    )}
-
-                    {displayFolders.map((folder) => {
+                    {displayFolders.map((f) => {
                       const isExpanded =
-                        expandedFolders.has(folder.id) || searchQuery !== '';
-                      const hasChildFolders = hasChildren(folder.id);
-                      const isSelected = selectedFolderId === folder.id;
-                      const isCurrentFolder = folder.id === currentFolderId;
+                        expandedFolders.has(f.id) || searchQuery !== '';
+                      const hasChildFolders = hasChildren(f.id);
+                      const isSelected = selectedParentId === f.id;
+                      const isCurrentParent = f.id === folder.parentId;
 
                       return (
                         <Button
-                          key={folder.id}
+                          key={f.id}
                           variant={isSelected ? 'secondary' : 'ghost'}
-                          onClick={() =>
-                            !isCurrentFolder && setSelectedFolderId(folder.id)
-                          }
-                          disabled={isCurrentFolder || isMoving}
+                          onClick={() => setSelectedParentId(f.id)}
+                          disabled={isMoving}
                           className="h-auto w-full justify-start gap-2 px-3 py-2 text-sm font-normal"
-                          style={{ paddingLeft: `${folder.level * 20 + 12}px` }}
+                          style={{ paddingLeft: `${f.level * 20 + 12}px` }}
                         >
                           {hasChildFolders && (
                             <div
                               onClick={(e) => {
                                 e.stopPropagation();
-                                toggleFolder(folder.id);
+                                toggleFolder(f.id);
                               }}
                               className="hover:bg-accent-foreground/10 rounded p-0.5"
                             >
@@ -238,14 +230,12 @@ export default function MoveNoteModal({
 
                           <div
                             className="h-4 w-4 flex-shrink-0 rounded-sm"
-                            style={{
-                              backgroundColor: folder.color || '#6b7280',
-                            }}
+                            style={{ backgroundColor: f.color || '#6b7280' }}
                           />
 
                           <span className="flex-1 truncate text-left">
-                            {folder.name}
-                            {isCurrentFolder && (
+                            {f.name}
+                            {isCurrentParent && (
                               <span className="text-muted-foreground ml-2 text-xs">
                                 (current)
                               </span>
@@ -254,12 +244,6 @@ export default function MoveNoteModal({
                         </Button>
                       );
                     })}
-
-                    {folders.length === 0 && !searchQuery && (
-                      <div className="text-muted-foreground py-8 text-center text-sm">
-                        No folders available. Create a folder first.
-                      </div>
-                    )}
                   </div>
                 </div>
               </div>
@@ -269,7 +253,9 @@ export default function MoveNoteModal({
             <div className="flex justify-end pt-2">
               <Button
                 onClick={handleMove}
-                disabled={selectedFolderId === undefined || isMoving}
+                disabled={
+                  isMoving || (folder.parentId ?? null) === selectedParentId
+                }
               >
                 {isMoving ? (
                   <>

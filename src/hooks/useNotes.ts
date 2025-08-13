@@ -351,13 +351,28 @@ export function useNotes() {
 
   const updateFolder = async (folderId: string, updates: Partial<Folder>) => {
     try {
-      const apiFolder = await api.updateFolder(folderId, {
-        name: updates.name,
-        color: updates.color,
-        parentId: updates.parentId ?? undefined,
-      });
+      const apiPayload: {
+        name?: string;
+        color?: string;
+        parentId?: string | null;
+      } = {};
 
+      if (updates.name !== undefined) {
+        apiPayload.name = updates.name;
+      }
+
+      if (updates.color !== undefined) {
+        apiPayload.color = updates.color;
+      }
+
+      if ('parentId' in updates) {
+        apiPayload.parentId =
+          updates.parentId === undefined ? null : updates.parentId;
+      }
+
+      const apiFolder = await api.updateFolder(folderId, apiPayload);
       const updatedFolder = convertApiFolder(apiFolder);
+
       setFolders((prev) =>
         prev.map((folder) => (folder.id === folderId ? updatedFolder : folder))
       );
@@ -368,6 +383,7 @@ export function useNotes() {
     } catch (error) {
       console.error('Failed to update folder:', error);
       setError('Failed to update folder');
+      throw error;
     }
   };
 

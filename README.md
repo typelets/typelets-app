@@ -28,7 +28,8 @@
 ## ✨ Features
 
 - 🔐 **Client-side AES-256-GCM encryption** - Your notes are encrypted before leaving your device
-- 📁 **Nested folder organization** - Create unlimited folder hierarchies
+- 📁 **Nested folder organization** - Create unlimited folder hierarchies with drag & drop
+- 🔄 **Move & organize** - Move notes and folders between locations
 - 🌙 **Dark/Light mode** - Easy on the eyes, day or night
 - 📝 **Rich text editor** - Powered by TipTap with markdown support
 - ⭐ **Star, archive, and organize** - Keep your important notes accessible
@@ -65,7 +66,7 @@ cd typelets
 pnpm install
 
 # Set up environment variables
-cp .env.OLD.example .env.OLD.local
+cp .env.example .env.local
 
 # Start the development server
 pnpm dev
@@ -75,21 +76,47 @@ The app will be available at `http://localhost:5173`
 
 ### Environment Setup
 
-Edit `.env.local` with your configuration:
+Create `.env.local` with your configuration:
 
 ```env
-# Required
+# Required - Clerk Authentication
 VITE_CLERK_PUBLISHABLE_KEY=pk_test_your_clerk_key
 
-# API Configuration (MUST be /api for nginx proxy)
+# API Configuration
 VITE_API_URL=/api
+
+# Proxy Configuration (for development)
+# The proxy will forward /api requests to this target
+VITE_PROXY_TARGET=https://dev.api.typelets.com
 
 # Optional
 VITE_APP_NAME=Typelets
-VITE_APP_VERSION=1.0.0
+VITE_APP_VERSION=0.5.0
 ```
 
 Get your Clerk keys from [dashboard.clerk.com](https://dashboard.clerk.com)
+
+### Development Proxy
+
+The development server includes a built-in proxy to avoid CORS issues during local development. The proxy automatically forwards all `/api` requests to your backend server.
+
+#### Using Different Backends
+
+```bash
+# Default: Use dev API server
+pnpm dev
+
+# Use local Docker API
+VITE_PROXY_TARGET=http://localhost:8080 pnpm dev
+
+# Use production API (for testing)
+VITE_PROXY_TARGET=https://api.typelets.com pnpm dev
+```
+
+You can also create environment-specific files:
+- `.env.local` - Default development
+- `.env.docker` - Local Docker API
+- `.env.production` - Production build
 
 ## 🐳 Docker Deployment
 
@@ -196,6 +223,13 @@ docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:la
 |----------|-------------|---------|
 | `BACKEND_URL` | Your backend API URL | `https://api.typelets.com` |
 
+#### Development Environment Variables
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `VITE_PROXY_TARGET` | Backend URL for development proxy | `https://dev.api.typelets.com` |
+| `VITE_API_URL` | API path (keep as `/api`) | `/api` |
+
 ### Cloud Deployment Examples
 
 <details>
@@ -241,7 +275,8 @@ services:
 
 ```bash
 # Development
-pnpm dev          # Start dev server
+pnpm dev          # Start dev server with proxy
+pnpm dev:docker   # Start with local Docker API
 pnpm build        # Build for production
 pnpm preview      # Preview production build
 
@@ -269,6 +304,7 @@ typelets/
 │   └── App.tsx         # Main App component
 ├── public/             # Static assets
 ├── nginx.conf.template # Nginx configuration
+├── vite.config.ts      # Vite configuration with proxy
 ├── Dockerfile          # Docker configuration
 └── .env.example        # Environment variables template
 ```
@@ -276,7 +312,7 @@ typelets/
 ## 🚀 Tech Stack
 
 - **Framework:** React 19 with TypeScript
-- **Build Tool:** Vite 7
+- **Build Tool:** Vite 7 with development proxy
 - **Styling:** Tailwind CSS v4
 - **Editor:** TipTap with code highlighting
 - **Authentication:** Clerk

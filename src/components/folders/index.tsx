@@ -2,7 +2,9 @@ import { useState, useCallback, useMemo } from 'react';
 import { UserButton, useUser } from '@clerk/clerk-react';
 import { Plus, Search } from 'lucide-react';
 import CreateFolderModal from '@/components/folders/modals/CreateFolderModal';
-import FolderModalDelete from '@/components/folders/modals/FolderModalDelete';
+import FolderDeleteModal from '@/components/folders/modals/FolderDeleteModal';
+import EditFolderModal from '@/components/folders/modals/EditFolderModal';
+import MoveFolderModal from '@/components/folders/modals/MoveFolderModal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
@@ -72,6 +74,8 @@ export default function FolderPanel({
   const [isCreateFolderModalOpen, setIsCreateFolderModalOpen] = useState(false);
   const [isDeleteFolderModalOpen, setIsDeleteFolderModalOpen] = useState(false);
   const [folderToDelete, setFolderToDelete] = useState<FolderType | null>(null);
+  const [editingFolder, setEditingFolder] = useState<FolderType | null>(null);
+  const [movingFolder, setMovingFolder] = useState<FolderType | null>(null);
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
   const [createSubfolderParent, setCreateSubfolderParent] = useState<
     string | null
@@ -143,7 +147,17 @@ export default function FolderPanel({
     [onDeleteFolder, selectedFolder, onFolderSelect, onViewChange]
   );
 
-  const openDeleteModal = useCallback((folder: FolderType) => {
+  const handleEditFolder = useCallback((folder: FolderType) => {
+    setEditingFolder(folder);
+    setOpenDropdownId(null);
+  }, []);
+
+  const handleMoveFolder = useCallback((folder: FolderType) => {
+    setMovingFolder(folder);
+    setOpenDropdownId(null);
+  }, []);
+
+  const handleDeleteFolderAction = useCallback((folder: FolderType) => {
     setFolderToDelete(folder);
     setIsDeleteFolderModalOpen(true);
     setOpenDropdownId(null);
@@ -246,10 +260,10 @@ export default function FolderPanel({
                   onSelect={handleFolderSelect}
                   onToggleExpansion={onToggleFolderExpansion}
                   onOpenDropdown={setOpenDropdownId}
-                  onUpdateFolder={onUpdateFolder}
-                  onUpdateFolderParent={onUpdateFolderParent}
+                  onEditFolder={handleEditFolder}
+                  onMoveFolder={handleMoveFolder}
+                  onDeleteFolder={handleDeleteFolderAction}
                   onCreateSubfolder={handleCreateSubfolder}
-                  onOpenDeleteModal={openDeleteModal}
                   dragHandlers={dragHandlers}
                 />
               ))}
@@ -299,7 +313,24 @@ export default function FolderPanel({
         }
       />
 
-      <FolderModalDelete
+      <EditFolderModal
+        open={!!editingFolder}
+        onOpenChange={(open) => !open && setEditingFolder(null)}
+        folder={editingFolder}
+        onSave={onUpdateFolder}
+      />
+
+      <MoveFolderModal
+        open={!!movingFolder}
+        onOpenChange={(open) => !open && setMovingFolder(null)}
+        folder={movingFolder}
+        folders={folders}
+        onMove={async (folderId, parentId) => {
+          await onUpdateFolderParent(folderId, parentId);
+        }}
+      />
+
+      <FolderDeleteModal
         isOpen={isDeleteFolderModalOpen}
         folder={folderToDelete}
         onClose={closeDeleteModal}

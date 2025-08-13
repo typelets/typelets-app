@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { FolderOpen, FileText } from 'lucide-react';
 import Index from '@/components/editor';
-import FolderPanel from '@/components/folders/FolderPanel';
+import FolderPanel from '@/components/folders';
 import NotesPanel from '@/components/notes/NotesPanel';
 import { Button } from '@/components/ui/button';
 import { useIsMobile } from '@/hooks/useIsMobile';
