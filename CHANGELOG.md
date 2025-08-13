@@ -1,3 +1,10 @@
+## [1.1.1](https://github.com/typelets/typelets-app/compare/v1.1.0...v1.1.1) (2025-08-13)
+
+
+### Bug Fixes
+
+* resolve security vulnerability in tmp package via pnpm override ([e5f203d](https://github.com/typelets/typelets-app/commit/e5f203d699fdc7cbdd057e7b37e31cd72546e461))
+
 # [1.1.0](https://github.com/typelets/typelets-app/compare/v1.0.0...v1.1.0) (2025-08-13)
 
 
