@@ -1,3 +1,10 @@
+# [1.4.0](https://github.com/typelets/typelets-app/compare/v1.3.2...v1.4.0) (2025-08-14)
+
+
+### Features
+
+* Add master password change functionality with encryption key management ([051159c](https://github.com/typelets/typelets-app/commit/051159c9dadf7e6994645b4c2c709511ad268217))
+
 ## [1.3.2](https://github.com/typelets/typelets-app/compare/v1.3.1...v1.3.2) (2025-08-14)
 
 
