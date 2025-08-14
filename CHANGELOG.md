@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/typelets/typelets-app/compare/v1.1.1...v1.2.0) (2025-08-14)
+
+
+### Features
+
+* send [ENCRYPTED] placeholders for title/content to server while storing actual encrypted data separately ([2d3c11f](https://github.com/typelets/typelets-app/commit/2d3c11ffd017e12150f2673150bc98e9e8b2ef4d))
+
 ## [1.1.1](https://github.com/typelets/typelets-app/compare/v1.1.0...v1.1.1) (2025-08-13)
 
 
