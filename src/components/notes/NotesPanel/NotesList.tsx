@@ -13,7 +13,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog.tsx';
 import { Button } from '@/components/ui/button.tsx';
-import type { Note } from '@/types/note.ts';
+import type { Note, Folder } from '@/types/note.ts';
 
 import NoteCard from './NoteCard.tsx';
 
@@ -25,6 +25,7 @@ interface NotesListProps {
   onEmptyTrash?: () => Promise<void>;
   isTrashView?: boolean;
   emptyMessage?: string;
+  folders?: Folder[];
 }
 
 export default function NotesList({
@@ -35,6 +36,7 @@ export default function NotesList({
   onEmptyTrash,
   isTrashView = false,
   emptyMessage,
+  folders,
 }: NotesListProps) {
   const [showEmptyTrashDialog, setShowEmptyTrashDialog] = useState(false);
   const [isEmptyingTrash, setIsEmptyingTrash] = useState(false);
@@ -56,7 +58,6 @@ export default function NotesList({
   return (
     <>
       <div className="divide-y divide-slate-100 dark:divide-slate-700">
-        {/* Empty Trash Button - Only show when in trash view and there are notes */}
         {isTrashView && notes.length > 0 && onEmptyTrash && (
           <div className="border-border bg-muted/20 border-b p-4">
             <div className="flex items-center justify-between">
@@ -79,7 +80,6 @@ export default function NotesList({
           </div>
         )}
 
-        {/* Notes List */}
         {notes.map((note) => (
           <NoteCard
             key={note.id}
@@ -87,10 +87,10 @@ export default function NotesList({
             isSelected={selectedNote?.id === note.id}
             onSelect={onSelectNote}
             onToggleStar={onToggleStar}
+            folders={folders}
           />
         ))}
 
-        {/* Empty State */}
         {notes.length === 0 && emptyMessage && (
           <div className="text-muted-foreground p-8 text-center">
             <Trash2 className="mx-auto mb-4 h-12 w-12 opacity-20" />
@@ -99,7 +99,6 @@ export default function NotesList({
         )}
       </div>
 
-      {/* Empty Trash Confirmation Dialog */}
       <AlertDialog
         open={showEmptyTrashDialog}
         onOpenChange={setShowEmptyTrashDialog}

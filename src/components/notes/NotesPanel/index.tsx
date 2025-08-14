@@ -8,6 +8,7 @@ interface FilesPanelProps {
   notes: Note[];
   selectedNote: Note | null;
   selectedFolder: FolderType | null;
+  folders?: FolderType[];
   currentView: ViewMode;
   isFolderPanelOpen: boolean;
   onSelectNote: (note: Note) => void;
@@ -24,6 +25,7 @@ export default function FilesPanel({
   notes,
   selectedNote,
   selectedFolder,
+  folders,
   currentView,
   isFolderPanelOpen,
   onSelectNote,
@@ -149,6 +151,7 @@ export default function FilesPanel({
           isTrashView={isTrashView}
           onEmptyTrash={onEmptyTrash}
           emptyMessage={getEmptyMessage()}
+          folders={folders}
         />
       </div>
     </div>
