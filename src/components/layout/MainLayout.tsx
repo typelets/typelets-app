@@ -9,10 +9,7 @@ import { MasterPasswordDialog } from '@/components/password/MasterPasswordDialog
 import { useIsMobile } from '@/hooks/useIsMobile';
 import { useNotes } from '@/hooks/useNotes';
 import { api } from '@/lib/api/api';
-import {
-  hasMasterPassword,
-  isMasterPasswordUnlocked,
-} from '@/lib/encryption';
+import { hasMasterPassword, isMasterPasswordUnlocked } from '@/lib/encryption';
 import type { Note, Folder, ViewMode } from '@/types/note';
 
 interface FolderPanelProps {
@@ -73,7 +70,7 @@ export default function MainLayout() {
   const isMobile = useIsMobile();
   const [folderSidebarOpen, setFolderSidebarOpen] = useState(!isMobile);
   const [filesPanelOpen, setFilesPanelOpen] = useState(!isMobile);
-  
+
   // Master password state
   const [showMasterPassword, setShowMasterPassword] = useState(false);
   const [isCheckingPassword, setIsCheckingPassword] = useState(true);
@@ -88,7 +85,7 @@ export default function MainLayout() {
     const checkMasterPassword = () => {
       const hasPassword = hasMasterPassword(user.id);
       const isUnlocked = isMasterPasswordUnlocked(user.id);
-      
+
       // Show dialog if:
       // 1. New user (no master password set)
       // 2. Returning user on new device (has password but not unlocked)
@@ -280,7 +277,7 @@ export default function MainLayout() {
     return (
       <div className="flex h-screen items-center justify-center">
         <div className="text-center">
-          <div className="text-2xl mb-2">🔐</div>
+          <div className="mb-2 text-2xl">🔐</div>
           <p className="text-gray-600">Checking encryption status...</p>
         </div>
       </div>
@@ -293,9 +290,13 @@ export default function MainLayout() {
       <>
         <div className="flex h-screen items-center justify-center bg-gray-50">
           <div className="text-center">
-            <div className="text-4xl mb-4">🔐</div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Secure Notes</h1>
-            <p className="text-gray-600">Your notes are protected with end-to-end encryption</p>
+            <div className="mb-4 text-4xl">🔐</div>
+            <h1 className="mb-2 text-2xl font-bold text-gray-900">
+              Secure Notes
+            </h1>
+            <p className="text-gray-600">
+              Your notes are protected with end-to-end encryption
+            </p>
           </div>
         </div>
         <MasterPasswordDialog

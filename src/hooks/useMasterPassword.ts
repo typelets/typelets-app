@@ -1,9 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useUser } from '@clerk/clerk-react';
-import {
-  hasMasterPassword,
-  isMasterPasswordUnlocked,
-} from '@/lib/encryption';
+import { hasMasterPassword, isMasterPasswordUnlocked } from '@/lib/encryption';
 
 export function useMasterPassword() {
   const { user } = useUser();
@@ -19,7 +16,7 @@ export function useMasterPassword() {
     const checkMasterPassword = () => {
       const hasPassword = hasMasterPassword(user.id);
       const isUnlocked = isMasterPasswordUnlocked(user.id);
-      
+
       // Needs unlock if has password but not unlocked
       setNeedsUnlock(hasPassword && !isUnlocked);
       setIsChecking(false);

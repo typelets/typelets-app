@@ -11,10 +11,10 @@ interface MasterPasswordDialogProps {
   onCancel?: () => void;
 }
 
-export function MasterPasswordDialog({ 
-  userId, 
+export function MasterPasswordDialog({
+  userId,
   onSuccess,
-  onCancel 
+  onCancel,
 }: MasterPasswordDialogProps) {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -45,7 +45,7 @@ export function MasterPasswordDialog({
           setIsLoading(false);
           return;
         }
-        
+
         await setupMasterPassword(password, userId);
         onSuccess();
       } else {
@@ -66,28 +66,39 @@ export function MasterPasswordDialog({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg p-6 max-w-md w-full shadow-xl">
-        <h2 className="text-2xl font-bold mb-4 text-gray-900">
-          {isNewSetup ? '🔐 Set Up Master Password' : '🔓 Enter Master Password'}
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
+        <h2 className="mb-4 text-2xl font-bold text-gray-900">
+          {isNewSetup
+            ? '🔐 Set Up Master Password'
+            : '🔓 Enter Master Password'}
         </h2>
-        
+
         <div className="mb-6 text-gray-600">
           {isNewSetup ? (
             <div className="space-y-2">
-              <p>Create a master password to encrypt your notes with end-to-end encryption.</p>
+              <p>
+                Create a master password to encrypt your notes with end-to-end
+                encryption.
+              </p>
               <p className="text-sm font-medium text-amber-600">
-                ⚠️ Important: This password cannot be recovered if forgotten. Your notes will be permanently inaccessible without it.
+                ⚠️ Important: This password cannot be recovered if forgotten.
+                Your notes will be permanently inaccessible without it.
               </p>
             </div>
           ) : (
-            <p>Enter your master password to decrypt your notes on this device.</p>
+            <p>
+              Enter your master password to decrypt your notes on this device.
+            </p>
           )}
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              htmlFor="password"
+              className="mb-1 block text-sm font-medium text-gray-700"
+            >
               Master Password
             </label>
             <input
@@ -96,16 +107,19 @@ export function MasterPasswordDialog({
               placeholder="Enter your master password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
               required
               autoFocus
               disabled={isLoading}
             />
           </div>
-          
+
           {isNewSetup && (
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
+              <label
+                htmlFor="confirmPassword"
+                className="mb-1 block text-sm font-medium text-gray-700"
+              >
                 Confirm Password
               </label>
               <input
@@ -114,7 +128,7 @@ export function MasterPasswordDialog({
                 placeholder="Confirm your master password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 required
                 disabled={isLoading}
               />
@@ -122,7 +136,7 @@ export function MasterPasswordDialog({
           )}
 
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-600 px-3 py-2 rounded-md text-sm">
+            <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">
               {error}
             </div>
           )}
@@ -131,17 +145,21 @@ export function MasterPasswordDialog({
             <button
               type="submit"
               disabled={isLoading}
-              className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="flex-1 rounded-md bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {isLoading ? 'Processing...' : (isNewSetup ? 'Set Master Password' : 'Unlock Notes')}
+              {isLoading
+                ? 'Processing...'
+                : isNewSetup
+                  ? 'Set Master Password'
+                  : 'Unlock Notes'}
             </button>
-            
+
             {onCancel && !isNewSetup && (
               <button
                 type="button"
                 onClick={onCancel}
                 disabled={isLoading}
-                className="px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="rounded-md bg-gray-100 px-4 py-2 text-gray-700 transition-colors hover:bg-gray-200 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Cancel
               </button>
@@ -150,19 +168,21 @@ export function MasterPasswordDialog({
         </form>
 
         {!isNewSetup && (
-          <div className="mt-6 pt-4 border-t border-gray-200">
+          <div className="mt-6 border-t border-gray-200 pt-4">
             <p className="text-sm text-gray-500">
-              <span className="font-medium">Forgot your master password?</span><br />
-              Unfortunately, your notes cannot be recovered without it due to the end-to-end encryption.
+              <span className="font-medium">Forgot your master password?</span>
+              <br />
+              Unfortunately, your notes cannot be recovered without it due to
+              the end-to-end encryption.
             </p>
           </div>
         )}
 
         {isNewSetup && (
-          <div className="mt-6 pt-4 border-t border-gray-200">
-            <div className="text-sm text-gray-600 space-y-2">
+          <div className="mt-6 border-t border-gray-200 pt-4">
+            <div className="space-y-2 text-sm text-gray-600">
               <p className="font-medium">Password Requirements:</p>
-              <ul className="list-disc list-inside space-y-1 text-gray-500">
+              <ul className="list-inside list-disc space-y-1 text-gray-500">
                 <li>At least 8 characters long</li>
                 <li>Store it in a safe place</li>
                 <li>You'll need it to access notes on other devices</li>
