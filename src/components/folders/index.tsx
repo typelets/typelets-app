@@ -5,10 +5,12 @@ import CreateFolderModal from '@/components/folders/modals/CreateFolderModal';
 import FolderDeleteModal from '@/components/folders/modals/FolderDeleteModal';
 import EditFolderModal from '@/components/folders/modals/EditFolderModal';
 import MoveFolderModal from '@/components/folders/modals/MoveFolderModal';
+import { ChangeMasterPasswordDialog } from '@/components/password/ChangeMasterPasswordDialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { APP_VERSION } from '@/constants/version';
+import { hasMasterPassword } from '@/lib/encryption';
 import type { ViewMode, Folder as FolderType } from '@/types/note';
 import {
   buildFolderTree,
@@ -47,6 +49,7 @@ interface FolderPanelProps {
   onViewChange: (view: ViewMode) => void;
   onFolderSelect: (folder: FolderType | null) => void;
   onSearchChange: (query: string) => void;
+  onRefreshNotes?: () => void;
 }
 
 export default function FolderPanel({
@@ -80,6 +83,9 @@ export default function FolderPanel({
   const [createSubfolderParent, setCreateSubfolderParent] = useState<
     string | null
   >(null);
+  const [showChangePassword, setShowChangePassword] = useState(false);
+
+  const hasPassword = user?.id ? hasMasterPassword(user.id) : false;
 
   const folderTree = useMemo(() => buildFolderTree(folders), [folders]);
   const displayFolders = useMemo(
@@ -166,6 +172,11 @@ export default function FolderPanel({
   const closeDeleteModal = useCallback(() => {
     setIsDeleteFolderModalOpen(false);
     setFolderToDelete(null);
+  }, []);
+
+  const handlePasswordChangeSuccess = useCallback(() => {
+    // Immediately reload the page to reset encryption
+    window.location.reload();
   }, []);
 
   const dragHandlers = useMemo(
@@ -284,7 +295,40 @@ export default function FolderPanel({
                   userButtonPopoverCard: 'w-64',
                 },
               }}
-            />
+              afterSignOutUrl="/"
+            >
+              {hasPassword && (
+                <UserButton.MenuItems>
+                  <UserButton.Action
+                    label="Change Master Password"
+                    labelIcon={
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <rect
+                          x="3"
+                          y="11"
+                          width="18"
+                          height="11"
+                          rx="2"
+                          ry="2"
+                        ></rect>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                      </svg>
+                    }
+                    onClick={() => setShowChangePassword(true)}
+                  />
+                </UserButton.MenuItems>
+              )}
+            </UserButton>
             <div className="min-w-0 flex-1">
               <div className="text-foreground truncate text-sm font-medium">
                 {user?.fullName ??
@@ -335,6 +379,12 @@ export default function FolderPanel({
         folder={folderToDelete}
         onClose={closeDeleteModal}
         onDeleteFolder={handleDeleteFolder}
+      />
+
+      <ChangeMasterPasswordDialog
+        open={showChangePassword}
+        onOpenChange={setShowChangePassword}
+        onSuccess={handlePasswordChangeSuccess}
       />
     </>
   );

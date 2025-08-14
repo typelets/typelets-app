@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import {
   SignedIn,
   SignedOut,
@@ -6,18 +6,34 @@ import {
   SignIn,
   SignUp,
   useAuth,
+  useUser,
 } from '@clerk/clerk-react';
 import Index from '@/components/common/SEO';
 import { SEO_CONFIG } from '@/constants';
 import { api } from '@/lib/api/api.ts';
+import { clearUserEncryptionData } from '@/lib/encryption';
 import MainApp from '@/pages/MainApp';
 
 function AppContent() {
-  const { getToken } = useAuth();
+  const { getToken, isSignedIn } = useAuth();
+  const { user } = useUser();
+  const previousUserId = useRef<string | null>(null);
 
   useEffect(() => {
     api.setTokenProvider(getToken);
   }, [getToken]);
+
+  useEffect(() => {
+    if (previousUserId.current && !isSignedIn) {
+      const userId = previousUserId.current;
+      clearUserEncryptionData(userId);
+      localStorage.removeItem(`test_encryption_${userId}`);
+      localStorage.removeItem(`has_master_password_${userId}`);
+      previousUserId.current = null;
+    } else if (user?.id && isSignedIn) {
+      previousUserId.current = user.id;
+    }
+  }, [isSignedIn, user?.id]);
 
   const isSignInPage = window.location.pathname === '/sign-in';
   const isSignUpPage = window.location.pathname === '/sign-up';
@@ -44,7 +60,6 @@ function AppContent() {
         <Index {...SEO_CONFIG.signedOut} />
         <RedirectToSignIn />
       </SignedOut>
-
       <SignedIn>
         <Index {...SEO_CONFIG.signedIn} type="website" />
         <MainApp />

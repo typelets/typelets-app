@@ -416,11 +416,17 @@ class EncryptionService {
   }
 
   clearUserData(userId: string): void {
+    // Clear all encryption keys
     localStorage.removeItem(STORAGE_KEYS.USER_SECRET(userId));
     localStorage.removeItem(`enc_master_key_${userId}`);
+    localStorage.removeItem(`has_master_password_${userId}`);
+    localStorage.removeItem(`test_encryption_${userId}`);
 
+    // Clear from memory
     this.userSecrets.delete(userId);
+    this.masterPasswordMode = false;
 
+    // Clear cache entries for this user
     const keysToDelete: string[] = [];
     this.decryptCache.forEach((_, key) => {
       if (key.startsWith(userId)) {

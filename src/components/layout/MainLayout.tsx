@@ -1,3 +1,4 @@
+// MainLayout.tsx
 import { useState, useCallback, useEffect } from 'react';
 import { FolderOpen, FileText } from 'lucide-react';
 import { useUser } from '@clerk/clerk-react';
@@ -39,6 +40,7 @@ interface FolderPanelProps {
   onViewChange: (view: ViewMode) => void;
   onFolderSelect: (folder: Folder | null) => void;
   onSearchChange: (query: string) => void;
+  onRefreshNotes?: () => void;
 }
 
 interface FilesPanelProps {
@@ -70,12 +72,9 @@ export default function MainLayout() {
   const isMobile = useIsMobile();
   const [folderSidebarOpen, setFolderSidebarOpen] = useState(!isMobile);
   const [filesPanelOpen, setFilesPanelOpen] = useState(!isMobile);
-
-  // Master password state
   const [showMasterPassword, setShowMasterPassword] = useState(false);
   const [isCheckingPassword, setIsCheckingPassword] = useState(true);
 
-  // Check master password status
   useEffect(() => {
     if (!user) {
       setIsCheckingPassword(false);
@@ -86,9 +85,6 @@ export default function MainLayout() {
       const hasPassword = hasMasterPassword(user.id);
       const isUnlocked = isMasterPasswordUnlocked(user.id);
 
-      // Show dialog if:
-      // 1. New user (no master password set)
-      // 2. Returning user on new device (has password but not unlocked)
       if (!hasPassword || (hasPassword && !isUnlocked)) {
         setShowMasterPassword(true);
       }
@@ -224,9 +220,15 @@ export default function MainLayout() {
 
   const handleMasterPasswordSuccess = useCallback(() => {
     setShowMasterPassword(false);
-    // Reload to decrypt notes with the new key
     window.location.reload();
   }, []);
+
+  const handlePasswordChange = useCallback(() => {
+    setSelectedNote(null);
+    setTimeout(() => {
+      window.location.reload();
+    }, 1500);
+  }, [setSelectedNote]);
 
   const sharedPanelProps: FolderPanelProps = {
     currentView,
@@ -248,6 +250,7 @@ export default function MainLayout() {
     onViewChange: setCurrentView,
     onFolderSelect: setSelectedFolder,
     onSearchChange: setSearchQuery,
+    onRefreshNotes: handlePasswordChange,
   };
 
   const sharedFilesPanelProps: FilesPanelProps = {
@@ -272,7 +275,6 @@ export default function MainLayout() {
     onToggleStar: toggleStar,
   };
 
-  // Show loading while checking password status
   if (isCheckingPassword) {
     return (
       <div className="flex h-screen items-center justify-center">
@@ -284,7 +286,6 @@ export default function MainLayout() {
     );
   }
 
-  // Show master password dialog if needed
   if (showMasterPassword && user) {
     return (
       <>
@@ -307,7 +308,6 @@ export default function MainLayout() {
     );
   }
 
-  // Normal app layout
   if (isMobile) {
     return (
       <MobileLayout
