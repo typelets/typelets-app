@@ -1,3 +1,10 @@
+## [1.3.1](https://github.com/typelets/typelets-app/compare/v1.3.0...v1.3.1) (2025-08-14)
+
+
+### Bug Fixes
+
+* display folder name and color indicator in note cards ([9d55047](https://github.com/typelets/typelets-app/commit/9d550478ba5b5c28afff3854e2b1c1b3a3db549b))
+
 # [1.3.0](https://github.com/typelets/typelets-app/compare/v1.2.0...v1.3.0) (2025-08-14)
 
 
