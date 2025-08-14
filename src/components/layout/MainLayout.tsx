@@ -1,12 +1,18 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { FolderOpen, FileText } from 'lucide-react';
+import { useUser } from '@clerk/clerk-react';
 import Index from '@/components/editor';
 import FolderPanel from '@/components/folders';
 import NotesPanel from '@/components/notes/NotesPanel';
 import { Button } from '@/components/ui/button';
+import { MasterPasswordDialog } from '@/components/password/MasterPasswordDialog';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import { useNotes } from '@/hooks/useNotes';
-import { api } from '@/lib/api/api.ts';
+import { api } from '@/lib/api/api';
+import {
+  hasMasterPassword,
+  isMasterPasswordUnlocked,
+} from '@/lib/encryption';
 import type { Note, Folder, ViewMode } from '@/types/note';
 
 interface FolderPanelProps {
@@ -63,9 +69,37 @@ interface EditorProps {
 }
 
 export default function MainLayout() {
+  const { user } = useUser();
   const isMobile = useIsMobile();
   const [folderSidebarOpen, setFolderSidebarOpen] = useState(!isMobile);
   const [filesPanelOpen, setFilesPanelOpen] = useState(!isMobile);
+  
+  // Master password state
+  const [showMasterPassword, setShowMasterPassword] = useState(false);
+  const [isCheckingPassword, setIsCheckingPassword] = useState(true);
+
+  // Check master password status
+  useEffect(() => {
+    if (!user) {
+      setIsCheckingPassword(false);
+      return;
+    }
+
+    const checkMasterPassword = () => {
+      const hasPassword = hasMasterPassword(user.id);
+      const isUnlocked = isMasterPasswordUnlocked(user.id);
+      
+      // Show dialog if:
+      // 1. New user (no master password set)
+      // 2. Returning user on new device (has password but not unlocked)
+      if (!hasPassword || (hasPassword && !isUnlocked)) {
+        setShowMasterPassword(true);
+      }
+      setIsCheckingPassword(false);
+    };
+
+    checkMasterPassword();
+  }, [user]);
 
   const {
     notes,
@@ -191,6 +225,12 @@ export default function MainLayout() {
     setFilesPanelOpen(false);
   }, []);
 
+  const handleMasterPasswordSuccess = useCallback(() => {
+    setShowMasterPassword(false);
+    // Reload to decrypt notes with the new key
+    window.location.reload();
+  }, []);
+
   const sharedPanelProps: FolderPanelProps = {
     currentView,
     folders,
@@ -235,6 +275,38 @@ export default function MainLayout() {
     onToggleStar: toggleStar,
   };
 
+  // Show loading while checking password status
+  if (isCheckingPassword) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div className="text-center">
+          <div className="text-2xl mb-2">🔐</div>
+          <p className="text-gray-600">Checking encryption status...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show master password dialog if needed
+  if (showMasterPassword && user) {
+    return (
+      <>
+        <div className="flex h-screen items-center justify-center bg-gray-50">
+          <div className="text-center">
+            <div className="text-4xl mb-4">🔐</div>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">Secure Notes</h1>
+            <p className="text-gray-600">Your notes are protected with end-to-end encryption</p>
+          </div>
+        </div>
+        <MasterPasswordDialog
+          userId={user.id}
+          onSuccess={handleMasterPasswordSuccess}
+        />
+      </>
+    );
+  }
+
+  // Normal app layout
   if (isMobile) {
     return (
       <MobileLayout

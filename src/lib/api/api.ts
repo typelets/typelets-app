@@ -225,14 +225,13 @@ class ClerkEncryptedApiService {
 
     const encryptedData = await this.encryptNoteForApi(title, content);
 
-    // CHANGE #1: Add [ENCRYPTED] placeholders
     const apiNote = await this.request<ApiNote>('/notes', {
       method: 'POST',
       body: JSON.stringify({
         ...noteData,
-        title: '[ENCRYPTED]', // Server will store this placeholder
-        content: '[ENCRYPTED]', // Server will store this placeholder
-        ...encryptedData, // This includes encryptedTitle, encryptedContent, iv, salt
+        title: '[ENCRYPTED]',
+        content: '[ENCRYPTED]',
+        ...encryptedData,
       }),
     });
 
@@ -261,12 +260,11 @@ class ClerkEncryptedApiService {
 
       const encrypted = await this.encryptNoteForApi(newTitle, newContent);
 
-      // CHANGE #2: Add [ENCRYPTED] placeholders
       encryptedUpdates = {
         ...updates,
-        title: '[ENCRYPTED]', // Server will store this placeholder
-        content: '[ENCRYPTED]', // Server will store this placeholder
-        ...encrypted, // This includes encryptedTitle, encryptedContent, iv, salt
+        title: '[ENCRYPTED]',
+        content: '[ENCRYPTED]',
+        ...encrypted,
       };
     }
 

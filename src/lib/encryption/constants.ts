@@ -1,4 +1,3 @@
-// src/lib/encryption/constants.ts
 export const ENCRYPTION_CONFIG = {
   ALGORITHM: 'AES-GCM' as const,
   KEY_LENGTH: 256,

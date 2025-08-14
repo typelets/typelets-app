@@ -12,7 +12,6 @@ export interface EncryptedNote {
   salt: string;
 }
 
-// Type guard interface for checking if an object has encrypted fields
 interface PotentiallyEncrypted {
   encryptedTitle?: unknown;
   encryptedContent?: unknown;
@@ -20,9 +19,16 @@ interface PotentiallyEncrypted {
   salt?: unknown;
 }
 
+interface CacheEntry {
+  data: { title: string; content: string };
+  timestamp: number;
+}
+
 class EncryptionService {
-  private decryptCache = new Map<string, { title: string; content: string }>();
+  private decryptCache = new Map<string, CacheEntry>();
   private userSecrets = new Map<string, string>();
+  private cacheTTL = 1000 * 60 * 15;
+  private masterPasswordMode = false;
 
   constructor() {
     if (typeof window !== 'undefined' && !window.crypto?.subtle) {
@@ -30,9 +36,148 @@ class EncryptionService {
         'Web Crypto API not available. HTTPS required for encryption.'
       );
     }
+    
+    if (typeof window !== 'undefined') {
+      setInterval(() => this.cleanExpiredCache(), 1000 * 60 * 5);
+    }
+  }
+
+  private cleanExpiredCache(): void {
+    const now = Date.now();
+    const expiredKeys: string[] = [];
+    
+    this.decryptCache.forEach((entry, key) => {
+      if (now - entry.timestamp > this.cacheTTL) {
+        expiredKeys.push(key);
+      }
+    });
+    
+    expiredKeys.forEach(key => this.decryptCache.delete(key));
+  }
+
+  hasMasterPassword(userId: string): boolean {
+    return localStorage.getItem(`has_master_password_${userId}`) === 'true';
+  }
+
+  isMasterPasswordUnlocked(userId: string): boolean {
+    return localStorage.getItem(`enc_master_key_${userId}`) !== null;
+  }
+
+  async setupMasterPassword(masterPassword: string, userId: string): Promise<void> {
+    const encoder = new TextEncoder();
+    const userSalt = encoder.encode(`typelets-salt-${userId}-v1`);
+    
+    const keyMaterial = await crypto.subtle.importKey(
+      'raw',
+      encoder.encode(masterPassword),
+      { name: 'PBKDF2' },
+      false,
+      ['deriveKey']
+    );
+
+    const key = await crypto.subtle.deriveKey(
+      {
+        name: 'PBKDF2',
+        salt: userSalt,
+        iterations: ENCRYPTION_CONFIG.ITERATIONS,
+        hash: 'SHA-256',
+      },
+      keyMaterial,
+      {
+        name: ENCRYPTION_CONFIG.ALGORITHM,
+        length: ENCRYPTION_CONFIG.KEY_LENGTH,
+      },
+      true,
+      ['encrypt', 'decrypt']
+    );
+
+    const exportedKey = await crypto.subtle.exportKey('raw', key);
+    const keyString = this.arrayBufferToBase64(new Uint8Array(exportedKey));
+    
+    localStorage.setItem(`enc_master_key_${userId}`, keyString);
+    localStorage.setItem(`has_master_password_${userId}`, 'true');
+    this.masterPasswordMode = true;
+    
+    const oldKey = STORAGE_KEYS.USER_SECRET(userId);
+    if (localStorage.getItem(oldKey)) {
+      localStorage.removeItem(oldKey);
+    }
+  }
+
+  async unlockWithMasterPassword(masterPassword: string, userId: string): Promise<boolean> {
+    try {
+      const encoder = new TextEncoder();
+      const userSalt = encoder.encode(`typelets-salt-${userId}-v1`);
+      
+      const keyMaterial = await crypto.subtle.importKey(
+        'raw',
+        encoder.encode(masterPassword),
+        { name: 'PBKDF2' },
+        false,
+        ['deriveKey']
+      );
+
+      const key = await crypto.subtle.deriveKey(
+        {
+          name: 'PBKDF2',
+          salt: userSalt,
+          iterations: ENCRYPTION_CONFIG.ITERATIONS,
+          hash: 'SHA-256',
+        },
+        keyMaterial,
+        {
+          name: ENCRYPTION_CONFIG.ALGORITHM,
+          length: ENCRYPTION_CONFIG.KEY_LENGTH,
+        },
+        true,
+        ['encrypt', 'decrypt']
+      );
+
+      const exportedKey = await crypto.subtle.exportKey('raw', key);
+      const keyString = this.arrayBufferToBase64(new Uint8Array(exportedKey));
+      
+      const testKey = `test_encryption_${userId}`;
+      const testData = localStorage.getItem(testKey);
+      
+      if (testData) {
+        try {
+          const testObj = JSON.parse(testData);
+          const iv = this.base64ToUint8Array(testObj.iv);
+          const encryptedData = this.base64ToArrayBuffer(testObj.data);
+          
+          await crypto.subtle.decrypt(
+            { name: ENCRYPTION_CONFIG.ALGORITHM, iv },
+            key,
+            encryptedData
+          );
+        } catch {
+          return false;
+        }
+      }
+      
+      localStorage.setItem(`enc_master_key_${userId}`, keyString);
+      localStorage.setItem(`has_master_password_${userId}`, 'true');
+      this.masterPasswordMode = true;
+      
+      const oldKey = STORAGE_KEYS.USER_SECRET(userId);
+      if (localStorage.getItem(oldKey)) {
+        localStorage.removeItem(oldKey);
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('Failed to unlock with master password:', error);
+      return false;
+    }
   }
 
   private getUserSecret(userId: string): string {
+    const masterKey = localStorage.getItem(`enc_master_key_${userId}`);
+    if (masterKey) {
+      this.masterPasswordMode = true;
+      return masterKey;
+    }
+
     if (this.userSecrets.has(userId)) {
       return this.userSecrets.get(userId)!;
     }
@@ -54,7 +199,18 @@ class EncryptionService {
     const encoder = new TextEncoder();
     const userSecret = this.getUserSecret(userId);
 
-    const keyMaterialString = `${userId}-${userSecret}-secure-v2`;
+    if (this.masterPasswordMode && localStorage.getItem(`enc_master_key_${userId}`)) {
+      const keyData = this.base64ToUint8Array(userSecret);
+      return crypto.subtle.importKey(
+        'raw',
+        keyData,
+        { name: ENCRYPTION_CONFIG.ALGORITHM },
+        false,
+        ['encrypt', 'decrypt']
+      );
+    }
+
+    const keyMaterialString = `${userId}-${userSecret}-typelets-secure-v2`;
 
     const keyMaterial = await crypto.subtle.importKey(
       'raw',
@@ -114,6 +270,18 @@ class EncryptionService {
       contentBytes
     );
 
+    if (this.masterPasswordMode && !localStorage.getItem(`test_encryption_${userId}`)) {
+      const testData = await crypto.subtle.encrypt(
+        { name: ENCRYPTION_CONFIG.ALGORITHM, iv },
+        key,
+        encoder.encode('test')
+      );
+      localStorage.setItem(`test_encryption_${userId}`, JSON.stringify({
+        data: this.arrayBufferToBase64(testData),
+        iv: this.arrayBufferToBase64(iv)
+      }));
+    }
+
     return {
       encryptedTitle: this.arrayBufferToBase64(encryptedTitleBuffer),
       encryptedContent: this.arrayBufferToBase64(encryptedContentBuffer),
@@ -131,8 +299,9 @@ class EncryptionService {
   ): Promise<{ title: string; content: string }> {
     const cacheKey = `${userId}-${encryptedTitle}-${ivBase64}`;
 
-    if (this.decryptCache.has(cacheKey)) {
-      return this.decryptCache.get(cacheKey)!;
+    const cached = this.decryptCache.get(cacheKey);
+    if (cached && Date.now() - cached.timestamp < this.cacheTTL) {
+      return cached.data;
     }
 
     try {
@@ -161,14 +330,18 @@ class EncryptionService {
 
       const result = { title, content };
 
-      if (this.decryptCache.size > CACHE_LIMITS.DECRYPT_CACHE_SIZE) {
+      if (this.decryptCache.size >= CACHE_LIMITS.DECRYPT_CACHE_SIZE) {
         const firstKey = this.decryptCache.keys().next().value;
         if (typeof firstKey === 'string') {
           this.decryptCache.delete(firstKey);
         }
       }
 
-      this.decryptCache.set(cacheKey, result);
+      this.decryptCache.set(cacheKey, {
+        data: result,
+        timestamp: Date.now(),
+      });
+
       return result;
     } catch (error) {
       console.error('Decryption failed:', error);
@@ -181,7 +354,11 @@ class EncryptionService {
       note.encryptedTitle &&
       note.encryptedContent &&
       note.iv &&
-      note.salt
+      note.salt &&
+      typeof note.encryptedTitle === 'string' &&
+      typeof note.encryptedContent === 'string' &&
+      typeof note.iv === 'string' &&
+      typeof note.salt === 'string'
     );
   }
 
@@ -191,7 +368,7 @@ class EncryptionService {
     const chunks: string[] = [];
 
     for (let i = 0; i < bytes.length; i += ENCODING.CHUNK_SIZE) {
-      const chunk = bytes.subarray(i, i + ENCODING.CHUNK_SIZE);
+      const chunk = bytes.subarray(i, Math.min(i + ENCODING.CHUNK_SIZE, bytes.length));
       chunks.push(String.fromCharCode.apply(null, Array.from(chunk)));
     }
 
@@ -200,7 +377,7 @@ class EncryptionService {
 
   private base64ToArrayBuffer(base64: string): ArrayBuffer {
     const bytes = this.base64ToUint8Array(base64);
-    return bytes.buffer;
+    return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
   }
 
   private base64ToUint8Array(base64: string): Uint8Array {
@@ -214,6 +391,22 @@ class EncryptionService {
 
   clearKeys(): void {
     this.decryptCache.clear();
+    this.userSecrets.clear();
+  }
+
+  clearUserData(userId: string): void {
+    localStorage.removeItem(STORAGE_KEYS.USER_SECRET(userId));
+    localStorage.removeItem(`enc_master_key_${userId}`);
+    
+    this.userSecrets.delete(userId);
+    
+    const keysToDelete: string[] = [];
+    this.decryptCache.forEach((_, key) => {
+      if (key.startsWith(userId)) {
+        keysToDelete.push(key);
+      }
+    });
+    keysToDelete.forEach(key => this.decryptCache.delete(key));
   }
 }
 
@@ -249,4 +442,24 @@ export function isNoteEncrypted(note: PotentiallyEncrypted): boolean {
 
 export function clearEncryptionKeys(): void {
   encryptionService.clearKeys();
+}
+
+export function clearUserEncryptionData(userId: string): void {
+  encryptionService.clearUserData(userId);
+}
+
+export function hasMasterPassword(userId: string): boolean {
+  return encryptionService.hasMasterPassword(userId);
+}
+
+export function isMasterPasswordUnlocked(userId: string): boolean {
+  return encryptionService.isMasterPasswordUnlocked(userId);
+}
+
+export async function setupMasterPassword(masterPassword: string, userId: string): Promise<void> {
+  return encryptionService.setupMasterPassword(masterPassword, userId);
+}
+
+export async function unlockWithMasterPassword(masterPassword: string, userId: string): Promise<boolean> {
+  return encryptionService.unlockWithMasterPassword(masterPassword, userId);
 }
