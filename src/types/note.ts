@@ -7,6 +7,7 @@ export interface Note {
   starred: boolean;
   tags: string[];
   folderId: string | null;
+  folder?: Folder;
   archived?: boolean;
   deleted?: boolean;
 }

@@ -1,5 +1,5 @@
 import { memo, useMemo } from 'react';
-import { Star } from 'lucide-react';
+import { Star, Folder } from 'lucide-react';
 import type { Note, Folder as FolderType } from '@/types/note.ts';
 
 interface NoteCardProps {
@@ -10,13 +10,7 @@ interface NoteCardProps {
   folders?: FolderType[];
 }
 
-function NoteCard({
-  note,
-  isSelected,
-  onSelect,
-  onToggleStar,
-  folders,
-}: NoteCardProps) {
+function NoteCard({ note, isSelected, onSelect, onToggleStar, folders }: NoteCardProps) {
   const formatDateTime = (date: Date) => {
     try {
       const noteDate = new Date(date);
@@ -57,9 +51,15 @@ function NoteCard({
   }, [note?.updatedAt]);
 
   const folder = useMemo(() => {
+    // First check if note has embedded folder data
+    if (note?.folder) {
+      return note.folder;
+    }
+    
+    // Fallback to looking up in folders array
     if (!note?.folderId || !folders || folders.length === 0) return null;
-    return folders.find((f) => f.id === note.folderId) || null;
-  }, [note?.folderId, folders]);
+    return folders.find(f => f.id === note.folderId) || null;
+  }, [note?.folder, note?.folderId, folders]);
 
   if (!note) {
     return null;
@@ -117,26 +117,23 @@ function NoteCard({
           <div className="flex flex-col gap-1">
             <span
               className={`text-xs ${
-                isSelected
-                  ? 'text-accent-foreground/70'
-                  : 'text-muted-foreground'
+                isSelected ? 'text-accent-foreground/70' : 'text-muted-foreground'
               }`}
             >
               {formattedDate}
             </span>
-
+            
             {folder && (
               <div
                 className={`flex items-center gap-1.5 text-xs ${
-                  isSelected
-                    ? 'text-accent-foreground/60'
-                    : 'text-muted-foreground/80'
+                  isSelected ? 'text-accent-foreground/60' : 'text-muted-foreground/80'
                 }`}
               >
                 <div
-                  className="h-2 w-2 shrink-0 rounded-sm"
+                  className="h-2 w-2 rounded-sm shrink-0"
                   style={{ backgroundColor: folder.color || '#6b7280' }}
                 />
+                <Folder className="h-3 w-3 shrink-0" />
                 <span className="truncate">{folder.name}</span>
               </div>
             )}
