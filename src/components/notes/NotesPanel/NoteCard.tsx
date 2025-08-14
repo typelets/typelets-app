@@ -133,7 +133,6 @@ function NoteCard({ note, isSelected, onSelect, onToggleStar, folders }: NoteCar
                   className="h-2 w-2 rounded-sm shrink-0"
                   style={{ backgroundColor: folder.color || '#6b7280' }}
                 />
-                <Folder className="h-3 w-3 shrink-0" />
                 <span className="truncate">{folder.name}</span>
               </div>
             )}
