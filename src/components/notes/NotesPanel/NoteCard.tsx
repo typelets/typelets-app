@@ -57,15 +57,9 @@ function NoteCard({
   }, [note?.updatedAt]);
 
   const folder = useMemo(() => {
-    // First check if note has embedded folder data
-    if (note?.folder) {
-      return note.folder;
-    }
-
-    // Fallback to looking up in folders array
     if (!note?.folderId || !folders || folders.length === 0) return null;
     return folders.find((f) => f.id === note.folderId) || null;
-  }, [note?.folder, note?.folderId, folders]);
+  }, [note?.folderId, folders]);
 
   if (!note) {
     return null;
