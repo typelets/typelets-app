@@ -45,7 +45,16 @@ Typelets uses industry-standard encryption:
 - **Per-note salt** - Each note has a unique encryption key
 - **Zero-knowledge architecture** - Server never sees unencrypted data
 
-Your encryption keys are derived from your user ID and a locally-stored secret. Even if our database is compromised, your notes remain encrypted and unreadable.
+Your encryption keys are derived from your master password. Even if our database is compromised, your notes remain encrypted and unreadable.
+
+### How It Works
+
+1. **Mandatory Setup**: You must set a master password on first use
+2. **Client-Side Encryption**: All encryption happens in your browser
+3. **Encrypted Storage**: Only encrypted data is sent to our servers
+4. **No Recovery**: We cannot recover forgotten passwords (by design)
+
+For complete security details and technical implementation, see our [**Security Documentation →**](./SECURITY.md)
 
 ## 🚀 Quick Start
 
