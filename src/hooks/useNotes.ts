@@ -354,11 +354,11 @@ export function useNotes() {
       const updatedNote = convertApiNote(apiNote);
 
       setNotes((prev) =>
-        prev.map((note) => (note.id === noteId ? updatedNote : note))
+        prev.map((note) => (note.id === noteId ? { ...updatedNote, attachments: note.attachments } : note))
       );
 
       if (selectedNote?.id === noteId) {
-        setSelectedNote(updatedNote);
+        setSelectedNote({ ...updatedNote, attachments: selectedNote.attachments });
       }
     } catch (error) {
       console.error('Failed to toggle star:', error);

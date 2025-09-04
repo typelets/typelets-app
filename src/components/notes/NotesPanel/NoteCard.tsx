@@ -1,5 +1,5 @@
 import { memo, useMemo } from 'react';
-import { Star } from 'lucide-react';
+import { Star, Paperclip } from 'lucide-react';
 import type { Note, Folder as FolderType } from '@/types/note.ts';
 
 interface NoteCardProps {
@@ -91,23 +91,29 @@ function NoteCard({
           >
             {note.title || 'Untitled'}
           </h3>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onToggleStar(note.id);
-            }}
-            className={`shrink-0 rounded p-1 transition-opacity ${
-              note.starred ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
-            } hover:bg-muted`}
-          >
-            <Star
-              className={`h-3.5 w-3.5 ${
-                note.starred
-                  ? 'fill-yellow-500 text-yellow-500'
-                  : 'text-muted-foreground'
-              }`}
-            />
-          </button>
+          <div className="flex items-center gap-1">
+            {note.attachments && note.attachments.length > 0 && (
+              <div className="flex items-center gap-0.5 text-xs text-muted-foreground">
+                <Paperclip className="h-3 w-3" />
+                <span>{note.attachments.length}</span>
+              </div>
+            )}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleStar(note.id);
+              }}
+              className="shrink-0 rounded p-1 hover:bg-muted"
+            >
+              <Star
+                className={`h-3.5 w-3.5 ${
+                  note.starred
+                    ? 'fill-yellow-500 text-yellow-500'
+                    : 'text-muted-foreground'
+                }`}
+              />
+            </button>
+          </div>
         </div>
 
         <p
@@ -182,15 +188,4 @@ function NoteCard({
   );
 }
 
-export default memo(NoteCard, (prevProps, nextProps) => {
-  return (
-    prevProps.note.id === nextProps.note.id &&
-    prevProps.note.title === nextProps.note.title &&
-    prevProps.note.content === nextProps.note.content &&
-    prevProps.note.starred === nextProps.note.starred &&
-    prevProps.note.updatedAt === nextProps.note.updatedAt &&
-    prevProps.note.folderId === nextProps.note.folderId &&
-    prevProps.isSelected === nextProps.isSelected &&
-    prevProps.folders === nextProps.folders
-  );
-});
+export default memo(NoteCard);
