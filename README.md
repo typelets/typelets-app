@@ -33,6 +33,7 @@
 - 🌙 **Dark/Light mode** - Easy on the eyes, day or night
 - 📝 **Rich text editor** - Powered by TipTap with markdown support
 - ⭐ **Star, archive, and organize** - Keep your important notes accessible
+- 📎 **File attachments** - Upload and encrypt files up to 10MB per file
 - 🔍 **Full-text search** - Find notes instantly (searches encrypted data locally)
 - 📱 **Responsive design** - Works seamlessly on desktop and mobile
 - 🔄 **Real-time sync** - Access your notes from anywhere
@@ -43,9 +44,10 @@ Typelets uses industry-standard encryption:
 - **AES-256-GCM** encryption algorithm
 - **250,000 PBKDF2 iterations** for key derivation
 - **Per-note salt** - Each note has a unique encryption key
+- **File encryption** - Attachments are encrypted with the same security as notes
 - **Zero-knowledge architecture** - Server never sees unencrypted data
 
-Your encryption keys are derived from your master password. Even if our database is compromised, your notes remain encrypted and unreadable.
+Your encryption keys are derived from your master password. Even if our database is compromised, your notes and files remain encrypted and unreadable.
 
 ### How It Works
 

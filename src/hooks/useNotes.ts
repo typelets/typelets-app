@@ -1,6 +1,7 @@
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { useAuth, useUser } from '@clerk/clerk-react';
 import { api, type ApiNote, type ApiFolder } from '@/lib/api/api.ts';
+import { fileService } from '@/services/fileService';
 import { clearEncryptionKeys } from '@/lib/encryption';
 import type { Note, Folder, ViewMode } from '@/types/note';
 import { getDescendantIds } from '@/utils/folderTree';
@@ -31,6 +32,8 @@ export function useNotes() {
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(
     new Set()
   );
+  
+  const saveTimeoutsRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
 
   const initializeUser = useCallback(async () => {
     try {
@@ -57,11 +60,27 @@ export function useNotes() {
 
       setFolders(foldersResponse.folders.map(convertApiFolder));
       const convertedNotes = notesResponse.notes.map(convertApiNote);
-      setNotes(convertedNotes);
+      
+      const notesWithAttachments = await Promise.all(
+        convertedNotes.map(async (note) => {
+          try {
+            const attachments = await fileService.getAttachments(note.id);
+            return { ...note, attachments };
+          } catch (error) {
+            console.warn(`Failed to load attachments for note ${note.id}:`, error);
+            return { ...note, attachments: [] };
+          }
+        })
+      );
+      
+      setNotes(notesWithAttachments);
 
-      if (!selectedNote && convertedNotes.length > 0) {
-        setSelectedNote(convertedNotes[0]);
-      }
+      setSelectedNote(prev => {
+        if (prev === null && notesWithAttachments.length > 0) {
+          return notesWithAttachments[0];
+        }
+        return prev;
+      });
     } catch (error) {
       console.error('Failed to load data:', error);
       if (error instanceof Error && error.message.includes('decrypt')) {
@@ -74,7 +93,7 @@ export function useNotes() {
     } finally {
       setLoading(false);
     }
-  }, [selectedNote]);
+  }, []);
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -94,6 +113,15 @@ export function useNotes() {
       void loadData();
     }
   }, [encryptionReady, clerkUser, loadData]);
+
+  useEffect(() => {
+    return () => {
+      saveTimeoutsRef.current.forEach((timeout) => {
+        clearTimeout(timeout);
+      });
+      saveTimeoutsRef.current.clear();
+    };
+  }, []);
 
   const filteredNotes = useMemo(() => {
     return notes.filter((note) => {
@@ -189,66 +217,112 @@ export function useNotes() {
     }
   };
 
-  const updateNote = async (noteId: string, updates: Partial<Note>) => {
-    try {
-      if (
-        !encryptionReady &&
-        (updates.title !== undefined || updates.content !== undefined)
-      ) {
-        throw new Error(
-          'Encryption not ready. Please wait a moment and try again.'
-        );
-      }
-
-      const shouldOptimisticUpdate = updates.content === undefined;
-
-      if (shouldOptimisticUpdate) {
-        const optimisticUpdate = {
-          ...updates,
-          id: noteId,
-          updatedAt: new Date(),
-        };
-        setNotes((prev) =>
-          prev.map((note) =>
-            note.id === noteId ? { ...note, ...optimisticUpdate } : note
-          )
-        );
-
-        if (selectedNote?.id === noteId) {
-          setSelectedNote((prev) =>
-            prev ? { ...prev, ...optimisticUpdate } : null
-          );
-        }
-      }
-
-      const apiNote = await api.updateNote(noteId, {
-        title: updates.title,
-        content: updates.content,
-        folderId: updates.folderId,
-        starred: updates.starred,
-        archived: updates.archived,
-        deleted: updates.deleted,
-        tags: updates.tags,
-      });
-
-      const updatedNote = convertApiNote(apiNote);
+  const updateNote = useCallback(async (noteId: string, updates: Partial<Note>) => {
+    const isAttachmentsOnlyUpdate = Object.keys(updates).length === 1 && updates.attachments !== undefined;
+    
+    if (isAttachmentsOnlyUpdate) {
+      const optimisticUpdate = {
+        ...updates,
+        id: noteId,
+        updatedAt: new Date(),
+      };
       setNotes((prev) =>
-        prev.map((note) => (note.id === noteId ? updatedNote : note))
+        prev.map((note) =>
+          note.id === noteId ? { ...note, ...optimisticUpdate } : note
+        )
       );
 
       if (selectedNote?.id === noteId) {
-        setSelectedNote(updatedNote);
+        setSelectedNote((prev) =>
+          prev ? { ...prev, ...optimisticUpdate } : null
+        );
       }
-    } catch (error) {
-      console.error('Failed to update note:', error);
-      if (error instanceof Error && error.message.includes('encrypt')) {
-        setError('Failed to encrypt note changes. Please try again.');
-      } else {
-        setError('Failed to update note');
-      }
-      void loadData();
+      return;
     }
-  };
+
+    const optimisticUpdate = {
+      ...updates,
+      updatedAt: new Date(),
+    };
+    
+    setNotes((prev) =>
+      prev.map((note) =>
+        note.id === noteId ? { ...note, ...optimisticUpdate } : note
+      )
+    );
+
+    if (selectedNote?.id === noteId) {
+      setSelectedNote((prev) =>
+        prev ? { ...prev, ...optimisticUpdate } : null
+      );
+    }
+
+    const existingTimeout = saveTimeoutsRef.current.get(noteId);
+    if (existingTimeout) {
+      clearTimeout(existingTimeout);
+    }
+
+    const immediateUpdates = ['starred', 'archived', 'deleted', 'folderId'];
+    const needsImmediateSave = Object.keys(updates).some(key => immediateUpdates.includes(key));
+
+    if (needsImmediateSave) {
+      try {
+        const apiNote = await api.updateNote(noteId, {
+          title: updates.title,
+          content: updates.content,
+          folderId: updates.folderId,
+          starred: updates.starred,
+          archived: updates.archived,
+          deleted: updates.deleted,
+          tags: updates.tags,
+        });
+
+        const updatedNote = convertApiNote(apiNote);
+        setNotes((prev) =>
+          prev.map((note) => (note.id === noteId ? updatedNote : note))
+        );
+
+        if (selectedNote?.id === noteId) {
+          setSelectedNote(updatedNote);
+        }
+      } catch (error) {
+        console.error('Failed to update note:', error);
+        setError('Failed to update note');
+        void loadData();
+      }
+    } else {
+      const timeout = setTimeout(async () => {
+        try {
+          if (!encryptionReady && (updates.title !== undefined || updates.content !== undefined)) {
+            throw new Error('Encryption not ready. Please wait a moment and try again.');
+          }
+
+          const apiNote = await api.updateNote(noteId, {
+            title: updates.title,
+            content: updates.content,
+            folderId: updates.folderId,
+            starred: updates.starred,
+            archived: updates.archived,
+            deleted: updates.deleted,
+            tags: updates.tags,
+          });
+
+          const updatedNote = convertApiNote(apiNote);
+          saveTimeoutsRef.current.delete(noteId);
+        } catch (error) {
+          console.error('Failed to update note:', error);
+          if (error instanceof Error && error.message.includes('encrypt')) {
+            setError('Failed to encrypt note changes. Please try again.');
+          } else {
+            setError('Failed to update note');
+          }
+          void loadData();
+        }
+      }, 1500);
+
+      saveTimeoutsRef.current.set(noteId, timeout);
+    }
+  }, [encryptionReady, selectedNote?.id, loadData]);
 
   const deleteNote = async (noteId: string) => {
     try {

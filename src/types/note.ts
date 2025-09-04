@@ -1,3 +1,13 @@
+export interface FileAttachment {
+  id: string;
+  noteId: string;
+  filename: string;
+  originalName: string;
+  mimeType: string;
+  size: number;
+  uploadedAt: Date;
+}
+
 export interface Note {
   id: string;
   title: string;
@@ -10,6 +20,7 @@ export interface Note {
   folder?: Folder;
   archived?: boolean;
   deleted?: boolean;
+  attachments?: FileAttachment[];
 }
 
 export interface Folder {

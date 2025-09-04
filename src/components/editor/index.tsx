@@ -5,6 +5,7 @@ import {
   Trash2,
   MoreHorizontal,
   FolderInput,
+  Paperclip,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -20,7 +21,9 @@ import { editorStyles } from './config/editor-styles';
 import { EmptyState } from '@/components/editor/Editor/EmptyState';
 import { Toolbar } from '@/components/editor/Editor/Toolbar';
 import MoveNoteModal from '@/components/editor/modals/MoveNoteModal';
-import type { Note, Folder as FolderType } from '@/types/note';
+import FileUpload from '@/components/editor/FileUpload';
+import { fileService } from '@/services/fileService';
+import type { Note, Folder as FolderType, FileAttachment } from '@/types/note';
 
 interface NoteEditorProps {
   note: Note | null;
@@ -29,6 +32,7 @@ interface NoteEditorProps {
   onDeleteNote: (noteId: string) => void;
   onArchiveNote: (noteId: string) => void;
   onToggleStar: (noteId: string) => void;
+  userId?: string;
 }
 
 export default function Index({
@@ -38,12 +42,13 @@ export default function Index({
   onDeleteNote,
   onArchiveNote,
   onToggleStar,
+  userId = 'current-user',
 }: NoteEditorProps) {
-  const [title, setTitle] = useState('');
   const [isMoveModalOpen, setIsMoveModalOpen] = useState(false);
-  const contentUpdateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const titleUpdateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const lastSavedContentRef = useRef<string>('');
+  const [showAttachments, setShowAttachments] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [deletingIds, setDeletingIds] = useState<string[]>([]);
 
   const editor = useEditor(
     {
@@ -56,87 +61,40 @@ export default function Index({
           style: 'max-width: none;',
         },
       },
+      onUpdate: ({ editor }) => {
+        if (!note) return;
+        const html = editor.getHTML();
+        if (html !== note.content) {
+          onUpdateNote(note.id, { content: html });
+        }
+      },
     },
     [note?.id]
   );
 
   useEffect(() => {
     if (!editor || !note) return;
-
-    const handleUpdate = () => {
-      const html = editor.getHTML();
-
-      if (html !== lastSavedContentRef.current && html !== note.content) {
-        if (contentUpdateTimeoutRef.current) {
-          clearTimeout(contentUpdateTimeoutRef.current);
+    
+    const currentContent = editor.getHTML();
+    if (note.content !== currentContent) {
+      const { from, to } = editor.state.selection;
+      editor.commands.setContent(note.content || '', false);
+      
+      try {
+        const docSize = editor.state.doc.content.size;
+        if (from <= docSize && to <= docSize) {
+          editor.commands.setTextSelection({ from, to });
         }
-
-        contentUpdateTimeoutRef.current = setTimeout(() => {
-          lastSavedContentRef.current = html;
-          onUpdateNote(note.id, { content: html });
-        }, 1500);
+      } catch {
       }
-    };
-
-    editor.on('update', handleUpdate);
-
-    return () => {
-      editor.off('update', handleUpdate);
-      if (contentUpdateTimeoutRef.current) {
-        clearTimeout(contentUpdateTimeoutRef.current);
-      }
-    };
-  }, [editor, note, onUpdateNote]);
-
-  useEffect(() => {
-    if (!editor) return;
-
-    if (note) {
-      setTitle(note.title);
-
-      const currentContent = editor.getHTML();
-      if (
-        note.content !== currentContent &&
-        note.content !== lastSavedContentRef.current
-      ) {
-        const { from, to } = editor.state.selection;
-
-        editor.commands.setContent(note.content || '', false);
-
-        try {
-          const docSize = editor.state.doc.content.size;
-          if (from <= docSize && to <= docSize) {
-            editor.commands.setTextSelection({ from, to });
-          }
-        } catch {
-          // Silently handle selection errors
-        }
-
-        lastSavedContentRef.current = note.content || '';
-      }
-    } else {
-      setTitle('');
-      editor.commands.setContent('');
-      lastSavedContentRef.current = '';
     }
-  }, [note, editor]);
+  }, [note?.content, editor]);
 
   const handleTitleChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      const newTitle = e.target.value;
-      setTitle(newTitle);
-
       if (!note) return;
-
-      if (titleUpdateTimeoutRef.current) {
-        clearTimeout(titleUpdateTimeoutRef.current);
-      }
-
-      titleUpdateTimeoutRef.current = setTimeout(() => {
-        if (newTitle !== note.title) {
-          onUpdateNote(note.id, { title: newTitle });
-        }
-      }, 1500);
+      const newTitle = e.target.value;
+      onUpdateNote(note.id, { title: newTitle });
     },
     [note, onUpdateNote]
   );
@@ -151,16 +109,72 @@ export default function Index({
     [note, onUpdateNote]
   );
 
-  useEffect(() => {
-    return () => {
-      if (contentUpdateTimeoutRef.current) {
-        clearTimeout(contentUpdateTimeoutRef.current);
+  const handleFileUpload = useCallback(
+    async (files: FileList) => {
+      if (!note) return;
+
+      setIsUploading(true);
+      setUploadProgress(0);
+
+      try {
+        const attachments = await fileService.uploadFiles(
+          note.id,
+          files,
+          userId,
+          (progress) => setUploadProgress(progress.percentage)
+        );
+
+        const currentAttachments = note.attachments || [];
+        const updatedAttachments = [...currentAttachments, ...attachments];
+        onUpdateNote(note.id, { attachments: updatedAttachments });
+      } catch (error) {
+        console.error('File upload failed:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Upload failed';
+        alert(errorMessage);
+      } finally {
+        setIsUploading(false);
+        setUploadProgress(0);
       }
-      if (titleUpdateTimeoutRef.current) {
-        clearTimeout(titleUpdateTimeoutRef.current);
+    },
+    [note, userId, onUpdateNote]
+  );
+
+  const handleFileRemove = useCallback(
+    async (attachmentId: string) => {
+      if (!note) return;
+
+      setDeletingIds(prev => [...prev, attachmentId]);
+
+      try {
+        await fileService.removeFile(attachmentId);
+
+        const updatedAttachments = (note.attachments || []).filter(
+          (attachment) => attachment.id !== attachmentId
+        );
+        onUpdateNote(note.id, { attachments: updatedAttachments });
+      } catch (error) {
+        console.error('File removal failed:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Failed to remove file';
+        alert(errorMessage);
+      } finally {
+        setDeletingIds(prev => prev.filter(id => id !== attachmentId));
       }
-    };
-  }, []);
+    },
+    [note, onUpdateNote]
+  );
+
+  const handleFileDownload = useCallback(
+    async (attachment: FileAttachment) => {
+      try {
+        const blob = await fileService.downloadFile(attachment, userId);
+        fileService.downloadBlob(blob, attachment.originalName);
+      } catch (error) {
+        console.error('File download failed:', error);
+      }
+    },
+    [userId]
+  );
+
 
   const formatDate = (date: Date) => {
     return new Intl.DateTimeFormat('en-US', {
@@ -190,7 +204,7 @@ export default function Index({
           <div className="flex flex-1 items-center gap-3">
             <input
               type="text"
-              value={title}
+              value={note.title || ''}
               onChange={handleTitleChange}
               className="text-foreground placeholder-muted-foreground min-w-0 flex-1 border-none bg-transparent text-2xl font-bold outline-none"
               placeholder="Untitled Note"
@@ -198,6 +212,27 @@ export default function Index({
           </div>
 
           <div className="flex items-center gap-2">
+            <div className="relative">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowAttachments(!showAttachments)}
+                className={
+                  showAttachments
+                    ? 'bg-accent text-accent-foreground'
+                    : note.attachments && note.attachments.length > 0
+                    ? 'text-primary'
+                    : 'text-muted-foreground'
+                }
+                title={showAttachments ? 'Hide attachments' : 'Show attachments'}
+              >
+                <Paperclip className="h-4 w-4" />
+              </Button>
+              <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-medium text-primary-foreground">
+                {(note.attachments?.length || 0) > 9 ? '9+' : (note.attachments?.length || 0)}
+              </span>
+            </div>
+            
             <Button
               variant="ghost"
               size="sm"
@@ -282,6 +317,23 @@ export default function Index({
         <Toolbar editor={editor} />
       </div>
 
+      {showAttachments && (
+        <>
+          <div className="flex-shrink-0 p-4">
+            <FileUpload
+              attachments={note.attachments}
+              onUpload={handleFileUpload}
+              onRemove={handleFileRemove}
+              onDownload={handleFileDownload}
+              isUploading={isUploading}
+              uploadProgress={uploadProgress}
+              deletingIds={deletingIds}
+            />
+          </div>
+          <div className="h-px bg-border" />
+        </>
+      )}
+
       <div className="min-h-0 flex-1">
         <EditorContent
           editor={editor}
@@ -291,7 +343,6 @@ export default function Index({
 
       <style dangerouslySetInnerHTML={{ __html: editorStyles }} />
 
-      {/* Move Note Modal */}
       {note && (
         <MoveNoteModal
           isOpen={isMoveModalOpen}

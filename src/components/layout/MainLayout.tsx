@@ -308,27 +308,23 @@ export default function MainLayout() {
     );
   }
 
-  if (isMobile) {
-    return (
-      <MobileLayout
-        folderSidebarOpen={folderSidebarOpen}
-        filesPanelOpen={filesPanelOpen}
-        selectedNote={selectedNote}
-        onClosePanels={handleClosePanels}
-        onToggleFolderPanel={handleToggleFolderPanel}
-        onToggleFilesPanel={handleToggleFilesPanel}
-        folderPanelProps={sharedPanelProps}
-        filesPanelProps={{
-          ...sharedFilesPanelProps,
-          isMobile: true,
-          onClose: () => setFilesPanelOpen(false),
-        }}
-        editorProps={editorProps}
-      />
-    );
-  }
-
-  return (
+  const layoutContent = isMobile ? (
+    <MobileLayout
+      folderSidebarOpen={folderSidebarOpen}
+      filesPanelOpen={filesPanelOpen}
+      selectedNote={selectedNote}
+      onClosePanels={handleClosePanels}
+      onToggleFolderPanel={handleToggleFolderPanel}
+      onToggleFilesPanel={handleToggleFilesPanel}
+      folderPanelProps={sharedPanelProps}
+      filesPanelProps={{
+        ...sharedFilesPanelProps,
+        isMobile: true,
+        onClose: () => setFilesPanelOpen(false),
+      }}
+      editorProps={editorProps}
+    />
+  ) : (
     <DesktopLayout
       folderSidebarOpen={folderSidebarOpen}
       filesPanelOpen={filesPanelOpen}
@@ -336,6 +332,12 @@ export default function MainLayout() {
       filesPanelProps={sharedFilesPanelProps}
       editorProps={editorProps}
     />
+  );
+
+  return (
+    <>
+      {layoutContent}
+    </>
   );
 }
 
