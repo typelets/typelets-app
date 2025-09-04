@@ -1,3 +1,10 @@
+# [1.8.0](https://github.com/typelets/typelets-app/compare/v1.7.0...v1.8.0) (2025-09-04)
+
+
+### Features
+
+* modernize mobile layout with shadcn/ui tabs and improved navigation ([f2dba7e](https://github.com/typelets/typelets-app/commit/f2dba7e0b8be938c496e075f1e5106d8a41040a0))
+
 # [1.7.0](https://github.com/typelets/typelets-app/compare/v1.6.0...v1.7.0) (2025-09-04)
 
 
