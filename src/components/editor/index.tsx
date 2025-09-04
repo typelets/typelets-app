@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Star,
   Archive,
@@ -86,9 +86,10 @@ export default function Index({
           editor.commands.setTextSelection({ from, to });
         }
       } catch {
+        // Ignore cursor restoration errors
       }
     }
-  }, [note?.content, editor]);
+  }, [note, editor]);
 
   const handleTitleChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {

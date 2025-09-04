@@ -112,7 +112,7 @@ export class FileService {
           try {
             const response = JSON.parse(xhr.responseText);
             resolve(response);
-          } catch (error) {
+          } catch {
             reject(new Error('Invalid response format'));
           }
         } else if (xhr.status === 413) {

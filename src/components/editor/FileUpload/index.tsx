@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Upload, X, File, Download, Loader2 } from 'lucide-react';
+import { Upload, X, Download, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import type { FileAttachment } from '@/types/note';

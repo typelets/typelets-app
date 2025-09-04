@@ -115,11 +115,12 @@ export function useNotes() {
   }, [encryptionReady, clerkUser, loadData]);
 
   useEffect(() => {
+    const timeouts = saveTimeoutsRef.current;
     return () => {
-      saveTimeoutsRef.current.forEach((timeout) => {
+      timeouts.forEach((timeout) => {
         clearTimeout(timeout);
       });
-      saveTimeoutsRef.current.clear();
+      timeouts.clear();
     };
   }, []);
 
@@ -297,7 +298,7 @@ export function useNotes() {
             throw new Error('Encryption not ready. Please wait a moment and try again.');
           }
 
-          const apiNote = await api.updateNote(noteId, {
+          await api.updateNote(noteId, {
             title: updates.title,
             content: updates.content,
             folderId: updates.folderId,
@@ -307,7 +308,6 @@ export function useNotes() {
             tags: updates.tags,
           });
 
-          const updatedNote = convertApiNote(apiNote);
           saveTimeoutsRef.current.delete(noteId);
         } catch (error) {
           console.error('Failed to update note:', error);
