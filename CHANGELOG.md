@@ -1,3 +1,15 @@
+# [1.5.0](https://github.com/typelets/typelets-app/compare/v1.4.0...v1.5.0) (2025-09-04)
+
+
+### Bug Fixes
+
+* Fix linting errors and warnings ([2b6381f](https://github.com/typelets/typelets-app/commit/2b6381fd47af3eb13b4c0d14c6460d7a2273524b))
+
+
+### Features
+
+* add encrypted file attachments with drag-and-drop upload ([f526c31](https://github.com/typelets/typelets-app/commit/f526c316185ec68f0d3aba0502b42fdee5109ae2))
+
 # [1.4.0](https://github.com/typelets/typelets-app/compare/v1.3.2...v1.4.0) (2025-08-14)
 
 
