@@ -6,6 +6,7 @@ import {
   MoreHorizontal,
   FolderInput,
   Paperclip,
+  Printer,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -176,6 +177,53 @@ export default function Index({
     [userId]
   );
 
+  const handlePrint = useCallback(() => {
+    if (!note) return;
+
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    const printContent = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>${note.title || 'Untitled Note'}</title>
+          <style>
+            body {
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+              line-height: 1.6;
+              max-width: 800px;
+              margin: 0 auto;
+              padding: 20px;
+              color: #333;
+            }
+            h1 { color: #2d3748; margin-bottom: 0.5rem; }
+            h2 { color: #4a5568; }
+            h3 { color: #718096; }
+            pre { background: #f7fafc; padding: 1rem; border-radius: 0.5rem; overflow-x: auto; }
+            code { background: #edf2f7; padding: 0.2rem 0.4rem; border-radius: 0.25rem; }
+            blockquote { border-left: 4px solid #e2e8f0; margin: 1rem 0; padding-left: 1rem; color: #4a5568; }
+            ul, ol { margin: 1rem 0; }
+            @media print {
+              body { margin: 0; padding: 1cm; }
+              .no-print { display: none; }
+            }
+          </style>
+        </head>
+        <body>
+          <h1>${note.title || 'Untitled Note'}</h1>
+          ${note.content}
+        </body>
+      </html>
+    `;
+
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+    printWindow.close();
+  }, [note]);
+
 
   const formatDate = (date: Date) => {
     return new Intl.DateTimeFormat('en-US', {
@@ -261,6 +309,10 @@ export default function Index({
                 <DropdownMenuItem onClick={() => setIsMoveModalOpen(true)}>
                   <FolderInput className="mr-2 h-4 w-4" />
                   Move
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handlePrint}>
+                  <Printer className="mr-2 h-4 w-4" />
+                  Print
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => onArchiveNote(note.id)}>
                   <Archive className="mr-2 h-4 w-4" />
