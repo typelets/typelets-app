@@ -1,3 +1,10 @@
+# [1.7.0](https://github.com/typelets/typelets-app/compare/v1.6.0...v1.7.0) (2025-09-04)
+
+
+### Features
+
+* add print functionality to note dropdown menu ([1b07def](https://github.com/typelets/typelets-app/commit/1b07defb58a956290e30c30d5c3cc5ec9bddd12e))
+
 # [1.6.0](https://github.com/typelets/typelets-app/compare/v1.5.0...v1.6.0) (2025-09-04)
 
 
