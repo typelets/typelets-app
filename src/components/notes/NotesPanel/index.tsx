@@ -1,4 +1,4 @@
-import { Plus, PanelLeftClose, PanelLeftOpen, ArrowLeft } from 'lucide-react';
+import { Plus, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import NotesList from '@/components/notes/NotesPanel/NotesList.tsx';
 import { Button } from '@/components/ui/button.tsx';
 import type { Note, Folder as FolderType, ViewMode } from '@/types/note.ts';
@@ -82,21 +82,11 @@ export default function FilesPanel({
 
   return (
     <div
-      className={`${isOpen ? 'w-80' : 'w-0'} border-border bg-background flex h-full flex-col overflow-hidden border-r transition-all duration-300`}
+      className={`${isOpen ? 'w-full md:w-80' : 'w-0'} border-border bg-background flex h-full flex-col overflow-hidden border-r transition-all duration-300`}
     >
       <div className="border-border flex h-17 shrink-0 items-center justify-between border-b p-3">
         <div className="flex min-w-0 flex-1 items-center gap-4">
-          {isMobile && onClose ? (
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={onClose}
-              title="Close files panel"
-              className="touch-manipulation"
-            >
-              <ArrowLeft />
-            </Button>
-          ) : (
+          {!isMobile && (
             <Button
               variant="outline"
               size="icon"

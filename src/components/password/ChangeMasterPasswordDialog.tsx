@@ -97,7 +97,7 @@ export function ChangeMasterPasswordDialog({
     <Dialog.Root open={open} onOpenChange={handleClose}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-50 bg-black/80" />
-        <Dialog.Content className="bg-background fixed top-[50%] left-[50%] z-50 max-h-[85vh] w-[90vw] max-w-[600px] translate-x-[-50%] translate-y-[-50%] gap-4 overflow-hidden rounded-lg border shadow-lg">
+        <Dialog.Content className="bg-background fixed top-[50%] left-[50%] z-50 max-h-[85vh] w-[90vw] max-w-[600px] translate-x-[-50%] translate-y-[-50%] gap-4 overflow-y-auto rounded-lg border shadow-lg">
           <div className="border-border flex items-center justify-between border-b p-4">
             <div className="space-y-1">
               <Dialog.Title className="flex items-center gap-2 text-lg font-semibold">

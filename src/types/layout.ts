@@ -1,0 +1,56 @@
+import type { Note, Folder, ViewMode } from '@/types/note';
+
+export interface FolderPanelProps {
+  currentView: ViewMode;
+  folders: Folder[];
+  selectedFolder: Folder | null;
+  searchQuery: string;
+  notesCount: number;
+  starredCount: number;
+  archivedCount: number;
+  trashedCount: number;
+  expandedFolders: Set<string>;
+  onUpdateFolder: (
+    folderId: string,
+    name: string,
+    color: string
+  ) => Promise<void>;
+  onUpdateFolderParent: (
+    folderId: string,
+    parentId: string | null
+  ) => Promise<void>;
+  onCreateNote: () => void;
+  onCreateFolder: (name: string, color: string, parentId?: string) => void;
+  onDeleteFolder: (folderId: string) => Promise<void>;
+  onReorderFolders: (folderId: string, newIndex: number) => Promise<void>;
+  onToggleFolderExpansion: (folderId: string) => void;
+  onViewChange: (view: ViewMode) => void;
+  onFolderSelect: (folder: Folder | null) => void;
+  onSearchChange: (query: string) => void;
+  onRefreshNotes?: () => void;
+}
+
+export interface FilesPanelProps {
+  notes: Note[];
+  selectedNote: Note | null;
+  selectedFolder: Folder | null;
+  currentView: ViewMode;
+  isFolderPanelOpen: boolean;
+  onSelectNote: (note: Note) => void;
+  onToggleStar: (noteId: string) => Promise<void>;
+  onCreateNote: () => void;
+  onToggleFolderPanel: () => void;
+  onEmptyTrash: () => Promise<void>;
+  isMobile?: boolean;
+  onClose?: () => void;
+}
+
+export interface EditorProps {
+  note: Note | null;
+  folders?: Folder[];
+  onUpdateNote: (noteId: string, updates: Partial<Note>) => Promise<void>;
+  onDeleteNote: (noteId: string) => Promise<void>;
+  onArchiveNote: (noteId: string) => Promise<void>;
+  onToggleStar: (noteId: string) => Promise<void>;
+  userId?: string;
+}
