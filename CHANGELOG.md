@@ -1,3 +1,10 @@
+# [1.6.0](https://github.com/typelets/typelets-app/compare/v1.5.0...v1.6.0) (2025-09-04)
+
+
+### Features
+
+* add attachment indicators to notes list and fix star toggle preservation ([02c4f78](https://github.com/typelets/typelets-app/commit/02c4f786095ec15dbcb07086ee468e5eb08d8623))
+
 # [1.5.0](https://github.com/typelets/typelets-app/compare/v1.4.0...v1.5.0) (2025-09-04)
 
 
