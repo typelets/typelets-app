@@ -1,15 +1,18 @@
 import { useState } from 'react';
 import { UserButton, useUser } from '@clerk/clerk-react';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Menu, X } from 'lucide-react';
 import { ChangeMasterPasswordDialog } from '@/components/password/ChangeMasterPasswordDialog';
+import { Button } from '@/components/ui/button';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { hasMasterPassword } from '@/lib/encryption';
+import { APP_VERSION } from '@/constants/version';
 import FolderPanel from '@/components/folders';
 import NotesPanel from '@/components/notes/NotesPanel';
 import Index from '@/components/editor';
 import type { Note } from '@/types/note';
 import type { FolderPanelProps, FilesPanelProps, EditorProps } from '@/types/layout';
 
-type MobileTab = 'folders' | 'notes' | 'editor';
+type MobileView = 'folders' | 'notes' | 'editor';
 
 interface MobileLayoutProps {
   selectedNote: Note | null;
@@ -25,9 +28,10 @@ export function MobileLayout({
   editorProps,
 }: MobileLayoutProps) {
   const { user } = useUser();
-  const [activeTab, setActiveTab] = useState<MobileTab>(
+  const [currentView, setCurrentView] = useState<MobileView>(
     selectedNote ? 'editor' : 'folders'
   );
+  const [showSidebar, setShowSidebar] = useState(false);
   const [showChangePassword, setShowChangePassword] = useState(false);
 
   const hasPassword = user?.id ? hasMasterPassword(user.id) : false;
@@ -35,86 +39,158 @@ export function MobileLayout({
   // Auto-switch to editor when note is selected
   const handleNoteSelect = (note: Note) => {
     filesPanelProps.onSelectNote(note);
-    setActiveTab('editor');
+    setCurrentView('editor');
+    setShowSidebar(false);
+  };
+
+  const handleViewChange = (view: MobileView) => {
+    setCurrentView(view);
+    setShowSidebar(false);
   };
 
   const modifiedFilesPanelProps = {
     ...filesPanelProps,
     onSelectNote: handleNoteSelect,
   };
+  const getViewTitle = () => {
+    switch (currentView) {
+      case 'folders': return 'Folders';
+      case 'notes': return 'Notes';
+      case 'editor': return selectedNote?.title || 'Editor';
+      default: return 'Typelets';
+    }
+  };
+
   return (
     <>
-      <Tabs 
-        value={activeTab} 
-        onValueChange={(value) => {
-          if (value === 'editor' && !selectedNote) return;
-          setActiveTab(value as MobileTab);
-        }}
-        className="flex h-screen flex-col"
-      >
-      {/* Header - only show on editor tab */}
-      {activeTab === 'editor' && selectedNote && (
-        <div className="border-border bg-background flex shrink-0 items-center justify-center border-b p-3">
-          <div className="text-foreground truncate text-sm font-medium">
-            {selectedNote.title || 'Untitled Note'}
+      <div className="flex h-screen flex-col bg-background">
+        {/* Header */}
+        <div className="border-b bg-background p-3">
+          <div className="flex items-center">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowSidebar(true)}
+              className="h-9 w-9 p-0 mr-3"
+            >
+              <Menu className="h-5 w-5" />
+            </Button>
+            
+            <h1 className="text-foreground text-lg font-semibold flex-1 truncate">
+              {getViewTitle()}
+            </h1>
           </div>
         </div>
-      )}
 
-      {/* Tab Content */}
-      <div className="flex-1 overflow-hidden">
-        <TabsContent value="folders" className="h-full m-0 p-0">
-          <FolderPanel isOpen={true} {...folderPanelProps} />
-        </TabsContent>
-        
-        <TabsContent value="notes" className="h-full m-0 p-0">
-          <NotesPanel isOpen={true} {...modifiedFilesPanelProps} />
-        </TabsContent>
-        
-        <TabsContent value="editor" className="h-full m-0 p-0">
-          {selectedNote ? (
-            <Index {...editorProps} />
-          ) : (
-            <div className="flex h-full items-center justify-center text-center p-4">
-              <div>
-                <p className="text-muted-foreground">Select a note to start editing</p>
-              </div>
-            </div>
+        {/* Content */}
+        <div className="flex-1 overflow-hidden">
+          {currentView === 'folders' && (
+            <FolderPanel isOpen={true} {...folderPanelProps} />
           )}
-        </TabsContent>
+          
+          {currentView === 'notes' && (
+            <NotesPanel isOpen={true} {...modifiedFilesPanelProps} />
+          )}
+          
+          {currentView === 'editor' && (
+            selectedNote ? (
+              <Index {...editorProps} />
+            ) : (
+              <div className="flex h-full items-center justify-center text-center p-4">
+                <div>
+                  <p className="text-muted-foreground">Select a note to start editing</p>
+                </div>
+              </div>
+            )
+          )}
+        </div>
       </div>
 
-      {/* Bottom Tab Bar */}
-      <div className="border-t bg-background p-2">
-        <div className="flex items-center">
-          <TabsList className="flex-1">
-            <TabsTrigger value="folders" className="flex-1">
-              Folders
-            </TabsTrigger>
-            <TabsTrigger value="notes" className="flex-1">
-              Notes
-            </TabsTrigger>
-            <TabsTrigger 
-              value="editor" 
-              className="flex-1"
-              disabled={!selectedNote}
+      {/* Sidebar Overlay */}
+      {showSidebar && (
+        <div
+          className="fixed inset-0 z-50 bg-black/50"
+          onClick={() => setShowSidebar(false)}
+        />
+      )}
+
+      {/* Sidebar Drawer */}
+      <div
+        className={`fixed top-0 left-0 z-50 h-full w-80 bg-background border-r shadow-lg transition-transform duration-300 ease-in-out ${
+          showSidebar ? 'translate-x-0' : '-translate-x-full'
+        }`}
+      >
+        {/* Sidebar Header */}
+        <div className="border-b p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-lg font-semibold">Typelets</h2>
+              <div className="text-muted-foreground text-xs opacity-80">
+                v{APP_VERSION}
+              </div>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowSidebar(false)}
+              className="h-8 w-8 p-0"
             >
-              Editor
-            </TabsTrigger>
-          </TabsList>
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+
+        {/* Navigation Items */}
+        <div className="p-4">
+          <div 
+            className={`w-full text-left p-4 rounded-lg cursor-pointer transition-colors ${
+              currentView === 'folders' 
+                ? 'bg-primary text-primary-foreground' 
+                : 'hover:bg-accent hover:text-accent-foreground'
+            }`}
+            onClick={() => handleViewChange('folders')}
+          >
+            <div className="font-medium">Folders</div>
+          </div>
           
-          <div className="mx-3 h-9 w-px bg-border" />
+          <div 
+            className={`w-full text-left p-4 rounded-lg cursor-pointer transition-colors ${
+              currentView === 'notes' 
+                ? 'bg-primary text-primary-foreground' 
+                : 'hover:bg-accent hover:text-accent-foreground'
+            }`}
+            onClick={() => handleViewChange('notes')}
+          >
+            <div className="font-medium">Notes</div>
+          </div>
           
-          <div className="flex items-center">
-            <UserButton
-              appearance={{
-                elements: {
-                  avatarBox: 'w-8 h-8',
-                  userButtonPopoverCard: 'w-64',
-                },
-              }}
-              afterSignOutUrl="/"
-            >
+          <div 
+            className={`w-full text-left p-4 rounded-lg cursor-pointer transition-colors ${
+              !selectedNote 
+                ? 'opacity-50 cursor-not-allowed' 
+                : currentView === 'editor' 
+                  ? 'bg-primary text-primary-foreground' 
+                  : 'hover:bg-accent hover:text-accent-foreground'
+            }`}
+            onClick={() => selectedNote && handleViewChange('editor')}
+          >
+            <div className="font-medium">Editor</div>
+          </div>
+        </div>
+
+        {/* User Section */}
+        <div className="absolute bottom-0 left-0 right-0 border-t p-4">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <UserButton
+                appearance={{
+                  elements: {
+                    avatarBox: 'w-10 h-10',
+                    userButtonPopoverCard: 'w-64',
+                  },
+                }}
+                afterSignOutUrl="/"
+              >
               <UserButton.MenuItems>
                 <UserButton.Action
                   label="Typelets Open Source"
@@ -187,10 +263,22 @@ export function MobileLayout({
                 )}
               </UserButton.MenuItems>
             </UserButton>
+            <div className="min-w-0 flex-1">
+              <div className="text-foreground truncate text-sm font-medium">
+                {user?.fullName ??
+                  user?.firstName ??
+                  user?.emailAddresses[0]?.emailAddress}
+              </div>
+              <div className="text-muted-foreground text-xs">
+                Tap avatar for settings
+              </div>
+            </div>
+            </div>
+            
+            <ThemeToggle />
           </div>
         </div>
       </div>
-      </Tabs>
 
       <ChangeMasterPasswordDialog
         open={showChangePassword}
