@@ -1,3 +1,17 @@
+# [1.9.0](https://github.com/typelets/typelets-app/compare/v1.8.1...v1.9.0) (2025-09-05)
+
+
+### Bug Fixes
+
+* resolve build errors and implement VSCode-style status bar ([82e3ebb](https://github.com/typelets/typelets-app/commit/82e3ebb8ff8677b891a62d1265d53e7edea906b1))
+* resolve ESLint warning by properly typing ResizableImage component props ([f6cb992](https://github.com/typelets/typelets-app/commit/f6cb99234252451acec3d86d8bd0c17bd326a349))
+* resolve ReactNodeViewRenderer type compatibility with proper type assertion ([80c177c](https://github.com/typelets/typelets-app/commit/80c177c3078efe08510726fcda49084216c92afa))
+
+
+### Features
+
+* enhance editor with comprehensive features, filtering, and auto-save ([bd0527c](https://github.com/typelets/typelets-app/commit/bd0527ce4261f95f513de8683314018c01953f7a))
+
 ## [1.8.1](https://github.com/typelets/typelets-app/compare/v1.8.0...v1.8.1) (2025-09-05)
 
 
