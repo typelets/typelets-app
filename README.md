@@ -27,16 +27,42 @@
 
 ## ✨ Features
 
+### 🔒 Security & Privacy
 - 🔐 **Client-side AES-256-GCM encryption** - Your notes are encrypted before leaving your device
+- 🔑 **Master password management** - Change your master password with automatic key re-derivation
+- 🛡️ **Zero-knowledge architecture** - Server never sees unencrypted data
+- 🔄 **Real-time sync** - Access your notes from anywhere securely
+
+### 📁 Organization & Management
 - 📁 **Nested folder organization** - Create unlimited folder hierarchies with drag & drop
 - 🔄 **Move & organize** - Move notes and folders between locations
-- 🌙 **Dark/Light mode** - Easy on the eyes, day or night
-- 📝 **Rich text editor** - Powered by TipTap with markdown support
 - ⭐ **Star, archive, and organize** - Keep your important notes accessible
-- 📎 **File attachments** - Upload and encrypt files up to 10MB per file
+- 🏷️ **Smart filtering & sorting** - Filter by starred, with attachments, or sort by date/title
 - 🔍 **Full-text search** - Find notes instantly (searches encrypted data locally)
+
+### ✍️ Advanced Rich Text Editor
+- 📝 **Modern rich text editing** - Powered by TipTap with extensive formatting support
+- 🎨 **Comprehensive formatting** - Bold, italic, underline, strikethrough, highlights
+- 📋 **Lists & structure** - Bullet lists, numbered lists, task lists, blockquotes
+- 🖼️ **Smart image handling** - Upload, resize, drag & drop images with visual controls
+- 📑 **Table of contents** - Auto-generated TOC with smooth navigation
+- ⚡ **Slash commands** - Quick formatting with `/` commands (headings, lists, images, etc.)
+- 💾 **Auto-save** - Real-time saving with visual indicators
+- 🔗 **Links & references** - Easy link insertion and management
+- 🧮 **Code support** - Inline code and code blocks with syntax highlighting
+
+### 📊 Professional Status Bar
+- 📈 **Real-time statistics** - Word count, character count, reading time estimates
+- 📜 **Scroll tracking** - Visual scroll position indicator
+- 🔍 **Zoom controls** - Adjustable text size (50%-200%) with visual controls
+- 💾 **Save status** - Live save status with visual feedback
+
+### 💻 User Experience
+- 🌙 **Dark/Light mode** - Easy on the eyes, day or night
+- 📎 **File attachments** - Upload and encrypt files up to 10MB per file
 - 📱 **Responsive design** - Works seamlessly on desktop and mobile
-- 🔄 **Real-time sync** - Access your notes from anywhere
+- 🎯 **Keyboard shortcuts** - Efficient navigation and formatting shortcuts
+- 🖨️ **Print support** - Clean printing with proper formatting
 
 ## 🔒 Security First
 
