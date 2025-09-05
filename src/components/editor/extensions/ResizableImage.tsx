@@ -5,7 +5,18 @@ import { useState, useRef, useEffect } from 'react';
 import { X, Maximize2 } from 'lucide-react';
 
 
-const ImageComponent = (props: any) => {
+const ImageComponent = (props: {
+  node: {
+    attrs: {
+      src: string;
+      alt?: string;
+      title?: string;
+      width?: string;
+    };
+  };
+  deleteNode: () => void;
+  updateAttributes: (attrs: { width?: string | null }) => void;
+}) => {
   const { node, deleteNode, updateAttributes } = props;
   const [showControls, setShowControls] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
