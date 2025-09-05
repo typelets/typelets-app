@@ -307,7 +307,7 @@ export default function FilesPanel({
                 <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">
                   CREATE FROM TEMPLATE
                 </div>
-                {NOTE_TEMPLATES.map((template, index) => (
+                {NOTE_TEMPLATES.map((template) => (
                   <DropdownMenuItem
                     key={template.id}
                     onClick={() => onCreateNote({ title: template.title, content: template.content })}
