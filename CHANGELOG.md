@@ -1,3 +1,15 @@
+# [1.10.0](https://github.com/typelets/typelets-app/compare/v1.9.0...v1.10.0) (2025-09-05)
+
+
+### Bug Fixes
+
+* remove unused index parameter in template mapping ([6b6768c](https://github.com/typelets/typelets-app/commit/6b6768cd6b9e73566cb28931f22a5ac0e3fdaeeb))
+
+
+### Features
+
+* add document templates for quick note creation ([163100e](https://github.com/typelets/typelets-app/commit/163100e257dadb8a35ef7088b6583994a684a6a3))
+
 # [1.9.0](https://github.com/typelets/typelets-app/compare/v1.8.1...v1.9.0) (2025-09-05)
 
 
