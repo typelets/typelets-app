@@ -196,6 +196,7 @@ export const ResizableImage = Node.create({
   },
 
   addNodeView() {
-    return ReactNodeViewRenderer(ImageComponent);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return ReactNodeViewRenderer(ImageComponent as any);
   },
 });
