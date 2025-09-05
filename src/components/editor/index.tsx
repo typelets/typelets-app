@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import {
   Star,
   Archive,
@@ -27,6 +27,9 @@ import { EmptyState } from '@/components/editor/Editor/EmptyState';
 import { Toolbar } from '@/components/editor/Editor/Toolbar';
 import MoveNoteModal from '@/components/editor/modals/MoveNoteModal';
 import FileUpload from '@/components/editor/FileUpload';
+import { StatusBar } from '@/components/editor/Editor/StatusBar';
+import { useEditorState } from '@/components/editor/hooks/useEditorState';
+import { useEditorEffects } from '@/components/editor/hooks/useEditorEffects';
 import { fileService } from '@/services/fileService';
 import type { Note, Folder as FolderType, FileAttachment } from '@/types/note';
 
@@ -54,11 +57,26 @@ export default function Index({
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [deletingIds, setDeletingIds] = useState<string[]>([]);
-  const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'error'>('saved');
-  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const lastContentRef = useRef<string>('');
-  const [wordCount, setWordCount] = useState(0);
-  const [charCount, setCharCount] = useState(0);
+
+  // Use custom hook for editor state management
+  const {
+    saveStatus,
+    setSaveStatus,
+    wordCount,
+    charCount,
+    scrollPercentage,
+    setScrollPercentage,
+    readingTime,
+    zoomLevel,
+    baseFontSize,
+    setBaseFontSize,
+    saveTimeoutRef,
+    lastContentRef,
+    updateCounts,
+    handleZoomIn,
+    handleZoomOut,
+    resetZoom,
+  } = useEditorState();
 
   const editor = useEditor(
     {
@@ -232,10 +250,7 @@ export default function Index({
         
         // Update word and character counts
         const text = editor.state.doc.textContent;
-        const words = text.trim() ? text.trim().split(/\s+/).length : 0;
-        const chars = text.length;
-        setWordCount(words);
-        setCharCount(chars);
+        updateCounts(text);
         
         const html = editor.getHTML();
         if (html !== note.content && html !== lastContentRef.current) {
@@ -260,35 +275,22 @@ export default function Index({
         }
       },
     },
-    [note?.id]
+    [note?.id, updateCounts]
   );
 
-  useEffect(() => {
-    if (!editor || !note) return;
-    
-    const currentContent = editor.getHTML();
-    if (note.content !== currentContent) {
-      const { from, to } = editor.state.selection;
-      editor.commands.setContent(note.content || '', false);
-      lastContentRef.current = note.content || '';
-      
-      // Update word and character counts
-      const text = editor.state.doc.textContent;
-      const words = text.trim() ? text.trim().split(/\s+/).length : 0;
-      const chars = text.length;
-      setWordCount(words);
-      setCharCount(chars);
-      
-      try {
-        const docSize = editor.state.doc.content.size;
-        if (from <= docSize && to <= docSize) {
-          editor.commands.setTextSelection({ from, to });
-        }
-      } catch {
-        // Ignore cursor restoration errors
-      }
-    }
-  }, [note, editor]);
+  // Use custom hook for editor effects
+  useEditorEffects({
+    editor,
+    note,
+    updateCounts,
+    setScrollPercentage,
+    zoomLevel,
+    baseFontSize,
+    setBaseFontSize,
+    lastContentRef,
+  });
+
+
 
   // Cleanup timeout on unmount
   useEffect(() => {
@@ -297,7 +299,7 @@ export default function Index({
         clearTimeout(saveTimeoutRef.current);
       }
     };
-  }, []);
+  }, [saveTimeoutRef]);
 
   const handleTitleChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -314,7 +316,7 @@ export default function Index({
         console.error('Failed to save title:', error);
       }
     },
-    [note, onUpdateNote]
+    [note, onUpdateNote, setSaveStatus]
   );
 
   const handleMoveNote = useCallback(
@@ -611,48 +613,17 @@ export default function Index({
         />
       </div>
 
-      {/* Status Bar - VSCode Style */}
-      <div className="border-t bg-primary/5 dark:bg-primary/10 px-3 py-0.5 flex items-center justify-between text-[11px] font-mono">
-        {/* Left side - Word and character count */}
-        <div className="flex items-center gap-3">
-          {(wordCount > 0 || charCount > 0) && (
-            <>
-              <span className="hover:bg-muted px-1.5 py-0.5 rounded cursor-default">
-                {wordCount} {wordCount === 1 ? 'word' : 'words'}
-              </span>
-              <span className="hover:bg-muted px-1.5 py-0.5 rounded cursor-default">
-                {charCount} {charCount === 1 ? 'character' : 'characters'}
-              </span>
-            </>
-          )}
-        </div>
-        
-        {/* Right side - Save status */}
-        <div className="flex items-center gap-1 px-1.5 py-0.5 hover:bg-muted rounded cursor-default" title={
-          saveStatus === 'saving' ? 'Saving changes...' : 
-          saveStatus === 'saved' ? 'All changes saved' : 
-          'Error saving changes'
-        }>
-          {saveStatus === 'saving' && (
-            <>
-              <div className="h-1.5 w-1.5 rounded-full bg-orange-500 animate-pulse" />
-              <span>Saving</span>
-            </>
-          )}
-          {saveStatus === 'saved' && (
-            <>
-              <div className="h-1.5 w-1.5 rounded-full bg-green-500" />
-              <span>Saved</span>
-            </>
-          )}
-          {saveStatus === 'error' && (
-            <>
-              <div className="h-1.5 w-1.5 rounded-full bg-red-500" />
-                <span className="text-red-500">Error</span>
-              </>
-            )}
-          </div>
-        </div>
+      <StatusBar
+        wordCount={wordCount}
+        charCount={charCount}
+        readingTime={readingTime}
+        scrollPercentage={scrollPercentage}
+        zoomLevel={zoomLevel}
+        saveStatus={saveStatus}
+        onZoomIn={handleZoomIn}
+        onZoomOut={handleZoomOut}
+        onResetZoom={resetZoom}
+      />
 
         <style dangerouslySetInnerHTML={{ __html: editorStyles }} />
 
