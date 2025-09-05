@@ -1,6 +1,7 @@
 import { Node, mergeAttributes } from '@tiptap/core';
-import { ReactNodeViewRenderer, NodeViewProps } from '@tiptap/react';
+import { ReactNodeViewRenderer } from '@tiptap/react';
 import { NodeViewWrapper } from '@tiptap/react';
+import type { Editor } from '@tiptap/react';
 import { useEffect, useState, useCallback } from 'react';
 import { ChevronRight, ChevronDown, FileText, X } from 'lucide-react';
 
@@ -10,7 +11,12 @@ interface Heading {
   id: string;
 }
 
-const TableOfContentsComponent = ({ editor, deleteNode }: NodeViewProps) => {
+interface TableOfContentsComponentProps {
+  editor: Editor;
+  deleteNode: () => void;
+}
+
+const TableOfContentsComponent = ({ editor, deleteNode }: TableOfContentsComponentProps) => {
   const [headings, setHeadings] = useState<Heading[]>([]);
   const [expanded, setExpanded] = useState(true);
 

@@ -1,10 +1,12 @@
 import { Node, mergeAttributes } from '@tiptap/core';
-import { ReactNodeViewRenderer, NodeViewProps } from '@tiptap/react';
+import { ReactNodeViewRenderer } from '@tiptap/react';
 import { NodeViewWrapper } from '@tiptap/react';
 import { useState, useRef, useEffect } from 'react';
 import { X, Maximize2 } from 'lucide-react';
 
-const ImageComponent = ({ node, deleteNode, updateAttributes }: NodeViewProps) => {
+
+const ImageComponent = (props: any) => {
+  const { node, deleteNode, updateAttributes } = props;
   const [showControls, setShowControls] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
   const imageRef = useRef<HTMLImageElement>(null);
@@ -184,16 +186,5 @@ export const ResizableImage = Node.create({
 
   addNodeView() {
     return ReactNodeViewRenderer(ImageComponent);
-  },
-
-  addCommands() {
-    return {
-      setImage: (options: { src: string; alt?: string; title?: string }) => ({ commands }) => {
-        return commands.insertContent({
-          type: this.name,
-          attrs: options,
-        });
-      },
-    };
   },
 });

@@ -276,7 +276,10 @@ const commands: CommandItem[] = [
             editor
               .chain()
               .focus()
-              .setImage({ src: result })
+              .insertContent({
+                type: 'image',
+                attrs: { src: result }
+              })
               .run();
           }
         };

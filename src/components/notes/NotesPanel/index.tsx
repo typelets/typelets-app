@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import type { Note, Folder as FolderType, ViewMode } from '@/types/note.ts';
 
-type SortOption = 'updated' | 'created' | 'title';
+type SortOption = 'updated' | 'created' | 'title' | 'starred';
 
 interface SortConfig {
   option: SortOption;

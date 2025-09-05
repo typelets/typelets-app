@@ -35,7 +35,10 @@ export function ImageUpload({ editor }: ImageUploadProps) {
             editor
               .chain()
               .focus()
-              .setImage({ src: result })
+              .insertContent({
+                type: 'image',
+                attrs: { src: result }
+              })
               .run();
           }
         };

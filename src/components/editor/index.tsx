@@ -57,6 +57,8 @@ export default function Index({
   const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'error'>('saved');
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastContentRef = useRef<string>('');
+  const [wordCount, setWordCount] = useState(0);
+  const [charCount, setCharCount] = useState(0);
 
   const editor = useEditor(
     {
@@ -183,7 +185,7 @@ export default function Index({
 
           return false;
         },
-        handleDrop: (view, event, slice, moved) => {
+        handleDrop: (view, event, _slice, moved) => {
           if (moved) return false;
           
           const files = event.dataTransfer?.files;
@@ -227,6 +229,14 @@ export default function Index({
       },
       onUpdate: ({ editor }) => {
         if (!note) return;
+        
+        // Update word and character counts
+        const text = editor.state.doc.textContent;
+        const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+        const chars = text.length;
+        setWordCount(words);
+        setCharCount(chars);
+        
         const html = editor.getHTML();
         if (html !== note.content && html !== lastContentRef.current) {
           lastContentRef.current = html;
@@ -261,6 +271,13 @@ export default function Index({
       const { from, to } = editor.state.selection;
       editor.commands.setContent(note.content || '', false);
       lastContentRef.current = note.content || '';
+      
+      // Update word and character counts
+      const text = editor.state.doc.textContent;
+      const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+      const chars = text.length;
+      setWordCount(words);
+      setCharCount(chars);
       
       try {
         const docSize = editor.state.doc.content.size;
@@ -446,7 +463,8 @@ export default function Index({
   const currentFolder = getCurrentFolder();
 
   return (
-    <div className="flex h-full flex-1 flex-col">
+    <>
+      <div className="flex h-full flex-1 flex-col">
       <div className="border-border flex-shrink-0 border-b p-4">
         <div className="mb-4 flex items-center justify-between">
           <div className="flex flex-1 items-center gap-3">
@@ -460,23 +478,6 @@ export default function Index({
           </div>
 
           <div className="flex items-center gap-2">
-            {/* Save status indicator */}
-            <div className="flex items-center mr-2" title={
-              saveStatus === 'saving' ? 'Saving' : 
-              saveStatus === 'saved' ? 'Saved' : 
-              'Error saving'
-            }>
-              {saveStatus === 'saving' && (
-                <div className="h-3 w-3 rounded-full bg-orange-500 animate-pulse" />
-              )}
-              {saveStatus === 'saved' && (
-                <div className="h-3 w-3 rounded-full bg-green-500" />
-              )}
-              {saveStatus === 'error' && (
-                <div className="h-3 w-3 rounded-full bg-red-500" />
-              )}
-            </div>
-            
             <div className="relative">
               <Button
                 variant="ghost"
@@ -610,18 +611,62 @@ export default function Index({
         />
       </div>
 
-      <style dangerouslySetInnerHTML={{ __html: editorStyles }} />
+      {/* Status Bar - VSCode Style */}
+      <div className="border-t bg-primary/5 dark:bg-primary/10 px-3 py-0.5 flex items-center justify-between text-[11px] font-mono">
+        {/* Left side - Word and character count */}
+        <div className="flex items-center gap-3">
+          {(wordCount > 0 || charCount > 0) && (
+            <>
+              <span className="hover:bg-muted px-1.5 py-0.5 rounded cursor-default">
+                {wordCount} {wordCount === 1 ? 'word' : 'words'}
+              </span>
+              <span className="hover:bg-muted px-1.5 py-0.5 rounded cursor-default">
+                {charCount} {charCount === 1 ? 'character' : 'characters'}
+              </span>
+            </>
+          )}
+        </div>
+        
+        {/* Right side - Save status */}
+        <div className="flex items-center gap-1 px-1.5 py-0.5 hover:bg-muted rounded cursor-default" title={
+          saveStatus === 'saving' ? 'Saving changes...' : 
+          saveStatus === 'saved' ? 'All changes saved' : 
+          'Error saving changes'
+        }>
+          {saveStatus === 'saving' && (
+            <>
+              <div className="h-1.5 w-1.5 rounded-full bg-orange-500 animate-pulse" />
+              <span>Saving</span>
+            </>
+          )}
+          {saveStatus === 'saved' && (
+            <>
+              <div className="h-1.5 w-1.5 rounded-full bg-green-500" />
+              <span>Saved</span>
+            </>
+          )}
+          {saveStatus === 'error' && (
+            <>
+              <div className="h-1.5 w-1.5 rounded-full bg-red-500" />
+                <span className="text-red-500">Error</span>
+              </>
+            )}
+          </div>
+        </div>
 
-      {note && (
-        <MoveNoteModal
-          isOpen={isMoveModalOpen}
-          onClose={() => setIsMoveModalOpen(false)}
-          onMove={handleMoveNote}
-          folders={folders || []}
-          currentFolderId={note.folderId}
-          noteTitle={note.title}
-        />
-      )}
-    </div>
+        <style dangerouslySetInnerHTML={{ __html: editorStyles }} />
+
+        {note && (
+          <MoveNoteModal
+            isOpen={isMoveModalOpen}
+            onClose={() => setIsMoveModalOpen(false)}
+            onMove={handleMoveNote}
+            folders={folders || []}
+            currentFolderId={note.folderId}
+            noteTitle={note.title}
+          />
+        )}
+      </div>
+    </>
   );
 }
