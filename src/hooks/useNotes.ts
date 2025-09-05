@@ -159,7 +159,7 @@ export function useNotes() {
     });
   }, [notes, searchQuery, currentView, selectedFolder, folders]);
 
-  const createNote = async (folderId?: string) => {
+  const createNote = async (folderId?: string, templateContent?: { title: string; content: string }) => {
     try {
       if (!encryptionReady) {
         throw new Error(
@@ -168,8 +168,8 @@ export function useNotes() {
       }
 
       const apiNote = await api.createNote({
-        title: 'Untitled Note',
-        content: '',
+        title: templateContent?.title || 'Untitled Note',
+        content: templateContent?.content || '',
         folderId: folderId ?? selectedFolder?.id ?? null,
         starred: false,
         tags: [],

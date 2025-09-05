@@ -19,7 +19,7 @@ export interface FolderPanelProps {
     folderId: string,
     parentId: string | null
   ) => Promise<void>;
-  onCreateNote: () => void;
+  onCreateNote: (templateContent?: { title: string; content: string }) => void;
   onCreateFolder: (name: string, color: string, parentId?: string) => void;
   onDeleteFolder: (folderId: string) => Promise<void>;
   onReorderFolders: (folderId: string, newIndex: number) => Promise<void>;
@@ -38,7 +38,7 @@ export interface FilesPanelProps {
   isFolderPanelOpen: boolean;
   onSelectNote: (note: Note) => void;
   onToggleStar: (noteId: string) => Promise<void>;
-  onCreateNote: () => void;
+  onCreateNote: (templateContent?: { title: string; content: string }) => void;
   onToggleFolderPanel: () => void;
   onEmptyTrash: () => Promise<void>;
   isMobile?: boolean;

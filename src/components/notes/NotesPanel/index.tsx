@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, PanelLeftClose, PanelLeftOpen, Filter, FilterX } from 'lucide-react';
+import { Plus, PanelLeftClose, PanelLeftOpen, Filter, FilterX, ChevronDown } from 'lucide-react';
 import NotesList from '@/components/notes/NotesPanel/NotesList.tsx';
 import { Button } from '@/components/ui/button.tsx';
 import {
@@ -9,6 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { NOTE_TEMPLATES } from '@/constants/templates';
 import type { Note, Folder as FolderType, ViewMode } from '@/types/note.ts';
 
 type SortOption = 'updated' | 'created' | 'title' | 'starred';
@@ -33,7 +34,7 @@ interface FilesPanelProps {
   isFolderPanelOpen: boolean;
   onSelectNote: (note: Note) => void;
   onToggleStar: (noteId: string) => void;
-  onCreateNote: () => void;
+  onCreateNote: (templateContent?: { title: string; content: string }) => void;
   onToggleFolderPanel: () => void;
   onEmptyTrash?: () => Promise<void>;
   isMobile?: boolean;
@@ -207,7 +208,7 @@ export default function FilesPanel({
                   style={{ backgroundColor: selectedFolder.color ?? '#6b7280' }}
                 />
               )}
-              <span className="text-xs opacity-80">
+              <span className="text-[11px] opacity-80">
                 {sortedNotes.length} note{sortedNotes.length !== 1 ? 's' : ''}
                 {sortedNotes.length !== notes.length && ` (${notes.length} total)`}
               </span>
@@ -231,7 +232,7 @@ export default function FilesPanel({
                 )}
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-52">
+            <DropdownMenuContent align="end" className="w-52" sideOffset={8}>
               <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">
                 FILTER
               </div>
@@ -290,15 +291,34 @@ export default function FilesPanel({
           </DropdownMenu>
 
           {!isTrashView && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onCreateNote}
-              className={`flex items-center justify-center ${isMobile ? 'h-9 w-9 touch-manipulation p-0' : 'h-6 w-6 p-0'} `}
-              title="Create new note"
-            >
-              <Plus className={isMobile ? 'h-4 w-4' : 'h-3 w-3'} />
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className={`flex items-center justify-center gap-1 ${isMobile ? 'h-9 px-3 touch-manipulation' : 'h-6 px-2'}`}
+                  title="Create new note from template"
+                >
+                  <Plus className={isMobile ? 'h-4 w-4' : 'h-3 w-3'} />
+                  {!isMobile && <ChevronDown className="h-2 w-2" />}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-64" sideOffset={8}>
+                <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">
+                  CREATE FROM TEMPLATE
+                </div>
+                {NOTE_TEMPLATES.map((template, index) => (
+                  <DropdownMenuItem
+                    key={template.id}
+                    onClick={() => onCreateNote({ title: template.title, content: template.content })}
+                    className="flex flex-col items-start gap-1 py-2"
+                  >
+                    <div className="font-medium">{template.name}</div>
+                    <div className="text-xs text-muted-foreground">{template.description}</div>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
           )}
         </div>
       </div>

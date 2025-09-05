@@ -45,8 +45,8 @@ export default function MainLayout() {
     refetch,
   } = useNotes();
 
-  const handleCreateNote = useCallback(() => {
-    void createNote();
+  const handleCreateNote = useCallback((templateContent?: { title: string; content: string }) => {
+    void createNote(undefined, templateContent);
     if (!filesPanelOpen) setFilesPanelOpen(true);
   }, [createNote, filesPanelOpen]);
 

@@ -83,7 +83,7 @@ export function Toolbar({ editor }: ToolbarProps) {
   };
 
   return (
-    <div className="border-border bg-muted flex flex-wrap items-center gap-1 border-b p-2">
+    <div className="border-border bg-muted dark:bg-gray-800 flex flex-wrap items-center gap-1 border-b p-2">
       <Button
         variant="ghost"
         size="sm"
@@ -297,6 +297,7 @@ export function Toolbar({ editor }: ToolbarProps) {
       >
         <Minus className="h-4 w-4" />
       </Button>
+
     </div>
   );
 }
