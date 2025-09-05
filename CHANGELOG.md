@@ -1,3 +1,10 @@
+## [1.8.1](https://github.com/typelets/typelets-app/compare/v1.8.0...v1.8.1) (2025-09-05)
+
+
+### Bug Fixes
+
+* replace mobile tabs with native sidebar drawer navigation and enhance user experience ([cd7701f](https://github.com/typelets/typelets-app/commit/cd7701f1e8f78671d9a29cb187ee430b69b2e245))
+
 # [1.8.0](https://github.com/typelets/typelets-app/compare/v1.7.0...v1.8.0) (2025-09-04)
 
 
