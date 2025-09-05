@@ -297,8 +297,48 @@ export default function FolderPanel({
               }}
               afterSignOutUrl="/"
             >
-              {hasPassword && (
-                <UserButton.MenuItems>
+              <UserButton.MenuItems>
+                <UserButton.Action
+                  label="Typelets Open Source"
+                  labelIcon={
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
+                    </svg>
+                  }
+                  onClick={() => window.open('https://github.com/typelets/typelets-app', '_blank')}
+                />
+                <UserButton.Action
+                  label="Support"
+                  labelIcon={
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                      <path d="M12 17h.01"></path>
+                      <circle cx="12" cy="12" r="10"></circle>
+                    </svg>
+                  }
+                  onClick={() => window.open('https://github.com/typelets/typelets-app/issues', '_blank')}
+                />
+                {hasPassword && (
                   <UserButton.Action
                     label="Change Master Password"
                     labelIcon={
@@ -326,8 +366,8 @@ export default function FolderPanel({
                     }
                     onClick={() => setShowChangePassword(true)}
                   />
-                </UserButton.MenuItems>
-              )}
+                )}
+              </UserButton.MenuItems>
             </UserButton>
             <div className="min-w-0 flex-1">
               <div className="text-foreground truncate text-sm font-medium">
