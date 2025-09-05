@@ -2,6 +2,12 @@ import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
 import TaskItem from '@tiptap/extension-task-item';
 import TaskList from '@tiptap/extension-task-list';
 import Underline from '@tiptap/extension-underline';
+import Link from '@tiptap/extension-link';
+import HorizontalRule from '@tiptap/extension-horizontal-rule';
+import Highlight from '@tiptap/extension-highlight';
+import { Dropcursor } from '@tiptap/extension-dropcursor';
+import { TableOfContents } from '../extensions/TableOfContents';
+import { ResizableImage } from '../extensions/ResizableImage';
 import StarterKit from '@tiptap/starter-kit';
 import bash from 'highlight.js/lib/languages/bash';
 import cpp from 'highlight.js/lib/languages/cpp';
@@ -65,5 +71,31 @@ export function createEditorExtensions() {
       },
     }),
     Underline,
+    Link.configure({
+      openOnClick: false,
+      HTMLAttributes: {
+        class: 'text-blue-600 underline hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300',
+      },
+    }),
+    HorizontalRule.configure({
+      HTMLAttributes: {
+        class: 'border-gray-300 dark:border-gray-600',
+      },
+    }),
+    Highlight.configure({
+      multicolor: false,
+      HTMLAttributes: {
+        class: 'bg-yellow-200 dark:bg-yellow-800 px-1 py-0.5 rounded',
+      },
+    }),
+    TableOfContents,
+    ResizableImage.configure({
+      inline: false,
+      allowBase64: true,
+    }),
+    Dropcursor.configure({
+      color: '#6b7280',
+      width: 2,
+    }),
   ];
 }

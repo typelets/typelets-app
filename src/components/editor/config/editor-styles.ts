@@ -254,4 +254,25 @@ export const editorStyles = `
     pointer-events: none;
     height: 0;
 }
+
+/* Image Styles */
+.ProseMirror img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    margin: 16px 0;
+    display: block;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+}
+
+.ProseMirror img.ProseMirror-selectednode {
+    outline: 3px solid hsl(var(--primary));
+    outline-offset: 2px;
+}
+
+/* Dropcursor for image placement */
+.ProseMirror .ProseMirror-dropcursor {
+    border-left: 2px solid hsl(var(--primary));
+}
 `;

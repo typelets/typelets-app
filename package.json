@@ -70,12 +70,18 @@
     "@radix-ui/react-tabs": "^1.1.13",
     "@tailwindcss/vite": "^4.1.11",
     "@tiptap/extension-code-block-lowlight": "^2.26.1",
+    "@tiptap/extension-dropcursor": "^3.4.1",
+    "@tiptap/extension-highlight": "^3.4.1",
+    "@tiptap/extension-horizontal-rule": "^3.4.1",
+    "@tiptap/extension-image": "^3.4.1",
+    "@tiptap/extension-link": "^3.4.1",
     "@tiptap/extension-task-item": "^2.26.1",
     "@tiptap/extension-task-list": "^2.26.1",
     "@tiptap/extension-underline": "^3.1.0",
     "@tiptap/pm": "^2.26.1",
     "@tiptap/react": "^2.26.1",
     "@tiptap/starter-kit": "^2.26.1",
+    "@tiptap/suggestion": "^3.4.1",
     "@unhead/react": "^2.0.14",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -84,7 +90,8 @@
     "lucide-react": "^0.523.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
-    "tailwind-merge": "^3.3.1"
+    "tailwind-merge": "^3.3.1",
+    "tippy.js": "^6.3.7"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.8.1",

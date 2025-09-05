@@ -1,7 +1,27 @@
-import { Plus, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { useState } from 'react';
+import { Plus, PanelLeftClose, PanelLeftOpen, Filter, FilterX } from 'lucide-react';
 import NotesList from '@/components/notes/NotesPanel/NotesList.tsx';
 import { Button } from '@/components/ui/button.tsx';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import type { Note, Folder as FolderType, ViewMode } from '@/types/note.ts';
+
+type SortOption = 'updated' | 'created' | 'title';
+
+interface SortConfig {
+  option: SortOption;
+  direction: 'asc' | 'desc';
+}
+
+interface FilterConfig {
+  showAttachmentsOnly: boolean;
+  showStarredOnly: boolean;
+}
 
 interface FilesPanelProps {
   isOpen: boolean;
@@ -36,6 +56,83 @@ export default function FilesPanel({
   isMobile = false,
   onClose,
 }: FilesPanelProps) {
+  const [sortConfig, setSortConfig] = useState<SortConfig>({
+    option: 'updated',
+    direction: 'desc'
+  });
+
+  const [filterConfig, setFilterConfig] = useState<FilterConfig>({
+    showAttachmentsOnly: false,
+    showStarredOnly: false
+  });
+
+  const sortNotes = (notes: Note[], config: SortConfig): Note[] => {
+    return [...notes].sort((a, b) => {
+      let aValue: string | number | Date;
+      let bValue: string | number | Date;
+
+      switch (config.option) {
+        case 'updated':
+          aValue = new Date(a.updatedAt);
+          bValue = new Date(b.updatedAt);
+          break;
+        case 'created':
+          aValue = new Date(a.createdAt);
+          bValue = new Date(b.createdAt);
+          break;
+        case 'title':
+          aValue = a.title.toLowerCase() || 'untitled';
+          bValue = b.title.toLowerCase() || 'untitled';
+          break;
+        case 'starred':
+          aValue = a.starred ? 1 : 0;
+          bValue = b.starred ? 1 : 0;
+          break;
+        default:
+          return 0;
+      }
+
+      if (aValue < bValue) return config.direction === 'asc' ? -1 : 1;
+      if (aValue > bValue) return config.direction === 'asc' ? 1 : -1;
+      return 0;
+    });
+  };
+
+  const filterNotes = (notes: Note[], config: FilterConfig): Note[] => {
+    return notes.filter(note => {
+      if (config.showAttachmentsOnly && (!note.attachments || note.attachments.length === 0)) {
+        return false;
+      }
+      if (config.showStarredOnly && !note.starred) {
+        return false;
+      }
+      return true;
+    });
+  };
+
+  const filteredNotes = filterNotes(notes, filterConfig);
+  const sortedNotes = sortNotes(filteredNotes, sortConfig);
+
+  const getSortLabel = () => {
+    switch (sortConfig.option) {
+      case 'updated': return 'Last Modified';
+      case 'created': return 'Created Date';
+      case 'title': return sortConfig.direction === 'asc' ? 'Title (A-Z)' : 'Title (Z-A)';
+      default: return 'Last Modified';
+    }
+  };
+
+  const getFilterLabel = () => {
+    const activeFilters = [];
+    if (filterConfig.showAttachmentsOnly) activeFilters.push('With Attachments');
+    if (filterConfig.showStarredOnly) activeFilters.push('Starred');
+    
+    if (activeFilters.length === 0) return `Sort: ${getSortLabel()}`;
+    return `Filter: ${activeFilters.join(', ')} | Sort: ${getSortLabel()}`;
+  };
+
+  const hasActiveFilters = filterConfig.showAttachmentsOnly || filterConfig.showStarredOnly;
+
   const getPanelTitle = () => {
     if (selectedFolder) {
       return selectedFolder.name;
@@ -111,13 +208,87 @@ export default function FilesPanel({
                 />
               )}
               <span className="text-xs opacity-80">
-                {notes.length} note{notes.length !== 1 ? 's' : ''}
+                {sortedNotes.length} note{sortedNotes.length !== 1 ? 's' : ''}
+                {sortedNotes.length !== notes.length && ` (${notes.length} total)`}
               </span>
             </div>
           </div>
         </div>
 
         <div className="flex shrink-0 items-center gap-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className={`flex items-center justify-center ${isMobile ? 'h-9 w-9 touch-manipulation p-0' : 'h-6 w-6 p-0'}`}
+                title={getFilterLabel()}
+              >
+                {hasActiveFilters ? (
+                  <FilterX className={`${isMobile ? 'h-3 w-3' : 'h-2 w-2'} text-primary`} />
+                ) : (
+                  <Filter className={isMobile ? 'h-3 w-3' : 'h-2 w-2'} />
+                )}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-52">
+              <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">
+                FILTER
+              </div>
+              <DropdownMenuItem
+                onClick={() => setFilterConfig(prev => ({ ...prev, showAttachmentsOnly: !prev.showAttachmentsOnly }))}
+                className={`${filterConfig.showAttachmentsOnly ? 'bg-accent' : ''} mb-1`}
+              >
+                {filterConfig.showAttachmentsOnly ? '✓' : '○'} With Attachments
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => setFilterConfig(prev => ({ ...prev, showStarredOnly: !prev.showStarredOnly }))}
+                className={`${filterConfig.showStarredOnly ? 'bg-accent' : ''} mb-1`}
+              >
+                {filterConfig.showStarredOnly ? '✓' : '○'} Starred Only
+              </DropdownMenuItem>
+              
+              {(filterConfig.showAttachmentsOnly || filterConfig.showStarredOnly) && (
+                <DropdownMenuItem
+                  onClick={() => setFilterConfig({ showAttachmentsOnly: false, showStarredOnly: false })}
+                  className="text-muted-foreground mb-1"
+                >
+                  Clear Filters
+                </DropdownMenuItem>
+              )}
+              
+              <DropdownMenuSeparator />
+              
+              <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">
+                SORT BY
+              </div>
+              <DropdownMenuItem
+                onClick={() => setSortConfig({ option: 'updated', direction: 'desc' })}
+                className={`${sortConfig.option === 'updated' ? 'bg-accent' : ''} mb-1`}
+              >
+                Last Modified
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => setSortConfig({ option: 'created', direction: 'desc' })}
+                className={`${sortConfig.option === 'created' ? 'bg-accent' : ''} mb-1`}
+              >
+                Created Date
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => setSortConfig({ option: 'title', direction: 'asc' })}
+                className={`${sortConfig.option === 'title' && sortConfig.direction === 'asc' ? 'bg-accent' : ''} mb-1`}
+              >
+                Title (A-Z)
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => setSortConfig({ option: 'title', direction: 'desc' })}
+                className={`${sortConfig.option === 'title' && sortConfig.direction === 'desc' ? 'bg-accent' : ''} mb-1`}
+              >
+                Title (Z-A)
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
           {!isTrashView && (
             <Button
               variant="outline"
@@ -134,7 +305,7 @@ export default function FilesPanel({
 
       <div className="flex-1 overflow-y-auto">
         <NotesList
-          notes={notes}
+          notes={sortedNotes}
           selectedNote={selectedNote}
           onSelectNote={handleNoteSelect}
           onToggleStar={onToggleStar}

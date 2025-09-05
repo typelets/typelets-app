@@ -1,4 +1,5 @@
 import { type Editor } from '@tiptap/react';
+import { ImageUpload } from '../extensions/ImageUpload';
 import {
   Bold,
   Italic,
@@ -9,11 +10,16 @@ import {
   Quote,
   Heading1,
   Heading2,
+  Heading3,
   Undo,
   Redo,
   Code,
   CheckSquare,
   ChevronDown,
+  Link,
+  Minus,
+  Highlighter,
+  FileText,
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button.tsx';
@@ -56,6 +62,25 @@ export function Toolbar({ editor }: ToolbarProps) {
   const currentLanguageLabel =
     LANGUAGES.find((lang) => lang.value === currentLanguage)?.label ??
     'Plain Text';
+
+  const setLink = () => {
+    const previousUrl = editor.getAttributes('link').href;
+    const url = window.prompt('URL', previousUrl);
+
+    // Cancelled
+    if (url === null) {
+      return;
+    }
+
+    // Empty
+    if (url === '') {
+      editor.chain().focus().extendMarkRange('link').unsetLink().run();
+      return;
+    }
+
+    // Update link
+    editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
+  };
 
   return (
     <div className="border-border bg-muted flex flex-wrap items-center gap-1 border-b p-2">
@@ -122,6 +147,22 @@ export function Toolbar({ editor }: ToolbarProps) {
       >
         <Code className="h-4 w-4" />
       </Button>
+      <Button
+        variant={editor.isActive('link') ? 'default' : 'ghost'}
+        size="sm"
+        onClick={setLink}
+        title="Add Link (Ctrl+K)"
+      >
+        <Link className="h-4 w-4" />
+      </Button>
+      <Button
+        variant={editor.isActive('highlight') ? 'default' : 'ghost'}
+        size="sm"
+        onClick={() => editor.chain().focus().toggleHighlight().run()}
+        title="Highlight Text"
+      >
+        <Highlighter className="h-4 w-4" />
+      </Button>
 
       <div className="bg-border mx-1 h-6 w-px" />
 
@@ -140,6 +181,14 @@ export function Toolbar({ editor }: ToolbarProps) {
         title="Heading 2"
       >
         <Heading2 className="h-4 w-4" />
+      </Button>
+      <Button
+        variant={editor.isActive('heading', { level: 3 }) ? 'default' : 'ghost'}
+        size="sm"
+        onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+        title="Heading 3"
+      >
+        <Heading3 className="h-4 w-4" />
       </Button>
 
       <div className="bg-border mx-1 h-6 w-px" />
@@ -225,6 +274,28 @@ export function Toolbar({ editor }: ToolbarProps) {
         title="Quote"
       >
         <Quote className="h-4 w-4" />
+      </Button>
+
+      <div className="bg-border mx-1 h-6 w-px" />
+
+      <ImageUpload editor={editor} />
+
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => editor.chain().focus().insertContent({ type: 'tableOfContents' }).run()}
+        title="Table of Contents"
+      >
+        <FileText className="h-4 w-4" />
+      </Button>
+
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => editor.chain().focus().setHorizontalRule().run()}
+        title="Horizontal Rule"
+      >
+        <Minus className="h-4 w-4" />
       </Button>
     </div>
   );

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   Star,
   Archive,
@@ -17,7 +17,11 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useEditor, EditorContent } from '@tiptap/react';
+import ReactDOM from 'react-dom/client';
+import tippy from 'tippy.js';
 import { createEditorExtensions } from './config/editor-config';
+import { SlashCommands } from './extensions/SlashCommandsExtension';
+import { SlashCommandsList } from './extensions/SlashCommands';
 import { editorStyles } from './config/editor-styles';
 import { EmptyState } from '@/components/editor/Editor/EmptyState';
 import { Toolbar } from '@/components/editor/Editor/Toolbar';
@@ -50,10 +54,93 @@ export default function Index({
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [deletingIds, setDeletingIds] = useState<string[]>([]);
+  const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'error'>('saved');
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastContentRef = useRef<string>('');
 
   const editor = useEditor(
     {
-      extensions: createEditorExtensions(),
+      extensions: [
+        ...createEditorExtensions(),
+        SlashCommands.configure({
+          suggestion: {
+            items: () => {
+              return [];
+            },
+            render: () => {
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              let component: any;
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              let popup: any;
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              let root: any;
+
+              return {
+                onStart: (props: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+                  if (!props.clientRect) {
+                    return;
+                  }
+
+                  const container = document.createElement('div');
+                  
+                  popup = tippy('body', {
+                    getReferenceClientRect: props.clientRect,
+                    appendTo: () => document.body,
+                    content: container,
+                    showOnCreate: true,
+                    interactive: true,
+                    trigger: 'manual',
+                    placement: 'bottom-start',
+                  })[0];
+
+                  root = ReactDOM.createRoot(container);
+                  
+                  const commandsList = document.createElement('div');
+                  component = ReactDOM.createRoot(commandsList);
+                  
+                  component.render(
+                    <SlashCommandsList
+                      ref={(ref: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+                        component = ref;
+                      }}
+                      command={props.command}
+                    />
+                  );
+                  
+                  root.render(
+                    <SlashCommandsList
+                      ref={(ref: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+                        component = ref;
+                      }}
+                      command={props.command}
+                    />
+                  );
+                },
+
+                onUpdate: (props: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+                  popup?.setProps({
+                    getReferenceClientRect: props.clientRect,
+                  });
+                },
+
+                onKeyDown: (props: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+                  if (props.event.key === 'Escape') {
+                    popup?.hide();
+                    return true;
+                  }
+                  
+                  return component?.onKeyDown?.(props);
+                },
+
+                onExit: () => {
+                  popup?.destroy();
+                  root?.unmount();
+                },
+              };
+            },
+          },
+        }),
+      ],
       content: note?.content || '',
       editorProps: {
         attributes: {
@@ -61,12 +148,105 @@ export default function Index({
             'prose prose-sm sm:prose-base lg:prose-lg xl:prose-2xl mx-auto focus:outline-none min-h-[400px] p-4',
           style: 'max-width: none;',
         },
+        handlePaste: (view, event) => {
+          const items = event.clipboardData?.items;
+          if (!items) return false;
+
+          for (const item of Array.from(items)) {
+            if (item.type.startsWith('image/')) {
+              event.preventDefault();
+              
+              const file = item.getAsFile();
+              if (!file) continue;
+
+              // Check file size (max 10MB)
+              if (file.size > 10 * 1024 * 1024) {
+                alert('Image is too large. Maximum size is 10MB.');
+                return true;
+              }
+
+              const reader = new FileReader();
+              reader.onload = (e) => {
+                const result = e.target?.result;
+                if (result && typeof result === 'string') {
+                  const { schema } = view.state;
+                  const node = schema.nodes.image.create({ src: result });
+                  const transaction = view.state.tr.replaceSelectionWith(node);
+                  view.dispatch(transaction);
+                }
+              };
+              reader.readAsDataURL(file);
+              
+              return true;
+            }
+          }
+
+          return false;
+        },
+        handleDrop: (view, event, slice, moved) => {
+          if (moved) return false;
+          
+          const files = event.dataTransfer?.files;
+          if (!files || files.length === 0) return false;
+
+          for (const file of Array.from(files)) {
+            if (file.type.startsWith('image/')) {
+              event.preventDefault();
+
+              // Check file size (max 10MB)
+              if (file.size > 10 * 1024 * 1024) {
+                alert(`File ${file.name} is too large. Maximum size is 10MB.`);
+                continue;
+              }
+
+              const reader = new FileReader();
+              reader.onload = (e) => {
+                const result = e.target?.result;
+                if (result && typeof result === 'string') {
+                  const { schema } = view.state;
+                  const coordinates = view.posAtCoords({
+                    left: event.clientX,
+                    top: event.clientY,
+                  });
+
+                  if (coordinates) {
+                    const node = schema.nodes.image.create({ src: result });
+                    const transaction = view.state.tr.insert(coordinates.pos, node);
+                    view.dispatch(transaction);
+                  }
+                }
+              };
+              reader.readAsDataURL(file);
+              
+              return true;
+            }
+          }
+
+          return false;
+        },
       },
       onUpdate: ({ editor }) => {
         if (!note) return;
         const html = editor.getHTML();
-        if (html !== note.content) {
-          onUpdateNote(note.id, { content: html });
+        if (html !== note.content && html !== lastContentRef.current) {
+          lastContentRef.current = html;
+          setSaveStatus('saving');
+          
+          // Clear existing timeout
+          if (saveTimeoutRef.current) {
+            clearTimeout(saveTimeoutRef.current);
+          }
+          
+          // Debounce the save operation
+          saveTimeoutRef.current = setTimeout(() => {
+            try {
+              onUpdateNote(note.id, { content: html });
+              setSaveStatus('saved');
+            } catch (error) {
+              setSaveStatus('error');
+              console.error('Failed to save note:', error);
+            }
+          }, 1000); // Wait 1 second after user stops typing
         }
       },
     },
@@ -80,6 +260,7 @@ export default function Index({
     if (note.content !== currentContent) {
       const { from, to } = editor.state.selection;
       editor.commands.setContent(note.content || '', false);
+      lastContentRef.current = note.content || '';
       
       try {
         const docSize = editor.state.doc.content.size;
@@ -92,11 +273,29 @@ export default function Index({
     }
   }, [note, editor]);
 
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
+  }, []);
+
   const handleTitleChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       if (!note) return;
       const newTitle = e.target.value;
-      onUpdateNote(note.id, { title: newTitle });
+      setSaveStatus('saving');
+      try {
+        onUpdateNote(note.id, { title: newTitle });
+        setTimeout(() => {
+          setSaveStatus('saved');
+        }, 500);
+      } catch (error) {
+        setSaveStatus('error');
+        console.error('Failed to save title:', error);
+      }
     },
     [note, onUpdateNote]
   );
@@ -261,6 +460,23 @@ export default function Index({
           </div>
 
           <div className="flex items-center gap-2">
+            {/* Save status indicator */}
+            <div className="flex items-center mr-2" title={
+              saveStatus === 'saving' ? 'Saving' : 
+              saveStatus === 'saved' ? 'Saved' : 
+              'Error saving'
+            }>
+              {saveStatus === 'saving' && (
+                <div className="h-3 w-3 rounded-full bg-orange-500 animate-pulse" />
+              )}
+              {saveStatus === 'saved' && (
+                <div className="h-3 w-3 rounded-full bg-green-500" />
+              )}
+              {saveStatus === 'error' && (
+                <div className="h-3 w-3 rounded-full bg-red-500" />
+              )}
+            </div>
+            
             <div className="relative">
               <Button
                 variant="ghost"
