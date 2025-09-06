@@ -1,4 +1,4 @@
-import { encryptNoteData, decryptNoteData } from '@/lib/encryption';
+import { encryptNoteData } from '@/lib/encryption';
 import type { FileAttachment } from '@/types/note';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
@@ -34,7 +34,17 @@ export class FileService {
 
   private async encryptFile(file: File, userId: string): Promise<{ encryptedData: string; encryptedTitle: string; iv: string; salt: string }> {
     const fileBuffer = await file.arrayBuffer();
-    const base64Content = btoa(String.fromCharCode(...new Uint8Array(fileBuffer)));
+    
+    // Convert ArrayBuffer to base64 safely for large files
+    const bytes = new Uint8Array(fileBuffer);
+    let base64Content = '';
+    const chunkSize = 0x8000; // 32KB chunks to avoid function argument limits
+    
+    for (let i = 0; i < bytes.length; i += chunkSize) {
+      const chunk = bytes.subarray(i, Math.min(i + chunkSize, bytes.length));
+      base64Content += String.fromCharCode.apply(null, Array.from(chunk));
+    }
+    base64Content = btoa(base64Content);
     
     const encrypted = await encryptNoteData(userId, file.name, base64Content);
     return {
@@ -45,15 +55,50 @@ export class FileService {
     };
   }
 
-  private async decryptFile(encryptedData: string, encryptedTitle: string, iv: string, salt: string, userId: string): Promise<ArrayBuffer> {
-    const decrypted = await decryptNoteData(userId, encryptedTitle, encryptedData, iv, salt);
+  private async decryptFile(encryptedData: string, filename: string, iv: string, salt: string, userId: string): Promise<ArrayBuffer> {
     
-    const binaryString = atob(decrypted.content);
-    const bytes = new Uint8Array(binaryString.length);
-    for (let i = 0; i < binaryString.length; i++) {
-      bytes[i] = binaryString.charCodeAt(i);
+    const { encryptionService } = await import('@/lib/encryption');
+    
+    // Convert base64 strings to required formats
+    const ivBytes = this.base64ToUint8Array(iv);
+    const saltBytes = this.base64ToUint8Array(salt);
+    const encryptedBytes = this.base64ToArrayBuffer(encryptedData);
+    
+    // Derive the same key used for encryption
+    const key = await encryptionService.deriveKey(userId, saltBytes);
+    
+    // Decrypt the file content
+    const decryptedBuffer = await crypto.subtle.decrypt(
+      { name: 'AES-GCM', iv: ivBytes },
+      key,
+      encryptedBytes
+    );
+    
+    // The decrypted content is base64-encoded, so we need to decode it
+    const decryptedText = new TextDecoder().decode(decryptedBuffer);
+    
+    // Decode the base64 to get the actual file content
+    const actualFileContent = atob(decryptedText);
+    const finalBuffer = new Uint8Array(actualFileContent.length);
+    for (let i = 0; i < actualFileContent.length; i++) {
+      finalBuffer[i] = actualFileContent.charCodeAt(i);
     }
-    return bytes.buffer;
+    
+    return finalBuffer.buffer;
+  }
+  
+  private base64ToUint8Array(base64: string): Uint8Array {
+    const binary = atob(base64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+    return bytes;
+  }
+  
+  private base64ToArrayBuffer(base64: string): ArrayBuffer {
+    const bytes = this.base64ToUint8Array(base64);
+    return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
   }
 
   async uploadFiles(
@@ -78,6 +123,7 @@ export class FileService {
     userId: string,
     onProgress?: (progress: UploadProgress) => void
   ): Promise<FileAttachment> {
+    
     if (file.size > 10 * 1024 * 1024) {
       throw new Error('File size exceeds 10MB limit');
     }
@@ -150,13 +196,14 @@ export class FileService {
     const encryptedFile = await response.json();
     const decryptedBuffer = await this.decryptFile(
       encryptedFile.encryptedData,
-      encryptedFile.encryptedTitle,
+      encryptedFile.originalName, // Use originalName instead of missing encryptedTitle
       encryptedFile.iv,
       encryptedFile.salt,
       userId
     );
     
-    return new Blob([decryptedBuffer], { type: attachment.mimeType });
+    const blob = new Blob([decryptedBuffer], { type: attachment.mimeType });
+    return blob;
   }
 
   async removeFile(attachmentId: string): Promise<void> {

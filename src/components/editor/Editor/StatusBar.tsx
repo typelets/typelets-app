@@ -7,6 +7,7 @@ interface StatusBarProps {
   scrollPercentage: number;
   zoomLevel: number;
   saveStatus: 'saved' | 'saving' | 'error';
+  noteId?: string;
   onZoomIn: () => void;
   onZoomOut: () => void;
   onResetZoom: () => void;
@@ -19,6 +20,7 @@ export function StatusBar({
   scrollPercentage,
   zoomLevel,
   saveStatus,
+  noteId,
   onZoomIn,
   onZoomOut,
   onResetZoom,
@@ -49,6 +51,13 @@ export function StatusBar({
         {scrollPercentage > 0 && (
           <span className="hover:bg-muted px-1.5 py-0.5 rounded cursor-default" title="Scroll position">
             {scrollPercentage}%
+          </span>
+        )}
+        
+        {/* Note ID */}
+        {noteId && (
+          <span className="hover:bg-muted px-1.5 py-0.5 rounded cursor-default" title="Note ID">
+            {noteId}
           </span>
         )}
         
