@@ -1,3 +1,10 @@
+## [1.10.3](https://github.com/typelets/typelets-app/compare/v1.10.2...v1.10.3) (2025-09-06)
+
+
+### Bug Fixes
+
+* resolve file encryption issues and add note ID to status bar ([aa91bbc](https://github.com/typelets/typelets-app/commit/aa91bbcea97ada9a5d0191d56480e60a288c2c3d))
+
 ## [1.10.2](https://github.com/typelets/typelets-app/compare/v1.10.1...v1.10.2) (2025-09-06)
 
 
