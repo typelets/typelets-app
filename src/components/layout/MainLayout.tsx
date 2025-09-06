@@ -128,6 +128,7 @@ export default function MainLayout() {
     onDeleteNote: deleteNote,
     onArchiveNote: archiveNote,
     onToggleStar: toggleStar,
+    userId,
   };
 
   if (isChecking) {

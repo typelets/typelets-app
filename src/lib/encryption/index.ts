@@ -364,8 +364,7 @@ class EncryptionService {
       });
 
       return result;
-    } catch (error) {
-      console.error('Decryption failed:', error);
+    } catch {
       throw new Error('Failed to decrypt note.');
     }
   }
