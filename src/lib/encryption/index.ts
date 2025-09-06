@@ -4,6 +4,7 @@ import {
   CACHE_LIMITS,
   ENCODING,
 } from './constants';
+import { secureStorage } from './secureStorage';
 
 export interface EncryptedNote {
   encryptedTitle: string;
@@ -177,33 +178,38 @@ class EncryptionService {
     }
   }
 
-  private getUserSecret(userId: string): string {
+  private async getUserSecret(userId: string): Promise<string> {
+    // Master password mode takes precedence - these are already derived keys
     const masterKey = localStorage.getItem(`enc_master_key_${userId}`);
     if (masterKey) {
       this.masterPasswordMode = true;
       return masterKey;
     }
 
+    // Check memory cache first (for performance)
     if (this.userSecrets.has(userId)) {
       return this.userSecrets.get(userId)!;
     }
 
+    // Use secure storage for fallback user secrets (when no master password)
     const storageKey = STORAGE_KEYS.USER_SECRET(userId);
-    let secret = localStorage.getItem(storageKey);
+    let secret = await secureStorage.getSecureItem(storageKey);
 
     if (!secret) {
+      // Generate new random secret and store it securely
       const randomBytes = crypto.getRandomValues(new Uint8Array(64));
       secret = this.arrayBufferToBase64(randomBytes);
-      localStorage.setItem(storageKey, secret);
+      await secureStorage.setSecureItem(storageKey, secret);
     }
 
+    // Cache in memory for performance (cleared on page reload for security)
     this.userSecrets.set(userId, secret);
     return secret;
   }
 
   async deriveKey(userId: string, salt: Uint8Array): Promise<CryptoKey> {
     const encoder = new TextEncoder();
-    const userSecret = this.getUserSecret(userId);
+    const userSecret = await this.getUserSecret(userId);
 
     if (
       this.masterPasswordMode &&
@@ -413,14 +419,21 @@ class EncryptionService {
   clearKeys(): void {
     this.decryptCache.clear();
     this.userSecrets.clear();
+    // Clear secure storage session for additional security
+    secureStorage.clearSession();
   }
 
   clearUserData(userId: string): void {
-    // Clear all encryption keys
-    localStorage.removeItem(STORAGE_KEYS.USER_SECRET(userId));
+    // Clear all encryption keys from regular localStorage
     localStorage.removeItem(`enc_master_key_${userId}`);
     localStorage.removeItem(`has_master_password_${userId}`);
     localStorage.removeItem(`test_encryption_${userId}`);
+
+    // Clear secure storage (encrypted user secrets)
+    secureStorage.removeSecureItem(STORAGE_KEYS.USER_SECRET(userId));
+
+    // Also remove any legacy plain-text secrets
+    localStorage.removeItem(STORAGE_KEYS.USER_SECRET(userId));
 
     // Clear from memory
     this.userSecrets.delete(userId);
