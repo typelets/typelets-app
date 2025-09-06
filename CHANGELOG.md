@@ -1,3 +1,10 @@
+## [1.10.2](https://github.com/typelets/typelets-app/compare/v1.10.1...v1.10.2) (2025-09-06)
+
+
+### Bug Fixes
+
+* resolve clear-text storage of encryption secrets ([2d43ceb](https://github.com/typelets/typelets-app/commit/2d43cebeb58dc85fb1af0f4157a5a8e708158ac5))
+
 ## [1.10.1](https://github.com/typelets/typelets-app/compare/v1.10.0...v1.10.1) (2025-09-06)
 
 
