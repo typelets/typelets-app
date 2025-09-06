@@ -1,3 +1,10 @@
+## [1.10.1](https://github.com/typelets/typelets-app/compare/v1.10.0...v1.10.1) (2025-09-06)
+
+
+### Bug Fixes
+
+* resolve master password prompt issues for new and returning users ([e006899](https://github.com/typelets/typelets-app/commit/e006899a79f287946166131a1b1f24c749494d75))
+
 # [1.10.0](https://github.com/typelets/typelets-app/compare/v1.9.0...v1.10.0) (2025-09-05)
 
 
