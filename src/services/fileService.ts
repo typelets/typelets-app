@@ -196,7 +196,6 @@ export class FileService {
     const encryptedFile = await response.json();
     const decryptedBuffer = await this.decryptFile(
       encryptedFile.encryptedData,
-      encryptedFile.originalName, // Use originalName instead of missing encryptedTitle
       encryptedFile.iv,
       encryptedFile.salt,
       userId
