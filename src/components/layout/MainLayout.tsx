@@ -43,6 +43,7 @@ export default function MainLayout() {
     setCurrentView,
     setSearchQuery,
     refetch,
+    reinitialize,
   } = useNotes();
 
   const handleCreateNote = useCallback((templateContent?: { title: string; content: string }) => {
@@ -89,6 +90,12 @@ export default function MainLayout() {
       window.location.reload();
     }, 1500);
   }, [setSelectedNote]);
+
+  const handleMasterPasswordUnlock = useCallback(() => {
+    handleUnlockSuccess();
+    // Force re-initialize and fetch data after successful unlock/setup
+    void reinitialize();
+  }, [handleUnlockSuccess, reinitialize]);
 
   const folderPanelProps: FolderPanelProps = {
     currentView, folders, selectedFolder, searchQuery, notesCount, starredCount, archivedCount, trashedCount, expandedFolders,
@@ -144,7 +151,7 @@ export default function MainLayout() {
             <p className="text-gray-600">Your notes are protected with end-to-end encryption</p>
           </div>
         </div>
-        <MasterPasswordDialog userId={userId} onSuccess={handleUnlockSuccess} />
+        <MasterPasswordDialog userId={userId} onSuccess={handleMasterPasswordUnlock} />
       </>
     );
   }

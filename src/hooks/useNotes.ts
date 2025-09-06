@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { useAuth, useUser } from '@clerk/clerk-react';
 import { api, type ApiNote, type ApiFolder } from '@/lib/api/api.ts';
 import { fileService } from '@/services/fileService';
-import { clearEncryptionKeys } from '@/lib/encryption';
+import { clearEncryptionKeys, hasMasterPassword, isMasterPasswordUnlocked } from '@/lib/encryption';
 import type { Note, Folder, ViewMode } from '@/types/note';
 import { getDescendantIds } from '@/utils/folderTree';
 
@@ -39,7 +39,15 @@ export function useNotes() {
     try {
       setError(null);
       api.setCurrentUser(clerkUser!.id);
-      await api.getCurrentUser();
+      
+      // Only call API if user has a master password set up and unlocked
+      const hasPassword = hasMasterPassword(clerkUser!.id);
+      const isUnlocked = isMasterPasswordUnlocked(clerkUser!.id);
+      
+      if (hasPassword && isUnlocked) {
+        await api.getCurrentUser();
+      }
+      
       setEncryptionReady(true);
     } catch (error) {
       console.error('Failed to initialize user:', error);
@@ -110,7 +118,13 @@ export function useNotes() {
 
   useEffect(() => {
     if (encryptionReady && clerkUser) {
-      void loadData();
+      const hasPassword = hasMasterPassword(clerkUser.id);
+      const isUnlocked = isMasterPasswordUnlocked(clerkUser.id);
+      
+      // Only load data if user has master password set up and unlocked
+      if (hasPassword && isUnlocked) {
+        void loadData();
+      }
     }
   }, [encryptionReady, clerkUser, loadData]);
 
@@ -541,5 +555,11 @@ export function useNotes() {
     setSearchQuery,
     setFolders,
     refetch: loadData,
+    reinitialize: async () => {
+      if (clerkUser) {
+        await initializeUser();
+        await loadData();
+      }
+    },
   };
 }

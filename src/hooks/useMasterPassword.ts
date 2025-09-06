@@ -17,8 +17,10 @@ export function useMasterPassword() {
       const hasPassword = hasMasterPassword(user.id);
       const isUnlocked = isMasterPasswordUnlocked(user.id);
 
-      // Needs unlock if has password but not unlocked
-      setNeedsUnlock(hasPassword && !isUnlocked);
+      // Needs unlock if:
+      // 1. User has password but not unlocked (returning user)
+      // 2. User doesn't have password at all (new user needs to set one up)
+      setNeedsUnlock(!hasPassword || (hasPassword && !isUnlocked));
       setIsChecking(false);
     };
 
