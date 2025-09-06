@@ -55,7 +55,7 @@ export class FileService {
     };
   }
 
-  private async decryptFile(encryptedData: string, filename: string, iv: string, salt: string, userId: string): Promise<ArrayBuffer> {
+  private async decryptFile(encryptedData: string, iv: string, salt: string, userId: string): Promise<ArrayBuffer> {
     
     const { encryptionService } = await import('@/lib/encryption');
     
