@@ -1,3 +1,10 @@
+## [1.10.4](https://github.com/typelets/typelets-app/compare/v1.10.3...v1.10.4) (2025-09-07)
+
+
+### Bug Fixes
+
+* increase nginx client_max_body_size to 50M for file uploads ([cb5a2bf](https://github.com/typelets/typelets-app/commit/cb5a2bfaf07fd1ad4152be1a174c71fc03a47535))
+
 ## [1.10.3](https://github.com/typelets/typelets-app/compare/v1.10.2...v1.10.3) (2025-09-06)
 
 
