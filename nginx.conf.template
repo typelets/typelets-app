@@ -31,6 +31,9 @@ http {
         server_name _;
         root /usr/share/nginx/html;
         index index.html;
+        
+        # File upload limits
+        client_max_body_size 50M;
 
         # Security headers
         add_header X-Frame-Options "SAMEORIGIN" always;
