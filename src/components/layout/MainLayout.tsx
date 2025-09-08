@@ -27,6 +27,7 @@ export default function MainLayout() {
     starredCount,
     archivedCount,
     trashedCount,
+    hiddenCount,
     expandedFolders,
     updateFolder,
     createNote,
@@ -36,6 +37,8 @@ export default function MainLayout() {
     deleteNote,
     toggleStar,
     archiveNote,
+    hideNote,
+    unhideNote,
     toggleFolderExpansion,
     reorderFolders,
     setSelectedNote,
@@ -98,7 +101,7 @@ export default function MainLayout() {
   }, [handleUnlockSuccess, reinitialize]);
 
   const folderPanelProps: FolderPanelProps = {
-    currentView, folders, selectedFolder, searchQuery, notesCount, starredCount, archivedCount, trashedCount, expandedFolders,
+    currentView, folders, selectedFolder, searchQuery, notesCount, starredCount, archivedCount, trashedCount, hiddenCount, expandedFolders,
     onUpdateFolder: (id, name, color) => updateFolder(id, { name, color }),
     onUpdateFolderParent: (id, parentId) => updateFolder(id, { parentId }),
     onCreateNote: handleCreateNote,
@@ -128,6 +131,8 @@ export default function MainLayout() {
     onDeleteNote: deleteNote,
     onArchiveNote: archiveNote,
     onToggleStar: toggleStar,
+    onHideNote: hideNote,
+    onUnhideNote: unhideNote,
     userId,
   };
 

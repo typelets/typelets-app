@@ -34,7 +34,13 @@ function NoteCard({
     }
   };
 
+  const formattedDate = useMemo(() => {
+    return note?.createdAt ? formatDateTime(note.createdAt) : 'No date';
+  }, [note?.createdAt]);
+
   const previewText = useMemo(() => {
+    if (note?.hidden) return '[HIDDEN]';
+    
     if (!note?.content) return 'No additional text';
 
     const temp = document.createElement('div');
@@ -50,11 +56,7 @@ function NoteCard({
     }
 
     return text || 'No additional text';
-  }, [note?.content]);
-
-  const formattedDate = useMemo(() => {
-    return note?.updatedAt ? formatDateTime(note.updatedAt) : 'No date';
-  }, [note?.updatedAt]);
+  }, [note?.content, note?.hidden]);
 
   const folder = useMemo(() => {
     // First check if note has embedded folder data

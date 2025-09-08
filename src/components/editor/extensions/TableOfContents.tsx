@@ -55,11 +55,8 @@ const TableOfContentsComponent = ({ editor, deleteNode }: TableOfContentsCompone
     editor.state.doc.descendants((node: any, pos: number) => { // eslint-disable-line @typescript-eslint/no-explicit-any
       if (node.type.name === 'heading') {
         if (currentIndex === index) {
-          // Focus the editor and set cursor position
           editor.commands.focus();
           editor.commands.setTextSelection(pos + 1);
-          
-          // Scroll to the heading
           setTimeout(() => {
             const element = editor.view.domAtPos(pos + 1);
             if (element && element.node) {

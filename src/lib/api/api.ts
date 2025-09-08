@@ -23,6 +23,8 @@ export interface ApiNote {
   starred: boolean;
   archived: boolean;
   deleted: boolean;
+  hidden: boolean;
+  hiddenAt: string | null;
   tags: string[];
   folderId: string | null;
   createdAt: string;
@@ -306,6 +308,20 @@ class ClerkEncryptedApiService {
 
   async unarchiveNote(id: string): Promise<ApiNote> {
     const apiNote = await this.request<ApiNote>(`/notes/${id}/unarchive`, {
+      method: 'POST',
+    });
+    return this.decryptApiNote(apiNote);
+  }
+
+  async hideNote(id: string): Promise<ApiNote> {
+    const apiNote = await this.request<ApiNote>(`/notes/${id}/hide`, {
+      method: 'POST',
+    });
+    return this.decryptApiNote(apiNote);
+  }
+
+  async unhideNote(id: string): Promise<ApiNote> {
+    const apiNote = await this.request<ApiNote>(`/notes/${id}/unhide`, {
       method: 'POST',
     });
     return this.decryptApiNote(apiNote);

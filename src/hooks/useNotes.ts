@@ -10,6 +10,7 @@ const convertApiNote = (apiNote: ApiNote): Note => ({
   ...apiNote,
   createdAt: new Date(apiNote.createdAt),
   updatedAt: new Date(apiNote.updatedAt),
+  hiddenAt: apiNote.hiddenAt ? new Date(apiNote.hiddenAt) : null,
 });
 
 const convertApiFolder = (apiFolder: ApiFolder): Folder => ({
@@ -66,26 +67,33 @@ export function useNotes() {
         api.getNotes({ limit: 100 }),
       ]);
 
-      setFolders(foldersResponse.folders.map(convertApiFolder));
+      const convertedFolders = foldersResponse.folders.map(convertApiFolder);
+      setFolders(convertedFolders);
       const convertedNotes = notesResponse.notes.map(convertApiNote);
       
-      const notesWithAttachments = await Promise.all(
+      // Create a folder map for quick lookup
+      const folderMap = new Map(convertedFolders.map(f => [f.id, f]));
+      
+      const notesWithAttachmentsAndFolders = await Promise.all(
         convertedNotes.map(async (note) => {
           try {
             const attachments = await fileService.getAttachments(note.id);
-            return { ...note, attachments };
+            // Embed folder data if note has a folderId
+            const folder = note.folderId ? folderMap.get(note.folderId) : undefined;
+            return { ...note, attachments, folder };
           } catch (error) {
             console.warn(`Failed to load attachments for note ${note.id}:`, error);
-            return { ...note, attachments: [] };
+            const folder = note.folderId ? folderMap.get(note.folderId) : undefined;
+            return { ...note, attachments: [], folder };
           }
         })
       );
       
-      setNotes(notesWithAttachments);
+      setNotes(notesWithAttachmentsAndFolders);
 
       setSelectedNote(prev => {
-        if (prev === null && notesWithAttachments.length > 0) {
-          return notesWithAttachments[0];
+        if (prev === null && notesWithAttachmentsAndFolders.length > 0) {
+          return notesWithAttachmentsAndFolders[0];
         }
         return prev;
       });
@@ -141,9 +149,12 @@ export function useNotes() {
   const filteredNotes = useMemo(() => {
     return notes.filter((note) => {
       if (searchQuery) {
+        // For hidden notes, search in title and tags but not in content
+        const searchableContent = note.hidden ? '[HIDDEN]' : note.content;
+        
         const matchesSearch =
           note.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          note.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          searchableContent.toLowerCase().includes(searchQuery.toLowerCase()) ||
           note.tags.some((tag) =>
             tag.toLowerCase().includes(searchQuery.toLowerCase())
           );
@@ -167,6 +178,8 @@ export function useNotes() {
           return note.archived && !note.deleted;
         case 'trash':
           return note.deleted;
+        case 'hidden':
+          return note.hidden && !note.deleted;
         default:
           return !note.deleted && !note.archived;
       }
@@ -181,18 +194,23 @@ export function useNotes() {
         );
       }
 
+      const noteFolderId = folderId ?? selectedFolder?.id ?? null;
       const apiNote = await api.createNote({
         title: templateContent?.title || 'Untitled Note',
         content: templateContent?.content || '',
-        folderId: folderId ?? selectedFolder?.id ?? null,
+        folderId: noteFolderId,
         starred: false,
         tags: [],
       });
 
       const newNote = convertApiNote(apiNote);
-      setNotes((prev) => [newNote, ...prev]);
-      setSelectedNote(newNote);
-      return newNote;
+      // Embed folder data if note has a folderId
+      const folder = noteFolderId ? folders.find(f => f.id === noteFolderId) : undefined;
+      const noteWithFolder = { ...newNote, folder };
+      
+      setNotes((prev) => [noteWithFolder, ...prev]);
+      setSelectedNote(noteWithFolder);
+      return noteWithFolder;
     } catch (error) {
       console.error('Failed to create note:', error);
       if (error instanceof Error && error.message.includes('encrypt')) {
@@ -368,11 +386,11 @@ export function useNotes() {
       const updatedNote = convertApiNote(apiNote);
 
       setNotes((prev) =>
-        prev.map((note) => (note.id === noteId ? { ...updatedNote, attachments: note.attachments } : note))
+        prev.map((note) => (note.id === noteId ? { ...updatedNote, attachments: note.attachments, folder: note.folder } : note))
       );
 
       if (selectedNote?.id === noteId) {
-        setSelectedNote({ ...updatedNote, attachments: selectedNote.attachments });
+        setSelectedNote({ ...updatedNote, attachments: selectedNote.attachments, folder: selectedNote.folder });
       }
     } catch (error) {
       console.error('Failed to toggle star:', error);
@@ -406,6 +424,42 @@ export function useNotes() {
     } catch (error) {
       console.error('Failed to restore note:', error);
       setError('Failed to restore note');
+    }
+  };
+
+  const hideNote = async (noteId: string) => {
+    try {
+      const apiNote = await api.hideNote(noteId);
+      const hiddenNote = convertApiNote(apiNote);
+
+      setNotes((prev) =>
+        prev.map((note) => (note.id === noteId ? { ...hiddenNote, attachments: note.attachments, folder: note.folder } : note))
+      );
+
+      if (selectedNote?.id === noteId) {
+        setSelectedNote({ ...hiddenNote, attachments: selectedNote.attachments, folder: selectedNote.folder });
+      }
+    } catch (error) {
+      console.error('Failed to hide note:', error);
+      setError('Failed to hide note');
+    }
+  };
+
+  const unhideNote = async (noteId: string) => {
+    try {
+      const apiNote = await api.unhideNote(noteId);
+      const unhiddenNote = convertApiNote(apiNote);
+
+      setNotes((prev) =>
+        prev.map((note) => (note.id === noteId ? { ...unhiddenNote, attachments: note.attachments, folder: note.folder } : note))
+      );
+
+      if (selectedNote?.id === noteId) {
+        setSelectedNote({ ...unhiddenNote, attachments: selectedNote.attachments, folder: selectedNote.folder });
+      }
+    } catch (error) {
+      console.error('Failed to unhide note:', error);
+      setError('Failed to unhide note');
     }
   };
 
@@ -468,6 +522,26 @@ export function useNotes() {
       if (selectedFolder?.id === folderId) {
         setSelectedFolder(updatedFolder);
       }
+
+      // Update notes that belong to this folder with the new folder data
+      setNotes((prev) =>
+        prev.map((note) => {
+          if (note.folderId === folderId) {
+            return {
+              ...note,
+              folder: updatedFolder,
+            };
+          }
+          return note;
+        })
+      );
+
+      // Update selected note if it belongs to this folder
+      if (selectedNote?.folderId === folderId) {
+        setSelectedNote((prev) =>
+          prev ? { ...prev, folder: updatedFolder } : null
+        );
+      }
     } catch (error) {
       console.error('Failed to update folder:', error);
       setError('Failed to update folder');
@@ -511,7 +585,9 @@ export function useNotes() {
   };
 
   const moveNoteToFolder = async (noteId: string, folderId: string | null) => {
-    await updateNote(noteId, { folderId });
+    // Find the folder data to embed
+    const folder = folderId ? folders.find(f => f.id === folderId) : undefined;
+    await updateNote(noteId, { folderId, folder });
   };
 
   const notesCount = notes.filter((n) => !n.deleted && !n.archived).length;
@@ -520,6 +596,7 @@ export function useNotes() {
   ).length;
   const archivedCount = notes.filter((n) => n.archived && !n.deleted).length;
   const trashedCount = notes.filter((n) => n.deleted).length;
+  const hiddenCount = notes.filter((n) => n.hidden && !n.deleted).length;
 
   return {
     notes: filteredNotes,
@@ -536,6 +613,7 @@ export function useNotes() {
     starredCount,
     archivedCount,
     trashedCount,
+    hiddenCount,
     createNote,
     createFolder,
     updateNote,
@@ -546,6 +624,8 @@ export function useNotes() {
     toggleStar,
     archiveNote,
     restoreNote,
+    hideNote,
+    unhideNote,
     permanentlyDeleteNote,
     moveNoteToFolder,
     toggleFolderExpansion,

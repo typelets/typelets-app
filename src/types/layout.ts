@@ -9,6 +9,7 @@ export interface FolderPanelProps {
   starredCount: number;
   archivedCount: number;
   trashedCount: number;
+  hiddenCount: number;
   expandedFolders: Set<string>;
   onUpdateFolder: (
     folderId: string,
@@ -52,5 +53,7 @@ export interface EditorProps {
   onDeleteNote: (noteId: string) => Promise<void>;
   onArchiveNote: (noteId: string) => Promise<void>;
   onToggleStar: (noteId: string) => Promise<void>;
+  onHideNote: (noteId: string) => Promise<void>;
+  onUnhideNote: (noteId: string) => Promise<void>;
   userId?: string;
 }

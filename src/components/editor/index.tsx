@@ -7,6 +7,8 @@ import {
   FolderInput,
   Paperclip,
   Printer,
+  EyeOff,
+  Eye,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -16,8 +18,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useEditor, EditorContent } from '@tiptap/react';
+import { useEditor, EditorContent, Editor } from '@tiptap/react';
 import ReactDOM from 'react-dom/client';
+import type { Root } from 'react-dom/client';
 import tippy from 'tippy.js';
 import { createEditorExtensions } from './config/editor-config';
 import { SlashCommands } from './extensions/SlashCommandsExtension';
@@ -33,6 +36,29 @@ import { useEditorEffects } from '@/components/editor/hooks/useEditorEffects';
 import { fileService } from '@/services/fileService';
 import type { Note, Folder as FolderType, FileAttachment } from '@/types/note';
 
+// Type definitions for TipTap Suggestion
+// Import CommandItem type from SlashCommands
+import type { CommandItem } from './extensions/SlashCommands';
+
+interface SuggestionProps {
+  editor: Editor;
+  range: { from: number; to: number };
+  query: string;
+  text: string;
+  command: (item: CommandItem) => void;
+  clientRect?: () => DOMRect | null;
+  decorationNode?: Element | null;
+  virtualNode?: Element | null;
+}
+
+interface SuggestionKeyDownProps {
+  event: KeyboardEvent;
+}
+
+interface SlashCommandsHandle {
+  onKeyDown: (props: SuggestionKeyDownProps) => boolean;
+}
+
 interface NoteEditorProps {
   note: Note | null;
   folders?: FolderType[];
@@ -40,6 +66,8 @@ interface NoteEditorProps {
   onDeleteNote: (noteId: string) => void;
   onArchiveNote: (noteId: string) => void;
   onToggleStar: (noteId: string) => void;
+  onHideNote: (noteId: string) => void;
+  onUnhideNote: (noteId: string) => void;
   userId?: string;
 }
 
@@ -50,6 +78,8 @@ export default function Index({
   onDeleteNote,
   onArchiveNote,
   onToggleStar,
+  onHideNote,
+  onUnhideNote,
   userId = 'current-user',
 }: NoteEditorProps) {
   const [isMoveModalOpen, setIsMoveModalOpen] = useState(false);
@@ -80,6 +110,7 @@ export default function Index({
 
   const editor = useEditor(
     {
+      editable: !note?.hidden,
       extensions: [
         ...createEditorExtensions(),
         SlashCommands.configure({
@@ -88,15 +119,12 @@ export default function Index({
               return [];
             },
             render: () => {
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              let component: any;
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              let popup: any;
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              let root: any;
+              let component: SlashCommandsHandle | null = null;
+              let popup: ReturnType<typeof tippy>[0] | null = null;
+              let root: Root | null = null;
 
               return {
-                onStart: (props: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+                onStart: (props: SuggestionProps) => {
                   if (!props.clientRect) {
                     return;
                   }
@@ -104,7 +132,7 @@ export default function Index({
                   const container = document.createElement('div');
                   
                   popup = tippy('body', {
-                    getReferenceClientRect: props.clientRect,
+                    getReferenceClientRect: props.clientRect as () => DOMRect,
                     appendTo: () => document.body,
                     content: container,
                     showOnCreate: true,
@@ -115,21 +143,9 @@ export default function Index({
 
                   root = ReactDOM.createRoot(container);
                   
-                  const commandsList = document.createElement('div');
-                  component = ReactDOM.createRoot(commandsList);
-                  
-                  component.render(
-                    <SlashCommandsList
-                      ref={(ref: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
-                        component = ref;
-                      }}
-                      command={props.command}
-                    />
-                  );
-                  
                   root.render(
                     <SlashCommandsList
-                      ref={(ref: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+                      ref={(ref: SlashCommandsHandle | null) => {
                         component = ref;
                       }}
                       command={props.command}
@@ -137,13 +153,13 @@ export default function Index({
                   );
                 },
 
-                onUpdate: (props: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+                onUpdate: (props: SuggestionProps) => {
                   popup?.setProps({
-                    getReferenceClientRect: props.clientRect,
+                    getReferenceClientRect: props.clientRect as () => DOMRect,
                   });
                 },
 
-                onKeyDown: (props: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+                onKeyDown: (props: SuggestionKeyDownProps) => {
                   if (props.event.key === 'Escape') {
                     popup?.hide();
                     return true;
@@ -161,7 +177,7 @@ export default function Index({
           },
         }),
       ],
-      content: note?.content || '',
+      content: note?.hidden ? '[HIDDEN]' : (note?.content || ''),
       editorProps: {
         attributes: {
           class:
@@ -246,7 +262,7 @@ export default function Index({
         },
       },
       onUpdate: ({ editor }) => {
-        if (!note) return;
+        if (!note || note.hidden) return; // Prevent auto-save for hidden notes
         
         // Update word and character counts
         const text = editor.state.doc.textContent;
@@ -275,7 +291,7 @@ export default function Index({
         }
       },
     },
-    [note?.id, updateCounts]
+    [note?.id, note?.hidden, updateCounts]
   );
 
   // Use custom hook for editor effects
@@ -291,6 +307,22 @@ export default function Index({
   });
 
 
+
+  // Update editor when note hidden state changes
+  useEffect(() => {
+    if (editor && note) {
+      const currentContent = editor.getHTML();
+      
+      // Only update if content actually changed
+      if (note.hidden && currentContent !== '[HIDDEN]') {
+        editor.commands.setContent('[HIDDEN]');
+        editor.setEditable(false);
+      } else if (!note.hidden && currentContent === '[HIDDEN]') {
+        editor.commands.setContent(note.content || '');
+        editor.setEditable(true);
+      }
+    }
+  }, [editor, note]);
 
   // Cleanup timeout on unmount
   useEffect(() => {
@@ -476,6 +508,7 @@ export default function Index({
               onChange={handleTitleChange}
               className="text-foreground placeholder-muted-foreground min-w-0 flex-1 border-none bg-transparent text-2xl font-bold outline-none"
               placeholder="Untitled Note"
+              disabled={note.hidden}
             />
           </div>
 
@@ -508,10 +541,27 @@ export default function Index({
               className={
                 note.starred ? 'text-yellow-500' : 'text-muted-foreground'
               }
+              title={note.starred ? 'Remove from starred' : 'Add to starred'}
             >
               <Star
                 className={`h-4 w-4 ${note.starred ? 'fill-current' : ''}`}
               />
+            </Button>
+
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => note.hidden ? onUnhideNote(note.id) : onHideNote(note.id)}
+              className={
+                note.hidden ? 'text-primary' : 'text-muted-foreground'
+              }
+              title={note.hidden ? 'Unhide note' : 'Hide note'}
+            >
+              {note.hidden ? (
+                <EyeOff className="h-4 w-4" />
+              ) : (
+                <Eye className="h-4 w-4" />
+              )}
             </Button>
 
             <DropdownMenu>
@@ -523,7 +573,7 @@ export default function Index({
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={() => onToggleStar(note.id)}>
                   <Star className="mr-2 h-4 w-4" />
-                  {note.starred ? 'Remove from Starred' : 'Star'}
+                  {note.starred ? 'Unstar' : 'Star'}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setIsMoveModalOpen(true)}>
                   <FolderInput className="mr-2 h-4 w-4" />
@@ -585,9 +635,11 @@ export default function Index({
         </div>
       </div>
 
-      <div className="flex-shrink-0">
-        <Toolbar editor={editor} />
-      </div>
+      {!note.hidden && (
+        <div className="flex-shrink-0">
+          <Toolbar editor={editor} />
+        </div>
+      )}
 
       {showAttachments && (
         <>

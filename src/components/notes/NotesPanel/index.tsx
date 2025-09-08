@@ -22,6 +22,7 @@ interface SortConfig {
 interface FilterConfig {
   showAttachmentsOnly: boolean;
   showStarredOnly: boolean;
+  showHiddenOnly: boolean;
 }
 
 interface FilesPanelProps {
@@ -58,13 +59,14 @@ export default function FilesPanel({
   onClose,
 }: FilesPanelProps) {
   const [sortConfig, setSortConfig] = useState<SortConfig>({
-    option: 'updated',
+    option: 'created',
     direction: 'desc'
   });
 
   const [filterConfig, setFilterConfig] = useState<FilterConfig>({
     showAttachmentsOnly: false,
-    showStarredOnly: false
+    showStarredOnly: false,
+    showHiddenOnly: false
   });
 
   const sortNotes = (notes: Note[], config: SortConfig): Note[] => {
@@ -107,6 +109,9 @@ export default function FilesPanel({
       if (config.showStarredOnly && !note.starred) {
         return false;
       }
+      if (config.showHiddenOnly && !note.hidden) {
+        return false;
+      }
       return true;
     });
   };
@@ -127,12 +132,13 @@ export default function FilesPanel({
     const activeFilters = [];
     if (filterConfig.showAttachmentsOnly) activeFilters.push('With Attachments');
     if (filterConfig.showStarredOnly) activeFilters.push('Starred');
+    if (filterConfig.showHiddenOnly) activeFilters.push('Hidden');
     
     if (activeFilters.length === 0) return `Sort: ${getSortLabel()}`;
     return `Filter: ${activeFilters.join(', ')} | Sort: ${getSortLabel()}`;
   };
 
-  const hasActiveFilters = filterConfig.showAttachmentsOnly || filterConfig.showStarredOnly;
+  const hasActiveFilters = filterConfig.showAttachmentsOnly || filterConfig.showStarredOnly || filterConfig.showHiddenOnly;
 
   const getPanelTitle = () => {
     if (selectedFolder) {
@@ -240,18 +246,24 @@ export default function FilesPanel({
                 onClick={() => setFilterConfig(prev => ({ ...prev, showAttachmentsOnly: !prev.showAttachmentsOnly }))}
                 className={`${filterConfig.showAttachmentsOnly ? 'bg-accent' : ''} mb-1`}
               >
-                {filterConfig.showAttachmentsOnly ? '✓' : '○'} With Attachments
+                {filterConfig.showAttachmentsOnly ? '✓' : '○'} Attachments
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => setFilterConfig(prev => ({ ...prev, showStarredOnly: !prev.showStarredOnly }))}
                 className={`${filterConfig.showStarredOnly ? 'bg-accent' : ''} mb-1`}
               >
-                {filterConfig.showStarredOnly ? '✓' : '○'} Starred Only
+                {filterConfig.showStarredOnly ? '✓' : '○'} Starred
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => setFilterConfig(prev => ({ ...prev, showHiddenOnly: !prev.showHiddenOnly }))}
+                className={`${filterConfig.showHiddenOnly ? 'bg-accent' : ''} mb-1`}
+              >
+                {filterConfig.showHiddenOnly ? '✓' : '○'} Hidden
               </DropdownMenuItem>
               
-              {(filterConfig.showAttachmentsOnly || filterConfig.showStarredOnly) && (
+              {(filterConfig.showAttachmentsOnly || filterConfig.showStarredOnly || filterConfig.showHiddenOnly) && (
                 <DropdownMenuItem
-                  onClick={() => setFilterConfig({ showAttachmentsOnly: false, showStarredOnly: false })}
+                  onClick={() => setFilterConfig({ showAttachmentsOnly: false, showStarredOnly: false, showHiddenOnly: false })}
                   className="text-muted-foreground mb-1"
                 >
                   Clear Filters

@@ -31,6 +31,7 @@ interface FolderPanelProps {
   starredCount: number;
   archivedCount: number;
   trashedCount: number;
+  hiddenCount: number;
   expandedFolders: Set<string>;
   onCreateNote: (templateContent?: { title: string; content: string }) => void;
   onCreateFolder: (name: string, color: string, parentId?: string) => void;
@@ -62,6 +63,7 @@ export default function FolderPanel({
   starredCount,
   archivedCount,
   trashedCount,
+  hiddenCount,
   expandedFolders,
   onCreateFolder,
   onUpdateFolder,
@@ -235,6 +237,7 @@ export default function FolderPanel({
           starredCount={starredCount}
           archivedCount={archivedCount}
           trashedCount={trashedCount}
+          hiddenCount={hiddenCount}
           onViewChange={onViewChange}
           onFolderSelect={onFolderSelect}
         />
