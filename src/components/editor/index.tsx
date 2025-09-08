@@ -132,7 +132,7 @@ export default function Index({
                   const container = document.createElement('div');
                   
                   popup = tippy('body', {
-                    getReferenceClientRect: props.clientRect,
+                    getReferenceClientRect: props.clientRect as () => DOMRect,
                     appendTo: () => document.body,
                     content: container,
                     showOnCreate: true,
@@ -155,7 +155,7 @@ export default function Index({
 
                 onUpdate: (props: SuggestionProps) => {
                   popup?.setProps({
-                    getReferenceClientRect: props.clientRect,
+                    getReferenceClientRect: props.clientRect as () => DOMRect,
                   });
                 },
 
