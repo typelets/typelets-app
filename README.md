@@ -37,7 +37,8 @@
 - 📁 **Nested folder organization** - Create unlimited folder hierarchies with drag & drop
 - 🔄 **Move & organize** - Move notes and folders between locations
 - ⭐ **Star, archive, and organize** - Keep your important notes accessible
-- 🏷️ **Smart filtering & sorting** - Filter by starred, with attachments, or sort by date/title
+- 🙈 **Hide sensitive notes** - Keep private notes hidden from quick view
+- 🏷️ **Smart filtering & sorting** - Filter by starred, hidden, with attachments, or sort by date/title
 - 🔍 **Full-text search** - Find notes instantly (searches encrypted data locally)
 
 ### ✍️ Advanced Rich Text Editor
