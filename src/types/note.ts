@@ -20,6 +20,8 @@ export interface Note {
   folder?: Folder;
   archived?: boolean;
   deleted?: boolean;
+  hidden: boolean;
+  hiddenAt: Date | null;
   attachments?: FileAttachment[];
 }
 
@@ -38,7 +40,7 @@ export interface Folder {
   noteCount?: number;
 }
 
-export type ViewMode = 'all' | 'starred' | 'archived' | 'trash';
+export type ViewMode = 'all' | 'starred' | 'archived' | 'trash' | 'hidden';
 
 export interface NotesState {
   notes: Note[];

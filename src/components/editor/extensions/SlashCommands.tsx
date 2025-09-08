@@ -26,7 +26,7 @@ import {
   Image,
 } from 'lucide-react';
 
-interface CommandItem {
+export interface CommandItem {
   title: string;
   command: ({ editor, range }: { editor: Editor; range: Range }) => void;
   icon: React.ReactNode;
