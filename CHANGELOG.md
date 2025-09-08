@@ -1,3 +1,15 @@
+# [1.11.0](https://github.com/typelets/typelets-app/compare/v1.10.4...v1.11.0) (2025-09-08)
+
+
+### Bug Fixes
+
+* resolve TypeScript errors - update tippy.js types and add hiddenCount prop ([920bb11](https://github.com/typelets/typelets-app/commit/920bb11f5d2d675a903283b4227a1daae51af4a0))
+
+
+### Features
+
+* implement hidden notes filtering and improve type safety ([8a013f4](https://github.com/typelets/typelets-app/commit/8a013f49811d22293e9c9adfa5e1da7a683b15a5))
+
 ## [1.10.4](https://github.com/typelets/typelets-app/compare/v1.10.3...v1.10.4) (2025-09-07)
 
 
