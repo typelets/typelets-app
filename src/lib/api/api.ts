@@ -42,11 +42,31 @@ export interface ApiFolder {
   noteCount?: number;
 }
 
+export interface ApiUserUsage {
+  storage: {
+    totalBytes: number;
+    totalMB: number;
+    totalGB: number;
+    limitGB: number;
+    usagePercent: number;
+    isOverLimit: boolean;
+  };
+  notes: {
+    count: number;
+    limit: number;
+    usagePercent: number;
+    isOverLimit: boolean;
+  };
+}
+
 export interface ApiUser {
   id: string;
   email: string;
   firstName: string | null;
   lastName: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+  usage?: ApiUserUsage;
 }
 
 export interface NotesResponse {
@@ -171,8 +191,9 @@ class ClerkEncryptedApiService {
     return encryptNoteData(this.currentUserId, title, content);
   }
 
-  async getCurrentUser(): Promise<ApiUser> {
-    const user = await this.request<ApiUser>('/users/me');
+  async getCurrentUser(includeUsage = false): Promise<ApiUser> {
+    const endpoint = includeUsage ? '/users/me?include_usage=true' : '/users/me';
+    const user = await this.request<ApiUser>(endpoint);
     this.setCurrentUser(user.id);
     return user;
   }

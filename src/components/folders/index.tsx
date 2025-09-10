@@ -6,6 +6,7 @@ import FolderDeleteModal from '@/components/folders/modals/FolderDeleteModal';
 import EditFolderModal from '@/components/folders/modals/EditFolderModal';
 import MoveFolderModal from '@/components/folders/modals/MoveFolderModal';
 import { ChangeMasterPasswordDialog } from '@/components/password/ChangeMasterPasswordDialog';
+import { UsageDialog } from '@/components/settings/UsageDialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
@@ -86,6 +87,7 @@ export default function FolderPanel({
     string | null
   >(null);
   const [showChangePassword, setShowChangePassword] = useState(false);
+  const [showUsage, setShowUsage] = useState(false);
 
   const hasPassword = user?.id ? hasMasterPassword(user.id) : false;
 
@@ -302,6 +304,26 @@ export default function FolderPanel({
             >
               <UserButton.MenuItems>
                 <UserButton.Action
+                  label="Usage"
+                  labelIcon={
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M3 3v18h18"/>
+                      <path d="m19 9-5 5-4-4-3 3"/>
+                    </svg>
+                  }
+                  onClick={() => setShowUsage(true)}
+                />
+                <UserButton.Action
                   label="Typelets Open Source"
                   labelIcon={
                     <svg
@@ -456,6 +478,11 @@ export default function FolderPanel({
         open={showChangePassword}
         onOpenChange={setShowChangePassword}
         onSuccess={handlePasswordChangeSuccess}
+      />
+
+      <UsageDialog
+        open={showUsage}
+        onOpenChange={setShowUsage}
       />
     </>
   );

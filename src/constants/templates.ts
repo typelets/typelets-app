@@ -42,4 +42,11 @@ export const NOTE_TEMPLATES: NoteTemplate[] = [
     title: 'Research: [Topic]',
     content: `<h1>Research: [Topic]</h1><h2>Research Question</h2><p><em>What am I trying to find out?</em></p><p></p><h2>Sources</h2><ul><li><p></p></li><li><p></p></li><li><p></p></li></ul><h2>Key Findings</h2><h3>Finding 1</h3><p></p><h3>Finding 2</h3><p></p><h3>Finding 3</h3><p></p><h2>Summary &amp; Conclusions</h2><p></p><h2>Next Steps</h2><ul data-type="taskList"><li data-type="taskItem" data-checked="false"><label><input type="checkbox"><span></span></label><div><p></p></div></li><li data-type="taskItem" data-checked="false"><label><input type="checkbox"><span></span></label><div><p></p></div></li></ul><hr><p><em>Research conducted on: ${new Date().toLocaleDateString()}</em></p>`,
   },
+  {
+    id: 'password-entry',
+    name: 'Password Entry',
+    description: 'Secure template for storing credentials',
+    title: '🔐 Password Entry',
+    content: `<h1>🔐 Password Entry</h1><p><strong>Service/Website:</strong> [Enter service name]<br><strong>Username/Email:</strong> [Enter username or email]<br><strong>Password:</strong> [Enter password - this note is encrypted]<br><strong>URL:</strong> [Enter website URL]</p><h2>Additional Information</h2><ul><li><p><strong>Security Questions:</strong><br>Q: [Question 1]<br>A: [Answer 1]</p></li><li><p><strong>Backup Codes:</strong> [Enter backup codes if any]</p></li><li><p><strong>Notes:</strong> [Any additional notes]</p></li></ul><h2>Recovery Information</h2><ul><li><p><strong>Recovery Email:</strong> [Recovery email if different]</p></li><li><p><strong>Recovery Phone:</strong> [Recovery phone number]</p></li></ul><hr><p><em>Last Updated: ${new Date().toLocaleDateString()}</em><br><em>Created: ${new Date().toLocaleDateString()}</em></p>`,
+  },
 ];

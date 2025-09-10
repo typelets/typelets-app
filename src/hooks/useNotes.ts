@@ -57,22 +57,40 @@ export function useNotes() {
     }
   }, [clerkUser]);
 
+  const fetchAllFolders = useCallback(async (): Promise<Folder[]> => {
+    let allFolders: Folder[] = [];
+    let page = 1;
+    let hasMorePages = true;
+
+    while (hasMorePages) {
+      const foldersResponse = await api.getFolders({ page, limit: 100 });
+      const convertedFolders = foldersResponse.folders.map(convertApiFolder);
+      allFolders = [...allFolders, ...convertedFolders];
+
+      // Check if we have more pages
+      const totalPages = Math.ceil(foldersResponse.total / foldersResponse.limit);
+      hasMorePages = page < totalPages;
+      page++;
+    }
+
+    return allFolders;
+  }, []);
+
   const loadData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
 
-      const [foldersResponse, notesResponse] = await Promise.all([
-        api.getFolders(),
+      const [allFolders, notesResponse] = await Promise.all([
+        fetchAllFolders(),
         api.getNotes({ limit: 100 }),
       ]);
 
-      const convertedFolders = foldersResponse.folders.map(convertApiFolder);
-      setFolders(convertedFolders);
+      setFolders(allFolders);
       const convertedNotes = notesResponse.notes.map(convertApiNote);
       
       // Create a folder map for quick lookup
-      const folderMap = new Map(convertedFolders.map(f => [f.id, f]));
+      const folderMap = new Map(allFolders.map(f => [f.id, f]));
       
       const notesWithAttachmentsAndFolders = await Promise.all(
         convertedNotes.map(async (note) => {
@@ -109,7 +127,7 @@ export function useNotes() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [fetchAllFolders]);
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -312,11 +330,26 @@ export function useNotes() {
 
         const updatedNote = convertApiNote(apiNote);
         setNotes((prev) =>
-          prev.map((note) => (note.id === noteId ? updatedNote : note))
+          prev.map((note) => {
+            if (note.id !== noteId) return note;
+            
+            // Preserve attachments and update folder data if folderId changed
+            const newFolder = updatedNote.folderId ? folders.find(f => f.id === updatedNote.folderId) : undefined;
+            return { 
+              ...updatedNote, 
+              attachments: note.attachments, 
+              folder: newFolder 
+            };
+          })
         );
 
         if (selectedNote?.id === noteId) {
-          setSelectedNote(updatedNote);
+          const newFolder = updatedNote.folderId ? folders.find(f => f.id === updatedNote.folderId) : undefined;
+          setSelectedNote({ 
+            ...updatedNote, 
+            attachments: selectedNote.attachments, 
+            folder: newFolder 
+          });
         }
       } catch (error) {
         console.error('Failed to update note:', error);
@@ -354,7 +387,7 @@ export function useNotes() {
 
       saveTimeoutsRef.current.set(noteId, timeout);
     }
-  }, [encryptionReady, selectedNote?.id, loadData]);
+  }, [encryptionReady, selectedNote?.id, selectedNote?.attachments, folders, loadData]);
 
   const deleteNote = async (noteId: string) => {
     try {
@@ -553,9 +586,7 @@ export function useNotes() {
     try {
       await api.reorderFolder(folderId, newIndex);
 
-      const foldersResponse = await api.getFolders();
-      const newFolders = foldersResponse.folders.map(convertApiFolder);
-
+      const newFolders = await fetchAllFolders();
       setFolders(newFolders);
     } catch (error) {
       console.error('Failed to reorder folders:', error);
