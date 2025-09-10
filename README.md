@@ -48,6 +48,7 @@
 - 🖼️ **Smart image handling** - Upload, resize, drag & drop images with visual controls
 - 📑 **Table of contents** - Auto-generated TOC with smooth navigation
 - ⚡ **Slash commands** - Quick formatting with `/` commands (headings, lists, images, etc.)
+- 📋 **Note templates** - Pre-built templates for meetings, projects, daily notes, research, and secure password storage
 - 💾 **Auto-save** - Real-time saving with visual indicators
 - 🔗 **Links & references** - Easy link insertion and management
 - 🧮 **Code support** - Inline code and code blocks with syntax highlighting
@@ -61,8 +62,8 @@
 ### 💻 User Experience
 - 🌙 **Dark/Light mode** - Easy on the eyes, day or night
 - 📎 **File attachments** - Upload and encrypt files up to 10MB per file
+- 📊 **Usage tracking** - Monitor storage and notes limits with visual progress indicators
 - 📱 **Responsive design** - Works seamlessly on desktop and mobile
-- 🎯 **Keyboard shortcuts** - Efficient navigation and formatting shortcuts
 - 🖨️ **Print support** - Clean printing with proper formatting
 
 ## 🔒 Security First
