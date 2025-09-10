@@ -1,3 +1,10 @@
+# [1.12.0](https://github.com/typelets/typelets-app/compare/v1.11.0...v1.12.0) (2025-09-10)
+
+
+### Features
+
+* add usage tracking, password template, and fix folder pagination ([efd1989](https://github.com/typelets/typelets-app/commit/efd1989d62b2e84f1f726c069dbf411882a41004))
+
 # [1.11.0](https://github.com/typelets/typelets-app/compare/v1.10.4...v1.11.0) (2025-09-08)
 
 
