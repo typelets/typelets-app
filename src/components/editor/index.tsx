@@ -169,8 +169,17 @@ export default function Index({
                 },
 
                 onExit: () => {
-                  popup?.destroy();
-                  root?.unmount();
+                  if (popup && !popup.state.isDestroyed) {
+                    popup.destroy();
+                  }
+                  popup = null;
+                  
+                  if (root) {
+                    setTimeout(() => {
+                      root?.unmount();
+                      root = null;
+                    }, 0);
+                  }
                 },
               };
             },

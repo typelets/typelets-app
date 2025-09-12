@@ -6,6 +6,8 @@ import Link from '@tiptap/extension-link';
 import HorizontalRule from '@tiptap/extension-horizontal-rule';
 import Highlight from '@tiptap/extension-highlight';
 import { Dropcursor } from '@tiptap/extension-dropcursor';
+import Color from '@tiptap/extension-color';
+import TextStyle from '@tiptap/extension-text-style';
 import { TableOfContents } from '../extensions/TableOfContents';
 import { ResizableImage } from '../extensions/ResizableImage';
 import StarterKit from '@tiptap/starter-kit';
@@ -51,6 +53,8 @@ export function createEditorExtensions() {
         levels: [1, 2, 3],
       },
       codeBlock: false,
+      horizontalRule: false,
+      dropcursor: false,
     }),
     CodeBlockLowlight.configure({
       lowlight,
@@ -97,5 +101,7 @@ export function createEditorExtensions() {
       color: '#6b7280',
       width: 2,
     }),
+    TextStyle,
+    Color,
   ];
 }

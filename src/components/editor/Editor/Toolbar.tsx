@@ -20,6 +20,10 @@ import {
   Minus,
   Highlighter,
   FileText,
+  Palette,
+  RemoveFormatting,
+  Copy,
+  Smile,
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button.tsx';
@@ -164,59 +168,172 @@ export function Toolbar({ editor }: ToolbarProps) {
         <Highlighter className="h-4 w-4" />
       </Button>
 
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="ghost"
+            size="sm"
+            title="Text Color"
+          >
+            <Palette className="h-4 w-4" />
+            <ChevronDown className="ml-1 h-3 w-3" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="grid grid-cols-5 gap-1 p-2">
+          {[
+            { label: 'Default', color: null },
+            { label: 'Red', color: '#ef4444' },
+            { label: 'Orange', color: '#f97316' },
+            { label: 'Yellow', color: '#eab308' },
+            { label: 'Green', color: '#22c55e' },
+            { label: 'Blue', color: '#3b82f6' },
+            { label: 'Indigo', color: '#6366f1' },
+            { label: 'Purple', color: '#a855f7' },
+            { label: 'Pink', color: '#ec4899' },
+            { label: 'Gray', color: '#6b7280' },
+          ].map((item) => (
+            <button
+              key={item.label}
+              onClick={() => {
+                if (item.color) {
+                  editor.chain().focus().setColor(item.color).run();
+                } else {
+                  editor.chain().focus().unsetColor().run();
+                }
+              }}
+              className="h-6 w-6 rounded border border-gray-300 hover:scale-110 transition-transform flex items-center justify-center"
+              style={{ backgroundColor: item.color || 'transparent' }}
+              title={item.label}
+            >
+              {!item.color && (
+                <span className="text-xs leading-none">✕</span>
+              )}
+            </button>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
+
       <div className="bg-border mx-1 h-6 w-px" />
 
-      <Button
-        variant={editor.isActive('heading', { level: 1 }) ? 'default' : 'ghost'}
-        size="sm"
-        onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-        title="Heading 1"
-      >
-        <Heading1 className="h-4 w-4" />
-      </Button>
-      <Button
-        variant={editor.isActive('heading', { level: 2 }) ? 'default' : 'ghost'}
-        size="sm"
-        onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-        title="Heading 2"
-      >
-        <Heading2 className="h-4 w-4" />
-      </Button>
-      <Button
-        variant={editor.isActive('heading', { level: 3 }) ? 'default' : 'ghost'}
-        size="sm"
-        onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
-        title="Heading 3"
-      >
-        <Heading3 className="h-4 w-4" />
-      </Button>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant={editor.isActive('heading') ? 'default' : 'ghost'}
+            size="sm"
+            className="gap-1"
+            title="Headings"
+          >
+            {editor.isActive('heading', { level: 1 }) ? (
+              <Heading1 className="h-4 w-4" />
+            ) : editor.isActive('heading', { level: 2 }) ? (
+              <Heading2 className="h-4 w-4" />
+            ) : editor.isActive('heading', { level: 3 }) ? (
+              <Heading3 className="h-4 w-4" />
+            ) : (
+              <Heading1 className="h-4 w-4" />
+            )}
+            <ChevronDown className="h-3 w-3" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-40 p-1">
+          <DropdownMenuItem
+            onClick={() => editor.chain().focus().setParagraph().run()}
+            className={`mb-1 ${!editor.isActive('heading') ? 'bg-accent' : ''}`}
+          >
+            <span className="text-sm">Normal Text</span>
+            {!editor.isActive('heading') && (
+              <span className="ml-auto text-xs opacity-60">✓</span>
+            )}
+          </DropdownMenuItem>
+          <DropdownMenuSeparator className="my-1" />
+          <DropdownMenuItem
+            onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+            className={`mb-1 ${editor.isActive('heading', { level: 1 }) ? 'bg-accent' : ''}`}
+          >
+            <Heading1 className="mr-2 h-4 w-4" />
+            <span className="text-sm font-semibold">Heading 1</span>
+            {editor.isActive('heading', { level: 1 }) && (
+              <span className="ml-auto text-xs opacity-60">✓</span>
+            )}
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+            className={`mb-1 ${editor.isActive('heading', { level: 2 }) ? 'bg-accent' : ''}`}
+          >
+            <Heading2 className="mr-2 h-4 w-4" />
+            <span className="text-sm font-medium">Heading 2</span>
+            {editor.isActive('heading', { level: 2 }) && (
+              <span className="ml-auto text-xs opacity-60">✓</span>
+            )}
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+            className={editor.isActive('heading', { level: 3 }) ? 'bg-accent' : ''}
+          >
+            <Heading3 className="mr-2 h-4 w-4" />
+            <span className="text-sm">Heading 3</span>
+            {editor.isActive('heading', { level: 3 }) && (
+              <span className="ml-auto text-xs opacity-60">✓</span>
+            )}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
 
       <div className="bg-border mx-1 h-6 w-px" />
 
-      <Button
-        variant={editor.isActive('bulletList') ? 'default' : 'ghost'}
-        size="sm"
-        onClick={() => editor.chain().focus().toggleBulletList().run()}
-        title="Bullet List"
-      >
-        <List className="h-4 w-4" />
-      </Button>
-      <Button
-        variant={editor.isActive('orderedList') ? 'default' : 'ghost'}
-        size="sm"
-        onClick={() => editor.chain().focus().toggleOrderedList().run()}
-        title="Numbered List"
-      >
-        <ListOrdered className="h-4 w-4" />
-      </Button>
-      <Button
-        variant={editor.isActive('taskList') ? 'default' : 'ghost'}
-        size="sm"
-        onClick={() => editor.chain().focus().toggleTaskList().run()}
-        title="Task List (Checkboxes)"
-      >
-        <CheckSquare className="h-4 w-4" />
-      </Button>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant={editor.isActive('bulletList') || editor.isActive('orderedList') || editor.isActive('taskList') ? 'default' : 'ghost'}
+            size="sm"
+            className="gap-1"
+            title="Lists"
+          >
+            {editor.isActive('bulletList') ? (
+              <List className="h-4 w-4" />
+            ) : editor.isActive('orderedList') ? (
+              <ListOrdered className="h-4 w-4" />
+            ) : editor.isActive('taskList') ? (
+              <CheckSquare className="h-4 w-4" />
+            ) : (
+              <List className="h-4 w-4" />
+            )}
+            <ChevronDown className="h-3 w-3" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-40 p-1">
+          <DropdownMenuItem
+            onClick={() => editor.chain().focus().toggleBulletList().run()}
+            className={`mb-1 ${editor.isActive('bulletList') ? 'bg-accent' : ''}`}
+          >
+            <List className="mr-2 h-4 w-4" />
+            <span className="text-sm">Bullet List</span>
+            {editor.isActive('bulletList') && (
+              <span className="ml-auto text-xs opacity-60">✓</span>
+            )}
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => editor.chain().focus().toggleOrderedList().run()}
+            className={`mb-1 ${editor.isActive('orderedList') ? 'bg-accent' : ''}`}
+          >
+            <ListOrdered className="mr-2 h-4 w-4" />
+            <span className="text-sm">Numbered List</span>
+            {editor.isActive('orderedList') && (
+              <span className="ml-auto text-xs opacity-60">✓</span>
+            )}
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => editor.chain().focus().toggleTaskList().run()}
+            className={editor.isActive('taskList') ? 'bg-accent' : ''}
+          >
+            <CheckSquare className="mr-2 h-4 w-4" />
+            <span className="text-sm">Task List</span>
+            {editor.isActive('taskList') && (
+              <span className="ml-auto text-xs opacity-60">✓</span>
+            )}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
 
       <div className="bg-border mx-1 h-6 w-px" />
 
@@ -297,6 +414,73 @@ export function Toolbar({ editor }: ToolbarProps) {
       >
         <Minus className="h-4 w-4" />
       </Button>
+
+      <div className="bg-border mx-1 h-6 w-px" />
+
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => editor.chain().focus().clearNodes().unsetAllMarks().run()}
+        title="Clear Formatting"
+      >
+        <RemoveFormatting className="h-4 w-4" />
+      </Button>
+
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => {
+          const content = editor.getText();
+          navigator.clipboard.writeText(content);
+        }}
+        title="Copy to Clipboard"
+      >
+        <Copy className="h-4 w-4" />
+      </Button>
+
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="ghost"
+            size="sm"
+            title="Insert Emoji"
+          >
+            <Smile className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-64 p-2">
+          <div className="grid grid-cols-8 gap-1">
+            {[
+              '😀', '😃', '😄', '😁', '😅', '😂', '🤣', '😊',
+              '😇', '🙂', '😉', '😌', '😍', '🥰', '😘', '😗',
+              '😙', '😚', '😋', '😛', '😜', '🤪', '😝', '🤑',
+              '🤗', '🤭', '🤫', '🤔', '🤐', '🤨', '😐', '😑',
+              '😶', '😏', '😒', '🙄', '😬', '🤥', '😺', '😔',
+              '😪', '🤤', '😴', '😷', '🤒', '🤕', '🤢', '🤮',
+              '🤧', '🥵', '🥶', '😎', '🤓', '🧐', '😕', '😟',
+              '🙁', '☹️', '😮', '😯', '😲', '😳', '🥺', '😦',
+              '😧', '😨', '😰', '😥', '😢', '😭', '😱', '😖',
+              '😣', '😞', '😓', '😩', '😫', '🥱', '😤', '😡',
+              '😠', '🤬', '😈', '👿', '💀', '☠️', '💩', '🤡',
+              '👍', '👎', '👌', '✌️', '🤞', '🤟', '🤘', '🤙',
+              '👏', '🙌', '👐', '🤲', '🙏', '✍️', '💪', '🦾',
+              '❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍',
+              '🤎', '💔', '❣️', '💕', '💞', '💓', '💗', '💖',
+              '💘', '💝', '⭐', '🌟', '✨', '⚡', '🔥', '💥',
+              '🎉', '🎊', '🎈', '🎁', '🎯', '🏆', '🥇', '🥈',
+            ].map((emoji) => (
+              <button
+                key={emoji}
+                onClick={() => editor.chain().focus().insertContent(emoji).run()}
+                className="hover:bg-gray-100 dark:hover:bg-gray-700 rounded p-1 text-xl"
+                title={`Insert ${emoji}`}
+              >
+                {emoji}
+              </button>
+            ))}
+          </div>
+        </DropdownMenuContent>
+      </DropdownMenu>
 
     </div>
   );
