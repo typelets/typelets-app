@@ -1,3 +1,10 @@
+# [1.13.0](https://github.com/typelets/typelets-app/compare/v1.12.0...v1.13.0) (2025-09-12)
+
+
+### Features
+
+* enhance editor with UI components and fix usage display ([2502db7](https://github.com/typelets/typelets-app/commit/2502db71175c7b6485960b22887bd1fe7b360755))
+
 # [1.12.0](https://github.com/typelets/typelets-app/compare/v1.11.0...v1.12.0) (2025-09-10)
 
 
