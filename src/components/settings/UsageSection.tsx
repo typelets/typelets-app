@@ -84,12 +84,23 @@ export function UsageSection({ className }: UsageSectionProps) {
           </div>
           
           <Progress 
-            value={usage.storage.usagePercent} 
+            value={Math.max(0.1, (usage.storage.totalBytes / (usage.storage.limitGB * 1024 * 1024 * 1024)) * 100)} 
             className="h-2"
           />
           
           <div className="flex justify-between text-xs text-muted-foreground">
-            <span>{usage.storage.usagePercent.toFixed(1)}% used</span>
+            <span>
+              {(() => {
+                const calculatedPercent = (usage.storage.totalBytes / (usage.storage.limitGB * 1024 * 1024 * 1024)) * 100;
+                if (calculatedPercent < 1 && calculatedPercent > 0) {
+                  return `${calculatedPercent.toFixed(2)}% used`;
+                } else if (calculatedPercent === 0) {
+                  return '0% used';
+                } else {
+                  return `${calculatedPercent.toFixed(1)}% used`;
+                }
+              })()}
+            </span>
             <span>{formatBytes((usage.storage.limitGB * 1024 * 1024 * 1024) - usage.storage.totalBytes)} free</span>
           </div>
 
@@ -125,7 +136,12 @@ export function UsageSection({ className }: UsageSectionProps) {
           />
           
           <div className="flex justify-between text-xs text-muted-foreground">
-            <span>{usage.notes.usagePercent.toFixed(1)}% used</span>
+            <span>
+              {usage.notes.usagePercent < 1 && usage.notes.usagePercent > 0 
+                ? `${usage.notes.usagePercent.toFixed(2)}% used`
+                : `${usage.notes.usagePercent.toFixed(1)}% used`
+              }
+            </span>
             <span>{usage.notes.limit - usage.notes.count} notes remaining</span>
           </div>
 
