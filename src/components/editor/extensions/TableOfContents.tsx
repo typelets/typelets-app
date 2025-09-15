@@ -1,4 +1,4 @@
-import { Node as ProseMirrorNode, mergeAttributes, Node as TiptapNode } from '@tiptap/core';
+import { mergeAttributes, Node as TiptapNode } from '@tiptap/core';
 import { ReactNodeViewRenderer } from '@tiptap/react';
 import { NodeViewWrapper } from '@tiptap/react';
 import type { Editor } from '@tiptap/react';
