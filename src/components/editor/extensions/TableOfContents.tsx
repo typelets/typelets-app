@@ -1,4 +1,4 @@
-import { Node, mergeAttributes } from '@tiptap/core';
+import { Node as ProseMirrorNode, mergeAttributes } from '@tiptap/core';
 import { ReactNodeViewRenderer } from '@tiptap/react';
 import { NodeViewWrapper } from '@tiptap/react';
 import type { Editor } from '@tiptap/react';
@@ -56,8 +56,7 @@ const TableOfContentsComponent = ({
     (index: number) => {
       let currentIndex = 0;
 
-      editor.state.doc.descendants((node: any, pos: number) => {
-        // eslint-disable-line @typescript-eslint/no-explicit-any
+      editor.state.doc.descendants((node: ProseMirrorNode, pos: number) => {
         if (node.type.name === 'heading') {
           if (currentIndex === index) {
             editor.commands.focus();
