@@ -127,7 +127,7 @@ VITE_API_URL=/api
 
 # Proxy Configuration (for development)
 # The proxy will forward /api requests to this target
-VITE_PROXY_TARGET=https://dev.api.typelets.com
+VITE_PROXY_TARGET=https://your-api-domain.com
 
 # Optional
 VITE_APP_NAME=Typelets
@@ -150,7 +150,7 @@ pnpm dev
 VITE_PROXY_TARGET=http://localhost:8080 pnpm dev
 
 # Use production API (for testing)
-VITE_PROXY_TARGET=https://api.typelets.com pnpm dev
+VITE_PROXY_TARGET=https://your-api-domain.com pnpm dev
 ```
 
 You can also create environment-specific files:
@@ -167,6 +167,7 @@ You can also create environment-specific files:
 docker build -t typelets-app:latest \
   --build-arg VITE_CLERK_PUBLISHABLE_KEY=your_clerk_key \
   --build-arg VITE_API_URL=/api \
+  --build-arg VITE_WEBSOCKET_URL \
   .
 
 # Run with your backend
@@ -185,8 +186,9 @@ docker run -p 80:8080 \
 $env:AWS_ACCOUNT_ID = (aws sts get-caller-identity --query Account --output text)
 $env:AWS_REGION = "us-east-1"
 $env:ECR_REPOSITORY = "typelets-app"
-$env:VITE_CLERK_PUBLISHABLE_KEY = "pk_live_your_key_here"
+$env:VITE_WEBSOCKET_URL = 
 $env:VITE_API_URL = "/api"
+$env:VITE_CLERK_PUBLISHABLE_KEY = "pk_live_your_key_here"
 
 # Create ECR repository (first time only)
 aws ecr create-repository `
@@ -201,6 +203,7 @@ aws ecr get-login-password --region $env:AWS_REGION | docker login --username AW
 docker build -t typelets-app:latest `
   --build-arg VITE_CLERK_PUBLISHABLE_KEY=$env:VITE_CLERK_PUBLISHABLE_KEY `
   --build-arg VITE_API_URL=$env:VITE_API_URL `
+  --build-arg VITE_WEBSOCKET_URL=$env:VITE_WEBSOCKET_URL `
   .
 
 # Tag for ECR
@@ -222,6 +225,7 @@ export AWS_REGION=us-east-1
 export ECR_REPOSITORY=typelets-app
 export VITE_CLERK_PUBLISHABLE_KEY=pk_live_your_key_here
 export VITE_API_URL=/api
+export VITE_WEBSOCKET_URL=wss://your-api-domain.com
 
 # Create ECR repository (first time only)
 aws ecr create-repository \
@@ -237,6 +241,7 @@ aws ecr get-login-password --region $AWS_REGION | \
 docker build -t typelets-app:latest \
   --build-arg VITE_CLERK_PUBLISHABLE_KEY=$VITE_CLERK_PUBLISHABLE_KEY \
   --build-arg VITE_API_URL=$VITE_API_URL \
+  --build-arg VITE_WEBSOCKET_URL=$VITE_WEBSOCKET_URL \
   .
 
 # Tag for ECR
@@ -256,19 +261,21 @@ docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:la
 |----------|-------------|---------|
 | `VITE_CLERK_PUBLISHABLE_KEY` | Clerk authentication key | `pk_live_xxx` |
 | `VITE_API_URL` | API path for React app (MUST be `/api`) | `/api` |
+| `VITE_WEBSOCKET_URL` | WebSocket URL for real-time sync | `wss://your-api-domain.com` |
 
 #### Runtime Environment Variables
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `BACKEND_URL` | Your backend API URL | `https://api.typelets.com` |
+| `BACKEND_URL` | Your backend API URL | `https://your-api-domain.com` |
 
 #### Development Environment Variables
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `VITE_PROXY_TARGET` | Backend URL for development proxy | `https://dev.api.typelets.com` |
+| `VITE_PROXY_TARGET` | Backend URL for development proxy | `https://your-api-domain.com` |
 | `VITE_API_URL` | API path (keep as `/api`) | `/api` |
+| `VITE_WEBSOCKET_URL` | WebSocket URL for development | `wss://your-api-domain.com` |
 
 ### Cloud Deployment Examples
 
