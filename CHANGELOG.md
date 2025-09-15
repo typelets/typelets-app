@@ -1,3 +1,10 @@
+## [1.14.2](https://github.com/typelets/typelets-app/compare/v1.14.1...v1.14.2) (2025-09-15)
+
+
+### Bug Fixes
+
+* add VITE_WEBSOCKET_URL build argument to Docker configuration ([acd2558](https://github.com/typelets/typelets-app/commit/acd255849ff381c44792284525fbd1aad6f5fb5e))
+
 ## [1.14.1](https://github.com/typelets/typelets-app/compare/v1.14.0...v1.14.1) (2025-09-15)
 
 
