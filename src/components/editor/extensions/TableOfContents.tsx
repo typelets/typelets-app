@@ -1,4 +1,4 @@
-import { Node as ProseMirrorNode, mergeAttributes } from '@tiptap/core';
+import { Node as ProseMirrorNode, mergeAttributes, Node as TiptapNode } from '@tiptap/core';
 import { ReactNodeViewRenderer } from '@tiptap/react';
 import { NodeViewWrapper } from '@tiptap/react';
 import type { Editor } from '@tiptap/react';
@@ -56,7 +56,7 @@ const TableOfContentsComponent = ({
     (index: number) => {
       let currentIndex = 0;
 
-      editor.state.doc.descendants((node: ProseMirrorNode, pos: number) => {
+      editor.state.doc.descendants((node, pos) => {
         if (node.type.name === 'heading') {
           if (currentIndex === index) {
             editor.commands.focus();
@@ -157,7 +157,7 @@ const TableOfContentsComponent = ({
   );
 };
 
-export const TableOfContents = Node.create({
+export const TableOfContents = TiptapNode.create({
   name: 'tableOfContents',
 
   group: 'block',
