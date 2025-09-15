@@ -1,3 +1,13 @@
+## [1.14.1](https://github.com/typelets/typelets-app/compare/v1.14.0...v1.14.1) (2025-09-15)
+
+
+### Bug Fixes
+
+* **editor:** resolve Node naming conflict in TableOfContents ([96f0a60](https://github.com/typelets/typelets-app/commit/96f0a6077d99d3c1a5deba47a1a8ff562d56d70b))
+* remove unused keyInitialized variable in messageAuth ([0629ea0](https://github.com/typelets/typelets-app/commit/0629ea0b5e08ba23d901e0f79b367e11ce6dcc09))
+* resolve critical XSS vulnerabilities and code quality issues ([cf62e72](https://github.com/typelets/typelets-app/commit/cf62e724d433e3c8c0b6e836b27b543e521531a7))
+* resolve critical XSS vulnerabilities and code quality issues ([af9c758](https://github.com/typelets/typelets-app/commit/af9c758f71d735961aebc57a776f39cb007c89ff))
+
 # [1.14.0](https://github.com/typelets/typelets-app/compare/v1.13.0...v1.14.0) (2025-09-15)
 
 
