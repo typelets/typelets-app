@@ -1,3 +1,10 @@
+# [1.14.0](https://github.com/typelets/typelets-app/compare/v1.13.0...v1.14.0) (2025-09-15)
+
+
+### Features
+
+* implement WebSocket real-time sync with HMAC message authentication ([469bfa9](https://github.com/typelets/typelets-app/commit/469bfa9c15f78997fe557b6abda31c020d57b36d))
+
 # [1.13.0](https://github.com/typelets/typelets-app/compare/v1.12.0...v1.13.0) (2025-09-12)
 
 
