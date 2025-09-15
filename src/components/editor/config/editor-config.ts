@@ -78,7 +78,8 @@ export function createEditorExtensions() {
     Link.configure({
       openOnClick: false,
       HTMLAttributes: {
-        class: 'text-blue-600 underline hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300',
+        class:
+          'text-blue-600 underline hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300',
       },
     }),
     HorizontalRule.configure({

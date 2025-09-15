@@ -210,13 +210,15 @@ export default function FolderPanel({
 
   return (
     <>
-      <div className="border-border bg-background flex h-full w-full md:w-64 flex-col overflow-hidden border-r transition-all duration-300">
+      <div className="border-border bg-background flex h-full w-full flex-col overflow-hidden border-r transition-all duration-300 md:w-64">
         <div className="border-border h-17 shrink-0 border-b p-3">
           <div className="flex items-center justify-between">
             <h3 className="text-foreground text-lg font-semibold">Folders</h3>
           </div>
           <div className="text-muted-foreground flex items-center gap-2 text-sm">
-            <span className="text-xs opacity-80">Typelets v{APP_VERSION}.beta</span>
+            <span className="text-xs opacity-80">
+              Typelets v{APP_VERSION}.beta
+            </span>
           </div>
         </div>
 
@@ -291,7 +293,7 @@ export default function FolderPanel({
           <ThemeToggle />
         </div>
 
-        <div className="border-border mt-auto border-t p-4 hidden md:block">
+        <div className="border-border mt-auto hidden border-t p-4 md:block">
           <div className="flex items-center gap-3">
             <UserButton
               appearance={{
@@ -317,8 +319,8 @@ export default function FolderPanel({
                       strokeLinecap="round"
                       strokeLinejoin="round"
                     >
-                      <path d="M3 3v18h18"/>
-                      <path d="m19 9-5 5-4-4-3 3"/>
+                      <path d="M3 3v18h18" />
+                      <path d="m19 9-5 5-4-4-3 3" />
                     </svg>
                   }
                   onClick={() => setShowUsage(true)}
@@ -340,7 +342,12 @@ export default function FolderPanel({
                       <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
                     </svg>
                   }
-                  onClick={() => window.open('https://github.com/typelets/typelets-app', '_blank')}
+                  onClick={() =>
+                    window.open(
+                      'https://github.com/typelets/typelets-app',
+                      '_blank'
+                    )
+                  }
                 />
                 <UserButton.Action
                   label="What's New"
@@ -356,14 +363,19 @@ export default function FolderPanel({
                       strokeLinecap="round"
                       strokeLinejoin="round"
                     >
-                      <path d="M8 2v4"/>
-                      <path d="M16 2v4"/>
-                      <rect width="18" height="18" x="3" y="4" rx="2"/>
-                      <path d="M3 10h18"/>
-                      <path d="m9 16 2 2 4-4"/>
+                      <path d="M8 2v4" />
+                      <path d="M16 2v4" />
+                      <rect width="18" height="18" x="3" y="4" rx="2" />
+                      <path d="M3 10h18" />
+                      <path d="m9 16 2 2 4-4" />
                     </svg>
                   }
-                  onClick={() => window.open('https://github.com/typelets/typelets-app/blob/main/CHANGELOG.md', '_blank')}
+                  onClick={() =>
+                    window.open(
+                      'https://github.com/typelets/typelets-app/blob/main/CHANGELOG.md',
+                      '_blank'
+                    )
+                  }
                 />
                 <UserButton.Action
                   label="Support"
@@ -384,7 +396,12 @@ export default function FolderPanel({
                       <circle cx="12" cy="12" r="10"></circle>
                     </svg>
                   }
-                  onClick={() => window.open('https://github.com/typelets/typelets-app/issues', '_blank')}
+                  onClick={() =>
+                    window.open(
+                      'https://github.com/typelets/typelets-app/issues',
+                      '_blank'
+                    )
+                  }
                 />
                 {hasPassword ? (
                   <UserButton.Action
@@ -503,10 +520,7 @@ export default function FolderPanel({
         onSuccess={handlePasswordChangeSuccess}
       />
 
-      <UsageDialog
-        open={showUsage}
-        onOpenChange={setShowUsage}
-      />
+      <UsageDialog open={showUsage} onOpenChange={setShowUsage} />
     </>
   );
 }

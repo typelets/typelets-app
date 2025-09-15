@@ -121,7 +121,6 @@ class ClerkEncryptedApiService {
       ...options,
     };
 
-
     try {
       const response = await fetch(url, config);
 
@@ -193,7 +192,9 @@ class ClerkEncryptedApiService {
   }
 
   async getCurrentUser(includeUsage = false): Promise<ApiUser> {
-    const endpoint = includeUsage ? '/users/me?include_usage=true' : '/users/me';
+    const endpoint = includeUsage
+      ? '/users/me?include_usage=true'
+      : '/users/me';
     const user = await this.request<ApiUser>(endpoint);
     this.setCurrentUser(user.id);
     return user;
@@ -298,7 +299,7 @@ class ClerkEncryptedApiService {
     const cleanedUpdates: Record<string, unknown> = {};
 
     // Only add properties that are explicitly defined (not undefined)
-    Object.keys(encryptedUpdates).forEach(key => {
+    Object.keys(encryptedUpdates).forEach((key) => {
       const value = (encryptedUpdates as Record<string, unknown>)[key];
       if (value !== undefined) {
         // Additional validation to prevent circular references and non-serializable values

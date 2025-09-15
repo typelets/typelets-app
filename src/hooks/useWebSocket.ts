@@ -62,7 +62,16 @@ export interface UseWebSocketReturn {
 
   // Folder methods
   sendFolderCreated: (folder: Folder) => void;
-  sendFolderUpdated: (folderId: string, changes: { name?: string; color?: string; parentId?: string | null; order?: number }, updatedFolder: Folder) => void;
+  sendFolderUpdated: (
+    folderId: string,
+    changes: {
+      name?: string;
+      color?: string;
+      parentId?: string | null;
+      order?: number;
+    },
+    updatedFolder: Folder
+  ) => void;
   sendFolderDeleted: (folderId: string) => void;
 
   // Utility methods
@@ -76,9 +85,13 @@ export interface UseWebSocketReturn {
   };
 }
 
-export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketReturn {
+export function useWebSocket(
+  options: UseWebSocketOptions = {}
+): UseWebSocketReturn {
   const { getToken, isSignedIn, userId: clerkUserId } = useAuth();
-  const [state, setState] = useState<WebSocketState>(() => webSocketService.getState());
+  const [state, setState] = useState<WebSocketState>(() =>
+    webSocketService.getState()
+  );
   const [error, setError] = useState<string | null>(null);
 
   // Refs to prevent stale closures
@@ -95,7 +108,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketRet
   useEffect(() => {
     const handlers = {
       onStatusChange: (status: WebSocketStatus) => {
-        setState(prevState => ({ ...prevState, status }));
+        setState((prevState) => ({ ...prevState, status }));
       },
 
       onNoteSync: (message: NoteSyncMessage) => {
@@ -141,7 +154,10 @@ export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketRet
               return; // Don't propagate error if we're retrying
             }
           } catch (error) {
-            secureLogger.error('Token refresh failed after auth failure', error);
+            secureLogger.error(
+              'Token refresh failed after auth failure',
+              error
+            );
           }
         }
 
@@ -222,19 +238,22 @@ export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketRet
     if (!isSignedIn) return;
 
     // Refresh token every 30 minutes (tokens typically expire in 1 hour)
-    const tokenRefreshInterval = setInterval(async () => {
-      try {
-        const freshToken = await getToken();
-        if (freshToken && webSocketService.isConnected()) {
-          debugLog('Auth', 'Refreshing JWT token proactively');
-          webSocketService.authenticate(freshToken);
-          lastTokenRef.current = freshToken;
+    const tokenRefreshInterval = setInterval(
+      async () => {
+        try {
+          const freshToken = await getToken();
+          if (freshToken && webSocketService.isConnected()) {
+            debugLog('Auth', 'Refreshing JWT token proactively');
+            webSocketService.authenticate(freshToken);
+            lastTokenRef.current = freshToken;
+          }
+        } catch (error) {
+          secureLogger.error('WebSocket token refresh failed', error);
+          setError('Token refresh failed');
         }
-      } catch (error) {
-        secureLogger.error('WebSocket token refresh failed', error);
-        setError('Token refresh failed');
-      }
-    }, 30 * 60 * 1000); // 30 minutes
+      },
+      30 * 60 * 1000
+    ); // 30 minutes
 
     return () => clearInterval(tokenRefreshInterval);
   }, [isSignedIn, getToken]);
@@ -243,7 +262,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketRet
   useEffect(() => {
     const interval = setInterval(() => {
       const currentState = webSocketService.getState();
-      setState(prevState => {
+      setState((prevState) => {
         if (JSON.stringify(prevState) !== JSON.stringify(currentState)) {
           return currentState;
         }
@@ -284,12 +303,15 @@ export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketRet
     webSocketService.leaveNote(noteId);
   }, []);
 
-  const sendNoteUpdate = useCallback((noteId: string, changes: Partial<Note>) => {
-    if (!webSocketService.isAuthenticated()) {
-      return;
-    }
-    webSocketService.sendNoteUpdate(noteId, changes);
-  }, []);
+  const sendNoteUpdate = useCallback(
+    (noteId: string, changes: Partial<Note>) => {
+      if (!webSocketService.isAuthenticated()) {
+        return;
+      }
+      webSocketService.sendNoteUpdate(noteId, changes);
+    },
+    []
+  );
 
   const sendNoteCreated = useCallback((note: Note) => {
     if (!webSocketService.isAuthenticated()) {
@@ -312,12 +334,15 @@ export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketRet
     webSocketService.sendFolderCreated(folder);
   }, []);
 
-  const sendFolderUpdated = useCallback((folderId: string, changes: Partial<Folder>, updatedFolder: Folder) => {
-    if (!webSocketService.isAuthenticated()) {
-      return;
-    }
-    webSocketService.sendFolderUpdated(folderId, changes, updatedFolder);
-  }, []);
+  const sendFolderUpdated = useCallback(
+    (folderId: string, changes: Partial<Folder>, updatedFolder: Folder) => {
+      if (!webSocketService.isAuthenticated()) {
+        return;
+      }
+      webSocketService.sendFolderUpdated(folderId, changes, updatedFolder);
+    },
+    []
+  );
 
   const sendFolderDeleted = useCallback((folderId: string) => {
     if (!webSocketService.isAuthenticated()) {
@@ -331,13 +356,16 @@ export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketRet
     setError(null);
   }, []);
 
-  const getConnectionInfo = useCallback(() => ({
-    status: state.status,
-    isConnected: state.isConnected,
-    isAuthenticated: state.isAuthenticated,
-    lastSync: state.lastSync,
-    joinedNotes: state.joinedNotes.size,
-  }), [state]);
+  const getConnectionInfo = useCallback(
+    () => ({
+      status: state.status,
+      isConnected: state.isConnected,
+      isAuthenticated: state.isAuthenticated,
+      lastSync: state.lastSync,
+      joinedNotes: state.joinedNotes.size,
+    }),
+    [state]
+  );
 
   return {
     // State

@@ -69,9 +69,10 @@ class EncryptionService {
     masterPassword: string | SecureString,
     userId: string
   ): Promise<void> {
-    const securePassword = typeof masterPassword === 'string'
-      ? new SecureString(masterPassword)
-      : masterPassword;
+    const securePassword =
+      typeof masterPassword === 'string'
+        ? new SecureString(masterPassword)
+        : masterPassword;
 
     try {
       const encoder = new TextEncoder();
@@ -85,33 +86,33 @@ class EncryptionService {
         ['deriveKey']
       );
 
-    const key = await crypto.subtle.deriveKey(
-      {
-        name: 'PBKDF2',
-        salt: userSalt,
-        iterations: ENCRYPTION_CONFIG.ITERATIONS,
-        hash: 'SHA-256',
-      },
-      keyMaterial,
-      {
-        name: ENCRYPTION_CONFIG.ALGORITHM,
-        length: ENCRYPTION_CONFIG.KEY_LENGTH,
-      },
-      true,
-      ['encrypt', 'decrypt']
-    );
+      const key = await crypto.subtle.deriveKey(
+        {
+          name: 'PBKDF2',
+          salt: userSalt,
+          iterations: ENCRYPTION_CONFIG.ITERATIONS,
+          hash: 'SHA-256',
+        },
+        keyMaterial,
+        {
+          name: ENCRYPTION_CONFIG.ALGORITHM,
+          length: ENCRYPTION_CONFIG.KEY_LENGTH,
+        },
+        true,
+        ['encrypt', 'decrypt']
+      );
 
-    const exportedKey = await crypto.subtle.exportKey('raw', key);
-    const keyString = this.arrayBufferToBase64(new Uint8Array(exportedKey));
+      const exportedKey = await crypto.subtle.exportKey('raw', key);
+      const keyString = this.arrayBufferToBase64(new Uint8Array(exportedKey));
 
-    localStorage.setItem(`enc_master_key_${userId}`, keyString);
-    localStorage.setItem(`has_master_password_${userId}`, 'true');
-    this.masterPasswordMode = true;
+      localStorage.setItem(`enc_master_key_${userId}`, keyString);
+      localStorage.setItem(`has_master_password_${userId}`, 'true');
+      this.masterPasswordMode = true;
 
-    const oldKey = STORAGE_KEYS.USER_SECRET(userId);
-    if (localStorage.getItem(oldKey)) {
-      localStorage.removeItem(oldKey);
-    }
+      const oldKey = STORAGE_KEYS.USER_SECRET(userId);
+      if (localStorage.getItem(oldKey)) {
+        localStorage.removeItem(oldKey);
+      }
     } finally {
       // Always clear the secure password from memory
       if (typeof masterPassword === 'string') {
@@ -124,9 +125,10 @@ class EncryptionService {
     masterPassword: string | SecureString,
     userId: string
   ): Promise<boolean> {
-    const securePassword = typeof masterPassword === 'string'
-      ? new SecureString(masterPassword)
-      : masterPassword;
+    const securePassword =
+      typeof masterPassword === 'string'
+        ? new SecureString(masterPassword)
+        : masterPassword;
 
     try {
       const encoder = new TextEncoder();

@@ -11,7 +11,16 @@ export type WebSocketStatus =
 
 // Outgoing Messages (Client → Server)
 export interface WebSocketOutgoingMessage {
-  type: 'auth' | 'join_note' | 'leave_note' | 'note_update' | 'note_created' | 'note_deleted' | 'folder_created' | 'folder_updated' | 'folder_deleted';
+  type:
+    | 'auth'
+    | 'join_note'
+    | 'leave_note'
+    | 'note_update'
+    | 'note_created'
+    | 'note_deleted'
+    | 'folder_created'
+    | 'folder_updated'
+    | 'folder_deleted';
 }
 
 export interface AuthMessage extends WebSocketOutgoingMessage {
@@ -39,6 +48,7 @@ export interface NoteUpdateMessage extends WebSocketOutgoingMessage {
     archived?: boolean;
     deleted?: boolean;
     hidden?: boolean;
+    hiddenAt?: Date | null;
     folderId?: string | null;
     tags?: string[];
   };
@@ -255,7 +265,11 @@ export interface WebSocketServiceInterface {
   sendNoteCreated(note: Note): void;
   sendNoteDeleted(noteId: string): void;
   sendFolderCreated(folder: Folder): void;
-  sendFolderUpdated(folderId: string, changes: Partial<Folder>, updatedFolder: Folder): void;
+  sendFolderUpdated(
+    folderId: string,
+    changes: Partial<Folder>,
+    updatedFolder: Folder
+  ): void;
   sendFolderDeleted(folderId: string): void;
   getStatus(): WebSocketStatus;
   isConnected(): boolean;

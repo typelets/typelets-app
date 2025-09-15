@@ -16,14 +16,17 @@ interface TableOfContentsComponentProps {
   deleteNode: () => void;
 }
 
-const TableOfContentsComponent = ({ editor, deleteNode }: TableOfContentsComponentProps) => {
+const TableOfContentsComponent = ({
+  editor,
+  deleteNode,
+}: TableOfContentsComponentProps) => {
   const [headings, setHeadings] = useState<Heading[]>([]);
   const [expanded, setExpanded] = useState(true);
 
   useEffect(() => {
     const updateHeadings = () => {
       const headingElements: Heading[] = [];
-      
+
       editor.state.doc.descendants((node, pos) => {
         if (node.type.name === 'heading') {
           const id = `heading-${pos}`;
@@ -34,55 +37,64 @@ const TableOfContentsComponent = ({ editor, deleteNode }: TableOfContentsCompone
           });
         }
       });
-      
+
       setHeadings(headingElements);
     };
 
     updateHeadings();
-    
+
     editor.on('update', updateHeadings);
     editor.on('selectionUpdate', updateHeadings);
-    
+
     return () => {
       editor.off('update', updateHeadings);
       editor.off('selectionUpdate', updateHeadings);
     };
   }, [editor]);
 
-  const scrollToHeading = useCallback((index: number) => {
-    let currentIndex = 0;
-    
-    editor.state.doc.descendants((node: any, pos: number) => { // eslint-disable-line @typescript-eslint/no-explicit-any
-      if (node.type.name === 'heading') {
-        if (currentIndex === index) {
-          editor.commands.focus();
-          editor.commands.setTextSelection(pos + 1);
-          setTimeout(() => {
-            const element = editor.view.domAtPos(pos + 1);
-            if (element && element.node) {
-              const domElement = element.node.nodeType === 1 ? element.node : element.node.parentElement;
-              if (domElement) {
-                (domElement as HTMLElement).scrollIntoView({ 
-                  behavior: 'smooth', 
-                  block: 'center' 
-                });
+  const scrollToHeading = useCallback(
+    (index: number) => {
+      let currentIndex = 0;
+
+      editor.state.doc.descendants((node: any, pos: number) => {
+        // eslint-disable-line @typescript-eslint/no-explicit-any
+        if (node.type.name === 'heading') {
+          if (currentIndex === index) {
+            editor.commands.focus();
+            editor.commands.setTextSelection(pos + 1);
+            setTimeout(() => {
+              const element = editor.view.domAtPos(pos + 1);
+              if (element && element.node) {
+                const domElement =
+                  element.node.nodeType === 1
+                    ? element.node
+                    : element.node.parentElement;
+                if (domElement) {
+                  (domElement as HTMLElement).scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center',
+                  });
+                }
               }
-            }
-          }, 50);
-          return false; // Stop traversing
+            }, 50);
+            return false; // Stop traversing
+          }
+          currentIndex++;
         }
-        currentIndex++;
-      }
-    });
-  }, [editor]);
+      });
+    },
+    [editor]
+  );
 
   if (headings.length === 0) {
     return (
       <NodeViewWrapper className="toc-wrapper">
-        <div className="bg-muted/50 border border-border rounded-lg p-4 my-4">
-          <div className="flex items-center gap-2 text-muted-foreground">
+        <div className="bg-muted/50 border-border my-4 rounded-lg border p-4">
+          <div className="text-muted-foreground flex items-center gap-2">
             <FileText className="h-4 w-4" />
-            <span className="text-sm">No headings found. Add headings to generate table of contents.</span>
+            <span className="text-sm">
+              No headings found. Add headings to generate table of contents.
+            </span>
           </div>
         </div>
       </NodeViewWrapper>
@@ -91,13 +103,13 @@ const TableOfContentsComponent = ({ editor, deleteNode }: TableOfContentsCompone
 
   return (
     <NodeViewWrapper className="toc-wrapper">
-      <div className="bg-muted/30 border border-border rounded-lg p-4 my-4 not-prose group relative">
-        <div className="flex items-center justify-between mb-3">
+      <div className="bg-muted/30 border-border not-prose group relative my-4 rounded-lg border p-4">
+        <div className="mb-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <button
               onClick={() => setExpanded(!expanded)}
               className="hover:bg-accent rounded p-1 transition-colors"
-              title={expanded ? "Collapse" : "Expand"}
+              title={expanded ? 'Collapse' : 'Expand'}
             >
               {expanded ? (
                 <ChevronDown className="h-4 w-4" />
@@ -105,32 +117,29 @@ const TableOfContentsComponent = ({ editor, deleteNode }: TableOfContentsCompone
                 <ChevronRight className="h-4 w-4" />
               )}
             </button>
-            <h3 className="font-semibold text-sm">Table of Contents</h3>
+            <h3 className="text-sm font-semibold">Table of Contents</h3>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground">{headings.length} sections</span>
+            <span className="text-muted-foreground text-xs">
+              {headings.length} sections
+            </span>
             <button
               onClick={() => deleteNode()}
-              className="opacity-0 group-hover:opacity-100 hover:bg-accent rounded p-1 transition-all"
+              className="hover:bg-accent rounded p-1 opacity-0 transition-all group-hover:opacity-100"
               title="Remove Table of Contents"
             >
               <X className="h-3 w-3" />
             </button>
           </div>
         </div>
-        
+
         {expanded && (
           <div className="space-y-1">
             {headings.map((heading, index) => (
               <button
                 key={index}
                 onClick={() => scrollToHeading(index)}
-                className={`
-                  block w-full text-left text-sm hover:bg-accent/50 rounded px-2 py-1.5 transition-colors
-                  ${heading.level === 1 ? 'font-semibold' : ''}
-                  ${heading.level === 2 ? 'pl-6' : ''}
-                  ${heading.level === 3 ? 'pl-10 text-muted-foreground' : ''}
-                `}
+                className={`hover:bg-accent/50 block w-full rounded px-2 py-1.5 text-left text-sm transition-colors ${heading.level === 1 ? 'font-semibold' : ''} ${heading.level === 2 ? 'pl-6' : ''} ${heading.level === 3 ? 'text-muted-foreground pl-10' : ''} `}
               >
                 <div className="flex items-center gap-2">
                   {heading.level > 1 && (
@@ -174,8 +183,8 @@ export const TableOfContents = Node.create({
 
   addKeyboardShortcuts() {
     return {
-      'Mod-Alt-t': () => this.editor.commands.insertContent({ type: this.name }),
+      'Mod-Alt-t': () =>
+        this.editor.commands.insertContent({ type: this.name }),
     };
   },
 });
-

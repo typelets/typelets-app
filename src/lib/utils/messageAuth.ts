@@ -15,10 +15,10 @@ class MessageAuthenticator {
   /**
    * Initialize the authenticator with a session key
    * This should be called after WebSocket authentication
+   * Can be called multiple times to reinitialize with new session secrets
    */
   async initialize(sessionSecret: string): Promise<void> {
-    if (this.keyInitialized) return;
-
+    // Always reinitialize - this handles token refresh scenarios
     const encoder = new TextEncoder();
     const keyMaterial = await crypto.subtle.importKey(
       'raw',
@@ -30,6 +30,15 @@ class MessageAuthenticator {
 
     this.authKey = keyMaterial;
     this.keyInitialized = true;
+  }
+
+  /**
+   * Clear the authentication state
+   * Should be called when disconnecting
+   */
+  clear(): void {
+    this.authKey = null;
+    this.keyInitialized = false;
   }
 
   /**
@@ -47,21 +56,25 @@ class MessageAuthenticator {
     const messageData = {
       payload,
       timestamp,
-      nonce
+      nonce,
     };
 
     const encoder = new TextEncoder();
     const dataToSign = encoder.encode(JSON.stringify(messageData));
 
     // Generate HMAC signature
-    const signatureBuffer = await crypto.subtle.sign('HMAC', this.authKey, dataToSign);
+    const signatureBuffer = await crypto.subtle.sign(
+      'HMAC',
+      this.authKey,
+      dataToSign
+    );
     const signature = this.arrayBufferToBase64(signatureBuffer);
 
     return {
       payload,
       signature,
       timestamp,
-      nonce
+      nonce,
     };
   }
 
@@ -83,7 +96,8 @@ class MessageAuthenticator {
         return false;
       }
 
-      if (messageAge < -60000) { // Allow 1 minute clock skew
+      if (messageAge < -60000) {
+        // Allow 1 minute clock skew
         // Message timestamp in future - potential attack
         return false;
       }
@@ -92,7 +106,7 @@ class MessageAuthenticator {
       const messageData = {
         payload: message.payload,
         timestamp: message.timestamp,
-        nonce: message.nonce
+        nonce: message.nonce,
       };
 
       const encoder = new TextEncoder();
@@ -112,14 +126,6 @@ class MessageAuthenticator {
       // Message verification failed - silent fail for security
       return false;
     }
-  }
-
-  /**
-   * Clear authentication keys
-   */
-  clear(): void {
-    this.authKey = null;
-    this.keyInitialized = false;
   }
 
   /**
@@ -160,18 +166,24 @@ export const messageAuthenticator = new MessageAuthenticator();
 /**
  * Utility functions for easy integration
  */
-export async function initializeMessageAuth(sessionSecret: string): Promise<void> {
+export async function initializeMessageAuth(
+  sessionSecret: string
+): Promise<void> {
   await messageAuthenticator.initialize(sessionSecret);
-}
-
-export async function signWebSocketMessage(payload: unknown): Promise<AuthenticatedMessage> {
-  return messageAuthenticator.signMessage(payload);
-}
-
-export async function verifyWebSocketMessage(message: AuthenticatedMessage): Promise<boolean> {
-  return messageAuthenticator.verifyMessage(message);
 }
 
 export function clearMessageAuth(): void {
   messageAuthenticator.clear();
+}
+
+export async function signWebSocketMessage(
+  payload: unknown
+): Promise<AuthenticatedMessage> {
+  return messageAuthenticator.signMessage(payload);
+}
+
+export async function verifyWebSocketMessage(
+  message: AuthenticatedMessage
+): Promise<boolean> {
+  return messageAuthenticator.verifyMessage(message);
 }

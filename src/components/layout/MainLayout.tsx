@@ -3,24 +3,31 @@ import { MasterPasswordDialog } from '@/components/password/MasterPasswordDialog
 import { MobileLayout } from './MobileLayout';
 import { DesktopLayout } from './DesktopLayout';
 import { useIsMobile } from '@/hooks/useIsMobile';
-import { useResponsiveFolderPanel, useResponsiveNotesPanel } from '@/hooks/useResponsiveFolderPanel';
+import {
+  useResponsiveFolderPanel,
+  useResponsiveNotesPanel,
+} from '@/hooks/useResponsiveFolderPanel';
 import { useMasterPassword } from '@/hooks/useMasterPassword';
 import { useNotes } from '@/hooks/useNotes';
 import { api } from '@/lib/api/api';
-import type { FolderPanelProps, FilesPanelProps, EditorProps } from '@/types/layout';
+import type {
+  FolderPanelProps,
+  FilesPanelProps,
+  EditorProps,
+} from '@/types/layout';
 import type { Note } from '@/types/note';
-
 
 export default function MainLayout() {
   const isMobile = useIsMobile();
-  const { needsUnlock, isChecking, userId, handleUnlockSuccess } = useMasterPassword();
-  
+  const { needsUnlock, isChecking, userId, handleUnlockSuccess } =
+    useMasterPassword();
+
   // Use responsive panel hooks for desktop view
   const responsiveFolderPanel = useResponsiveFolderPanel(!isMobile);
   const responsiveNotesPanel = useResponsiveNotesPanel(!isMobile);
   const [folderSidebarOpen, setFolderSidebarOpen] = useState(!isMobile);
   const [filesPanelOpen, setFilesPanelOpen] = useState(!isMobile);
-  
+
   // Sync responsive panel states with local states for desktop
   useEffect(() => {
     if (!isMobile) {
@@ -63,10 +70,13 @@ export default function MainLayout() {
     webSocket,
   } = useNotes();
 
-  const handleCreateNote = useCallback((templateContent?: { title: string; content: string }) => {
-    void createNote(undefined, templateContent);
-    if (!filesPanelOpen) setFilesPanelOpen(true);
-  }, [createNote, filesPanelOpen]);
+  const handleCreateNote = useCallback(
+    (templateContent?: { title: string; content: string }) => {
+      void createNote(undefined, templateContent);
+      if (!filesPanelOpen) setFilesPanelOpen(true);
+    },
+    [createNote, filesPanelOpen]
+  );
 
   const handleEmptyTrash = useCallback(async () => {
     try {
@@ -131,9 +141,22 @@ export default function MainLayout() {
   }, [handleUnlockSuccess, reinitialize]);
 
   const folderPanelProps: FolderPanelProps = {
-    currentView, folders, selectedFolder, searchQuery, notesCount, starredCount, archivedCount, trashedCount, hiddenCount, expandedFolders,
-    onUpdateFolder: async (id, name, color) => { await updateFolder(id, { name, color }); },
-    onUpdateFolderParent: async (id, parentId) => { await updateFolder(id, { parentId }); },
+    currentView,
+    folders,
+    selectedFolder,
+    searchQuery,
+    notesCount,
+    starredCount,
+    archivedCount,
+    trashedCount,
+    hiddenCount,
+    expandedFolders,
+    onUpdateFolder: async (id, name, color) => {
+      await updateFolder(id, { name, color });
+    },
+    onUpdateFolderParent: async (id, parentId) => {
+      await updateFolder(id, { parentId });
+    },
     onCreateNote: handleCreateNote,
     onCreateFolder: createFolder,
     onDeleteFolder: deleteFolder,
@@ -146,7 +169,10 @@ export default function MainLayout() {
   };
 
   const filesPanelProps: FilesPanelProps = {
-    notes, selectedNote, selectedFolder, currentView,
+    notes,
+    selectedNote,
+    selectedFolder,
+    currentView,
     isFolderPanelOpen: folderSidebarOpen,
     onSelectNote: handleSelectNote,
     onToggleStar: toggleStar,
@@ -156,7 +182,8 @@ export default function MainLayout() {
   };
 
   const editorProps: EditorProps = {
-    note: selectedNote, folders,
+    note: selectedNote,
+    folders,
     onUpdateNote: updateNote,
     onDeleteNote: deleteNote,
     onArchiveNote: archiveNote,
@@ -189,11 +216,18 @@ export default function MainLayout() {
         <div className="flex h-screen items-center justify-center bg-gray-50">
           <div className="text-center">
             <div className="mb-4 text-4xl">🔐</div>
-            <h1 className="mb-2 text-2xl font-bold text-gray-900">Secure Notes</h1>
-            <p className="text-gray-600">Your notes are protected with end-to-end encryption</p>
+            <h1 className="mb-2 text-2xl font-bold text-gray-900">
+              Secure Notes
+            </h1>
+            <p className="text-gray-600">
+              Your notes are protected with end-to-end encryption
+            </p>
           </div>
         </div>
-        <MasterPasswordDialog userId={userId} onSuccess={handleMasterPasswordUnlock} />
+        <MasterPasswordDialog
+          userId={userId}
+          onSuccess={handleMasterPasswordUnlock}
+        />
       </>
     );
   }
@@ -202,7 +236,11 @@ export default function MainLayout() {
     <MobileLayout
       selectedNote={selectedNote}
       folderPanelProps={folderPanelProps}
-      filesPanelProps={{ ...filesPanelProps, isMobile: true, onClose: () => setFilesPanelOpen(false) }}
+      filesPanelProps={{
+        ...filesPanelProps,
+        isMobile: true,
+        onClose: () => setFilesPanelOpen(false),
+      }}
       editorProps={editorProps}
     />
   ) : (
@@ -215,4 +253,3 @@ export default function MainLayout() {
     />
   );
 }
-

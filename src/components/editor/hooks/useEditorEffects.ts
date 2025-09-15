@@ -23,21 +23,20 @@ export function useEditorEffects({
   setBaseFontSize,
   lastContentRef,
 }: UseEditorEffectsProps) {
-  
   // Sync editor content with note changes
   useEffect(() => {
     if (!editor || !note) return;
-    
+
     const currentContent = editor.getHTML();
     if (note.content !== currentContent) {
       const { from, to } = editor.state.selection;
       editor.commands.setContent(note.content || '', false);
       lastContentRef.current = note.content || '';
-      
+
       // Update word and character counts
       const text = editor.state.doc.textContent;
       updateCounts(text);
-      
+
       try {
         const docSize = editor.state.doc.content.size;
         if (from <= docSize && to <= docSize) {
@@ -52,7 +51,7 @@ export function useEditorEffects({
   // Initialize word count when editor is ready
   useEffect(() => {
     if (!editor) return;
-    
+
     // Calculate initial word count
     const text = editor.state.doc.textContent;
     updateCounts(text);
@@ -68,7 +67,7 @@ export function useEditorEffects({
 
       const { scrollTop, scrollHeight, clientHeight } = editorView.dom;
       const maxScroll = scrollHeight - clientHeight;
-      
+
       if (maxScroll <= 0) {
         setScrollPercentage(0);
       } else {
@@ -79,7 +78,7 @@ export function useEditorEffects({
 
     const editorElement = editor.view.dom;
     editorElement.addEventListener('scroll', updateScrollPercentage);
-    
+
     // Initial calculation
     updateScrollPercentage();
 
@@ -103,7 +102,7 @@ export function useEditorEffects({
     if (!editor || !baseFontSize) return;
 
     const editorElement = editor.view.dom as HTMLElement;
-    
+
     if (zoomLevel === 100) {
       // At 100%, use the original font size
       editorElement.style.fontSize = baseFontSize;

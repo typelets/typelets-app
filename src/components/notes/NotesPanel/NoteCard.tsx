@@ -40,13 +40,34 @@ function NoteCard({
 
   const previewText = useMemo(() => {
     if (note?.hidden) return '[HIDDEN]';
-    
+
     if (!note?.content) return 'No additional text';
 
-    const temp = document.createElement('div');
-    temp.innerHTML = note.content;
+    // Safely extract text content from HTML while preserving readable spacing
+    let text;
+    if (note.content.includes('<')) {
+      // Parse HTML safely using DOMParser (doesn't execute scripts)
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(note.content, 'text/html');
 
-    let text = temp.textContent || temp.innerText || '';
+      // Add spacing for block elements to preserve readability
+      const blockElements = doc.querySelectorAll(
+        'p, div, br, h1, h2, h3, h4, h5, h6, li, blockquote'
+      );
+      blockElements.forEach((el) => {
+        if (el.tagName === 'BR') {
+          el.replaceWith(' ');
+        } else {
+          // Add space after block elements
+          el.insertAdjacentText('afterend', ' ');
+        }
+      });
+
+      text = doc.body.textContent || doc.body.innerText || '';
+    } else {
+      // Plain text content
+      text = note.content;
+    }
 
     text = text.replace(/\s+/g, ' ').trim();
 
@@ -95,7 +116,7 @@ function NoteCard({
           </h3>
           <div className="flex items-center gap-1">
             {note.attachments && note.attachments.length > 0 && (
-              <div className="flex items-center gap-0.5 text-xs text-muted-foreground">
+              <div className="text-muted-foreground flex items-center gap-0.5 text-xs">
                 <Paperclip className="h-3 w-3" />
                 <span>{note.attachments.length}</span>
               </div>
@@ -105,7 +126,7 @@ function NoteCard({
                 e.stopPropagation();
                 onToggleStar(note.id);
               }}
-              className="shrink-0 rounded p-1 hover:bg-muted"
+              className="hover:bg-muted shrink-0 rounded p-1"
             >
               <Star
                 className={`h-3.5 w-3.5 ${

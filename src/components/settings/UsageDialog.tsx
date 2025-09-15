@@ -19,7 +19,9 @@ export function UsageDialog({ open, onOpenChange }: UsageDialogProps) {
             <div className="space-y-1">
               <div className="flex items-center gap-2">
                 <BarChart3 className="h-5 w-5" />
-                <Dialog.Title className="text-lg font-semibold">Usage & Limits</Dialog.Title>
+                <Dialog.Title className="text-lg font-semibold">
+                  Usage & Limits
+                </Dialog.Title>
               </div>
               <Dialog.Description className="text-muted-foreground text-sm">
                 Monitor your account usage and limits
@@ -28,7 +30,7 @@ export function UsageDialog({ open, onOpenChange }: UsageDialogProps) {
           </div>
 
           {/* Content */}
-          <div className="p-4 min-h-[400px]">
+          <div className="min-h-[400px] p-4">
             <UsageSection />
           </div>
 

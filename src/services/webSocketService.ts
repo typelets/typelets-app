@@ -14,7 +14,7 @@ import {
   initializeMessageAuth,
   signWebSocketMessage,
   verifyWebSocketMessage,
-  clearMessageAuth
+  clearMessageAuth,
 } from '@/lib/utils/messageAuth';
 
 // Debug logging utility with security safeguards
@@ -22,18 +22,25 @@ import {
 const DEBUG_WEBSOCKET = false;
 
 // Message authentication is now working - backend matches frontend implementation
-const DISABLE_MESSAGE_AUTH = false;
+// Only allow disabling in development for debugging
+const DISABLE_MESSAGE_AUTH =
+  import.meta.env.VITE_DISABLE_MESSAGE_AUTH === 'true' && import.meta.env.DEV;
 
 const sanitizeLogData = (data: unknown): unknown => {
   if (!data) return data;
 
   // Handle auth messages - redact token
-  if (typeof data === 'object' && data !== null && 'type' in data && 'token' in data) {
+  if (
+    typeof data === 'object' &&
+    data !== null &&
+    'type' in data &&
+    'token' in data
+  ) {
     const authData = data as Record<string, unknown>;
     if (authData.type === 'auth' && authData.token) {
       return {
         ...data,
-        token: '[REDACTED]'
+        token: '[REDACTED]',
       };
     }
   }
@@ -47,7 +54,10 @@ const sanitizeLogData = (data: unknown): unknown => {
   if (typeof data === 'object') {
     const sanitized: Record<string, unknown> = {};
     for (const [key, value] of Object.entries(data)) {
-      if (key.toLowerCase().includes('token') || key.toLowerCase().includes('password')) {
+      if (
+        key.toLowerCase().includes('token') ||
+        key.toLowerCase().includes('password')
+      ) {
         sanitized[key] = '[REDACTED]';
       } else if (typeof value === 'object') {
         sanitized[key] = sanitizeLogData(value);
@@ -108,7 +118,10 @@ class WebSocketService implements WebSocketServiceInterface {
   }
 
   public connect(): void {
-    if (this.ws?.readyState === WebSocket.CONNECTING || this.ws?.readyState === WebSocket.OPEN) {
+    if (
+      this.ws?.readyState === WebSocket.CONNECTING ||
+      this.ws?.readyState === WebSocket.OPEN
+    ) {
       debugLog('Connection', 'Already connecting or connected');
       return;
     }
@@ -121,7 +134,9 @@ class WebSocketService implements WebSocketServiceInterface {
       this.setupWebSocketHandlers();
     } catch (error) {
       debugLog('Connection', 'Connection failed', error);
-      this.handleConnectionError(error instanceof Error ? error.message : 'Connection failed');
+      this.handleConnectionError(
+        error instanceof Error ? error.message : 'Connection failed'
+      );
     }
   }
 
@@ -134,6 +149,10 @@ class WebSocketService implements WebSocketServiceInterface {
       this.ws = null;
     }
 
+    // Clear message authentication state
+    clearMessageAuth();
+    this.messageAuthEnabled = false;
+
     this.updateStatus('disconnected');
     this.state.isConnected = false;
     this.state.isAuthenticated = false;
@@ -141,17 +160,14 @@ class WebSocketService implements WebSocketServiceInterface {
     this.state.joinedNotes.clear();
     this.messageQueue = [];
 
-    // Clear message authentication
-    if (this.messageAuthEnabled) {
-      clearMessageAuth();
-      this.messageAuthEnabled = false;
-    }
-
     this.eventHandlers.onDisconnect?.();
   }
 
   public authenticate(token: string): void {
-    debugLog('Auth', 'Attempting authentication', { hasToken: !!token, isConnected: this.state.isConnected });
+    debugLog('Auth', 'Attempting authentication', {
+      hasToken: !!token,
+      isConnected: this.state.isConnected,
+    });
     this.currentToken = token;
 
     if (this.state.isConnected) {
@@ -165,13 +181,25 @@ class WebSocketService implements WebSocketServiceInterface {
 
   private async initializeMessageAuth(sessionSecret: string): Promise<void> {
     if (DISABLE_MESSAGE_AUTH) {
-      debugLog('Auth', 'Message authentication disabled by DISABLE_MESSAGE_AUTH flag');
+      debugLog(
+        'Auth',
+        'Message authentication disabled by DISABLE_MESSAGE_AUTH flag'
+      );
       this.messageAuthEnabled = false;
       return;
     }
 
     try {
-      debugLog('Auth', 'Initializing message auth with session secret length:', sessionSecret.length);
+      debugLog(
+        'Auth',
+        'Initializing message auth with session secret length:',
+        sessionSecret.length
+      );
+      debugLog(
+        'Auth',
+        'Previous auth state:',
+        this.messageAuthEnabled ? 'enabled' : 'disabled'
+      );
       await initializeMessageAuth(sessionSecret);
       this.messageAuthEnabled = true;
       debugLog('Auth', 'Message authentication initialized successfully');
@@ -182,7 +210,9 @@ class WebSocketService implements WebSocketServiceInterface {
     }
   }
 
-  private isAuthenticatedMessage(message: unknown): message is AuthenticatedMessage {
+  private isAuthenticatedMessage(
+    message: unknown
+  ): message is AuthenticatedMessage {
     return (
       typeof message === 'object' &&
       message !== null &&
@@ -232,6 +262,7 @@ class WebSocketService implements WebSocketServiceInterface {
         archived: changes.archived,
         deleted: changes.deleted,
         hidden: changes.hidden,
+        hiddenAt: changes.hiddenAt,
         folderId: changes.folderId,
         tags: changes.tags,
       },
@@ -271,7 +302,16 @@ class WebSocketService implements WebSocketServiceInterface {
     });
   }
 
-  public sendFolderUpdated(folderId: string, changes: { name?: string; color?: string; parentId?: string | null; order?: number }, updatedFolder: Folder): void {
+  public sendFolderUpdated(
+    folderId: string,
+    changes: {
+      name?: string;
+      color?: string;
+      parentId?: string | null;
+      order?: number;
+    },
+    updatedFolder: Folder
+  ): void {
     if (!this.state.isAuthenticated) {
       return;
     }
@@ -336,8 +376,11 @@ class WebSocketService implements WebSocketServiceInterface {
       this.state.isAuthenticated = false;
       this.clearHeartbeatTimer();
 
-      if (event.code !== 1000) { // Not a normal closure
-        this.handleConnectionError(`Connection closed: ${event.reason || 'Unknown reason'}`);
+      if (event.code !== 1000) {
+        // Not a normal closure
+        this.handleConnectionError(
+          `Connection closed: ${event.reason || 'Unknown reason'}`
+        );
       } else {
         this.updateStatus('disconnected');
       }
@@ -368,15 +411,21 @@ class WebSocketService implements WebSocketServiceInterface {
       // Check if this is an authenticated message
       if (this.messageAuthEnabled && this.isAuthenticatedMessage(rawMessage)) {
         // Verify message signature
-        const isValid = await verifyWebSocketMessage(rawMessage as AuthenticatedMessage);
+        const isValid = await verifyWebSocketMessage(
+          rawMessage as AuthenticatedMessage
+        );
         if (!isValid) {
-          debugLog('Receive', 'Message signature verification failed - rejecting message');
+          debugLog(
+            'Receive',
+            'Message signature verification failed - rejecting message'
+          );
 
           // SECURITY: Strict mode - disconnect on authentication failure
           this.eventHandlers.onError?.({
             type: 'error',
-            message: 'Message authentication failed - connection terminated for security',
-            code: 'AUTH_FAILED_STRICT'
+            message:
+              'Message authentication failed - connection terminated for security',
+            code: 'AUTH_FAILED_STRICT',
           });
 
           // Terminate connection immediately to prevent downgrade attacks
@@ -388,7 +437,10 @@ class WebSocketService implements WebSocketServiceInterface {
           if (authMessage.payload) {
             message = authMessage.payload as IncomingMessage;
           } else {
-            debugLog('Receive', 'Authenticated message missing payload - rejecting');
+            debugLog(
+              'Receive',
+              'Authenticated message missing payload - rejecting'
+            );
             return;
           }
         }
@@ -420,10 +472,16 @@ class WebSocketService implements WebSocketServiceInterface {
 
           // Initialize message authentication with session secret
           if (message.sessionSecret) {
-            debugLog('Auth', 'Session secret received, initializing message authentication');
+            debugLog(
+              'Auth',
+              'Session secret received, initializing message authentication'
+            );
             this.initializeMessageAuth(message.sessionSecret);
           } else {
-            debugLog('Auth', 'No session secret provided - message authentication disabled');
+            debugLog(
+              'Auth',
+              'No session secret provided - message authentication disabled'
+            );
             this.messageAuthEnabled = false;
           }
 
@@ -439,7 +497,7 @@ class WebSocketService implements WebSocketServiceInterface {
           this.eventHandlers.onError?.({
             type: 'error',
             message: `Authentication failed: ${message.message}`,
-            code: 'AUTH_FAILED'
+            code: 'AUTH_FAILED',
           });
           break;
 
@@ -506,7 +564,7 @@ class WebSocketService implements WebSocketServiceInterface {
         default:
           debugLog('Receive', 'Unknown message type', {
             type: (message as { type?: string }).type,
-            message
+            message,
           });
       }
     } catch (error) {
@@ -516,7 +574,7 @@ class WebSocketService implements WebSocketServiceInterface {
       this.eventHandlers.onError?.({
         type: 'error',
         message: `Message handling error: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        code: 'MESSAGE_HANDLING_ERROR'
+        code: 'MESSAGE_HANDLING_ERROR',
       });
     }
   }
@@ -525,7 +583,9 @@ class WebSocketService implements WebSocketServiceInterface {
     debugLog('Send', `Sending ${message.type} message`, message);
 
     if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
-      debugLog('Send', 'Connection not ready, queuing message', { readyState: this.ws?.readyState });
+      debugLog('Send', 'Connection not ready, queuing message', {
+        readyState: this.ws?.readyState,
+      });
       this.messageQueue.push(message);
       return;
     }
@@ -533,18 +593,47 @@ class WebSocketService implements WebSocketServiceInterface {
     try {
       let messageToSend: string;
 
-      // Sign message if authentication is enabled and this isn't an auth message
-      if (this.messageAuthEnabled && message.type !== 'auth') {
+      // Sign message if authentication is enabled
+      if (this.messageAuthEnabled) {
         try {
           const signedMessage = await signWebSocketMessage(message);
           messageToSend = JSON.stringify(signedMessage);
           debugLog('Send', 'Message signed successfully');
         } catch (error) {
-          debugLog('Send', 'Failed to sign message, sending unsigned', error);
-          messageToSend = JSON.stringify(message);
+          debugLog(
+            'Send',
+            'Message signing failed, dropping message for security',
+            error
+          );
+          throw new Error(
+            'Message authentication failed - message dropped for security'
+          );
         }
       } else {
-        messageToSend = JSON.stringify(message);
+        // Only allow unsigned messages when message auth is not yet initialized
+        // This covers the initial auth handshake case
+        if (message.type === 'auth' && !this.state.isAuthenticated) {
+          debugLog(
+            'Send',
+            'Sending initial auth message unsigned (message auth not yet initialized)'
+          );
+          messageToSend = JSON.stringify(message);
+        } else if (DISABLE_MESSAGE_AUTH) {
+          debugLog(
+            'Send',
+            'Sending unsigned message (message auth disabled by flag)'
+          );
+          messageToSend = JSON.stringify(message);
+        } else {
+          // Don't allow unsigned messages in production after initial connection
+          debugLog(
+            'Send',
+            'Rejecting unsigned message - authentication required'
+          );
+          throw new Error(
+            'Cannot send unsigned message in authenticated session'
+          );
+        }
       }
 
       this.ws.send(messageToSend);
@@ -555,7 +644,10 @@ class WebSocketService implements WebSocketServiceInterface {
   }
 
   private async processMessageQueue(): Promise<void> {
-    while (this.messageQueue.length > 0 && this.ws?.readyState === WebSocket.OPEN) {
+    while (
+      this.messageQueue.length > 0 &&
+      this.ws?.readyState === WebSocket.OPEN
+    ) {
       const message = this.messageQueue.shift();
       if (message) {
         await this.sendMessage(message);
@@ -588,7 +680,11 @@ class WebSocketService implements WebSocketServiceInterface {
     this.updateStatus('reconnecting');
 
     const delay = Math.min(
-      this.config.reconnectInterval * Math.pow(this.config.reconnectBackoffFactor, this.state.reconnectAttempts),
+      this.config.reconnectInterval *
+        Math.pow(
+          this.config.reconnectBackoffFactor,
+          this.state.reconnectAttempts
+        ),
       this.config.maxReconnectInterval
     );
 

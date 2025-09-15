@@ -26,19 +26,21 @@ class SecureLogger {
     }
 
     if (data instanceof Error) {
-      return this.isProduction ? {
-        name: data.name,
-        message: data.message
-        // Stack traces not included in production
-      } : {
-        name: data.name,
-        message: data.message,
-        stack: data.stack
-      };
+      return this.isProduction
+        ? {
+            name: data.name,
+            message: data.message,
+            // Stack traces not included in production
+          }
+        : {
+            name: data.name,
+            message: data.message,
+            stack: data.stack,
+          };
     }
 
     if (Array.isArray(data)) {
-      return data.map(item => this.sanitizeData(item));
+      return data.map((item) => this.sanitizeData(item));
     }
 
     const sanitized: Record<string, unknown> = {};
@@ -46,12 +48,14 @@ class SecureLogger {
       const lowerKey = key.toLowerCase();
 
       // Redact sensitive fields
-      if (lowerKey.includes('token') ||
-          lowerKey.includes('password') ||
-          lowerKey.includes('secret') ||
-          lowerKey.includes('key') ||
-          lowerKey.includes('userid') ||
-          lowerKey.includes('id')) {
+      if (
+        lowerKey.includes('token') ||
+        lowerKey.includes('password') ||
+        lowerKey.includes('secret') ||
+        lowerKey.includes('key') ||
+        lowerKey.includes('userid') ||
+        lowerKey.includes('id')
+      ) {
         sanitized[key] = '[REDACTED]';
       } else if (typeof value === 'object') {
         sanitized[key] = this.sanitizeData(value);
@@ -106,7 +110,10 @@ class SecureLogger {
   }
 
   // Special method for authentication events
-  authEvent(event: 'login' | 'logout' | 'token_refresh' | 'auth_failed', userId?: string): void {
+  authEvent(
+    event: 'login' | 'logout' | 'token_refresh' | 'auth_failed',
+    userId?: string
+  ): void {
     if (this.isProduction) {
       // In production: no authentication logging for security
       return;
@@ -134,11 +141,11 @@ class SecureLogger {
       'WebSocket authentication failed',
       'Token refresh failed',
       'Connection error',
-      'Connection closed'
+      'Connection closed',
     ];
 
     // Check if this is a transient connection error
-    const isConnectionError = transientPatterns.some(pattern =>
+    const isConnectionError = transientPatterns.some((pattern) =>
       message.toLowerCase().includes(pattern.toLowerCase())
     );
 
@@ -151,21 +158,25 @@ class SecureLogger {
 
     // Check if it's a connection close error (normal during page transitions)
     const dataMessage = (data as Record<string, unknown>)?.message;
-    const isConnectionClosed = (typeof dataMessage === 'string') && (
-      dataMessage.includes('Connection closed') ||
-      dataMessage.includes('connection failed') ||
-      dataMessage.includes('Unknown reason')
-    );
+    const isConnectionClosed =
+      typeof dataMessage === 'string' &&
+      (dataMessage.includes('Connection closed') ||
+        dataMessage.includes('connection failed') ||
+        dataMessage.includes('Unknown reason'));
 
     return isStartupError || isConnectionClosed;
   }
 
   // Utility method to check current environment
-  getEnvironmentInfo(): { isProduction: boolean; hostname: string; env: string } {
+  getEnvironmentInfo(): {
+    isProduction: boolean;
+    hostname: string;
+    env: string;
+  } {
     return {
       isProduction: this.isProduction,
       hostname: window.location.hostname,
-      env: import.meta.env.NODE_ENV || 'unknown'
+      env: import.meta.env.NODE_ENV || 'unknown',
     };
   }
 
@@ -177,7 +188,10 @@ class SecureLogger {
 }
 
 // Create singleton instance with explicit production detection
-const isProductionEnvironment = import.meta.env.PROD || import.meta.env.NODE_ENV === 'production' || window.location.hostname !== 'localhost';
+const isProductionEnvironment =
+  import.meta.env.PROD ||
+  import.meta.env.NODE_ENV === 'production' ||
+  window.location.hostname !== 'localhost';
 export const secureLogger = new SecureLogger(isProductionEnvironment);
 
 // Export for testing with different environments

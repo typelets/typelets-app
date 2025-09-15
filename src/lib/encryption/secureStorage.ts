@@ -30,10 +30,12 @@ class SecureStorage {
     try {
       const encoder = new TextEncoder();
       const data = encoder.encode(value);
-      
+
       // Generate random IV for each encryption
-      const iv = crypto.getRandomValues(new Uint8Array(ENCRYPTION_CONFIG.IV_LENGTH));
-      
+      const iv = crypto.getRandomValues(
+        new Uint8Array(ENCRYPTION_CONFIG.IV_LENGTH)
+      );
+
       // Encrypt the data
       const encryptedData = await crypto.subtle.encrypt(
         { name: ENCRYPTION_CONFIG.ALGORITHM, iv },
@@ -115,7 +117,10 @@ class SecureStorage {
 
   private base64ToArrayBuffer(base64: string): ArrayBuffer {
     const bytes = this.base64ToUint8Array(base64);
-    return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
+    return bytes.buffer.slice(
+      bytes.byteOffset,
+      bytes.byteOffset + bytes.byteLength
+    );
   }
 
   private base64ToUint8Array(base64: string): Uint8Array {

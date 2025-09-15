@@ -1,9 +1,9 @@
-import { 
-  useState, 
-  useEffect, 
-  useImperativeHandle, 
+import {
+  useState,
+  useEffect,
+  useImperativeHandle,
   forwardRef,
-  useCallback
+  useCallback,
 } from 'react';
 import type { Editor } from '@tiptap/react';
 import {
@@ -82,144 +82,84 @@ const commands: CommandItem[] = [
     title: 'Bold',
     icon: <Bold className="h-4 w-4" />,
     command: ({ editor, range }) => {
-      editor
-        .chain()
-        .focus()
-        .deleteRange(range)
-        .setMark('bold')
-        .run();
+      editor.chain().focus().deleteRange(range).setMark('bold').run();
     },
   },
   {
     title: 'Italic',
     icon: <Italic className="h-4 w-4" />,
     command: ({ editor, range }) => {
-      editor
-        .chain()
-        .focus()
-        .deleteRange(range)
-        .setMark('italic')
-        .run();
+      editor.chain().focus().deleteRange(range).setMark('italic').run();
     },
   },
   {
     title: 'Underline',
     icon: <Underline className="h-4 w-4" />,
     command: ({ editor, range }) => {
-      editor
-        .chain()
-        .focus()
-        .deleteRange(range)
-        .setMark('underline')
-        .run();
+      editor.chain().focus().deleteRange(range).setMark('underline').run();
     },
   },
   {
     title: 'Strikethrough',
     icon: <Strikethrough className="h-4 w-4" />,
     command: ({ editor, range }) => {
-      editor
-        .chain()
-        .focus()
-        .deleteRange(range)
-        .setMark('strike')
-        .run();
+      editor.chain().focus().deleteRange(range).setMark('strike').run();
     },
   },
   {
     title: 'Highlight',
     icon: <Highlighter className="h-4 w-4" />,
     command: ({ editor, range }) => {
-      editor
-        .chain()
-        .focus()
-        .deleteRange(range)
-        .setMark('highlight')
-        .run();
+      editor.chain().focus().deleteRange(range).setMark('highlight').run();
     },
   },
   {
     title: 'Bullet List',
     icon: <List className="h-4 w-4" />,
     command: ({ editor, range }) => {
-      editor
-        .chain()
-        .focus()
-        .deleteRange(range)
-        .toggleBulletList()
-        .run();
+      editor.chain().focus().deleteRange(range).toggleBulletList().run();
     },
   },
   {
     title: 'Numbered List',
     icon: <ListOrdered className="h-4 w-4" />,
     command: ({ editor, range }) => {
-      editor
-        .chain()
-        .focus()
-        .deleteRange(range)
-        .toggleOrderedList()
-        .run();
+      editor.chain().focus().deleteRange(range).toggleOrderedList().run();
     },
   },
   {
     title: 'Task List',
     icon: <CheckSquare className="h-4 w-4" />,
     command: ({ editor, range }) => {
-      editor
-        .chain()
-        .focus()
-        .deleteRange(range)
-        .toggleTaskList()
-        .run();
+      editor.chain().focus().deleteRange(range).toggleTaskList().run();
     },
   },
   {
     title: 'Blockquote',
     icon: <Quote className="h-4 w-4" />,
     command: ({ editor, range }) => {
-      editor
-        .chain()
-        .focus()
-        .deleteRange(range)
-        .toggleBlockquote()
-        .run();
+      editor.chain().focus().deleteRange(range).toggleBlockquote().run();
     },
   },
   {
     title: 'Inline Code',
     icon: <Code className="h-4 w-4" />,
     command: ({ editor, range }) => {
-      editor
-        .chain()
-        .focus()
-        .deleteRange(range)
-        .setMark('code')
-        .run();
+      editor.chain().focus().deleteRange(range).setMark('code').run();
     },
   },
   {
     title: 'Code Block',
     icon: <Code className="h-4 w-4" />,
     command: ({ editor, range }) => {
-      editor
-        .chain()
-        .focus()
-        .deleteRange(range)
-        .toggleCodeBlock()
-        .run();
+      editor.chain().focus().deleteRange(range).toggleCodeBlock().run();
     },
   },
   {
     title: 'Horizontal Rule',
     icon: <Minus className="h-4 w-4" />,
     command: ({ editor, range }) => {
-      editor
-        .chain()
-        .focus()
-        .deleteRange(range)
-        .setHorizontalRule()
-        .run();
+      editor.chain().focus().deleteRange(range).setHorizontalRule().run();
     },
   },
   {
@@ -228,12 +168,7 @@ const commands: CommandItem[] = [
     command: ({ editor, range }) => {
       const url = window.prompt('Enter URL:');
       if (url) {
-        editor
-          .chain()
-          .focus()
-          .deleteRange(range)
-          .setLink({ href: url })
-          .run();
+        editor.chain().focus().deleteRange(range).setLink({ href: url }).run();
       }
     },
   },
@@ -254,7 +189,7 @@ const commands: CommandItem[] = [
     icon: <Image className="h-4 w-4" />,
     command: ({ editor, range }) => {
       editor.chain().focus().deleteRange(range).run();
-      
+
       const input = document.createElement('input');
       input.type = 'file';
       input.accept = 'image/*';
@@ -278,7 +213,7 @@ const commands: CommandItem[] = [
               .focus()
               .insertContent({
                 type: 'image',
-                attrs: { src: result }
+                attrs: { src: result },
               })
               .run();
           }
@@ -295,15 +230,21 @@ interface SlashCommandsHandle {
   onKeyDown: (props: { event: KeyboardEvent }) => boolean;
 }
 
-export const SlashCommandsList = forwardRef<SlashCommandsHandle, SlashCommandsListProps>((props, ref) => {
+export const SlashCommandsList = forwardRef<
+  SlashCommandsHandle,
+  SlashCommandsListProps
+>((props, ref) => {
   const [selectedIndex, setSelectedIndex] = useState(0);
 
-  const selectItem = useCallback((index: number) => {
-    const item = commands[index];
-    if (item) {
-      props.command(item);
-    }
-  }, [props]);
+  const selectItem = useCallback(
+    (index: number) => {
+      const item = commands[index];
+      if (item) {
+        props.command(item);
+      }
+    },
+    [props]
+  );
 
   const upHandler = useCallback(() => {
     setSelectedIndex((selectedIndex + commands.length - 1) % commands.length);
@@ -317,34 +258,38 @@ export const SlashCommandsList = forwardRef<SlashCommandsHandle, SlashCommandsLi
     setSelectedIndex(0);
   }, []);
 
-  useImperativeHandle(ref, () => ({
-    onKeyDown: ({ event }: { event: KeyboardEvent }) => {
-      if (event.key === 'ArrowUp') {
-        upHandler();
-        return true;
-      }
+  useImperativeHandle(
+    ref,
+    () => ({
+      onKeyDown: ({ event }: { event: KeyboardEvent }) => {
+        if (event.key === 'ArrowUp') {
+          upHandler();
+          return true;
+        }
 
-      if (event.key === 'ArrowDown') {
-        downHandler();
-        return true;
-      }
+        if (event.key === 'ArrowDown') {
+          downHandler();
+          return true;
+        }
 
-      if (event.key === 'Enter') {
-        selectItem(selectedIndex);
-        return true;
-      }
+        if (event.key === 'Enter') {
+          selectItem(selectedIndex);
+          return true;
+        }
 
-      return false;
-    },
-  }), [upHandler, downHandler, selectItem, selectedIndex]);
+        return false;
+      },
+    }),
+    [upHandler, downHandler, selectItem, selectedIndex]
+  );
 
   return (
-    <div className="bg-background border border-border rounded-lg shadow-lg p-2 max-h-80 overflow-y-auto">
+    <div className="bg-background border-border max-h-80 overflow-y-auto rounded-lg border p-2 shadow-lg">
       {commands.map((item, index) => (
         <button
           key={index}
           onClick={() => selectItem(index)}
-          className={`flex items-center gap-2 w-full text-left px-2 py-1.5 rounded-md transition-colors ${
+          className={`flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors ${
             index === selectedIndex
               ? 'bg-accent text-accent-foreground'
               : 'hover:bg-accent hover:text-accent-foreground'

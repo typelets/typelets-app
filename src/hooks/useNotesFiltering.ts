@@ -15,9 +15,8 @@ export function useNotesFiltering({
   folders,
   selectedFolder,
   currentView,
-  searchQuery
+  searchQuery,
 }: UseNotesFilteringParams) {
-
   const filteredNotes = useMemo(() => {
     return notes.filter((note) => {
       // Search filtering
@@ -83,6 +82,6 @@ export function useNotesFiltering({
 
   return {
     filteredNotes,
-    ...counts
+    ...counts,
   };
 }

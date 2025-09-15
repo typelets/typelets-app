@@ -37,7 +37,7 @@ export function ImageUpload({ editor }: ImageUploadProps) {
               .focus()
               .insertContent({
                 type: 'image',
-                attrs: { src: result }
+                attrs: { src: result },
               })
               .run();
           }
@@ -88,7 +88,7 @@ export const handleImagePaste = (view: EditorView, event: ClipboardEvent) => {
   for (const item of Array.from(items)) {
     if (item.type.startsWith('image/')) {
       event.preventDefault();
-      
+
       const file = item.getAsFile();
       if (!file) continue;
 
@@ -104,18 +104,18 @@ export const handleImagePaste = (view: EditorView, event: ClipboardEvent) => {
         if (result && typeof result === 'string') {
           const { state } = view;
           const { tr } = state;
-          
+
           tr.replaceSelectionWith(
             state.schema.nodes.image.create({
               src: result,
             })
           );
-          
+
           view.dispatch(tr);
         }
       };
       reader.readAsDataURL(file);
-      
+
       return true;
     }
   }

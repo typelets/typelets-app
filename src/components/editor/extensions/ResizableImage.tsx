@@ -4,7 +4,6 @@ import { NodeViewWrapper } from '@tiptap/react';
 import { useState, useRef, useEffect } from 'react';
 import { X, Maximize2 } from 'lucide-react';
 
-
 const ImageComponent = (props: {
   node: {
     attrs: {
@@ -33,13 +32,16 @@ const ImageComponent = (props: {
   const handleResize = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     const startX = e.clientX;
     const startWidth = imageRef.current?.offsetWidth || 0;
     const maxWidth = containerRef.current?.parentElement?.offsetWidth || 800;
 
     const handleMouseMove = (e: MouseEvent) => {
-      const newWidth = Math.min(Math.max(100, startWidth + (e.clientX - startX)), maxWidth);
+      const newWidth = Math.min(
+        Math.max(100, startWidth + (e.clientX - startX)),
+        maxWidth
+      );
       setWidth(`${newWidth}px`);
       updateAttributes({ width: `${newWidth}px` });
     };
@@ -62,9 +64,9 @@ const ImageComponent = (props: {
 
   return (
     <NodeViewWrapper className="image-wrapper">
-      <div 
+      <div
         ref={containerRef}
-        className={`relative inline-block group ${isResizing ? 'select-none' : ''}`}
+        className={`group relative inline-block ${isResizing ? 'select-none' : ''}`}
         style={{ width: width === 'auto' ? 'auto' : width, maxWidth: '100%' }}
         onMouseEnter={() => setShowControls(true)}
         onMouseLeave={() => setShowControls(false)}
@@ -74,26 +76,26 @@ const ImageComponent = (props: {
           src={node.attrs.src}
           alt={node.attrs.alt || ''}
           title={node.attrs.title || ''}
-          className="rounded-lg w-full h-auto block shadow-md"
+          className="block h-auto w-full rounded-lg shadow-md"
           draggable={false}
         />
-        
+
         {showControls && (
           <>
             {/* Delete button */}
             <button
               onClick={deleteNode}
-              className="absolute top-2 right-2 bg-background/90 hover:bg-background rounded-md p-1.5 shadow-lg border border-border opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+              className="bg-background/90 hover:bg-background border-border absolute top-2 right-2 rounded-md border p-1.5 opacity-0 shadow-lg transition-opacity duration-200 group-hover:opacity-100"
               title="Remove image"
             >
               <X className="h-4 w-4" />
             </button>
-            
+
             {/* Reset size button */}
             {width !== 'auto' && (
               <button
                 onClick={resetSize}
-                className="absolute top-2 right-10 bg-background/90 hover:bg-background rounded-md p-1.5 shadow-lg border border-border opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                className="bg-background/90 hover:bg-background border-border absolute top-2 right-10 rounded-md border p-1.5 opacity-0 shadow-lg transition-opacity duration-200 group-hover:opacity-100"
                 title="Reset to original size"
               >
                 <Maximize2 className="h-4 w-4" />
@@ -102,25 +104,29 @@ const ImageComponent = (props: {
 
             {/* Resize handles */}
             <div
-              className="absolute top-0 bottom-0 right-0 w-2 cursor-ew-resize opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+              className="absolute top-0 right-0 bottom-0 w-2 cursor-ew-resize opacity-0 transition-opacity duration-200 group-hover:opacity-100"
               onMouseDown={handleResize}
             >
-              <div className="absolute inset-y-0 right-0 w-1 bg-primary/50 hover:bg-primary transition-colors" />
+              <div className="bg-primary/50 hover:bg-primary absolute inset-y-0 right-0 w-1 transition-colors" />
             </div>
-            
+
             <div
-              className="absolute top-0 bottom-0 left-0 w-2 cursor-ew-resize opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+              className="absolute top-0 bottom-0 left-0 w-2 cursor-ew-resize opacity-0 transition-opacity duration-200 group-hover:opacity-100"
               onMouseDown={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                
+
                 const startX = e.clientX;
                 const startWidth = imageRef.current?.offsetWidth || 0;
-                const maxWidth = containerRef.current?.parentElement?.offsetWidth || 800;
+                const maxWidth =
+                  containerRef.current?.parentElement?.offsetWidth || 800;
 
                 const handleMouseMove = (e: MouseEvent) => {
                   const delta = startX - e.clientX;
-                  const newWidth = Math.min(Math.max(100, startWidth + delta), maxWidth);
+                  const newWidth = Math.min(
+                    Math.max(100, startWidth + delta),
+                    maxWidth
+                  );
                   setWidth(`${newWidth}px`);
                   updateAttributes({ width: `${newWidth}px` });
                 };
@@ -136,7 +142,7 @@ const ImageComponent = (props: {
                 document.addEventListener('mouseup', handleMouseUp);
               }}
             >
-              <div className="absolute inset-y-0 left-0 w-1 bg-primary/50 hover:bg-primary transition-colors" />
+              <div className="bg-primary/50 hover:bg-primary absolute inset-y-0 left-0 w-1 transition-colors" />
             </div>
           </>
         )}
@@ -192,7 +198,10 @@ export const ResizableImage = Node.create({
   },
 
   renderHTML({ HTMLAttributes }) {
-    return ['img', mergeAttributes(this.options.HTMLAttributes, HTMLAttributes)];
+    return [
+      'img',
+      mergeAttributes(this.options.HTMLAttributes, HTMLAttributes),
+    ];
   },
 
   addNodeView() {

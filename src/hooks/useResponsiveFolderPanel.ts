@@ -8,7 +8,7 @@ const NOTES_COLLAPSE_BREAKPOINT = 1280;
 export function useResponsiveFolderPanel(initialState = true) {
   // Track if user has manually toggled (to respect user preference)
   const [userHasToggled, setUserHasToggled] = useState(false);
-  
+
   // Track the actual open/closed state
   const [isOpen, setIsOpen] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -19,19 +19,21 @@ export function useResponsiveFolderPanel(initialState = true) {
   });
 
   // Track previous window width to detect crossing breakpoint
-  const [previousWidth, setPreviousWidth] = useState(() => 
-    typeof window !== 'undefined' ? window.innerWidth : FOLDER_COLLAPSE_BREAKPOINT
+  const [previousWidth, setPreviousWidth] = useState(() =>
+    typeof window !== 'undefined'
+      ? window.innerWidth
+      : FOLDER_COLLAPSE_BREAKPOINT
   );
 
   useEffect(() => {
     const handleResize = () => {
       const currentWidth = window.innerWidth;
-      
+
       // Only auto-toggle if user hasn't manually toggled
       if (!userHasToggled) {
         const wasAboveBreakpoint = previousWidth >= FOLDER_COLLAPSE_BREAKPOINT;
         const isAboveBreakpoint = currentWidth >= FOLDER_COLLAPSE_BREAKPOINT;
-        
+
         // Auto-collapse when crossing breakpoint from larger to smaller
         if (wasAboveBreakpoint && !isAboveBreakpoint) {
           setIsOpen(false);
@@ -41,7 +43,7 @@ export function useResponsiveFolderPanel(initialState = true) {
           setIsOpen(true);
         }
       }
-      
+
       setPreviousWidth(currentWidth);
     };
 
@@ -54,8 +56,8 @@ export function useResponsiveFolderPanel(initialState = true) {
   // Manual toggle function that respects user preference
   const toggleFolderPanel = useCallback((forceState?: boolean) => {
     setUserHasToggled(true);
-    setIsOpen(prev => forceState !== undefined ? forceState : !prev);
-    
+    setIsOpen((prev) => (forceState !== undefined ? forceState : !prev));
+
     // Reset user toggle flag after 5 seconds to allow auto-behavior again
     setTimeout(() => {
       setUserHasToggled(false);
@@ -73,14 +75,15 @@ export function useResponsiveFolderPanel(initialState = true) {
     isOpen,
     toggleFolderPanel,
     resetToAuto,
-    isAutoCollapsed: window.innerWidth < FOLDER_COLLAPSE_BREAKPOINT && !userHasToggled,
+    isAutoCollapsed:
+      window.innerWidth < FOLDER_COLLAPSE_BREAKPOINT && !userHasToggled,
   };
 }
 
 export function useResponsiveNotesPanel(initialState = true) {
   // Track if user has manually toggled (to respect user preference)
   const [userHasToggled, setUserHasToggled] = useState(false);
-  
+
   // Track the actual open/closed state
   const [isOpen, setIsOpen] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -91,19 +94,21 @@ export function useResponsiveNotesPanel(initialState = true) {
   });
 
   // Track previous window width to detect crossing breakpoint
-  const [previousWidth, setPreviousWidth] = useState(() => 
-    typeof window !== 'undefined' ? window.innerWidth : NOTES_COLLAPSE_BREAKPOINT
+  const [previousWidth, setPreviousWidth] = useState(() =>
+    typeof window !== 'undefined'
+      ? window.innerWidth
+      : NOTES_COLLAPSE_BREAKPOINT
   );
 
   useEffect(() => {
     const handleResize = () => {
       const currentWidth = window.innerWidth;
-      
+
       // Only auto-toggle if user hasn't manually toggled
       if (!userHasToggled) {
         const wasAboveBreakpoint = previousWidth >= NOTES_COLLAPSE_BREAKPOINT;
         const isAboveBreakpoint = currentWidth >= NOTES_COLLAPSE_BREAKPOINT;
-        
+
         // Auto-collapse when crossing breakpoint from larger to smaller
         if (wasAboveBreakpoint && !isAboveBreakpoint) {
           setIsOpen(false);
@@ -113,7 +118,7 @@ export function useResponsiveNotesPanel(initialState = true) {
           setIsOpen(true);
         }
       }
-      
+
       setPreviousWidth(currentWidth);
     };
 
@@ -126,8 +131,8 @@ export function useResponsiveNotesPanel(initialState = true) {
   // Manual toggle function that respects user preference
   const toggleNotesPanel = useCallback((forceState?: boolean) => {
     setUserHasToggled(true);
-    setIsOpen(prev => forceState !== undefined ? forceState : !prev);
-    
+    setIsOpen((prev) => (forceState !== undefined ? forceState : !prev));
+
     // Reset user toggle flag after 5 seconds to allow auto-behavior again
     setTimeout(() => {
       setUserHasToggled(false);
@@ -145,6 +150,7 @@ export function useResponsiveNotesPanel(initialState = true) {
     isOpen,
     toggleNotesPanel,
     resetToAuto,
-    isAutoCollapsed: window.innerWidth < NOTES_COLLAPSE_BREAKPOINT && !userHasToggled,
+    isAutoCollapsed:
+      window.innerWidth < NOTES_COLLAPSE_BREAKPOINT && !userHasToggled,
   };
 }

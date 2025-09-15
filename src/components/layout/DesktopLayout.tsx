@@ -1,7 +1,11 @@
 import FolderPanel from '@/components/folders';
 import NotesPanel from '@/components/notes/NotesPanel';
 import Index from '@/components/editor';
-import type { FolderPanelProps, FilesPanelProps, EditorProps } from '@/types/layout';
+import type {
+  FolderPanelProps,
+  FilesPanelProps,
+  EditorProps,
+} from '@/types/layout';
 
 interface DesktopLayoutProps {
   folderSidebarOpen: boolean;

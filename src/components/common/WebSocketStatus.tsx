@@ -1,4 +1,11 @@
-import { Wifi, WifiOff, RefreshCw, AlertCircle, CheckCircle, Clock } from 'lucide-react';
+import {
+  Wifi,
+  WifiOff,
+  RefreshCw,
+  AlertCircle,
+  CheckCircle,
+  Clock,
+} from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,7 +30,11 @@ interface WebSocketStatusProps {
   showDetails?: boolean;
 }
 
-const getStatusIcon = (_status: WebSocketStatus, isConnected: boolean, isAuthenticated: boolean) => {
+const getStatusIcon = (
+  _status: WebSocketStatus,
+  isConnected: boolean,
+  isAuthenticated: boolean
+) => {
   // Keep wifi icons but with proper colors
   const isConnectedAndAuth = isConnected && isAuthenticated;
 
@@ -36,14 +47,16 @@ const getStatusIcon = (_status: WebSocketStatus, isConnected: boolean, isAuthent
 
 const getStatusText = (status: WebSocketStatus, isAuthenticated: boolean) => {
   // Simplified: only show Connected or Disconnected
-  const isConnectedAndAuth = (status === 'connected' || status === 'authenticated') && isAuthenticated;
+  const isConnectedAndAuth =
+    (status === 'connected' || status === 'authenticated') && isAuthenticated;
 
   return isConnectedAndAuth ? 'Connected' : 'Disconnected';
 };
 
 const getStatusColor = (status: WebSocketStatus, isAuthenticated: boolean) => {
   // Simplified: green for connected, gray for disconnected
-  const isConnectedAndAuth = (status === 'connected' || status === 'authenticated') && isAuthenticated;
+  const isConnectedAndAuth =
+    (status === 'connected' || status === 'authenticated') && isAuthenticated;
 
   return isConnectedAndAuth ? 'text-green-600' : 'text-gray-500';
 };
@@ -93,16 +106,17 @@ export function WebSocketStatus({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <div className="flex items-center gap-1 px-1.5 py-0.5 hover:bg-muted rounded cursor-default" title={statusText}>
+        <div
+          className="hover:bg-muted flex cursor-default items-center gap-1 rounded px-1.5 py-0.5"
+          title={statusText}
+        >
           {statusIcon}
-          <span className="hidden sm:inline">
-            {statusText}
-          </span>
+          <span className="hidden sm:inline">{statusText}</span>
         </div>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-64">
         <div className="p-2">
-          <div className="flex items-center gap-2 mb-2">
+          <div className="mb-2 flex items-center gap-2">
             {statusIcon}
             <span className={`text-sm font-medium ${statusColor}`}>
               {statusText}
@@ -110,8 +124,8 @@ export function WebSocketStatus({
           </div>
 
           {error && (
-            <div className="mb-2 p-2 bg-red-50 border border-red-200 rounded text-xs text-red-700">
-              <div className="font-medium mb-1">Error:</div>
+            <div className="mb-2 rounded border border-red-200 bg-red-50 p-2 text-xs text-red-700">
+              <div className="mb-1 font-medium">Error:</div>
               <div>{error}</div>
             </div>
           )}
@@ -187,20 +201,19 @@ export function WebSocketStatusCompact({
   isAuthenticated,
   lastSync,
 }: Pick<WebSocketStatusProps, 'status' | 'isAuthenticated' | 'lastSync'>) {
-  const isConnectedAndAuth = (status === 'connected' || status === 'authenticated') && isAuthenticated;
+  const isConnectedAndAuth =
+    (status === 'connected' || status === 'authenticated') && isAuthenticated;
   const statusIcon = getStatusIcon(status, isConnectedAndAuth, isAuthenticated);
   const statusText = isConnectedAndAuth ? 'Connected' : 'Disconnected';
 
   return (
     <div className="flex items-center gap-1">
       <div
-        className="flex items-center gap-1 px-1.5 py-0.5 rounded cursor-default"
+        className="flex cursor-default items-center gap-1 rounded px-1.5 py-0.5"
         title={`${statusText}${lastSync ? ` • Last sync: ${formatLastSync(lastSync)}` : ''}`}
       >
         {statusIcon}
-        <span className="hidden sm:inline">
-          {statusText}
-        </span>
+        <span className="hidden sm:inline">{statusText}</span>
       </div>
     </div>
   );
@@ -209,7 +222,7 @@ export function WebSocketStatusCompact({
 // Sync indicator for showing when sync is in progress
 export function SyncIndicator({
   isVisible,
-  message = 'Syncing...'
+  message = 'Syncing...',
 }: {
   isVisible: boolean;
   message?: string;
@@ -217,7 +230,7 @@ export function SyncIndicator({
   if (!isVisible) return null;
 
   return (
-    <div className="flex items-center gap-2 px-2 py-1 bg-blue-50 border border-blue-200 rounded text-xs text-blue-700">
+    <div className="flex items-center gap-2 rounded border border-blue-200 bg-blue-50 px-2 py-1 text-xs text-blue-700">
       <RefreshCw className="h-3 w-3 animate-spin" />
       <span>{message}</span>
     </div>
@@ -251,12 +264,14 @@ export function SyncNotification({
   };
 
   return (
-    <div className={`fixed top-4 right-4 z-50 flex items-center gap-2 px-3 py-2 border rounded shadow-sm ${colors[type]} max-w-sm`}>
+    <div
+      className={`fixed top-4 right-4 z-50 flex items-center gap-2 rounded border px-3 py-2 shadow-sm ${colors[type]} max-w-sm`}
+    >
       {icons[type]}
-      <span className="text-sm flex-1">{message}</span>
+      <span className="flex-1 text-sm">{message}</span>
       <button
         onClick={onDismiss}
-        className="text-gray-500 hover:text-gray-700 ml-2"
+        className="ml-2 text-gray-500 hover:text-gray-700"
       >
         ×
       </button>

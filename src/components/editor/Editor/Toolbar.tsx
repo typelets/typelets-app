@@ -87,7 +87,7 @@ export function Toolbar({ editor }: ToolbarProps) {
   };
 
   return (
-    <div className="border-border bg-muted dark:bg-gray-800 flex flex-wrap items-center gap-1 border-b p-2">
+    <div className="border-border bg-muted flex flex-wrap items-center gap-1 border-b p-2 dark:bg-gray-800">
       <Button
         variant="ghost"
         size="sm"
@@ -170,16 +170,15 @@ export function Toolbar({ editor }: ToolbarProps) {
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            size="sm"
-            title="Text Color"
-          >
+          <Button variant="ghost" size="sm" title="Text Color">
             <Palette className="h-4 w-4" />
             <ChevronDown className="ml-1 h-3 w-3" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="grid grid-cols-5 gap-1 p-2">
+        <DropdownMenuContent
+          align="start"
+          className="grid grid-cols-5 gap-1 p-2"
+        >
           {[
             { label: 'Default', color: null },
             { label: 'Red', color: '#ef4444' },
@@ -201,13 +200,11 @@ export function Toolbar({ editor }: ToolbarProps) {
                   editor.chain().focus().unsetColor().run();
                 }
               }}
-              className="h-6 w-6 rounded border border-gray-300 hover:scale-110 transition-transform flex items-center justify-center"
+              className="flex h-6 w-6 items-center justify-center rounded border border-gray-300 transition-transform hover:scale-110"
               style={{ backgroundColor: item.color || 'transparent' }}
               title={item.label}
             >
-              {!item.color && (
-                <span className="text-xs leading-none">✕</span>
-              )}
+              {!item.color && <span className="text-xs leading-none">✕</span>}
             </button>
           ))}
         </DropdownMenuContent>
@@ -247,7 +244,9 @@ export function Toolbar({ editor }: ToolbarProps) {
           </DropdownMenuItem>
           <DropdownMenuSeparator className="my-1" />
           <DropdownMenuItem
-            onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+            onClick={() =>
+              editor.chain().focus().toggleHeading({ level: 1 }).run()
+            }
             className={`mb-1 ${editor.isActive('heading', { level: 1 }) ? 'bg-accent' : ''}`}
           >
             <Heading1 className="mr-2 h-4 w-4" />
@@ -257,7 +256,9 @@ export function Toolbar({ editor }: ToolbarProps) {
             )}
           </DropdownMenuItem>
           <DropdownMenuItem
-            onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+            onClick={() =>
+              editor.chain().focus().toggleHeading({ level: 2 }).run()
+            }
             className={`mb-1 ${editor.isActive('heading', { level: 2 }) ? 'bg-accent' : ''}`}
           >
             <Heading2 className="mr-2 h-4 w-4" />
@@ -267,8 +268,12 @@ export function Toolbar({ editor }: ToolbarProps) {
             )}
           </DropdownMenuItem>
           <DropdownMenuItem
-            onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
-            className={editor.isActive('heading', { level: 3 }) ? 'bg-accent' : ''}
+            onClick={() =>
+              editor.chain().focus().toggleHeading({ level: 3 }).run()
+            }
+            className={
+              editor.isActive('heading', { level: 3 }) ? 'bg-accent' : ''
+            }
           >
             <Heading3 className="mr-2 h-4 w-4" />
             <span className="text-sm">Heading 3</span>
@@ -284,7 +289,13 @@ export function Toolbar({ editor }: ToolbarProps) {
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
-            variant={editor.isActive('bulletList') || editor.isActive('orderedList') || editor.isActive('taskList') ? 'default' : 'ghost'}
+            variant={
+              editor.isActive('bulletList') ||
+              editor.isActive('orderedList') ||
+              editor.isActive('taskList')
+                ? 'default'
+                : 'ghost'
+            }
             size="sm"
             className="gap-1"
             title="Lists"
@@ -400,7 +411,13 @@ export function Toolbar({ editor }: ToolbarProps) {
       <Button
         variant="ghost"
         size="sm"
-        onClick={() => editor.chain().focus().insertContent({ type: 'tableOfContents' }).run()}
+        onClick={() =>
+          editor
+            .chain()
+            .focus()
+            .insertContent({ type: 'tableOfContents' })
+            .run()
+        }
         title="Table of Contents"
       >
         <FileText className="h-4 w-4" />
@@ -420,7 +437,9 @@ export function Toolbar({ editor }: ToolbarProps) {
       <Button
         variant="ghost"
         size="sm"
-        onClick={() => editor.chain().focus().clearNodes().unsetAllMarks().run()}
+        onClick={() =>
+          editor.chain().focus().clearNodes().unsetAllMarks().run()
+        }
         title="Clear Formatting"
       >
         <RemoveFormatting className="h-4 w-4" />
@@ -440,39 +459,156 @@ export function Toolbar({ editor }: ToolbarProps) {
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            size="sm"
-            title="Insert Emoji"
-          >
+          <Button variant="ghost" size="sm" title="Insert Emoji">
             <Smile className="h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-64 p-2">
           <div className="grid grid-cols-8 gap-1">
             {[
-              '😀', '😃', '😄', '😁', '😅', '😂', '🤣', '😊',
-              '😇', '🙂', '😉', '😌', '😍', '🥰', '😘', '😗',
-              '😙', '😚', '😋', '😛', '😜', '🤪', '😝', '🤑',
-              '🤗', '🤭', '🤫', '🤔', '🤐', '🤨', '😐', '😑',
-              '😶', '😏', '😒', '🙄', '😬', '🤥', '😺', '😔',
-              '😪', '🤤', '😴', '😷', '🤒', '🤕', '🤢', '🤮',
-              '🤧', '🥵', '🥶', '😎', '🤓', '🧐', '😕', '😟',
-              '🙁', '☹️', '😮', '😯', '😲', '😳', '🥺', '😦',
-              '😧', '😨', '😰', '😥', '😢', '😭', '😱', '😖',
-              '😣', '😞', '😓', '😩', '😫', '🥱', '😤', '😡',
-              '😠', '🤬', '😈', '👿', '💀', '☠️', '💩', '🤡',
-              '👍', '👎', '👌', '✌️', '🤞', '🤟', '🤘', '🤙',
-              '👏', '🙌', '👐', '🤲', '🙏', '✍️', '💪', '🦾',
-              '❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍',
-              '🤎', '💔', '❣️', '💕', '💞', '💓', '💗', '💖',
-              '💘', '💝', '⭐', '🌟', '✨', '⚡', '🔥', '💥',
-              '🎉', '🎊', '🎈', '🎁', '🎯', '🏆', '🥇', '🥈',
+              '😀',
+              '😃',
+              '😄',
+              '😁',
+              '😅',
+              '😂',
+              '🤣',
+              '😊',
+              '😇',
+              '🙂',
+              '😉',
+              '😌',
+              '😍',
+              '🥰',
+              '😘',
+              '😗',
+              '😙',
+              '😚',
+              '😋',
+              '😛',
+              '😜',
+              '🤪',
+              '😝',
+              '🤑',
+              '🤗',
+              '🤭',
+              '🤫',
+              '🤔',
+              '🤐',
+              '🤨',
+              '😐',
+              '😑',
+              '😶',
+              '😏',
+              '😒',
+              '🙄',
+              '😬',
+              '🤥',
+              '😺',
+              '😔',
+              '😪',
+              '🤤',
+              '😴',
+              '😷',
+              '🤒',
+              '🤕',
+              '🤢',
+              '🤮',
+              '🤧',
+              '🥵',
+              '🥶',
+              '😎',
+              '🤓',
+              '🧐',
+              '😕',
+              '😟',
+              '🙁',
+              '☹️',
+              '😮',
+              '😯',
+              '😲',
+              '😳',
+              '🥺',
+              '😦',
+              '😧',
+              '😨',
+              '😰',
+              '😥',
+              '😢',
+              '😭',
+              '😱',
+              '😖',
+              '😣',
+              '😞',
+              '😓',
+              '😩',
+              '😫',
+              '🥱',
+              '😤',
+              '😡',
+              '😠',
+              '🤬',
+              '😈',
+              '👿',
+              '💀',
+              '☠️',
+              '💩',
+              '🤡',
+              '👍',
+              '👎',
+              '👌',
+              '✌️',
+              '🤞',
+              '🤟',
+              '🤘',
+              '🤙',
+              '👏',
+              '🙌',
+              '👐',
+              '🤲',
+              '🙏',
+              '✍️',
+              '💪',
+              '🦾',
+              '❤️',
+              '🧡',
+              '💛',
+              '💚',
+              '💙',
+              '💜',
+              '🖤',
+              '🤍',
+              '🤎',
+              '💔',
+              '❣️',
+              '💕',
+              '💞',
+              '💓',
+              '💗',
+              '💖',
+              '💘',
+              '💝',
+              '⭐',
+              '🌟',
+              '✨',
+              '⚡',
+              '🔥',
+              '💥',
+              '🎉',
+              '🎊',
+              '🎈',
+              '🎁',
+              '🎯',
+              '🏆',
+              '🥇',
+              '🥈',
             ].map((emoji) => (
               <button
                 key={emoji}
-                onClick={() => editor.chain().focus().insertContent(emoji).run()}
-                className="hover:bg-gray-100 dark:hover:bg-gray-700 rounded p-1 text-xl"
+                onClick={() =>
+                  editor.chain().focus().insertContent(emoji).run()
+                }
+                className="rounded p-1 text-xl hover:bg-gray-100 dark:hover:bg-gray-700"
                 title={`Insert ${emoji}`}
               >
                 {emoji}
@@ -481,7 +617,6 @@ export function Toolbar({ editor }: ToolbarProps) {
           </div>
         </DropdownMenuContent>
       </DropdownMenu>
-
     </div>
   );
 }

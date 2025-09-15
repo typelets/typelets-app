@@ -150,7 +150,7 @@ export default function Index({
                   }
 
                   const container = document.createElement('div');
-                  
+
                   popup = tippy('body', {
                     getReferenceClientRect: props.clientRect as () => DOMRect,
                     appendTo: () => document.body,
@@ -162,7 +162,7 @@ export default function Index({
                   })[0];
 
                   root = ReactDOM.createRoot(container);
-                  
+
                   root.render(
                     <SlashCommandsList
                       ref={(ref: SlashCommandsHandle | null) => {
@@ -184,7 +184,7 @@ export default function Index({
                     popup?.hide();
                     return true;
                   }
-                  
+
                   return component?.onKeyDown?.(props);
                 },
 
@@ -193,7 +193,7 @@ export default function Index({
                     popup.destroy();
                   }
                   popup = null;
-                  
+
                   if (root) {
                     setTimeout(() => {
                       root?.unmount();
@@ -206,7 +206,7 @@ export default function Index({
           },
         }),
       ],
-      content: note?.hidden ? '[HIDDEN]' : (note?.content || ''),
+      content: note?.hidden ? '[HIDDEN]' : note?.content || '',
       editorProps: {
         attributes: {
           class:
@@ -220,7 +220,7 @@ export default function Index({
           for (const item of Array.from(items)) {
             if (item.type.startsWith('image/')) {
               event.preventDefault();
-              
+
               const file = item.getAsFile();
               if (!file) continue;
 
@@ -241,7 +241,7 @@ export default function Index({
                 }
               };
               reader.readAsDataURL(file);
-              
+
               return true;
             }
           }
@@ -250,7 +250,7 @@ export default function Index({
         },
         handleDrop: (view, event, _slice, moved) => {
           if (moved) return false;
-          
+
           const files = event.dataTransfer?.files;
           if (!files || files.length === 0) return false;
 
@@ -276,13 +276,16 @@ export default function Index({
 
                   if (coordinates) {
                     const node = schema.nodes.image.create({ src: result });
-                    const transaction = view.state.tr.insert(coordinates.pos, node);
+                    const transaction = view.state.tr.insert(
+                      coordinates.pos,
+                      node
+                    );
                     view.dispatch(transaction);
                   }
                 }
               };
               reader.readAsDataURL(file);
-              
+
               return true;
             }
           }
@@ -292,21 +295,21 @@ export default function Index({
       },
       onUpdate: ({ editor }) => {
         if (!note || note.hidden) return; // Prevent auto-save for hidden notes
-        
+
         // Update word and character counts
         const text = editor.state.doc.textContent;
         updateCounts(text);
-        
+
         const html = editor.getHTML();
         if (html !== note.content && html !== lastContentRef.current) {
           lastContentRef.current = html;
           setSaveStatus('saving');
-          
+
           // Clear existing timeout
           if (saveTimeoutRef.current) {
             clearTimeout(saveTimeoutRef.current);
           }
-          
+
           // Debounce the save operation
           saveTimeoutRef.current = setTimeout(() => {
             try {
@@ -335,13 +338,11 @@ export default function Index({
     lastContentRef,
   });
 
-
-
   // Update editor when note hidden state changes
   useEffect(() => {
     if (editor && note) {
       const currentContent = editor.getHTML();
-      
+
       // Only update if content actually changed
       if (note.hidden && currentContent !== '[HIDDEN]') {
         editor.commands.setContent('[HIDDEN]');
@@ -410,7 +411,8 @@ export default function Index({
         onUpdateNote(note.id, { attachments: updatedAttachments });
       } catch (error) {
         console.error('File upload failed:', error);
-        const errorMessage = error instanceof Error ? error.message : 'Upload failed';
+        const errorMessage =
+          error instanceof Error ? error.message : 'Upload failed';
         alert(errorMessage);
       } finally {
         setIsUploading(false);
@@ -424,7 +426,7 @@ export default function Index({
     async (attachmentId: string) => {
       if (!note) return;
 
-      setDeletingIds(prev => [...prev, attachmentId]);
+      setDeletingIds((prev) => [...prev, attachmentId]);
 
       try {
         await fileService.removeFile(attachmentId);
@@ -435,10 +437,11 @@ export default function Index({
         onUpdateNote(note.id, { attachments: updatedAttachments });
       } catch (error) {
         console.error('File removal failed:', error);
-        const errorMessage = error instanceof Error ? error.message : 'Failed to remove file';
+        const errorMessage =
+          error instanceof Error ? error.message : 'Failed to remove file';
         alert(errorMessage);
       } finally {
-        setDeletingIds(prev => prev.filter(id => id !== attachmentId));
+        setDeletingIds((prev) => prev.filter((id) => id !== attachmentId));
       }
     },
     [note, onUpdateNote]
@@ -462,11 +465,17 @@ export default function Index({
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
 
-    const printContent = `
+    // Safely create print document to prevent XSS
+    const printDoc = printWindow.document;
+    printDoc.open();
+
+    // Build the HTML structure safely
+    printDoc.write(`
       <!DOCTYPE html>
       <html>
         <head>
-          <title>${note.title || 'Untitled Note'}</title>
+          <meta charset="UTF-8">
+          <title></title>
           <style>
             body {
               font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -490,19 +499,34 @@ export default function Index({
           </style>
         </head>
         <body>
-          <h1>${note.title || 'Untitled Note'}</h1>
-          ${note.content}
         </body>
       </html>
-    `;
+    `);
 
-    printWindow.document.write(printContent);
+    // Safely set title and content using DOM methods
+    printDoc.title = note.title || 'Untitled Note';
+    const h1 = printDoc.createElement('h1');
+    h1.textContent = note.title || 'Untitled Note';
+    printDoc.body.appendChild(h1);
+
+    // Safely add content by parsing HTML and sanitizing
+    const contentDiv = printDoc.createElement('div');
+    if (note.content) {
+      // Parse the HTML content safely
+      const parser = new DOMParser();
+      const parsedContent = parser.parseFromString(note.content, 'text/html');
+      // Import the parsed content nodes into the print document
+      Array.from(parsedContent.body.childNodes).forEach((node) => {
+        const importedNode = printDoc.importNode(node, true);
+        contentDiv.appendChild(importedNode);
+      });
+    }
+    printDoc.body.appendChild(contentDiv);
     printWindow.document.close();
     printWindow.focus();
     printWindow.print();
     printWindow.close();
   }, [note]);
-
 
   const formatDate = (date: Date) => {
     return new Intl.DateTimeFormat('en-US', {
@@ -528,204 +552,213 @@ export default function Index({
   return (
     <>
       <div className="flex h-full flex-1 flex-col">
-      <div className="border-border flex-shrink-0 border-b p-4">
-        <div className="mb-4 flex items-center justify-between">
-          <div className="flex items-center gap-3 min-w-0 flex-1">
-            {onToggleNotesPanel && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onToggleNotesPanel}
-                title={
-                  isNotesPanelOpen ? 'Hide notes panel' : 'Show notes panel'
-                }
-                className="flex-shrink-0"
-              >
-                {isNotesPanelOpen ? <PanelRightOpen className="h-4 w-4" /> : <PanelRightClose className="h-4 w-4" />}
-              </Button>
-            )}
-            <input
-              type="text"
-              value={note.title || ''}
-              onChange={handleTitleChange}
-              className="text-foreground placeholder-muted-foreground min-w-0 flex-1 border-none bg-transparent text-2xl font-bold outline-none"
-              placeholder="Untitled Note"
-              disabled={note.hidden}
-            />
-          </div>
+        <div className="border-border flex-shrink-0 border-b p-4">
+          <div className="mb-4 flex items-center justify-between">
+            <div className="flex min-w-0 flex-1 items-center gap-3">
+              {onToggleNotesPanel && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onToggleNotesPanel}
+                  title={
+                    isNotesPanelOpen ? 'Hide notes panel' : 'Show notes panel'
+                  }
+                  className="flex-shrink-0"
+                >
+                  {isNotesPanelOpen ? (
+                    <PanelRightOpen className="h-4 w-4" />
+                  ) : (
+                    <PanelRightClose className="h-4 w-4" />
+                  )}
+                </Button>
+              )}
+              <input
+                type="text"
+                value={note.title || ''}
+                onChange={handleTitleChange}
+                className="text-foreground placeholder-muted-foreground min-w-0 flex-1 border-none bg-transparent text-2xl font-bold outline-none"
+                placeholder="Untitled Note"
+                disabled={note.hidden}
+              />
+            </div>
 
-          <div className="flex items-center gap-2 flex-shrink-0">
-            
-            <div className="relative">
+            <div className="flex flex-shrink-0 items-center gap-2">
+              <div className="relative">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowAttachments(!showAttachments)}
+                  className={
+                    showAttachments
+                      ? 'bg-accent text-accent-foreground'
+                      : note.attachments && note.attachments.length > 0
+                        ? 'text-primary'
+                        : 'text-muted-foreground'
+                  }
+                  title={
+                    showAttachments ? 'Hide attachments' : 'Show attachments'
+                  }
+                >
+                  <Paperclip className="h-4 w-4" />
+                </Button>
+                <span className="bg-primary text-primary-foreground absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full text-[10px] font-medium">
+                  {(note.attachments?.length || 0) > 9
+                    ? '9+'
+                    : note.attachments?.length || 0}
+                </span>
+              </div>
+
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => setShowAttachments(!showAttachments)}
+                onClick={() => onToggleStar(note.id)}
                 className={
-                  showAttachments
-                    ? 'bg-accent text-accent-foreground'
-                    : note.attachments && note.attachments.length > 0
-                    ? 'text-primary'
-                    : 'text-muted-foreground'
+                  note.starred ? 'text-yellow-500' : 'text-muted-foreground'
                 }
-                title={showAttachments ? 'Hide attachments' : 'Show attachments'}
+                title={note.starred ? 'Remove from starred' : 'Add to starred'}
               >
-                <Paperclip className="h-4 w-4" />
+                <Star
+                  className={`h-4 w-4 ${note.starred ? 'fill-current' : ''}`}
+                />
               </Button>
-              <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-medium text-primary-foreground">
-                {(note.attachments?.length || 0) > 9 ? '9+' : (note.attachments?.length || 0)}
-              </span>
+
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() =>
+                  note.hidden ? onUnhideNote(note.id) : onHideNote(note.id)
+                }
+                className={
+                  note.hidden ? 'text-primary' : 'text-muted-foreground'
+                }
+                title={note.hidden ? 'Unhide note' : 'Hide note'}
+              >
+                {note.hidden ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
+              </Button>
+
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm">
+                    <MoreHorizontal className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => onToggleStar(note.id)}>
+                    <Star className="mr-2 h-4 w-4" />
+                    {note.starred ? 'Unstar' : 'Star'}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setIsMoveModalOpen(true)}>
+                    <FolderInput className="mr-2 h-4 w-4" />
+                    Move
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handlePrint}>
+                    <Printer className="mr-2 h-4 w-4" />
+                    Print
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => onArchiveNote(note.id)}>
+                    <Archive className="mr-2 h-4 w-4" />
+                    Archive
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={() => onDeleteNote(note.id)}
+                    className="text"
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Trash
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
-            
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onToggleStar(note.id)}
-              className={
-                note.starred ? 'text-yellow-500' : 'text-muted-foreground'
-              }
-              title={note.starred ? 'Remove from starred' : 'Add to starred'}
-            >
-              <Star
-                className={`h-4 w-4 ${note.starred ? 'fill-current' : ''}`}
-              />
-            </Button>
-
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => note.hidden ? onUnhideNote(note.id) : onHideNote(note.id)}
-              className={
-                note.hidden ? 'text-primary' : 'text-muted-foreground'
-              }
-              title={note.hidden ? 'Unhide note' : 'Hide note'}
-            >
-              {note.hidden ? (
-                <EyeOff className="h-4 w-4" />
-              ) : (
-                <Eye className="h-4 w-4" />
-              )}
-            </Button>
-
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm">
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => onToggleStar(note.id)}>
-                  <Star className="mr-2 h-4 w-4" />
-                  {note.starred ? 'Unstar' : 'Star'}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setIsMoveModalOpen(true)}>
-                  <FolderInput className="mr-2 h-4 w-4" />
-                  Move
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={handlePrint}>
-                  <Printer className="mr-2 h-4 w-4" />
-                  Print
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onArchiveNote(note.id)}>
-                  <Archive className="mr-2 h-4 w-4" />
-                  Archive
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={() => onDeleteNote(note.id)}
-                  className="text"
-                >
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  Trash
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </div>
-
-        <div className="text-muted-foreground flex flex-col gap-1 text-sm">
-          <div className="flex items-center gap-4">
-            <span className="text-xs opacity-80">
-              Created {formatDate(note.createdAt)}
-            </span>
-            <span className="text-xs opacity-80">•</span>
-            <span className="text-xs opacity-80">
-              Modified {formatDate(note.updatedAt)}
-            </span>
           </div>
 
-          {currentFolder && (
-            <div className="flex items-center gap-1 text-xs opacity-80">
-              <span>
-                <span className="font-semibold">Folder:</span>{' '}
-                {currentFolder.name}
+          <div className="text-muted-foreground flex flex-col gap-1 text-sm">
+            <div className="flex items-center gap-4">
+              <span className="text-xs opacity-80">
+                Created {formatDate(note.createdAt)}
+              </span>
+              <span className="text-xs opacity-80">•</span>
+              <span className="text-xs opacity-80">
+                Modified {formatDate(note.updatedAt)}
               </span>
             </div>
-          )}
 
-          {note.tags.length > 0 && (
-            <div className="mt-1 flex gap-1">
-              {note.tags.map((tag) => (
-                <span
-                  key={tag}
-                  className="bg-muted text-muted-foreground rounded-md px-2 py-1 text-xs"
-                >
-                  {tag}
+            {currentFolder && (
+              <div className="flex items-center gap-1 text-xs opacity-80">
+                <span>
+                  <span className="font-semibold">Folder:</span>{' '}
+                  {currentFolder.name}
                 </span>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
+              </div>
+            )}
 
-      {!note.hidden && (
-        <div className="flex-shrink-0">
-          <Toolbar editor={editor} />
-        </div>
-      )}
-
-      {showAttachments && (
-        <>
-          <div className="flex-shrink-0 p-4">
-            <FileUpload
-              attachments={note.attachments}
-              onUpload={handleFileUpload}
-              onRemove={handleFileRemove}
-              onDownload={handleFileDownload}
-              isUploading={isUploading}
-              uploadProgress={uploadProgress}
-              deletingIds={deletingIds}
-            />
+            {note.tags.length > 0 && (
+              <div className="mt-1 flex gap-1">
+                {note.tags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="bg-muted text-muted-foreground rounded-md px-2 py-1 text-xs"
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
-          <div className="h-px bg-border" />
-        </>
-      )}
+        </div>
 
-      <div className="min-h-0 flex-1">
-        <EditorContent
-          editor={editor}
-          className="bg-background text-foreground h-full"
+        {!note.hidden && (
+          <div className="flex-shrink-0">
+            <Toolbar editor={editor} />
+          </div>
+        )}
+
+        {showAttachments && (
+          <>
+            <div className="flex-shrink-0 p-4">
+              <FileUpload
+                attachments={note.attachments}
+                onUpload={handleFileUpload}
+                onRemove={handleFileRemove}
+                onDownload={handleFileDownload}
+                isUploading={isUploading}
+                uploadProgress={uploadProgress}
+                deletingIds={deletingIds}
+              />
+            </div>
+            <div className="bg-border h-px" />
+          </>
+        )}
+
+        <div className="min-h-0 flex-1">
+          <EditorContent
+            editor={editor}
+            className="bg-background text-foreground h-full"
+          />
+        </div>
+
+        <StatusBar
+          wordCount={wordCount}
+          charCount={charCount}
+          readingTime={readingTime}
+          scrollPercentage={scrollPercentage}
+          zoomLevel={zoomLevel}
+          saveStatus={saveStatus}
+          noteId={note?.id}
+          onZoomIn={handleZoomIn}
+          onZoomOut={handleZoomOut}
+          onResetZoom={resetZoom}
+          wsStatus={wsStatus}
+          wsIsAuthenticated={wsIsAuthenticated}
+          wsLastSync={wsLastSync}
+          onWsReconnect={onWsReconnect}
+          onWsConnect={onWsConnect}
+          onWsDisconnect={onWsDisconnect}
         />
-      </div>
-
-      <StatusBar
-        wordCount={wordCount}
-        charCount={charCount}
-        readingTime={readingTime}
-        scrollPercentage={scrollPercentage}
-        zoomLevel={zoomLevel}
-        saveStatus={saveStatus}
-        noteId={note?.id}
-        onZoomIn={handleZoomIn}
-        onZoomOut={handleZoomOut}
-        onResetZoom={resetZoom}
-        wsStatus={wsStatus}
-        wsIsAuthenticated={wsIsAuthenticated}
-        wsLastSync={wsLastSync}
-        onWsReconnect={onWsReconnect}
-        onWsConnect={onWsConnect}
-        onWsDisconnect={onWsDisconnect}
-      />
 
         <style dangerouslySetInnerHTML={{ __html: editorStyles }} />
 

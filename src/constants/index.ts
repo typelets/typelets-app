@@ -9,7 +9,9 @@ export const CLERK_PUBLISHABLE_KEY = import.meta.env
   .VITE_CLERK_PUBLISHABLE_KEY as string | undefined;
 
 // WebSocket Configuration
-export const WEBSOCKET_URL = import.meta.env.VITE_WEBSOCKET_URL as string | undefined;
+export const WEBSOCKET_URL = import.meta.env.VITE_WEBSOCKET_URL as
+  | string
+  | undefined;
 
 // Storage Keys
 export const STORAGE_KEYS = {

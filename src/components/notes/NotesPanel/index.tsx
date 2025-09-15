@@ -1,5 +1,12 @@
 import { useState } from 'react';
-import { Plus, PanelLeftClose, PanelLeftOpen, Filter, FilterX, ChevronDown } from 'lucide-react';
+import {
+  Plus,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Filter,
+  FilterX,
+  ChevronDown,
+} from 'lucide-react';
 import NotesList from '@/components/notes/NotesPanel/NotesList.tsx';
 import { Button } from '@/components/ui/button.tsx';
 import {
@@ -60,13 +67,13 @@ export default function FilesPanel({
 }: FilesPanelProps) {
   const [sortConfig, setSortConfig] = useState<SortConfig>({
     option: 'created',
-    direction: 'desc'
+    direction: 'desc',
   });
 
   const [filterConfig, setFilterConfig] = useState<FilterConfig>({
     showAttachmentsOnly: false,
     showStarredOnly: false,
-    showHiddenOnly: false
+    showHiddenOnly: false,
   });
 
   const sortNotes = (notes: Note[], config: SortConfig): Note[] => {
@@ -102,8 +109,11 @@ export default function FilesPanel({
   };
 
   const filterNotes = (notes: Note[], config: FilterConfig): Note[] => {
-    return notes.filter(note => {
-      if (config.showAttachmentsOnly && (!note.attachments || note.attachments.length === 0)) {
+    return notes.filter((note) => {
+      if (
+        config.showAttachmentsOnly &&
+        (!note.attachments || note.attachments.length === 0)
+      ) {
         return false;
       }
       if (config.showStarredOnly && !note.starred) {
@@ -121,24 +131,32 @@ export default function FilesPanel({
 
   const getSortLabel = () => {
     switch (sortConfig.option) {
-      case 'updated': return 'Last Modified';
-      case 'created': return 'Created Date';
-      case 'title': return sortConfig.direction === 'asc' ? 'Title (A-Z)' : 'Title (Z-A)';
-      default: return 'Last Modified';
+      case 'updated':
+        return 'Last Modified';
+      case 'created':
+        return 'Created Date';
+      case 'title':
+        return sortConfig.direction === 'asc' ? 'Title (A-Z)' : 'Title (Z-A)';
+      default:
+        return 'Last Modified';
     }
   };
 
   const getFilterLabel = () => {
     const activeFilters = [];
-    if (filterConfig.showAttachmentsOnly) activeFilters.push('With Attachments');
+    if (filterConfig.showAttachmentsOnly)
+      activeFilters.push('With Attachments');
     if (filterConfig.showStarredOnly) activeFilters.push('Starred');
     if (filterConfig.showHiddenOnly) activeFilters.push('Hidden');
-    
+
     if (activeFilters.length === 0) return `Sort: ${getSortLabel()}`;
     return `Filter: ${activeFilters.join(', ')} | Sort: ${getSortLabel()}`;
   };
 
-  const hasActiveFilters = filterConfig.showAttachmentsOnly || filterConfig.showStarredOnly || filterConfig.showHiddenOnly;
+  const hasActiveFilters =
+    filterConfig.showAttachmentsOnly ||
+    filterConfig.showStarredOnly ||
+    filterConfig.showHiddenOnly;
 
   const getPanelTitle = () => {
     if (selectedFolder) {
@@ -216,7 +234,8 @@ export default function FilesPanel({
               )}
               <span className="text-[11px] opacity-80">
                 {sortedNotes.length} note{sortedNotes.length !== 1 ? 's' : ''}
-                {sortedNotes.length !== notes.length && ` (${notes.length} total)`}
+                {sortedNotes.length !== notes.length &&
+                  ` (${notes.length} total)`}
               </span>
             </div>
           </div>
@@ -232,69 +251,102 @@ export default function FilesPanel({
                 title={getFilterLabel()}
               >
                 {hasActiveFilters ? (
-                  <FilterX className={`${isMobile ? 'h-3 w-3' : 'h-2 w-2'} text-primary`} />
+                  <FilterX
+                    className={`${isMobile ? 'h-3 w-3' : 'h-2 w-2'} text-primary`}
+                  />
                 ) : (
                   <Filter className={isMobile ? 'h-3 w-3' : 'h-2 w-2'} />
                 )}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-52" sideOffset={8}>
-              <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">
+              <div className="text-muted-foreground px-2 py-1.5 text-xs font-medium">
                 FILTER
               </div>
               <DropdownMenuItem
-                onClick={() => setFilterConfig(prev => ({ ...prev, showAttachmentsOnly: !prev.showAttachmentsOnly }))}
+                onClick={() =>
+                  setFilterConfig((prev) => ({
+                    ...prev,
+                    showAttachmentsOnly: !prev.showAttachmentsOnly,
+                  }))
+                }
                 className={`${filterConfig.showAttachmentsOnly ? 'bg-accent' : ''} mb-1`}
               >
                 {filterConfig.showAttachmentsOnly ? '✓' : '○'} Attachments
               </DropdownMenuItem>
               <DropdownMenuItem
-                onClick={() => setFilterConfig(prev => ({ ...prev, showStarredOnly: !prev.showStarredOnly }))}
+                onClick={() =>
+                  setFilterConfig((prev) => ({
+                    ...prev,
+                    showStarredOnly: !prev.showStarredOnly,
+                  }))
+                }
                 className={`${filterConfig.showStarredOnly ? 'bg-accent' : ''} mb-1`}
               >
                 {filterConfig.showStarredOnly ? '✓' : '○'} Starred
               </DropdownMenuItem>
               <DropdownMenuItem
-                onClick={() => setFilterConfig(prev => ({ ...prev, showHiddenOnly: !prev.showHiddenOnly }))}
+                onClick={() =>
+                  setFilterConfig((prev) => ({
+                    ...prev,
+                    showHiddenOnly: !prev.showHiddenOnly,
+                  }))
+                }
                 className={`${filterConfig.showHiddenOnly ? 'bg-accent' : ''} mb-1`}
               >
                 {filterConfig.showHiddenOnly ? '✓' : '○'} Hidden
               </DropdownMenuItem>
-              
-              {(filterConfig.showAttachmentsOnly || filterConfig.showStarredOnly || filterConfig.showHiddenOnly) && (
+
+              {(filterConfig.showAttachmentsOnly ||
+                filterConfig.showStarredOnly ||
+                filterConfig.showHiddenOnly) && (
                 <DropdownMenuItem
-                  onClick={() => setFilterConfig({ showAttachmentsOnly: false, showStarredOnly: false, showHiddenOnly: false })}
+                  onClick={() =>
+                    setFilterConfig({
+                      showAttachmentsOnly: false,
+                      showStarredOnly: false,
+                      showHiddenOnly: false,
+                    })
+                  }
                   className="text-muted-foreground mb-1"
                 >
                   Clear Filters
                 </DropdownMenuItem>
               )}
-              
+
               <DropdownMenuSeparator />
-              
-              <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">
+
+              <div className="text-muted-foreground px-2 py-1.5 text-xs font-medium">
                 SORT BY
               </div>
               <DropdownMenuItem
-                onClick={() => setSortConfig({ option: 'updated', direction: 'desc' })}
+                onClick={() =>
+                  setSortConfig({ option: 'updated', direction: 'desc' })
+                }
                 className={`${sortConfig.option === 'updated' ? 'bg-accent' : ''} mb-1`}
               >
                 Last Modified
               </DropdownMenuItem>
               <DropdownMenuItem
-                onClick={() => setSortConfig({ option: 'created', direction: 'desc' })}
+                onClick={() =>
+                  setSortConfig({ option: 'created', direction: 'desc' })
+                }
                 className={`${sortConfig.option === 'created' ? 'bg-accent' : ''} mb-1`}
               >
                 Created Date
               </DropdownMenuItem>
               <DropdownMenuItem
-                onClick={() => setSortConfig({ option: 'title', direction: 'asc' })}
+                onClick={() =>
+                  setSortConfig({ option: 'title', direction: 'asc' })
+                }
                 className={`${sortConfig.option === 'title' && sortConfig.direction === 'asc' ? 'bg-accent' : ''} mb-1`}
               >
                 Title (A-Z)
               </DropdownMenuItem>
               <DropdownMenuItem
-                onClick={() => setSortConfig({ option: 'title', direction: 'desc' })}
+                onClick={() =>
+                  setSortConfig({ option: 'title', direction: 'desc' })
+                }
                 className={`${sortConfig.option === 'title' && sortConfig.direction === 'desc' ? 'bg-accent' : ''} mb-1`}
               >
                 Title (Z-A)
@@ -308,7 +360,7 @@ export default function FilesPanel({
                 <Button
                   variant="outline"
                   size="sm"
-                  className={`flex items-center justify-center gap-1 ${isMobile ? 'h-9 px-3 touch-manipulation' : 'h-6 px-2'}`}
+                  className={`flex items-center justify-center gap-1 ${isMobile ? 'h-9 touch-manipulation px-3' : 'h-6 px-2'}`}
                   title="Create new note from template"
                 >
                   <Plus className={isMobile ? 'h-4 w-4' : 'h-3 w-3'} />
@@ -316,17 +368,24 @@ export default function FilesPanel({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-64" sideOffset={8}>
-                <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">
+                <div className="text-muted-foreground px-2 py-1.5 text-xs font-medium">
                   CREATE FROM TEMPLATE
                 </div>
                 {NOTE_TEMPLATES.map((template) => (
                   <DropdownMenuItem
                     key={template.id}
-                    onClick={() => onCreateNote({ title: template.title, content: template.content })}
+                    onClick={() =>
+                      onCreateNote({
+                        title: template.title,
+                        content: template.content,
+                      })
+                    }
                     className="flex flex-col items-start gap-1 py-2"
                   >
                     <div className="font-medium">{template.name}</div>
-                    <div className="text-xs text-muted-foreground">{template.description}</div>
+                    <div className="text-muted-foreground text-xs">
+                      {template.description}
+                    </div>
                   </DropdownMenuItem>
                 ))}
               </DropdownMenuContent>

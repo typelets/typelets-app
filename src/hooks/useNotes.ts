@@ -2,7 +2,11 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuth, useUser } from '@clerk/clerk-react';
 import { api, type ApiNote, type ApiFolder } from '@/lib/api/api.ts';
 import { fileService } from '@/services/fileService';
-import { clearEncryptionKeys, hasMasterPassword, isMasterPasswordUnlocked } from '@/lib/encryption';
+import {
+  clearEncryptionKeys,
+  hasMasterPassword,
+  isMasterPasswordUnlocked,
+} from '@/lib/encryption';
 import { useWebSocket } from './useWebSocket';
 import { useNotesSync } from './useNotesSync';
 import { useNotesFiltering } from './useNotesFiltering';
@@ -30,10 +34,18 @@ const safeConvertDates = (item: Note | Folder): void => {
   }
 
   // Note-specific properties
-  if ('updatedAt' in item && item.updatedAt && typeof item.updatedAt === 'string') {
+  if (
+    'updatedAt' in item &&
+    item.updatedAt &&
+    typeof item.updatedAt === 'string'
+  ) {
     item.updatedAt = new Date(item.updatedAt);
   }
-  if ('hiddenAt' in item && item.hiddenAt && typeof item.hiddenAt === 'string') {
+  if (
+    'hiddenAt' in item &&
+    item.hiddenAt &&
+    typeof item.hiddenAt === 'string'
+  ) {
     item.hiddenAt = new Date(item.hiddenAt);
   }
 };
@@ -49,14 +61,18 @@ const retryWithBackoff = async <T>(
       return await fn();
     } catch (error) {
       // Check if it's a rate limit error
-      const isRateLimitError = error instanceof Error &&
-        (error.message.includes('429') || error.message.includes('Too Many Requests'));
+      const isRateLimitError =
+        error instanceof Error &&
+        (error.message.includes('429') ||
+          error.message.includes('Too Many Requests'));
 
       if (isRateLimitError && attempt < maxRetries) {
         // Exponential backoff: 1s, 2s, 4s
         const delay = baseDelay * Math.pow(2, attempt);
-        secureLogger.warn(`Rate limited, retrying in ${delay}ms (attempt ${attempt + 1}/${maxRetries + 1})`);
-        await new Promise(resolve => setTimeout(resolve, delay));
+        secureLogger.warn(
+          `Rate limited, retrying in ${delay}ms (attempt ${attempt + 1}/${maxRetries + 1})`
+        );
+        await new Promise((resolve) => setTimeout(resolve, delay));
         continue;
       }
 
@@ -91,20 +107,22 @@ export function useNotes() {
     let hasMorePages = true;
 
     while (hasMorePages) {
-      const foldersResponse = await retryWithBackoff(
-        () => api.getFolders({ page, limit: 50 })
+      const foldersResponse = await retryWithBackoff(() =>
+        api.getFolders({ page, limit: 50 })
       );
       const convertedFolders = foldersResponse.folders.map(convertApiFolder);
       allFolders = [...allFolders, ...convertedFolders];
 
       // Check if we have more pages
-      const totalPages = Math.ceil(foldersResponse.total / foldersResponse.limit);
+      const totalPages = Math.ceil(
+        foldersResponse.total / foldersResponse.limit
+      );
       hasMorePages = page < totalPages;
       page++;
 
       // Add small delay between requests to avoid rate limiting
       if (hasMorePages) {
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
       }
     }
 
@@ -128,7 +146,7 @@ export function useNotes() {
     setFolders,
     setSelectedNote,
     safeConvertDates,
-    refetchFolders
+    refetchFolders,
   });
 
   // WebSocket integration for real-time sync
@@ -141,7 +159,8 @@ export function useNotes() {
 
       // Don't show transient connection errors during startup
       const isStartupError = Date.now() - window.performance.timeOrigin < 10000;
-      const isConnectionClosed = error?.message?.includes?.('Connection closed');
+      const isConnectionClosed =
+        error?.message?.includes?.('Connection closed');
 
       if (!isStartupError && !isConnectionClosed) {
         setError(`Connection error: ${error.message || 'Unknown error'}`);
@@ -157,24 +176,27 @@ export function useNotes() {
     try {
       setError(null);
       api.setCurrentUser(clerkUser!.id);
-      
+
       // Only call API if user has a master password set up and unlocked
       const hasPassword = hasMasterPassword(clerkUser!.id);
       const isUnlocked = isMasterPasswordUnlocked(clerkUser!.id);
-      
+
       if (hasPassword && isUnlocked) {
         // Ensure token provider is ready before making API call
         try {
           await retryWithBackoff(() => api.getCurrentUser());
         } catch (error) {
-          if (error instanceof Error && error.message.includes('Token provider not set')) {
+          if (
+            error instanceof Error &&
+            error.message.includes('Token provider not set')
+          ) {
             // Don't throw error, just continue without API call
           } else {
             throw error;
           }
         }
       }
-      
+
       setEncryptionReady(true);
     } catch (error) {
       secureLogger.error('User initialization failed', error);
@@ -189,8 +211,8 @@ export function useNotes() {
     let hasMorePages = true;
 
     while (hasMorePages) {
-      const notesResponse = await retryWithBackoff(
-        () => api.getNotes({ page, limit: 50 })
+      const notesResponse = await retryWithBackoff(() =>
+        api.getNotes({ page, limit: 50 })
       );
       const convertedNotes = notesResponse.notes.map(convertApiNote);
       allNotes = [...allNotes, ...convertedNotes];
@@ -202,7 +224,7 @@ export function useNotes() {
 
       // Add small delay between requests to avoid rate limiting
       if (hasMorePages) {
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
       }
     }
 
@@ -222,26 +244,33 @@ export function useNotes() {
       setFolders(allFolders);
 
       // Create a folder map for quick lookup
-      const folderMap = new Map(allFolders.map(f => [f.id, f]));
+      const folderMap = new Map(allFolders.map((f) => [f.id, f]));
 
       const notesWithAttachmentsAndFolders = await Promise.all(
         allNotes.map(async (note) => {
           try {
             const attachments = await fileService.getAttachments(note.id);
             // Embed folder data if note has a folderId
-            const folder = note.folderId ? folderMap.get(note.folderId) : undefined;
+            const folder = note.folderId
+              ? folderMap.get(note.folderId)
+              : undefined;
             return { ...note, attachments, folder };
           } catch (error) {
-            secureLogger.warn('Failed to load attachments for note', { noteId: '[REDACTED]', error });
-            const folder = note.folderId ? folderMap.get(note.folderId) : undefined;
+            secureLogger.warn('Failed to load attachments for note', {
+              noteId: '[REDACTED]',
+              error,
+            });
+            const folder = note.folderId
+              ? folderMap.get(note.folderId)
+              : undefined;
             return { ...note, attachments: [], folder };
           }
         })
       );
-      
+
       setNotes(notesWithAttachmentsAndFolders);
 
-      setSelectedNote(prev => {
+      setSelectedNote((prev) => {
         if (prev === null && notesWithAttachmentsAndFolders.length > 0) {
           return notesWithAttachmentsAndFolders[0];
         }
@@ -278,14 +307,13 @@ export function useNotes() {
     if (encryptionReady && clerkUser) {
       const hasPassword = hasMasterPassword(clerkUser.id);
       const isUnlocked = isMasterPasswordUnlocked(clerkUser.id);
-      
+
       // Only load data if user has master password set up and unlocked
       if (hasPassword && isUnlocked) {
         void loadData();
       }
     }
   }, [encryptionReady, clerkUser, loadData]);
-
 
   // Notes filtering
   const {
@@ -294,13 +322,13 @@ export function useNotes() {
     starredCount,
     archivedCount,
     trashedCount,
-    hiddenCount
+    hiddenCount,
   } = useNotesFiltering({
     notes,
     folders,
     selectedFolder,
     currentView,
-    searchQuery
+    searchQuery,
   });
 
   // Notes operations
@@ -317,7 +345,7 @@ export function useNotes() {
     loadData,
     convertApiNote: convertApiNote as (apiNote: unknown) => Note,
     safeConvertDates,
-    getDescendantIds
+    getDescendantIds,
   });
 
   // Auto-join selected note for real-time sync
@@ -345,7 +373,6 @@ export function useNotes() {
     }
   }, [selectedNote, filteredNotes]);
 
-
   const createFolder = async (
     name: string,
     color?: string,
@@ -360,35 +387,30 @@ export function useNotes() {
     return newFolder;
   };
 
-  const updateNote = useCallback(async (noteId: string, updates: Partial<Note>) => {
-    await notesOperations.updateNote(noteId, updates);
-  }, [notesOperations]);
+  const updateNote = useCallback(
+    async (noteId: string, updates: Partial<Note>) => {
+      await notesOperations.updateNote(noteId, updates);
+    },
+    [notesOperations]
+  );
 
   const deleteNote = async (noteId: string) => {
     await notesOperations.deleteNote(noteId);
 
     if (selectedNote?.id === noteId) {
-      const remainingNotes = filteredNotes.filter(
-        (note) => note.id !== noteId
-      );
+      const remainingNotes = filteredNotes.filter((note) => note.id !== noteId);
       setSelectedNote(remainingNotes.length > 0 ? remainingNotes[0] : null);
     }
   };
-
 
   const archiveNote = async (noteId: string) => {
     await notesOperations.archiveNote(noteId);
 
     if (selectedNote?.id === noteId) {
-      const remainingNotes = filteredNotes.filter(
-        (note) => note.id !== noteId
-      );
+      const remainingNotes = filteredNotes.filter((note) => note.id !== noteId);
       setSelectedNote(remainingNotes.length > 0 ? remainingNotes[0] : null);
     }
   };
-
-
-
 
   const updateFolder = async (folderId: string, updates: Partial<Folder>) => {
     const updatedFolder = await notesOperations.updateFolder(folderId, updates);
@@ -429,9 +451,13 @@ export function useNotes() {
 
       // Send WebSocket notification about folder reordering
       if (webSocket.isAuthenticated) {
-        const reorderedFolder = newFolders.find(f => f.id === folderId);
+        const reorderedFolder = newFolders.find((f) => f.id === folderId);
         if (reorderedFolder) {
-          webSocket.sendFolderUpdated(folderId, { order: newIndex }, reorderedFolder);
+          webSocket.sendFolderUpdated(
+            folderId,
+            { order: newIndex },
+            reorderedFolder
+          );
         }
       }
     } catch (error) {
@@ -464,7 +490,6 @@ export function useNotes() {
   const moveNoteToFolder = async (noteId: string, folderId: string | null) => {
     await notesOperations.moveNoteToFolder(noteId, folderId);
   };
-
 
   return {
     notes: filteredNotes,

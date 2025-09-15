@@ -39,7 +39,7 @@ export default function FileUpload({
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragOver(false);
-    
+
     const files = e.dataTransfer.files;
     if (files.length > 0) {
       onUpload(files);
@@ -69,7 +69,8 @@ export default function FileUpload({
     if (mimeType.startsWith('audio/')) return '🎵';
     if (mimeType.includes('pdf')) return '📄';
     if (mimeType.includes('document') || mimeType.includes('word')) return '📝';
-    if (mimeType.includes('spreadsheet') || mimeType.includes('excel')) return '📊';
+    if (mimeType.includes('spreadsheet') || mimeType.includes('excel'))
+      return '📊';
     return '📎';
   };
 
@@ -77,7 +78,7 @@ export default function FileUpload({
     <div className="space-y-4">
       {/* Upload Area */}
       <div
-        className={`border border-dashed rounded-lg p-3 text-center transition-colors ${
+        className={`rounded-lg border border-dashed p-3 text-center transition-colors ${
           isDragOver
             ? 'border-primary bg-primary/5'
             : 'border-border hover:border-primary/50'
@@ -93,10 +94,10 @@ export default function FileUpload({
           className="hidden"
           onChange={handleFileSelect}
         />
-        
+
         <div className="flex flex-col items-center gap-2">
-          <Upload className="h-8 w-8 text-muted-foreground" />
-          <p className="text-sm text-muted-foreground">
+          <Upload className="text-muted-foreground h-8 w-8" />
+          <p className="text-muted-foreground text-sm">
             Drag files here or{' '}
             <button
               type="button"
@@ -122,25 +123,27 @@ export default function FileUpload({
       {/* Attachments List */}
       {attachments.length > 0 && (
         <div className="space-y-3">
-          <h4 className="text-sm font-medium">Attachments ({attachments.length})</h4>
+          <h4 className="text-sm font-medium">
+            Attachments ({attachments.length})
+          </h4>
           <div className="flex flex-wrap gap-2">
             {attachments.map((attachment) => {
               const isDeleting = deletingIds.includes(attachment.id);
-              
+
               return (
                 <div
                   key={attachment.id}
-                  className="flex items-center gap-2 p-2 border rounded-lg bg-card min-w-0 max-w-xs"
+                  className="bg-card flex max-w-xs min-w-0 items-center gap-2 rounded-lg border p-2"
                 >
                   <div className="text-sm">
                     {getFileIcon(attachment.mimeType)}
                   </div>
-                  
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-medium truncate">
+
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-xs font-medium">
                       {attachment.originalName}
                     </p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-muted-foreground text-xs">
                       {formatFileSize(attachment.size)}
                     </p>
                   </div>
@@ -156,7 +159,7 @@ export default function FileUpload({
                     >
                       <Download className="h-3 w-3" />
                     </Button>
-                    
+
                     <Button
                       variant="ghost"
                       size="sm"
