@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react';
 
 import type { Folder } from '@/types/note.ts';
 import { canMoveToFolder } from '@/utils/folderTree';
+import { secureLogger } from '@/lib/utils/secureLogger';
 
 interface DragState {
   isDragging: boolean;
@@ -94,7 +95,7 @@ export function useDragAndDrop(
           targetFolder.parentId &&
           !canMoveToFolder(draggedFolder.id, targetFolder.parentId, folders)
         ) {
-          console.warn('Cannot move folder to its own descendant');
+          secureLogger.warn('Cannot move folder to its own descendant');
           return;
         }
 
@@ -118,13 +119,13 @@ export function useDragAndDrop(
         );
 
         if (draggedSiblingIndex === -1 || targetSiblingIndex === -1) {
-          console.error('Could not find folder indices in siblings array');
+          secureLogger.error('Could not find folder indices in siblings array');
           return;
         }
 
         await onReorderFolders(draggedFolderId, targetSiblingIndex);
       } catch (error) {
-        console.error('Failed to reorder folders:', error);
+        secureLogger.error('Failed to reorder folders:', error);
       } finally {
         setDragState({
           isDragging: false,

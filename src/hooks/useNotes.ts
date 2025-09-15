@@ -1,10 +1,15 @@
-import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth, useUser } from '@clerk/clerk-react';
 import { api, type ApiNote, type ApiFolder } from '@/lib/api/api.ts';
 import { fileService } from '@/services/fileService';
 import { clearEncryptionKeys, hasMasterPassword, isMasterPasswordUnlocked } from '@/lib/encryption';
+import { useWebSocket } from './useWebSocket';
+import { useNotesSync } from './useNotesSync';
+import { useNotesFiltering } from './useNotesFiltering';
+import { useNotesOperations } from './useNotesOperations';
 import type { Note, Folder, ViewMode } from '@/types/note';
 import { getDescendantIds } from '@/utils/folderTree';
+import { secureLogger } from '@/lib/utils/secureLogger';
 
 const convertApiNote = (apiNote: ApiNote): Note => ({
   ...apiNote,
@@ -17,6 +22,51 @@ const convertApiFolder = (apiFolder: ApiFolder): Folder => ({
   ...apiFolder,
   createdAt: new Date(apiFolder.createdAt),
 });
+
+// Helper function for safe date conversion
+const safeConvertDates = (item: Note | Folder): void => {
+  if (item.createdAt && typeof item.createdAt === 'string') {
+    item.createdAt = new Date(item.createdAt);
+  }
+
+  // Note-specific properties
+  if ('updatedAt' in item && item.updatedAt && typeof item.updatedAt === 'string') {
+    item.updatedAt = new Date(item.updatedAt);
+  }
+  if ('hiddenAt' in item && item.hiddenAt && typeof item.hiddenAt === 'string') {
+    item.hiddenAt = new Date(item.hiddenAt);
+  }
+};
+
+// Retry utility with exponential backoff for rate limiting
+const retryWithBackoff = async <T>(
+  fn: () => Promise<T>,
+  maxRetries: number = 3,
+  baseDelay: number = 1000
+): Promise<T> => {
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      // Check if it's a rate limit error
+      const isRateLimitError = error instanceof Error &&
+        (error.message.includes('429') || error.message.includes('Too Many Requests'));
+
+      if (isRateLimitError && attempt < maxRetries) {
+        // Exponential backoff: 1s, 2s, 4s
+        const delay = baseDelay * Math.pow(2, attempt);
+        secureLogger.warn(`Rate limited, retrying in ${delay}ms (attempt ${attempt + 1}/${maxRetries + 1})`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        continue;
+      }
+
+      // If not a rate limit error or max retries reached, throw the error
+      throw error;
+    }
+  }
+
+  throw new Error('Max retries exceeded');
+};
 
 export function useNotes() {
   const { isSignedIn, isLoaded } = useAuth();
@@ -33,8 +83,75 @@ export function useNotes() {
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(
     new Set()
   );
-  
-  const saveTimeoutsRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
+
+  // Define helper functions early for the sync handlers
+  const fetchAllFolders = useCallback(async (): Promise<Folder[]> => {
+    let allFolders: Folder[] = [];
+    let page = 1;
+    let hasMorePages = true;
+
+    while (hasMorePages) {
+      const foldersResponse = await retryWithBackoff(
+        () => api.getFolders({ page, limit: 50 })
+      );
+      const convertedFolders = foldersResponse.folders.map(convertApiFolder);
+      allFolders = [...allFolders, ...convertedFolders];
+
+      // Check if we have more pages
+      const totalPages = Math.ceil(foldersResponse.total / foldersResponse.limit);
+      hasMorePages = page < totalPages;
+      page++;
+
+      // Add small delay between requests to avoid rate limiting
+      if (hasMorePages) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+    }
+
+    return allFolders;
+  }, []);
+
+  const refetchFolders = useCallback(async () => {
+    try {
+      const allFolders = await fetchAllFolders();
+      setFolders(allFolders);
+    } catch (error) {
+      secureLogger.error('Failed to refetch folders:', error);
+    }
+  }, [fetchAllFolders, setFolders]);
+
+  // WebSocket sync handlers
+  const syncHandlers = useNotesSync({
+    folders,
+    selectedFolder,
+    setNotes,
+    setFolders,
+    setSelectedNote,
+    safeConvertDates,
+    refetchFolders
+  });
+
+  // WebSocket integration for real-time sync
+  const webSocket = useWebSocket({
+    autoConnect: true,
+    ...syncHandlers,
+    onError: useCallback((error: Error | { message?: string }) => {
+      // Only show connection errors to users if they persist
+      secureLogger.error('WebSocket connection error', error);
+
+      // Don't show transient connection errors during startup
+      const isStartupError = Date.now() - window.performance.timeOrigin < 10000;
+      const isConnectionClosed = error?.message?.includes?.('Connection closed');
+
+      if (!isStartupError && !isConnectionClosed) {
+        setError(`Connection error: ${error.message || 'Unknown error'}`);
+      }
+    }, []),
+    onAuthenticated: useCallback((userId: string) => {
+      secureLogger.authEvent('login', userId);
+      setError(null); // Clear any previous connection errors
+    }, []),
+  });
 
   const initializeUser = useCallback(async () => {
     try {
@@ -46,34 +163,50 @@ export function useNotes() {
       const isUnlocked = isMasterPasswordUnlocked(clerkUser!.id);
       
       if (hasPassword && isUnlocked) {
-        await api.getCurrentUser();
+        // Ensure token provider is ready before making API call
+        try {
+          await retryWithBackoff(() => api.getCurrentUser());
+        } catch (error) {
+          if (error instanceof Error && error.message.includes('Token provider not set')) {
+            // Don't throw error, just continue without API call
+          } else {
+            throw error;
+          }
+        }
       }
       
       setEncryptionReady(true);
     } catch (error) {
-      console.error('Failed to initialize user:', error);
+      secureLogger.error('User initialization failed', error);
       setError('Failed to initialize user account');
       setLoading(false);
     }
   }, [clerkUser]);
 
-  const fetchAllFolders = useCallback(async (): Promise<Folder[]> => {
-    let allFolders: Folder[] = [];
+  const fetchAllNotes = useCallback(async (): Promise<Note[]> => {
+    let allNotes: Note[] = [];
     let page = 1;
     let hasMorePages = true;
 
     while (hasMorePages) {
-      const foldersResponse = await api.getFolders({ page, limit: 100 });
-      const convertedFolders = foldersResponse.folders.map(convertApiFolder);
-      allFolders = [...allFolders, ...convertedFolders];
+      const notesResponse = await retryWithBackoff(
+        () => api.getNotes({ page, limit: 50 })
+      );
+      const convertedNotes = notesResponse.notes.map(convertApiNote);
+      allNotes = [...allNotes, ...convertedNotes];
 
       // Check if we have more pages
-      const totalPages = Math.ceil(foldersResponse.total / foldersResponse.limit);
+      const totalPages = Math.ceil(notesResponse.total / notesResponse.limit);
       hasMorePages = page < totalPages;
       page++;
+
+      // Add small delay between requests to avoid rate limiting
+      if (hasMorePages) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
     }
 
-    return allFolders;
+    return allNotes;
   }, []);
 
   const loadData = useCallback(async () => {
@@ -81,26 +214,25 @@ export function useNotes() {
       setLoading(true);
       setError(null);
 
-      const [allFolders, notesResponse] = await Promise.all([
+      const [allFolders, allNotes] = await Promise.all([
         fetchAllFolders(),
-        api.getNotes({ limit: 100 }),
+        fetchAllNotes(),
       ]);
 
       setFolders(allFolders);
-      const convertedNotes = notesResponse.notes.map(convertApiNote);
-      
+
       // Create a folder map for quick lookup
       const folderMap = new Map(allFolders.map(f => [f.id, f]));
-      
+
       const notesWithAttachmentsAndFolders = await Promise.all(
-        convertedNotes.map(async (note) => {
+        allNotes.map(async (note) => {
           try {
             const attachments = await fileService.getAttachments(note.id);
             // Embed folder data if note has a folderId
             const folder = note.folderId ? folderMap.get(note.folderId) : undefined;
             return { ...note, attachments, folder };
           } catch (error) {
-            console.warn(`Failed to load attachments for note ${note.id}:`, error);
+            secureLogger.warn('Failed to load attachments for note', { noteId: '[REDACTED]', error });
             const folder = note.folderId ? folderMap.get(note.folderId) : undefined;
             return { ...note, attachments: [], folder };
           }
@@ -116,7 +248,7 @@ export function useNotes() {
         return prev;
       });
     } catch (error) {
-      console.error('Failed to load data:', error);
+      secureLogger.error('Data loading failed', error);
       if (error instanceof Error && error.message.includes('decrypt')) {
         setError(
           'Failed to decrypt some notes. They may be corrupted or from an old version.'
@@ -127,7 +259,7 @@ export function useNotes() {
     } finally {
       setLoading(false);
     }
-  }, [fetchAllFolders]);
+  }, [fetchAllFolders, fetchAllNotes]);
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -154,432 +286,138 @@ export function useNotes() {
     }
   }, [encryptionReady, clerkUser, loadData]);
 
+
+  // Notes filtering
+  const {
+    filteredNotes,
+    notesCount,
+    starredCount,
+    archivedCount,
+    trashedCount,
+    hiddenCount
+  } = useNotesFiltering({
+    notes,
+    folders,
+    selectedFolder,
+    currentView,
+    searchQuery
+  });
+
+  // Notes operations
+  const notesOperations = useNotesOperations({
+    folders,
+    selectedNote,
+    selectedFolder,
+    encryptionReady,
+    webSocket,
+    setNotes,
+    setFolders,
+    setSelectedNote,
+    setError,
+    loadData,
+    convertApiNote: convertApiNote as (apiNote: unknown) => Note,
+    safeConvertDates,
+    getDescendantIds
+  });
+
+  // Auto-join selected note for real-time sync
   useEffect(() => {
-    const timeouts = saveTimeoutsRef.current;
-    return () => {
-      timeouts.forEach((timeout) => {
-        clearTimeout(timeout);
-      });
-      timeouts.clear();
-    };
-  }, []);
-
-  const filteredNotes = useMemo(() => {
-    return notes.filter((note) => {
-      if (searchQuery) {
-        // For hidden notes, search in title and tags but not in content
-        const searchableContent = note.hidden ? '[HIDDEN]' : note.content;
-        
-        const matchesSearch =
-          note.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          searchableContent.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          note.tags.some((tag) =>
-            tag.toLowerCase().includes(searchQuery.toLowerCase())
-          );
-
-        if (!matchesSearch) return false;
-      }
-
-      if (selectedFolder) {
-        const folderIds = [
-          selectedFolder.id,
-          ...getDescendantIds(selectedFolder.id, folders),
-        ];
-        if (!folderIds.includes(note.folderId ?? '')) return false;
-        return !note.deleted && !note.archived;
-      }
-
-      switch (currentView) {
-        case 'starred':
-          return note.starred && !note.deleted && !note.archived;
-        case 'archived':
-          return note.archived && !note.deleted;
-        case 'trash':
-          return note.deleted;
-        case 'hidden':
-          return note.hidden && !note.deleted;
-        default:
-          return !note.deleted && !note.archived;
-      }
-    });
-  }, [notes, searchQuery, currentView, selectedFolder, folders]);
-
-  const createNote = async (folderId?: string, templateContent?: { title: string; content: string }) => {
-    try {
-      if (!encryptionReady) {
-        throw new Error(
-          'Encryption not ready. Please wait a moment and try again.'
-        );
-      }
-
-      const noteFolderId = folderId ?? selectedFolder?.id ?? null;
-      const apiNote = await api.createNote({
-        title: templateContent?.title || 'Untitled Note',
-        content: templateContent?.content || '',
-        folderId: noteFolderId,
-        starred: false,
-        tags: [],
+    if (selectedNote?.id && webSocket.isAuthenticated) {
+      // Leave previous note if any
+      const joinedNotes = webSocket.joinedNotes;
+      joinedNotes.forEach((noteId) => {
+        if (noteId !== selectedNote.id) {
+          webSocket.leaveNote(noteId);
+        }
       });
 
-      const newNote = convertApiNote(apiNote);
-      // Embed folder data if note has a folderId
-      const folder = noteFolderId ? folders.find(f => f.id === noteFolderId) : undefined;
-      const noteWithFolder = { ...newNote, folder };
-      
-      setNotes((prev) => [noteWithFolder, ...prev]);
-      setSelectedNote(noteWithFolder);
-      return noteWithFolder;
-    } catch (error) {
-      console.error('Failed to create note:', error);
-      if (error instanceof Error && error.message.includes('encrypt')) {
-        setError('Failed to encrypt note. Please try again.');
-      } else {
-        setError('Failed to create note');
+      // Join current note for real-time sync
+      if (!joinedNotes.includes(selectedNote.id)) {
+        webSocket.joinNote(selectedNote.id);
       }
-      throw error;
     }
-  };
+  }, [selectedNote?.id, webSocket.isAuthenticated, webSocket]);
+
+  // Auto-select a note when selectedNote becomes null and there are available notes
+  useEffect(() => {
+    if (!selectedNote && filteredNotes.length > 0) {
+      setSelectedNote(filteredNotes[0]);
+    }
+  }, [selectedNote, filteredNotes]);
+
 
   const createFolder = async (
     name: string,
     color?: string,
     parentId?: string
   ) => {
-    try {
-      const apiFolder = await api.createFolder({
-        name,
-        color: color ?? '#6b7280',
-        isDefault: false,
-        parentId: parentId ?? undefined,
-      });
+    const newFolder = await notesOperations.createFolder(name, color, parentId);
 
-      const newFolder = convertApiFolder(apiFolder);
-      setFolders((prev) => [...prev, newFolder]);
-
-      if (parentId) {
-        setExpandedFolders((prev) => new Set([...prev, parentId]));
-      }
-
-      return newFolder;
-    } catch (error) {
-      console.error('Failed to create folder:', error);
-      setError('Failed to create folder');
-      throw error;
+    if (parentId) {
+      setExpandedFolders((prev) => new Set([...prev, parentId]));
     }
+
+    return newFolder;
   };
 
   const updateNote = useCallback(async (noteId: string, updates: Partial<Note>) => {
-    const isAttachmentsOnlyUpdate = Object.keys(updates).length === 1 && updates.attachments !== undefined;
-    
-    if (isAttachmentsOnlyUpdate) {
-      const optimisticUpdate = {
-        ...updates,
-        id: noteId,
-        updatedAt: new Date(),
-      };
-      setNotes((prev) =>
-        prev.map((note) =>
-          note.id === noteId ? { ...note, ...optimisticUpdate } : note
-        )
-      );
-
-      if (selectedNote?.id === noteId) {
-        setSelectedNote((prev) =>
-          prev ? { ...prev, ...optimisticUpdate } : null
-        );
-      }
-      return;
-    }
-
-    const optimisticUpdate = {
-      ...updates,
-      updatedAt: new Date(),
-    };
-    
-    setNotes((prev) =>
-      prev.map((note) =>
-        note.id === noteId ? { ...note, ...optimisticUpdate } : note
-      )
-    );
-
-    if (selectedNote?.id === noteId) {
-      setSelectedNote((prev) =>
-        prev ? { ...prev, ...optimisticUpdate } : null
-      );
-    }
-
-    const existingTimeout = saveTimeoutsRef.current.get(noteId);
-    if (existingTimeout) {
-      clearTimeout(existingTimeout);
-    }
-
-    const immediateUpdates = ['starred', 'archived', 'deleted', 'folderId'];
-    const needsImmediateSave = Object.keys(updates).some(key => immediateUpdates.includes(key));
-
-    if (needsImmediateSave) {
-      try {
-        const apiNote = await api.updateNote(noteId, {
-          title: updates.title,
-          content: updates.content,
-          folderId: updates.folderId,
-          starred: updates.starred,
-          archived: updates.archived,
-          deleted: updates.deleted,
-          tags: updates.tags,
-        });
-
-        const updatedNote = convertApiNote(apiNote);
-        setNotes((prev) =>
-          prev.map((note) => {
-            if (note.id !== noteId) return note;
-            
-            // Preserve attachments and update folder data if folderId changed
-            const newFolder = updatedNote.folderId ? folders.find(f => f.id === updatedNote.folderId) : undefined;
-            return { 
-              ...updatedNote, 
-              attachments: note.attachments, 
-              folder: newFolder 
-            };
-          })
-        );
-
-        if (selectedNote?.id === noteId) {
-          const newFolder = updatedNote.folderId ? folders.find(f => f.id === updatedNote.folderId) : undefined;
-          setSelectedNote({ 
-            ...updatedNote, 
-            attachments: selectedNote.attachments, 
-            folder: newFolder 
-          });
-        }
-      } catch (error) {
-        console.error('Failed to update note:', error);
-        setError('Failed to update note');
-        void loadData();
-      }
-    } else {
-      const timeout = setTimeout(async () => {
-        try {
-          if (!encryptionReady && (updates.title !== undefined || updates.content !== undefined)) {
-            throw new Error('Encryption not ready. Please wait a moment and try again.');
-          }
-
-          await api.updateNote(noteId, {
-            title: updates.title,
-            content: updates.content,
-            folderId: updates.folderId,
-            starred: updates.starred,
-            archived: updates.archived,
-            deleted: updates.deleted,
-            tags: updates.tags,
-          });
-
-          saveTimeoutsRef.current.delete(noteId);
-        } catch (error) {
-          console.error('Failed to update note:', error);
-          if (error instanceof Error && error.message.includes('encrypt')) {
-            setError('Failed to encrypt note changes. Please try again.');
-          } else {
-            setError('Failed to update note');
-          }
-          void loadData();
-        }
-      }, 1500);
-
-      saveTimeoutsRef.current.set(noteId, timeout);
-    }
-  }, [encryptionReady, selectedNote?.id, selectedNote?.attachments, folders, loadData]);
+    await notesOperations.updateNote(noteId, updates);
+  }, [notesOperations]);
 
   const deleteNote = async (noteId: string) => {
-    try {
-      await api.deleteNote(noteId);
+    await notesOperations.deleteNote(noteId);
 
-      setNotes((prev) =>
-        prev.map((note) =>
-          note.id === noteId
-            ? { ...note, deleted: true, updatedAt: new Date() }
-            : note
-        )
+    if (selectedNote?.id === noteId) {
+      const remainingNotes = filteredNotes.filter(
+        (note) => note.id !== noteId
       );
-
-      if (selectedNote?.id === noteId) {
-        const remainingNotes = filteredNotes.filter(
-          (note) => note.id !== noteId
-        );
-        setSelectedNote(remainingNotes.length > 0 ? remainingNotes[0] : null);
-      }
-    } catch (error) {
-      console.error('Failed to delete note:', error);
-      setError('Failed to delete note');
+      setSelectedNote(remainingNotes.length > 0 ? remainingNotes[0] : null);
     }
   };
 
-  const toggleStar = async (noteId: string) => {
-    try {
-      const apiNote = await api.toggleStarNote(noteId);
-      const updatedNote = convertApiNote(apiNote);
-
-      setNotes((prev) =>
-        prev.map((note) => (note.id === noteId ? { ...updatedNote, attachments: note.attachments, folder: note.folder } : note))
-      );
-
-      if (selectedNote?.id === noteId) {
-        setSelectedNote({ ...updatedNote, attachments: selectedNote.attachments, folder: selectedNote.folder });
-      }
-    } catch (error) {
-      console.error('Failed to toggle star:', error);
-      setError('Failed to toggle star');
-    }
-  };
 
   const archiveNote = async (noteId: string) => {
-    try {
-      await updateNote(noteId, { archived: true });
+    await notesOperations.archiveNote(noteId);
 
-      if (selectedNote?.id === noteId) {
-        const remainingNotes = filteredNotes.filter(
-          (note) => note.id !== noteId
-        );
-        setSelectedNote(remainingNotes.length > 0 ? remainingNotes[0] : null);
-      }
-    } catch (error) {
-      console.error('Failed to archive note:', error);
+    if (selectedNote?.id === noteId) {
+      const remainingNotes = filteredNotes.filter(
+        (note) => note.id !== noteId
+      );
+      setSelectedNote(remainingNotes.length > 0 ? remainingNotes[0] : null);
     }
   };
 
-  const restoreNote = async (noteId: string) => {
-    try {
-      const apiNote = await api.restoreNote(noteId);
-      const restoredNote = convertApiNote(apiNote);
 
-      setNotes((prev) =>
-        prev.map((note) => (note.id === noteId ? restoredNote : note))
-      );
-    } catch (error) {
-      console.error('Failed to restore note:', error);
-      setError('Failed to restore note');
-    }
-  };
 
-  const hideNote = async (noteId: string) => {
-    try {
-      const apiNote = await api.hideNote(noteId);
-      const hiddenNote = convertApiNote(apiNote);
-
-      setNotes((prev) =>
-        prev.map((note) => (note.id === noteId ? { ...hiddenNote, attachments: note.attachments, folder: note.folder } : note))
-      );
-
-      if (selectedNote?.id === noteId) {
-        setSelectedNote({ ...hiddenNote, attachments: selectedNote.attachments, folder: selectedNote.folder });
-      }
-    } catch (error) {
-      console.error('Failed to hide note:', error);
-      setError('Failed to hide note');
-    }
-  };
-
-  const unhideNote = async (noteId: string) => {
-    try {
-      const apiNote = await api.unhideNote(noteId);
-      const unhiddenNote = convertApiNote(apiNote);
-
-      setNotes((prev) =>
-        prev.map((note) => (note.id === noteId ? { ...unhiddenNote, attachments: note.attachments, folder: note.folder } : note))
-      );
-
-      if (selectedNote?.id === noteId) {
-        setSelectedNote({ ...unhiddenNote, attachments: selectedNote.attachments, folder: selectedNote.folder });
-      }
-    } catch (error) {
-      console.error('Failed to unhide note:', error);
-      setError('Failed to unhide note');
-    }
-  };
-
-  const deleteFolder = async (folderId: string) => {
-    try {
-      await api.deleteFolder(folderId);
-
-      const descendantIds = getDescendantIds(folderId, folders);
-      const allFolderIds = [folderId, ...descendantIds];
-
-      setNotes((prev) =>
-        prev.map((note) =>
-          allFolderIds.includes(note.folderId ?? '')
-            ? { ...note, folderId: null, updatedAt: new Date() }
-            : note
-        )
-      );
-
-      setFolders((prev) =>
-        prev.filter((folder) => !allFolderIds.includes(folder.id))
-      );
-
-      if (selectedFolder && allFolderIds.includes(selectedFolder.id)) {
-        setSelectedFolder(null);
-      }
-    } catch (error) {
-      console.error('Failed to delete folder:', error);
-      setError('Failed to delete folder');
-    }
-  };
 
   const updateFolder = async (folderId: string, updates: Partial<Folder>) => {
-    try {
-      const apiPayload: {
-        name?: string;
-        color?: string;
-        parentId?: string | null;
-      } = {};
+    const updatedFolder = await notesOperations.updateFolder(folderId, updates);
 
-      if (updates.name !== undefined) {
-        apiPayload.name = updates.name;
-      }
-
-      if (updates.color !== undefined) {
-        apiPayload.color = updates.color;
-      }
-
-      if ('parentId' in updates) {
-        apiPayload.parentId =
-          updates.parentId === undefined ? null : updates.parentId;
-      }
-
-      const apiFolder = await api.updateFolder(folderId, apiPayload);
-      const updatedFolder = convertApiFolder(apiFolder);
-
-      setFolders((prev) =>
-        prev.map((folder) => (folder.id === folderId ? updatedFolder : folder))
-      );
-
-      if (selectedFolder?.id === folderId) {
-        setSelectedFolder(updatedFolder);
-      }
-
-      // Update notes that belong to this folder with the new folder data
-      setNotes((prev) =>
-        prev.map((note) => {
-          if (note.folderId === folderId) {
-            return {
-              ...note,
-              folder: updatedFolder,
-            };
-          }
-          return note;
-        })
-      );
-
-      // Update selected note if it belongs to this folder
-      if (selectedNote?.folderId === folderId) {
-        setSelectedNote((prev) =>
-          prev ? { ...prev, folder: updatedFolder } : null
-        );
-      }
-    } catch (error) {
-      console.error('Failed to update folder:', error);
-      setError('Failed to update folder');
-      throw error;
+    if (selectedFolder?.id === folderId) {
+      setSelectedFolder(updatedFolder);
     }
+
+    // Update notes that belong to this folder with the new folder data
+    setNotes((prev) =>
+      prev.map((note) => {
+        if (note.folderId === folderId) {
+          return {
+            ...note,
+            folder: updatedFolder,
+          };
+        }
+        return note;
+      })
+    );
+
+    // Update selected note if it belongs to this folder
+    if (selectedNote?.folderId === folderId) {
+      setSelectedNote((prev) =>
+        prev ? { ...prev, folder: updatedFolder } : null
+      );
+    }
+
+    return updatedFolder;
   };
 
   const reorderFolders = async (folderId: string, newIndex: number) => {
@@ -588,8 +426,16 @@ export function useNotes() {
 
       const newFolders = await fetchAllFolders();
       setFolders(newFolders);
+
+      // Send WebSocket notification about folder reordering
+      if (webSocket.isAuthenticated) {
+        const reorderedFolder = newFolders.find(f => f.id === folderId);
+        if (reorderedFolder) {
+          webSocket.sendFolderUpdated(folderId, { order: newIndex }, reorderedFolder);
+        }
+      }
     } catch (error) {
-      console.error('Failed to reorder folders:', error);
+      secureLogger.error('Folder reordering failed', error);
       setError('Failed to reorder folders');
     }
   };
@@ -607,7 +453,7 @@ export function useNotes() {
   };
 
   const permanentlyDeleteNote = (noteId: string) => {
-    setNotes((prev) => prev.filter((note) => note.id !== noteId));
+    notesOperations.permanentlyDeleteNote(noteId);
 
     if (selectedNote?.id === noteId) {
       const remainingNotes = filteredNotes.filter((note) => note.id !== noteId);
@@ -616,18 +462,9 @@ export function useNotes() {
   };
 
   const moveNoteToFolder = async (noteId: string, folderId: string | null) => {
-    // Find the folder data to embed
-    const folder = folderId ? folders.find(f => f.id === folderId) : undefined;
-    await updateNote(noteId, { folderId, folder });
+    await notesOperations.moveNoteToFolder(noteId, folderId);
   };
 
-  const notesCount = notes.filter((n) => !n.deleted && !n.archived).length;
-  const starredCount = notes.filter(
-    (n) => n.starred && !n.deleted && !n.archived
-  ).length;
-  const archivedCount = notes.filter((n) => n.archived && !n.deleted).length;
-  const trashedCount = notes.filter((n) => n.deleted).length;
-  const hiddenCount = notes.filter((n) => n.hidden && !n.deleted).length;
 
   return {
     notes: filteredNotes,
@@ -645,18 +482,18 @@ export function useNotes() {
     archivedCount,
     trashedCount,
     hiddenCount,
-    createNote,
+    createNote: notesOperations.createNote,
     createFolder,
     updateNote,
     updateFolder,
     deleteNote,
-    deleteFolder,
+    deleteFolder: notesOperations.deleteFolder,
     reorderFolders,
-    toggleStar,
+    toggleStar: notesOperations.toggleStar,
     archiveNote,
-    restoreNote,
-    hideNote,
-    unhideNote,
+    restoreNote: notesOperations.restoreNote,
+    hideNote: notesOperations.hideNote,
+    unhideNote: notesOperations.unhideNote,
     permanentlyDeleteNote,
     moveNoteToFolder,
     toggleFolderExpansion,
@@ -671,6 +508,21 @@ export function useNotes() {
         await initializeUser();
         await loadData();
       }
+    },
+    // WebSocket sync status
+    webSocket: {
+      status: webSocket.status,
+      isConnected: webSocket.isConnected,
+      isAuthenticated: webSocket.isAuthenticated,
+      userId: webSocket.userId,
+      error: webSocket.error,
+      reconnectAttempts: webSocket.reconnectAttempts,
+      lastSync: webSocket.lastSync,
+      joinedNotes: webSocket.joinedNotes,
+      connect: webSocket.connect,
+      disconnect: webSocket.disconnect,
+      reconnect: webSocket.reconnect,
+      clearError: webSocket.clearError,
     },
   };
 }

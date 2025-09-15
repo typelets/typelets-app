@@ -9,6 +9,8 @@ import {
   Printer,
   EyeOff,
   Eye,
+  PanelRightClose,
+  PanelRightOpen,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -35,6 +37,7 @@ import { useEditorState } from '@/components/editor/hooks/useEditorState';
 import { useEditorEffects } from '@/components/editor/hooks/useEditorEffects';
 import { fileService } from '@/services/fileService';
 import type { Note, Folder as FolderType, FileAttachment } from '@/types/note';
+import type { WebSocketStatus } from '@/types/websocket';
 
 // Type definitions for TipTap Suggestion
 // Import CommandItem type from SlashCommands
@@ -69,6 +72,15 @@ interface NoteEditorProps {
   onHideNote: (noteId: string) => void;
   onUnhideNote: (noteId: string) => void;
   userId?: string;
+  isNotesPanelOpen?: boolean;
+  onToggleNotesPanel?: () => void;
+  // WebSocket sync status props (optional)
+  wsStatus?: WebSocketStatus;
+  wsIsAuthenticated?: boolean;
+  wsLastSync?: number | null;
+  onWsReconnect?: () => void;
+  onWsConnect?: () => void;
+  onWsDisconnect?: () => void;
 }
 
 export default function Index({
@@ -81,6 +93,14 @@ export default function Index({
   onHideNote,
   onUnhideNote,
   userId = 'current-user',
+  isNotesPanelOpen,
+  onToggleNotesPanel,
+  wsStatus,
+  wsIsAuthenticated,
+  wsLastSync,
+  onWsReconnect,
+  onWsConnect,
+  onWsDisconnect,
 }: NoteEditorProps) {
   const [isMoveModalOpen, setIsMoveModalOpen] = useState(false);
   const [showAttachments, setShowAttachments] = useState(false);
@@ -510,7 +530,20 @@ export default function Index({
       <div className="flex h-full flex-1 flex-col">
       <div className="border-border flex-shrink-0 border-b p-4">
         <div className="mb-4 flex items-center justify-between">
-          <div className="flex flex-1 items-center gap-3">
+          <div className="flex items-center gap-3 min-w-0 flex-1">
+            {onToggleNotesPanel && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onToggleNotesPanel}
+                title={
+                  isNotesPanelOpen ? 'Hide notes panel' : 'Show notes panel'
+                }
+                className="flex-shrink-0"
+              >
+                {isNotesPanelOpen ? <PanelRightOpen className="h-4 w-4" /> : <PanelRightClose className="h-4 w-4" />}
+              </Button>
+            )}
             <input
               type="text"
               value={note.title || ''}
@@ -521,7 +554,8 @@ export default function Index({
             />
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-shrink-0">
+            
             <div className="relative">
               <Button
                 variant="ghost"
@@ -685,6 +719,12 @@ export default function Index({
         onZoomIn={handleZoomIn}
         onZoomOut={handleZoomOut}
         onResetZoom={resetZoom}
+        wsStatus={wsStatus}
+        wsIsAuthenticated={wsIsAuthenticated}
+        wsLastSync={wsLastSync}
+        onWsReconnect={onWsReconnect}
+        onWsConnect={onWsConnect}
+        onWsDisconnect={onWsDisconnect}
       />
 
         <style dangerouslySetInnerHTML={{ __html: editorStyles }} />

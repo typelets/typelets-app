@@ -1,8 +1,9 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { MasterPasswordDialog } from '@/components/password/MasterPasswordDialog';
 import { MobileLayout } from './MobileLayout';
 import { DesktopLayout } from './DesktopLayout';
 import { useIsMobile } from '@/hooks/useIsMobile';
+import { useResponsiveFolderPanel, useResponsiveNotesPanel } from '@/hooks/useResponsiveFolderPanel';
 import { useMasterPassword } from '@/hooks/useMasterPassword';
 import { useNotes } from '@/hooks/useNotes';
 import { api } from '@/lib/api/api';
@@ -13,8 +14,20 @@ import type { Note } from '@/types/note';
 export default function MainLayout() {
   const isMobile = useIsMobile();
   const { needsUnlock, isChecking, userId, handleUnlockSuccess } = useMasterPassword();
+  
+  // Use responsive panel hooks for desktop view
+  const responsiveFolderPanel = useResponsiveFolderPanel(!isMobile);
+  const responsiveNotesPanel = useResponsiveNotesPanel(!isMobile);
   const [folderSidebarOpen, setFolderSidebarOpen] = useState(!isMobile);
   const [filesPanelOpen, setFilesPanelOpen] = useState(!isMobile);
+  
+  // Sync responsive panel states with local states for desktop
+  useEffect(() => {
+    if (!isMobile) {
+      setFolderSidebarOpen(responsiveFolderPanel.isOpen);
+      setFilesPanelOpen(responsiveNotesPanel.isOpen);
+    }
+  }, [isMobile, responsiveFolderPanel.isOpen, responsiveNotesPanel.isOpen]);
 
   const {
     notes,
@@ -47,6 +60,7 @@ export default function MainLayout() {
     setSearchQuery,
     refetch,
     reinitialize,
+    webSocket,
   } = useNotes();
 
   const handleCreateNote = useCallback((templateContent?: { title: string; content: string }) => {
@@ -67,14 +81,30 @@ export default function MainLayout() {
   }, [selectedNote, currentView, setSelectedNote, refetch]);
 
   const handleToggleFolderPanel = useCallback(() => {
-    setFolderSidebarOpen((prev) => {
-      const newState = !prev;
-      if (isMobile && newState) {
-        setFilesPanelOpen(false);
-      }
-      return newState;
-    });
-  }, [isMobile]);
+    if (!isMobile) {
+      // Use responsive toggle for desktop
+      responsiveFolderPanel.toggleFolderPanel();
+    } else {
+      // Manual toggle for mobile
+      setFolderSidebarOpen((prev) => {
+        const newState = !prev;
+        if (newState) {
+          setFilesPanelOpen(false);
+        }
+        return newState;
+      });
+    }
+  }, [isMobile, responsiveFolderPanel]);
+
+  const handleToggleNotesPanel = useCallback(() => {
+    if (!isMobile) {
+      // Use responsive toggle for desktop
+      responsiveNotesPanel.toggleNotesPanel();
+    } else {
+      // Manual toggle for mobile
+      setFilesPanelOpen((prev) => !prev);
+    }
+  }, [isMobile, responsiveNotesPanel]);
 
   const handleSelectNote = useCallback(
     (note: Note) => {
@@ -102,8 +132,8 @@ export default function MainLayout() {
 
   const folderPanelProps: FolderPanelProps = {
     currentView, folders, selectedFolder, searchQuery, notesCount, starredCount, archivedCount, trashedCount, hiddenCount, expandedFolders,
-    onUpdateFolder: (id, name, color) => updateFolder(id, { name, color }),
-    onUpdateFolderParent: (id, parentId) => updateFolder(id, { parentId }),
+    onUpdateFolder: async (id, name, color) => { await updateFolder(id, { name, color }); },
+    onUpdateFolderParent: async (id, parentId) => { await updateFolder(id, { parentId }); },
     onCreateNote: handleCreateNote,
     onCreateFolder: createFolder,
     onDeleteFolder: deleteFolder,
@@ -134,6 +164,12 @@ export default function MainLayout() {
     onHideNote: hideNote,
     onUnhideNote: unhideNote,
     userId,
+    isNotesPanelOpen: filesPanelOpen,
+    onToggleNotesPanel: handleToggleNotesPanel,
+    wsStatus: webSocket.status,
+    wsIsAuthenticated: webSocket.isAuthenticated,
+    wsLastSync: webSocket.lastSync,
+    onWsReconnect: webSocket.reconnect,
   };
 
   if (isChecking) {

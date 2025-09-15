@@ -1,4 +1,6 @@
 import { Plus, Minus } from 'lucide-react';
+import { WebSocketStatusCompact } from '@/components/common/WebSocketStatus';
+import type { WebSocketStatus } from '@/types/websocket';
 
 interface StatusBarProps {
   wordCount: number;
@@ -11,6 +13,13 @@ interface StatusBarProps {
   onZoomIn: () => void;
   onZoomOut: () => void;
   onResetZoom: () => void;
+  // WebSocket status props (optional)
+  wsStatus?: WebSocketStatus;
+  wsIsAuthenticated?: boolean;
+  wsLastSync?: number | null;
+  onWsReconnect?: () => void;
+  onWsConnect?: () => void;
+  onWsDisconnect?: () => void;
 }
 
 export function StatusBar({
@@ -24,6 +33,10 @@ export function StatusBar({
   onZoomIn,
   onZoomOut,
   onResetZoom,
+  wsStatus,
+  wsIsAuthenticated,
+  wsLastSync,
+  onWsReconnect,
 }: StatusBarProps) {
   return (
     <div className="border-t bg-primary/5 dark:bg-primary/10 px-3 py-0.5 flex items-center justify-between text-[11px] font-sans">
@@ -88,10 +101,19 @@ export function StatusBar({
           </button>
         </div>
         
+        {/* WebSocket sync status */}
+        {wsStatus && onWsReconnect && (
+          <WebSocketStatusCompact
+            status={wsStatus}
+            isAuthenticated={wsIsAuthenticated || false}
+            lastSync={wsLastSync ?? null}
+          />
+        )}
+
         {/* Save status */}
         <div className="flex items-center gap-1 px-1.5 py-0.5 hover:bg-muted rounded cursor-default" title={
-          saveStatus === 'saving' ? 'Saving changes...' : 
-          saveStatus === 'saved' ? 'All changes saved' : 
+          saveStatus === 'saving' ? 'Saving changes...' :
+          saveStatus === 'saved' ? 'All changes saved' :
           'Error saving changes'
         }>
           {saveStatus === 'saving' && (

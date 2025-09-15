@@ -212,6 +212,29 @@ export function MobileLayout({
                   onClick={() => window.open('https://github.com/typelets/typelets-app', '_blank')}
                 />
                 <UserButton.Action
+                  label="What's New"
+                  labelIcon={
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M8 2v4"/>
+                      <path d="M16 2v4"/>
+                      <rect width="18" height="18" x="3" y="4" rx="2"/>
+                      <path d="M3 10h18"/>
+                      <path d="m9 16 2 2 4-4"/>
+                    </svg>
+                  }
+                  onClick={() => window.open('https://github.com/typelets/typelets-app/blob/main/CHANGELOG.md', '_blank')}
+                />
+                <UserButton.Action
                   label="Support"
                   labelIcon={
                     <svg
