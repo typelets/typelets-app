@@ -8,6 +8,9 @@ export const APP_NAME =
 export const CLERK_PUBLISHABLE_KEY = import.meta.env
   .VITE_CLERK_PUBLISHABLE_KEY as string | undefined;
 
+// WebSocket Configuration
+export const WEBSOCKET_URL = import.meta.env.VITE_WEBSOCKET_URL as string | undefined;
+
 // Storage Keys
 export const STORAGE_KEYS = {
   THEME: `${APP_NAME.toLowerCase()}-ui-theme`,
@@ -48,7 +51,7 @@ export const SEO_CONFIG = {
 // Error Messages
 export const ERROR_MESSAGES = {
   CLERK_KEY_MISSING:
-    'Missing Clerk Publishable Key. Please set VITE_CLERK_PUBLISHABLE_KEY in your .env.OLD file.',
+    'Missing Clerk Publishable Key. Please set VITE_CLERK_PUBLISHABLE_KEY in your .env file.',
   ROOT_ELEMENT_MISSING:
     'Failed to find root element. Ensure index.html has a div with id="root".',
 } as const;

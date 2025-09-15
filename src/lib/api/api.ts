@@ -121,6 +121,7 @@ class ClerkEncryptedApiService {
       ...options,
     };
 
+
     try {
       const response = await fetch(url, config);
 
@@ -252,8 +253,9 @@ class ClerkEncryptedApiService {
       method: 'POST',
       body: JSON.stringify({
         ...noteData,
-        title: '[ENCRYPTED]',
-        content: '[ENCRYPTED]',
+        // Remove plain text fields completely when sending encrypted data
+        title: undefined,
+        content: undefined,
         ...encryptedData,
       }),
     });
@@ -285,15 +287,35 @@ class ClerkEncryptedApiService {
 
       encryptedUpdates = {
         ...updates,
-        title: '[ENCRYPTED]',
-        content: '[ENCRYPTED]',
+        // Remove plain text fields completely when sending encrypted data
+        title: undefined,
+        content: undefined,
         ...encrypted,
       };
     }
 
+    // Simplified approach - only send defined properties from encryptedUpdates
+    const cleanedUpdates: Record<string, unknown> = {};
+
+    // Only add properties that are explicitly defined (not undefined)
+    Object.keys(encryptedUpdates).forEach(key => {
+      const value = (encryptedUpdates as Record<string, unknown>)[key];
+      if (value !== undefined) {
+        // Additional validation to prevent circular references and non-serializable values
+        try {
+          JSON.stringify(value);
+          cleanedUpdates[key] = value;
+        } catch (error) {
+          console.warn(`Skipping non-serializable property ${key}:`, error);
+        }
+      }
+    });
+
+    const requestBody = JSON.stringify(cleanedUpdates);
+
     const apiNote = await this.request<ApiNote>(`/notes/${id}`, {
       method: 'PUT',
-      body: JSON.stringify(encryptedUpdates),
+      body: requestBody,
     });
 
     return this.decryptApiNote(apiNote);

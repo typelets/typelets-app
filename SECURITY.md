@@ -2,7 +2,7 @@
 
 ## Overview
 
-Typelets implements a **zero-knowledge encryption architecture** where all note encryption and decryption happens exclusively in your browser. We cannot read your notes - even if we wanted to. This document details our security implementation for transparency and verification.
+Typelets implements a **zero-knowledge encryption architecture** with **cryptographic message authentication** for real-time sync. All note encryption and decryption happens exclusively in your browser, and all real-time communications are cryptographically authenticated. We cannot read your notes - even if we wanted to. This document details our complete security implementation for transparency and verification.
 
 ## Core Security Principles
 
@@ -17,6 +17,12 @@ Typelets implements a **zero-knowledge encryption architecture** where all note 
 - Encryption keys are derived from user-specific secrets
 - No master keys exist that could decrypt all user data
 - Password reset means permanent data loss (by design)
+
+### 3. Cryptographic Message Authentication
+- Real-time WebSocket messages are HMAC-SHA256 signed
+- Session secrets derived from JWT tokens prevent tampering
+- Timestamp + nonce protection against replay attacks
+- Message integrity verified on both client and server
 
 ## Technical Implementation
 
@@ -119,6 +125,34 @@ graph LR
 - **Token-based API access**: No passwords stored
 - **Automatic token refresh**: Seamless security updates
 
+### Real-Time Sync Security
+
+**WebSocket Message Authentication (HMAC-SHA256)**
+```
+Algorithm: HMAC-SHA256
+Session Secret: Derived from JWT + User ID + Timestamp
+Message Replay Protection: 5-minute maximum age
+Nonce-based Uniqueness: Cryptographic random nonces
+```
+
+**Message Authentication Flow**
+```javascript
+// Outgoing Message Structure
+{
+  payload: { type: "note_update", noteId: "123", changes: {...} },
+  signature: "hmac_sha256_signature...",
+  timestamp: 1640995200000,
+  nonce: "cryptographic_random_string"
+}
+```
+
+**Security Features**
+- **Message Integrity**: HMAC-SHA256 prevents tampering
+- **Authenticity Verification**: Proves message origin
+- **Replay Attack Prevention**: Timestamp + nonce protection
+- **Session-based Authentication**: Unique secrets per connection
+- **Graceful Degradation**: Works without backend support
+
 ## Attack Mitigation
 
 ### What We Protect Against
@@ -126,7 +160,11 @@ graph LR
 | Attack Vector | Protection Method |
 |--------------|------------------|
 | Server breach | Encrypted data only - no readable content |
-| Man-in-the-middle | HTTPS + encrypted payload |
+| Man-in-the-middle | HTTPS + encrypted payload + message authentication |
+| Message tampering | HMAC-SHA256 signature verification |
+| Replay attacks | Timestamp validation + cryptographic nonces |
+| WebSocket MITM | Session-based message authentication |
+| Message forgery | HMAC signature proves authenticity |
 | Rainbow tables | Per-note salts (128-bit) |
 | Brute force | 250,000 PBKDF2 iterations |
 | Key reuse | Unique IV per encryption |
@@ -142,6 +180,7 @@ graph LR
 - Weak master passwords (if used)
 - Browser vulnerabilities
 - Users who lose their encryption keys
+- WebSocket message authentication requires backend support (graceful fallback without)
 
 ## User Experience & Security Flow
 
@@ -171,6 +210,21 @@ Login → Enter Master Password → Access Notes → Auto-lock on Session End
 3. Inspect the API request payload
 4. Verify `title` and `content` show as `[ENCRYPTED]`
 5. Verify presence of `encryptedTitle`, `encryptedContent`, `iv`, `salt`
+
+### Test Message Authentication
+1. Open browser DevTools → Console tab
+2. Look for "Message authentication initialized" on WebSocket connection
+3. Edit a note in real-time
+4. Check WebSocket messages for signature structure:
+   ```json
+   {
+     "payload": { "type": "note_update", ... },
+     "signature": "base64_hmac_signature",
+     "timestamp": 1640995200000,
+     "nonce": "random_string"
+   }
+   ```
+5. Verify "Message signed successfully" in console logs
 
 ### Verify Zero-Knowledge
 ```sql
@@ -230,7 +284,13 @@ SELECT encryptedTitle FROM notes;
 **Security vs Performance balance.** This provides ~0.5 seconds of computation on modern devices while exceeding OWASP recommendations.
 
 ### Q: What about quantum computers?
-**AES-256 is quantum-resistant** with effective 128-bit security against Grover's algorithm. We'll migrate to post-quantum algorithms when standardized.
+**AES-256 is quantum-resistant** with effective 128-bit security against Grover's algorithm. HMAC-SHA256 is also quantum-resistant. We'll migrate to post-quantum algorithms when standardized.
+
+### Q: How does WebSocket message authentication work?
+**Each real-time message is cryptographically signed** using HMAC-SHA256 with a session secret derived from your JWT token. This prevents message tampering, replay attacks, and ensures authenticity of real-time updates.
+
+### Q: What happens if message authentication fails?
+**The message is rejected and logged as a security event.** Your app continues working normally, but you're protected from potentially malicious messages. The frontend gracefully handles authentication failures.
 
 ## Security Disclosure
 
@@ -251,4 +311,15 @@ For security-related questions:
 
 ---
 
-**Remember**: True security means even we cannot access your data. Your privacy is not a feature - it's our foundation.
+**Remember**: True security means even we cannot access your data AND cannot tamper with your real-time communications. Your privacy and data integrity are not features - they're our foundation.
+
+## Security Summary
+
+Typelets provides **defense-in-depth** with multiple layers of cryptographic protection:
+
+1. **Storage Layer**: AES-256-GCM client-side encryption with zero-knowledge architecture
+2. **Transport Layer**: HMAC-SHA256 message authentication for real-time sync integrity
+3. **Session Layer**: JWT-based authentication with automatic token refresh
+4. **Application Layer**: Memory-safe key management with automatic cleanup
+
+This makes Typelets one of the most secure note-taking platforms available, with both **storage encryption** and **transport authentication** cryptographically protected.

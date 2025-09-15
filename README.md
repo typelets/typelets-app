@@ -63,7 +63,7 @@
 - 🌙 **Dark/Light mode** - Easy on the eyes, day or night
 - 📎 **File attachments** - Upload and encrypt files up to 10MB per file
 - 📊 **Usage tracking** - Monitor storage and notes limits with visual progress indicators
-- 📱 **Responsive design** - Works seamlessly on desktop and mobile
+- 🌐 **Cross-platform** - Responsive web app that works seamlessly on desktop, tablet, and mobile
 - 🖨️ **Print support** - Clean printing with proper formatting
 
 ## 🔒 Security First
@@ -85,6 +85,7 @@ Your encryption keys are derived from your master password. Even if our database
 4. **No Recovery**: We cannot recover forgotten passwords (by design)
 
 For complete security details and technical implementation, see our [**Security Documentation →**](./SECURITY.md)
+
 
 ## 🚀 Quick Start
 

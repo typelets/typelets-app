@@ -1,4 +1,5 @@
 import type { Note, Folder, ViewMode } from '@/types/note';
+import type { WebSocketStatus } from '@/types/websocket';
 
 export interface FolderPanelProps {
   currentView: ViewMode;
@@ -56,4 +57,11 @@ export interface EditorProps {
   onHideNote: (noteId: string) => Promise<void>;
   onUnhideNote: (noteId: string) => Promise<void>;
   userId?: string;
+  isNotesPanelOpen?: boolean;
+  onToggleNotesPanel?: () => void;
+  // WebSocket sync status props (optional)
+  wsStatus?: WebSocketStatus;
+  wsIsAuthenticated?: boolean;
+  wsLastSync?: number | null;
+  onWsReconnect?: () => void;
 }

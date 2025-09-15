@@ -79,17 +79,21 @@ export class FileService {
     
     // Decode the base64 to get the actual file content
     const actualFileContent = atob(decryptedText);
-    const finalBuffer = new Uint8Array(actualFileContent.length);
+    // Create a proper ArrayBuffer to avoid SharedArrayBuffer issues
+    const buffer = new ArrayBuffer(actualFileContent.length);
+    const finalBuffer = new Uint8Array(buffer);
     for (let i = 0; i < actualFileContent.length; i++) {
       finalBuffer[i] = actualFileContent.charCodeAt(i);
     }
-    
+
     return finalBuffer.buffer;
   }
   
   private base64ToUint8Array(base64: string): Uint8Array {
     const binary = atob(base64);
-    const bytes = new Uint8Array(binary.length);
+    // Create a proper ArrayBuffer to avoid SharedArrayBuffer issues
+    const buffer = new ArrayBuffer(binary.length);
+    const bytes = new Uint8Array(buffer);
     for (let i = 0; i < binary.length; i++) {
       bytes[i] = binary.charCodeAt(i);
     }
@@ -98,6 +102,7 @@ export class FileService {
   
   private base64ToArrayBuffer(base64: string): ArrayBuffer {
     const bytes = this.base64ToUint8Array(base64);
+    // Since base64ToUint8Array now creates proper ArrayBuffers, we can safely return the buffer
     return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
   }
 

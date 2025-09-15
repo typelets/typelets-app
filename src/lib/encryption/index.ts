@@ -5,6 +5,7 @@ import {
   ENCODING,
 } from './constants';
 import { secureStorage } from './secureStorage';
+import { SecureString } from '../utils/secureString';
 
 export interface EncryptedNote {
   encryptedTitle: string;
@@ -65,19 +66,24 @@ class EncryptionService {
   }
 
   async setupMasterPassword(
-    masterPassword: string,
+    masterPassword: string | SecureString,
     userId: string
   ): Promise<void> {
-    const encoder = new TextEncoder();
-    const userSalt = encoder.encode(`typelets-salt-${userId}-v1`);
+    const securePassword = typeof masterPassword === 'string'
+      ? new SecureString(masterPassword)
+      : masterPassword;
 
-    const keyMaterial = await crypto.subtle.importKey(
-      'raw',
-      encoder.encode(masterPassword),
-      { name: 'PBKDF2' },
-      false,
-      ['deriveKey']
-    );
+    try {
+      const encoder = new TextEncoder();
+      const userSalt = encoder.encode(`typelets-salt-${userId}-v1`);
+
+      const keyMaterial = await crypto.subtle.importKey(
+        'raw',
+        securePassword.getBytes(),
+        { name: 'PBKDF2' },
+        false,
+        ['deriveKey']
+      );
 
     const key = await crypto.subtle.deriveKey(
       {
@@ -106,19 +112,29 @@ class EncryptionService {
     if (localStorage.getItem(oldKey)) {
       localStorage.removeItem(oldKey);
     }
+    } finally {
+      // Always clear the secure password from memory
+      if (typeof masterPassword === 'string') {
+        securePassword.clear();
+      }
+    }
   }
 
   async unlockWithMasterPassword(
-    masterPassword: string,
+    masterPassword: string | SecureString,
     userId: string
   ): Promise<boolean> {
+    const securePassword = typeof masterPassword === 'string'
+      ? new SecureString(masterPassword)
+      : masterPassword;
+
     try {
       const encoder = new TextEncoder();
       const userSalt = encoder.encode(`typelets-salt-${userId}-v1`);
 
       const keyMaterial = await crypto.subtle.importKey(
         'raw',
-        encoder.encode(masterPassword),
+        securePassword.getBytes(),
         { name: 'PBKDF2' },
         false,
         ['deriveKey']
@@ -175,6 +191,11 @@ class EncryptionService {
     } catch (error) {
       console.error('Failed to unlock with master password:', error);
       return false;
+    } finally {
+      // Always clear the secure password from memory
+      if (typeof masterPassword === 'string') {
+        securePassword.clear();
+      }
     }
   }
 
@@ -496,14 +517,14 @@ export function isMasterPasswordUnlocked(userId: string): boolean {
 }
 
 export async function setupMasterPassword(
-  masterPassword: string,
+  masterPassword: string | SecureString,
   userId: string
 ): Promise<void> {
   return encryptionService.setupMasterPassword(masterPassword, userId);
 }
 
 export async function unlockWithMasterPassword(
-  masterPassword: string,
+  masterPassword: string | SecureString,
   userId: string
 ): Promise<boolean> {
   return encryptionService.unlockWithMasterPassword(masterPassword, userId);
