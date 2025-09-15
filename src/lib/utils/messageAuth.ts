@@ -10,7 +10,6 @@ export interface AuthenticatedMessage {
 
 class MessageAuthenticator {
   private authKey: CryptoKey | null = null;
-  private keyInitialized = false;
 
   /**
    * Initialize the authenticator with a session key
@@ -29,7 +28,6 @@ class MessageAuthenticator {
     );
 
     this.authKey = keyMaterial;
-    this.keyInitialized = true;
   }
 
   /**
@@ -38,7 +36,6 @@ class MessageAuthenticator {
    */
   clear(): void {
     this.authKey = null;
-    this.keyInitialized = false;
   }
 
   /**
