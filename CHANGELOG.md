@@ -1,3 +1,11 @@
+## [1.14.4](https://github.com/typelets/typelets-app/compare/v1.14.3...v1.14.4) (2025-09-16)
+
+
+### Bug Fixes
+
+* resolve API validation and WebSocket message issues ([eb5588c](https://github.com/typelets/typelets-app/commit/eb5588c9baa32afd0890e39eff15c1cafa9949eb))
+* resolve WebSocket message issues ([f441405](https://github.com/typelets/typelets-app/commit/f441405cd3dc03406736f89b66e9162828540b47))
+
 ## [1.14.3](https://github.com/typelets/typelets-app/compare/v1.14.2...v1.14.3) (2025-09-16)
 
 
