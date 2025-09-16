@@ -250,13 +250,12 @@ class ClerkEncryptedApiService {
 
     const encryptedData = await this.encryptNoteForApi(title, content);
 
+    const { title: _, content: __, ...restNoteData } = noteData;
+
     const apiNote = await this.request<ApiNote>('/notes', {
       method: 'POST',
       body: JSON.stringify({
-        ...noteData,
-        // Remove plain text fields completely when sending encrypted data
-        title: undefined,
-        content: undefined,
+        ...restNoteData,
         ...encryptedData,
       }),
     });
