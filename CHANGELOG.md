@@ -1,3 +1,10 @@
+## [1.14.3](https://github.com/typelets/typelets-app/compare/v1.14.2...v1.14.3) (2025-09-16)
+
+
+### Bug Fixes
+
+* remove undefined title/content fields from note creation request ([be5cad2](https://github.com/typelets/typelets-app/commit/be5cad2a33c363f6cf655838c125da6b5ea90073))
+
 ## [1.14.2](https://github.com/typelets/typelets-app/compare/v1.14.1...v1.14.2) (2025-09-15)
 
 
