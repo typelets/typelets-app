@@ -56,6 +56,7 @@ export interface NoteUpdateMessage extends WebSocketOutgoingMessage {
 
 export interface NoteCreatedMessage extends WebSocketOutgoingMessage {
   type: 'note_created';
+  noteId: string;
   noteData: Note;
 }
 
