@@ -228,6 +228,10 @@ class WebSocketService implements WebSocketServiceInterface {
       return;
     }
 
+    if (!noteId || typeof noteId !== 'string') {
+      return;
+    }
+
     if (this.state.joinedNotes.has(noteId)) {
       return;
     }
@@ -240,6 +244,10 @@ class WebSocketService implements WebSocketServiceInterface {
       return;
     }
 
+    if (!noteId || typeof noteId !== 'string') {
+      return;
+    }
+
     if (!this.state.joinedNotes.has(noteId)) {
       return;
     }
@@ -249,6 +257,10 @@ class WebSocketService implements WebSocketServiceInterface {
 
   public sendNoteUpdate(noteId: string, changes: Partial<Note>): void {
     if (!this.state.isAuthenticated) {
+      return;
+    }
+
+    if (!noteId || typeof noteId !== 'string') {
       return;
     }
 
@@ -276,6 +288,7 @@ class WebSocketService implements WebSocketServiceInterface {
 
     this.sendMessage({
       type: 'note_created',
+      noteId: note.id,
       noteData: note,
     });
   }

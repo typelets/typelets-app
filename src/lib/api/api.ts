@@ -256,6 +256,8 @@ class ClerkEncryptedApiService {
       method: 'POST',
       body: JSON.stringify({
         ...restNoteData,
+        // Temporary placeholder until API is updated to make title optional
+        title: "temp",
         ...encryptedData,
       }),
     });
@@ -285,11 +287,9 @@ class ClerkEncryptedApiService {
 
       const encrypted = await this.encryptNoteForApi(newTitle, newContent);
 
+      const { title: _, content: __, ...restUpdates } = updates;
       encryptedUpdates = {
-        ...updates,
-        // Remove plain text fields completely when sending encrypted data
-        title: undefined,
-        content: undefined,
+        ...restUpdates,
         ...encrypted,
       };
     }
