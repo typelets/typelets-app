@@ -1,3 +1,10 @@
+## [1.15.5](https://github.com/typelets/typelets-app/compare/v1.15.4...v1.15.5) (2025-09-18)
+
+
+### Bug Fixes
+
+* update desktop build workflow to detect version changes in constants file ([ac7af63](https://github.com/typelets/typelets-app/commit/ac7af637c2e07a58707e4e13acf45bc7db53005d))
+
 ## [1.15.4](https://github.com/typelets/typelets-app/compare/v1.15.3...v1.15.4) (2025-09-18)
 
 
