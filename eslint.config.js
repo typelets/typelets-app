@@ -8,6 +8,7 @@ export default tseslint.config(
   {
     ignores: [
       'dist',
+      'apps/desktop/dist',
       'node_modules',
       '.vite',
       'coverage',
