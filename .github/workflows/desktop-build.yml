@@ -85,7 +85,7 @@ jobs:
         id: version-check
         run: |
           if git diff HEAD~1 HEAD --name-only | grep -q "apps/desktop/package\.json" && git diff HEAD~1 HEAD | grep -E "^\+.*version.*[0-9]+\.[0-9]+\.[0-9]+"; then
-            VERSION=$(node -p "require('./apps/desktop/package.json').version")
+            VERSION=$(node -p "require('./package.json').version")
             echo "version-changed=true" >> $GITHUB_OUTPUT
             echo "new-version=v$VERSION" >> $GITHUB_OUTPUT
           else
