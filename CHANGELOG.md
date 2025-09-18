@@ -1,3 +1,10 @@
+## [1.15.1](https://github.com/typelets/typelets-app/compare/v1.15.0...v1.15.1) (2025-09-18)
+
+
+### Bug Fixes
+
+* exclude desktop dist directory from ESLint ([b4f784b](https://github.com/typelets/typelets-app/commit/b4f784ba5c4e0e5a7a668eedd54990e17cfb3a92))
+
 # [1.15.0](https://github.com/typelets/typelets-app/compare/v1.14.5...v1.15.0) (2025-09-18)
 
 
