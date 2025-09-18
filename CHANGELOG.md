@@ -1,3 +1,10 @@
+# [1.16.0](https://github.com/typelets/typelets-app/compare/v1.15.5...v1.16.0) (2025-09-18)
+
+
+### Features
+
+* complete desktop app integration with unified versioning ([ae440f8](https://github.com/typelets/typelets-app/commit/ae440f8dce6950ad891d0eb9c97e020adc5548c6))
+
 ## [1.15.5](https://github.com/typelets/typelets-app/compare/v1.15.4...v1.15.5) (2025-09-18)
 
 
