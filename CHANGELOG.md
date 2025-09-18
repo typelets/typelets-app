@@ -1,3 +1,10 @@
+## [1.15.3](https://github.com/typelets/typelets-app/compare/v1.15.2...v1.15.3) (2025-09-18)
+
+
+### Bug Fixes
+
+* align desktop app version with main app and use main version for releases ([845a69f](https://github.com/typelets/typelets-app/commit/845a69fc94751e2827f94366363348e147dcf52a))
+
 ## [1.15.2](https://github.com/typelets/typelets-app/compare/v1.15.1...v1.15.2) (2025-09-18)
 
 
