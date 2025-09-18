@@ -1,3 +1,11 @@
+## [1.14.5](https://github.com/typelets/typelets-app/compare/v1.14.4...v1.14.5) (2025-09-18)
+
+
+### Bug Fixes
+
+* enable real-time sync for notes and folders across tabs ([d546bc2](https://github.com/typelets/typelets-app/commit/d546bc2c61b54dc2ef6463b3976221189c861a91))
+* enable real-time sync for notes and folders across tabs ([3c78591](https://github.com/typelets/typelets-app/commit/3c7859163260724332b5805ff240f5720fd6b9ae))
+
 ## [1.14.4](https://github.com/typelets/typelets-app/compare/v1.14.3...v1.14.4) (2025-09-16)
 
 
