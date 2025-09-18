@@ -186,8 +186,8 @@ docker run -p 80:8080 \
 $env:AWS_ACCOUNT_ID = (aws sts get-caller-identity --query Account --output text)
 $env:AWS_REGION = "us-east-1"
 $env:ECR_REPOSITORY = "typelets-app"
-$env:VITE_WEBSOCKET_URL = 
 $env:VITE_API_URL = "/api"
+$env:VITE_WEBSOCKET_URL = "https://your-api-domain.com"
 $env:VITE_CLERK_PUBLISHABLE_KEY = "pk_live_your_key_here"
 
 # Create ECR repository (first time only)
