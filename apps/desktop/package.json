@@ -2,19 +2,20 @@
   "name": "typelets-desktop",
   "version": "0.1.0",
   "description": "Typelets Desktop - Secure Note Taking App",
-  "main": "main.js",
+  "main": "dist/main.js",
   "author": "Typelets Team",
   "license": "MIT",
   "homepage": "https://typelets.com",
   "scripts": {
-    "start": "electron .",
-    "dev": "cross-env NODE_ENV=development electron .",
-    "build": "electron-builder",
-    "build:win": "electron-builder --win",
-    "build:mac": "electron-builder --mac",
-    "build:linux": "electron-builder --linux",
-    "pack": "electron-builder --dir",
-    "dist": "electron-builder --publish=never",
+    "build:ts": "tsc",
+    "start": "npm run build:ts && electron .",
+    "dev": "npm run build:ts && cross-env NODE_ENV=development electron .",
+    "build": "npm run build:ts && electron-builder",
+    "build:win": "npm run build:ts && electron-builder --win",
+    "build:mac": "npm run build:ts && electron-builder --mac",
+    "build:linux": "npm run build:ts && electron-builder --linux",
+    "pack": "npm run build:ts && electron-builder --dir",
+    "dist": "npm run build:ts && electron-builder --publish=never",
     "postinstall": "electron-builder install-app-deps"
   },
   "build": {
@@ -25,8 +26,7 @@
       "buildResources": "assets"
     },
     "files": [
-      "main.js",
-      "preload.js",
+      "dist/**/*",
       "assets/**/*",
       "../../dist/**/*",
       "node_modules/**/*"
@@ -41,7 +41,9 @@
       "target": [
         {
           "target": "nsis",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ],
       "icon": "assets/icon.ico"
@@ -50,7 +52,10 @@
       "target": [
         {
           "target": "dmg",
-          "arch": ["x64", "arm64"]
+          "arch": [
+            "x64",
+            "arm64"
+          ]
         }
       ],
       "icon": "assets/icon.icns",
@@ -60,7 +65,9 @@
       "target": [
         {
           "target": "AppImage",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ],
       "icon": "assets/icon.png",
@@ -72,9 +79,12 @@
     }
   },
   "devDependencies": {
+    "@types/node": "^24.5.2",
+    "cross-env": "^7.0.3",
     "electron": "^28.0.0",
     "electron-builder": "^24.9.1",
     "electron-reload": "^2.0.0-alpha.1",
-    "cross-env": "^7.0.3"
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.2"
   }
 }
