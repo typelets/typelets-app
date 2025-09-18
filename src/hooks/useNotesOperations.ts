@@ -466,12 +466,23 @@ export function useNotesOperations({
   const createFolder = useCallback(
     async (name: string, color: string = '#3b82f6', parentId?: string) => {
       try {
-        const apiFolder = await api.createFolder({
+        const folderData: {
+          name: string;
+          color: string;
+          isDefault: boolean;
+          parentId?: string;
+        } = {
           name,
           color,
-          parentId: parentId || selectedFolder?.id,
           isDefault: false,
-        });
+        };
+
+        // Only include parentId if it's provided
+        if (parentId) {
+          folderData.parentId = parentId;
+        }
+
+        const apiFolder = await api.createFolder(folderData);
 
         const newFolder = {
           ...apiFolder,

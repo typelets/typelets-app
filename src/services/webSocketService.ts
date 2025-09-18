@@ -311,6 +311,7 @@ class WebSocketService implements WebSocketServiceInterface {
 
     this.sendMessage({
       type: 'folder_created',
+      folderId: folder.id,
       folderData: folder,
     });
   }
@@ -523,17 +524,15 @@ class WebSocketService implements WebSocketServiceInterface {
           break;
 
         case 'note_created_sync':
-          if (message.fromUserId !== this.state.userId) {
-            this.state.lastSync = Date.now();
-            this.eventHandlers.onNoteCreatedSync?.(message);
-          }
+          // Process note creation sync for cross-tab synchronization
+          this.state.lastSync = Date.now();
+          this.eventHandlers.onNoteCreatedSync?.(message);
           break;
 
         case 'note_deleted_sync':
-          if (message.fromUserId !== this.state.userId) {
-            this.state.lastSync = Date.now();
-            this.eventHandlers.onNoteDeletedSync?.(message);
-          }
+          // Process note deletion sync for cross-tab synchronization
+          this.state.lastSync = Date.now();
+          this.eventHandlers.onNoteDeletedSync?.(message);
           break;
 
         case 'folder_created_sync':

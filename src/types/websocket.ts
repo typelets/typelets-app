@@ -67,6 +67,7 @@ export interface NoteDeletedMessage extends WebSocketOutgoingMessage {
 
 export interface FolderCreatedMessage extends WebSocketOutgoingMessage {
   type: 'folder_created';
+  folderId: string;
   folderData: Folder;
 }
 
