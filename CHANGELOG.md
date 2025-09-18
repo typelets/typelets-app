@@ -1,3 +1,17 @@
+# [1.15.0](https://github.com/typelets/typelets-app/compare/v1.14.5...v1.15.0) (2025-09-18)
+
+
+### Bug Fixes
+
+* create proper multi-resolution ICO file for Windows builds ([f5e0d96](https://github.com/typelets/typelets-app/commit/f5e0d967543c37091bde3af5545aa118e401d375))
+* resolve eslint issues in Electron TypeScript code ([d728bd3](https://github.com/typelets/typelets-app/commit/d728bd3ca0d6f492d25571a55168e14365854728))
+* use proper 256x256 PNG icon for Linux builds ([e1086f1](https://github.com/typelets/typelets-app/commit/e1086f1d2077bd73fcffb10650a6a1203e35369c))
+
+
+### Features
+
+* add desktop app and UI improvements ([4cd03de](https://github.com/typelets/typelets-app/commit/4cd03de1b0f3dd86bc1e547cde25324dc129a201))
+
 ## [1.14.5](https://github.com/typelets/typelets-app/compare/v1.14.4...v1.14.5) (2025-09-18)
 
 
