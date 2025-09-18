@@ -1,3 +1,24 @@
+## [1.15.5](https://github.com/typelets/typelets-app/compare/v1.15.4...v1.15.5) (2025-09-18)
+
+
+### Bug Fixes
+
+* update desktop build workflow to detect version changes in constants file ([ac7af63](https://github.com/typelets/typelets-app/commit/ac7af637c2e07a58707e4e13acf45bc7db53005d))
+
+## [1.15.4](https://github.com/typelets/typelets-app/compare/v1.15.3...v1.15.4) (2025-09-18)
+
+
+### Bug Fixes
+
+* implement unified versioning system and fix desktop app loading ([5e09b78](https://github.com/typelets/typelets-app/commit/5e09b781a2769c643f4a2fe542986d3c53411584))
+
+## [1.15.3](https://github.com/typelets/typelets-app/compare/v1.15.2...v1.15.3) (2025-09-18)
+
+
+### Bug Fixes
+
+* align desktop app version with main app and use main version for releases ([845a69f](https://github.com/typelets/typelets-app/commit/845a69fc94751e2827f94366363348e147dcf52a))
+
 ## [1.15.2](https://github.com/typelets/typelets-app/compare/v1.15.1...v1.15.2) (2025-09-18)
 
 
