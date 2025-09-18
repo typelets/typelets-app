@@ -737,17 +737,21 @@ const getWebSocketUrl = () => {
   const isDevelopment = import.meta.env.DEV;
 
   if (WEBSOCKET_URL) {
+    console.log('Using WEBSOCKET_URL from env:', WEBSOCKET_URL);
     return WEBSOCKET_URL;
   }
 
   // Default URLs based on environment
   if (isDevelopment) {
+    console.log('Using development WebSocket URL: ws://localhost:3000');
     return 'ws://localhost:3000';
   }
 
   // Production - use same host but with ws/wss protocol
   const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-  return `${protocol}//${window.location.host}`;
+  const fallbackUrl = `${protocol}//${window.location.host}`;
+  console.log('Using fallback WebSocket URL:', fallbackUrl);
+  return fallbackUrl;
 };
 
 export const webSocketService = new WebSocketService({

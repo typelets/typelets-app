@@ -1,0 +1,115 @@
+name: Desktop Build
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  build-desktop:
+    name: Build Desktop Apps
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            platform: win
+            artifact: exe
+          - os: macos-latest
+            platform: mac
+            artifact: dmg
+          - os: ubuntu-latest
+            platform: linux
+            artifact: AppImage
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build web app
+        run: pnpm build
+
+      - name: Install desktop dependencies
+        run: cd apps/desktop && npm install
+
+      - name: Build desktop app
+        run: cd apps/desktop && npm run build:${{ matrix.platform }}
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: typelets-${{ matrix.platform }}
+          path: |
+            apps/desktop/dist/*.exe
+            apps/desktop/dist/*.dmg
+            apps/desktop/dist/*.AppImage
+            apps/desktop/dist/*.deb
+            apps/desktop/dist/*.rpm
+          retention-days: 90
+
+  release:
+    name: Create Release
+    needs: build-desktop
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Check if version changed
+        id: version-check
+        run: |
+          if git diff HEAD~1 HEAD --name-only | grep -E "(package\.json|version)" && git diff HEAD~1 HEAD | grep -E "^\+.*version.*[0-9]+\.[0-9]+\.[0-9]+"; then
+            VERSION=$(node -p "require('./package.json').version")
+            echo "version-changed=true" >> $GITHUB_OUTPUT
+            echo "new-version=v$VERSION" >> $GITHUB_OUTPUT
+          else
+            echo "version-changed=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Download all artifacts
+        if: steps.version-check.outputs.version-changed == 'true'
+        uses: actions/download-artifact@v4
+        with:
+          path: release-artifacts
+
+      - name: Create Release
+        if: steps.version-check.outputs.version-changed == 'true'
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.version-check.outputs.new-version }}
+          name: Release ${{ steps.version-check.outputs.new-version }}
+          files: |
+            release-artifacts/typelets-win/*.exe
+            release-artifacts/typelets-mac/*.dmg
+            release-artifacts/typelets-linux/*.AppImage
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
