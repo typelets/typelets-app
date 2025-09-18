@@ -1,3 +1,10 @@
+## [1.15.4](https://github.com/typelets/typelets-app/compare/v1.15.3...v1.15.4) (2025-09-18)
+
+
+### Bug Fixes
+
+* implement unified versioning system and fix desktop app loading ([5e09b78](https://github.com/typelets/typelets-app/commit/5e09b781a2769c643f4a2fe542986d3c53411584))
+
 ## [1.15.3](https://github.com/typelets/typelets-app/compare/v1.15.2...v1.15.3) (2025-09-18)
 
 
