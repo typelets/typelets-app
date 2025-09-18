@@ -1,3 +1,10 @@
+## [1.15.2](https://github.com/typelets/typelets-app/compare/v1.15.1...v1.15.2) (2025-09-18)
+
+
+### Bug Fixes
+
+* check desktop package.json for version changes in workflow ([f109f1f](https://github.com/typelets/typelets-app/commit/f109f1ffe71d258bb052c3708d6a99466a74f88d))
+
 ## [1.15.1](https://github.com/typelets/typelets-app/compare/v1.15.0...v1.15.1) (2025-09-18)
 
 
