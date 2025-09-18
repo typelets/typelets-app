@@ -19,6 +19,15 @@ const versionContent = `export const APP_VERSION = '${version}';\n`;
 fs.writeFileSync(versionFilePath, versionContent);
 console.log(`Updated version.ts to ${version}`);
 
+// Update desktop app package.json version
+const desktopPackagePath = path.join(__dirname, '../apps/desktop/package.json');
+if (fs.existsSync(desktopPackagePath)) {
+  const desktopPackage = JSON.parse(fs.readFileSync(desktopPackagePath, 'utf8'));
+  desktopPackage.version = version;
+  fs.writeFileSync(desktopPackagePath, JSON.stringify(desktopPackage, null, 2) + '\n');
+  console.log(`Updated desktop package.json to ${version}`);
+}
+
 // Update README if you have version badges
 const readmePath = path.join(__dirname, '../README.md');
 if (fs.existsSync(readmePath)) {

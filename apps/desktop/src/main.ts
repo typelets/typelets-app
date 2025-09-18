@@ -28,33 +28,19 @@ function createWindow(): void {
     },
     icon: join(__dirname, 'assets', 'icon.png'),
     titleBarStyle: 'default',
-    show: false
+    show: true
   });
 
   if (isDev) {
     mainWindow.webContents.session.clearCache();
-
-    mainWindow.loadURL('https://app.typelets.com');
     mainWindow.webContents.openDevTools();
-  } else {
-    mainWindow.loadFile(join(__dirname, '../../dist/index.html'));
   }
 
-  mainWindow.once('ready-to-show', () => {
-    mainWindow.show();
-  });
+  mainWindow.loadURL('https://app.typelets.com');
 
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     shell.openExternal(url);
     return { action: 'deny' };
-  });
-
-  mainWindow.webContents.on('will-navigate', (event, navigationUrl) => {
-    const parsedUrl = new URL(navigationUrl);
-
-    if (parsedUrl.origin !== 'https://app.typlets.com' && !isDev) {
-      event.preventDefault();
-    }
   });
 }
 
