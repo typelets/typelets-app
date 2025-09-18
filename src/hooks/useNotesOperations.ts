@@ -503,7 +503,7 @@ export function useNotesOperations({
         throw error;
       }
     },
-    [selectedFolder?.id, setFolders, webSocket, setError]
+    [setFolders, webSocket, setError]
   );
 
   const updateFolder = useCallback(
