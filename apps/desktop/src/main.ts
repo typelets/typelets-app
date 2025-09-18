@@ -5,12 +5,13 @@ const isDev = process.env.NODE_ENV === 'development';
 
 if (isDev) {
   try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     require('electron-reload')(join(__dirname, '..'), {
       electron: join(__dirname, '..', 'node_modules', '.bin', 'electron'),
       hardResetMethod: 'exit'
     });
   } catch (error) {
-    console.log('Electron reload disabled:', (error as Error).message);
+    console.warn('Electron reload disabled:', (error as Error).message);
   }
 }
 
