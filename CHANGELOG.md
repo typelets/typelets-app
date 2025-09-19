@@ -1,3 +1,10 @@
+## [1.17.1](https://github.com/typelets/typelets-app/compare/v1.17.0...v1.17.1) (2025-09-19)
+
+
+### Bug Fixes
+
+* switch to workflow_run trigger for automatic desktop builds ([c6c284f](https://github.com/typelets/typelets-app/commit/c6c284fe4de3c940e6001837eae068836ee0bb90))
+
 # [1.17.0](https://github.com/typelets/typelets-app/compare/v1.16.15...v1.17.0) (2025-09-19)
 
 
