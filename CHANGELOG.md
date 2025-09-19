@@ -1,3 +1,10 @@
+## [1.16.1](https://github.com/typelets/typelets-app/compare/v1.16.0...v1.16.1) (2025-09-19)
+
+
+### Bug Fixes
+
+* trigger desktop builds on release events ([a6f8c23](https://github.com/typelets/typelets-app/commit/a6f8c23be72d5ddbffd4d7c8112aebf6dd1b7440))
+
 # [1.16.0](https://github.com/typelets/typelets-app/compare/v1.15.5...v1.16.0) (2025-09-18)
 
 
