@@ -1,3 +1,10 @@
+## [1.16.9](https://github.com/typelets/typelets-app/compare/v1.16.8...v1.16.9) (2025-09-19)
+
+
+### Bug Fixes
+
+* remove conflicting desktop build job from release workflow ([b95f426](https://github.com/typelets/typelets-app/commit/b95f42662fbd9fd41de179b2425f933530d61128))
+
 ## [1.16.8](https://github.com/typelets/typelets-app/compare/v1.16.7...v1.16.8) (2025-09-19)
 
 
