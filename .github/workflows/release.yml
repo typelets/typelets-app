@@ -120,6 +120,18 @@ jobs:
       - name: Build desktop app
         run: cd apps/desktop && npm run build:${{ matrix.platform }}
 
+      - name: List generated files
+        run: |
+          echo "=== Contents of apps/desktop/dist ==="
+          ls -la apps/desktop/dist/ || echo "Directory not found"
+          echo "=== All .exe files ==="
+          find apps/desktop -name "*.exe" || echo "No .exe files found"
+          echo "=== All .dmg files ==="
+          find apps/desktop -name "*.dmg" || echo "No .dmg files found"
+          echo "=== All .AppImage files ==="
+          find apps/desktop -name "*.AppImage" || echo "No .AppImage files found"
+        shell: bash
+
       - name: Get current version
         id: current_version
         run: |
