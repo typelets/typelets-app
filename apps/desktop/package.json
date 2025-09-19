@@ -46,7 +46,9 @@
           ]
         }
       ],
-      "icon": "assets/icon.ico"
+      "icon": "assets/icon.ico",
+      "sign": null,
+      "verifyUpdateCodeSignature": false
     },
     "mac": {
       "target": [
@@ -76,7 +78,10 @@
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true
-    }
+    },
+    "forceCodeSigning": false,
+    "afterSign": null,
+    "afterAllArtifactBuild": null
   },
   "devDependencies": {
     "@types/node": "^24.5.2",

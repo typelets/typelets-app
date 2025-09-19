@@ -16,7 +16,7 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: windows-latest
+          - os: ubuntu-latest
             platform: win
             artifact: exe
           - os: macos-latest
