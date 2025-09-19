@@ -70,9 +70,20 @@ jobs:
     name: Attach Desktop Assets
     needs: build-desktop
     runs-on: ubuntu-latest
-    if: github.event_name == 'release'
+    if: github.event_name == 'release' || github.event_name == 'workflow_dispatch'
 
     steps:
+      - name: Get latest release tag
+        id: latest_release
+        run: |
+          if [ "${{ github.event_name }}" = "release" ]; then
+            echo "tag_name=${{ github.event.release.tag_name }}" >> $GITHUB_OUTPUT
+          else
+            # Get latest release tag for manual trigger
+            TAG=$(curl -s https://api.github.com/repos/${{ github.repository }}/releases/latest | jq -r '.tag_name')
+            echo "tag_name=$TAG" >> $GITHUB_OUTPUT
+          fi
+
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
@@ -84,7 +95,7 @@ jobs:
       - name: Attach assets to release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ github.event.release.tag_name }}
+          tag_name: ${{ steps.latest_release.outputs.tag_name }}
           files: |
             release-artifacts/**/*.exe
             release-artifacts/**/*.dmg
