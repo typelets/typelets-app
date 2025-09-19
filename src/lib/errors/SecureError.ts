@@ -5,14 +5,14 @@
 export type ErrorSeverity = 'low' | 'medium' | 'high' | 'critical';
 
 export type ErrorCode =
-  | 'AUTH_001' | 'AUTH_002' | 'AUTH_003'  // Authentication errors
-  | 'CRYPTO_001' | 'CRYPTO_002' | 'CRYPTO_003'  // Encryption errors
-  | 'NETWORK_001' | 'NETWORK_002' | 'NETWORK_003'  // Network errors
-  | 'STORAGE_001' | 'STORAGE_002' | 'STORAGE_003'  // Storage errors
-  | 'WS_001' | 'WS_002' | 'WS_003'  // WebSocket errors
-  | 'FILE_001' | 'FILE_002' | 'FILE_003'  // File operation errors
-  | 'VALIDATION_001' | 'VALIDATION_002'  // Validation errors
-  | 'UNKNOWN_ERROR';  // Fallback
+  | 'AUTH_001' | 'AUTH_002' | 'AUTH_003'
+  | 'CRYPTO_001' | 'CRYPTO_002' | 'CRYPTO_003'
+  | 'NETWORK_001' | 'NETWORK_002' | 'NETWORK_003'
+  | 'STORAGE_001' | 'STORAGE_002' | 'STORAGE_003'
+  | 'WS_001' | 'WS_002' | 'WS_003'
+  | 'FILE_001' | 'FILE_002' | 'FILE_003'
+  | 'VALIDATION_001' | 'VALIDATION_002'
+  | 'UNKNOWN_ERROR';
 
 export class SecureError extends Error {
   constructor(
