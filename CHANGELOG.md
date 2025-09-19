@@ -1,3 +1,10 @@
+## [1.16.3](https://github.com/typelets/typelets-app/compare/v1.16.2...v1.16.3) (2025-09-19)
+
+
+### Bug Fixes
+
+* integrate desktop builds directly into release workflow ([14c068a](https://github.com/typelets/typelets-app/commit/14c068a963adee82346f5df116b6353d804f0370))
+
 ## [1.16.2](https://github.com/typelets/typelets-app/compare/v1.16.1...v1.16.2) (2025-09-19)
 
 
