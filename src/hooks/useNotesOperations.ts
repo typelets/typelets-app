@@ -3,6 +3,7 @@ import { api } from '@/lib/api/api';
 import type { Note, Folder } from '@/types/note';
 import type { UseWebSocketReturn } from './useWebSocket';
 import { secureLogger } from '@/lib/utils/secureLogger';
+import { SecureError, logSecureError, sanitizeError } from '@/lib/errors/SecureError';
 
 interface UseNotesOperationsParams {
   folders: Folder[];
@@ -45,8 +46,11 @@ export function useNotesOperations({
     ) => {
       try {
         if (!encryptionReady) {
-          throw new Error(
-            'Encryption not ready. Please wait a moment and try again.'
+          throw new SecureError(
+            'Note creation attempted without encryption ready',
+            'Encryption not ready. Please wait a moment and try again.',
+            'CRYPTO_001',
+            'medium'
           );
         }
 
@@ -76,9 +80,11 @@ export function useNotesOperations({
 
         return noteWithFolder;
       } catch (error) {
+        const secureError = sanitizeError(error, 'Failed to create note');
+        logSecureError(secureError, 'useNotesOperations.createNote');
         secureLogger.error('Note creation failed', error);
-        setError('Failed to create note');
-        throw error;
+        setError(secureError.userMessage);
+        throw secureError;
       }
     },
     [
@@ -191,8 +197,10 @@ export function useNotesOperations({
             webSocket.sendNoteUpdate(noteId, updates);
           }
         } catch (error) {
+          const secureError = sanitizeError(error, 'Failed to update note');
+          logSecureError(secureError, 'useNotesOperations.updateNote.immediate');
           secureLogger.error('Failed to update note:', error);
-          setError('Failed to update note');
+          setError(secureError.userMessage);
           void loadData();
         }
       } else {
@@ -202,8 +210,11 @@ export function useNotesOperations({
               !encryptionReady &&
               (updates.title !== undefined || updates.content !== undefined)
             ) {
-              throw new Error(
-                'Encryption not ready. Please wait a moment and try again.'
+              throw new SecureError(
+                'Note update attempted without encryption ready',
+                'Encryption not ready. Please wait a moment and try again.',
+                'CRYPTO_001',
+                'medium'
               );
             }
 
@@ -224,11 +235,13 @@ export function useNotesOperations({
 
             saveTimeoutsRef.current.delete(noteId);
           } catch (error) {
+            const secureError = sanitizeError(error, 'Failed to update note');
+            logSecureError(secureError, 'useNotesOperations.updateNote.delayed');
             secureLogger.error('Failed to update note (delayed):', error);
-            if (error instanceof Error && error.message.includes('encrypt')) {
+            if (error instanceof SecureError && error.code === 'CRYPTO_001') {
               setError('Failed to encrypt note changes. Please try again.');
             } else {
-              setError('Failed to update note');
+              setError(secureError.userMessage);
             }
             void loadData();
           }
@@ -261,8 +274,10 @@ export function useNotesOperations({
           webSocket.sendNoteDeleted(noteId);
         }
       } catch (error) {
+        const secureError = sanitizeError(error, 'Failed to delete note');
+        logSecureError(secureError, 'useNotesOperations.deleteNote');
         secureLogger.error('Failed to delete note:', error);
-        setError('Failed to delete note');
+        setError(secureError.userMessage);
       }
     },
     [updateNote, webSocket, setError]
@@ -300,8 +315,10 @@ export function useNotesOperations({
           webSocket.sendNoteUpdate(noteId, { starred: updatedNote.starred });
         }
       } catch (error) {
+        const secureError = sanitizeError(error, 'Failed to toggle star');
+        logSecureError(secureError, 'useNotesOperations.toggleStar');
         secureLogger.error('Failed to toggle star:', error);
-        setError('Failed to toggle star');
+        setError(secureError.userMessage);
       }
     },
     [
@@ -319,6 +336,8 @@ export function useNotesOperations({
       try {
         await updateNote(noteId, { archived: true });
       } catch (error) {
+        const secureError = sanitizeError(error, 'Failed to archive note');
+        logSecureError(secureError, 'useNotesOperations.archiveNote');
         secureLogger.error('Failed to archive note:', error);
       }
     },
@@ -340,8 +359,10 @@ export function useNotesOperations({
           webSocket.sendNoteUpdate(noteId, { deleted: restoredNote.deleted });
         }
       } catch (error) {
+        const secureError = sanitizeError(error, 'Failed to restore note');
+        logSecureError(secureError, 'useNotesOperations.restoreNote');
         secureLogger.error('Failed to restore note:', error);
-        setError('Failed to restore note');
+        setError(secureError.userMessage);
       }
     },
     [convertApiNote, setNotes, webSocket, setError]
@@ -381,8 +402,10 @@ export function useNotesOperations({
           });
         }
       } catch (error) {
+        const secureError = sanitizeError(error, 'Failed to hide note');
+        logSecureError(secureError, 'useNotesOperations.hideNote');
         secureLogger.error('Failed to hide note:', error);
-        setError('Failed to hide note');
+        setError(secureError.userMessage);
       }
     },
     [
@@ -429,8 +452,10 @@ export function useNotesOperations({
           });
         }
       } catch (error) {
+        const secureError = sanitizeError(error, 'Failed to unhide note');
+        logSecureError(secureError, 'useNotesOperations.unhideNote');
         secureLogger.error('Failed to unhide note:', error);
-        setError('Failed to unhide note');
+        setError(secureError.userMessage);
       }
     },
     [
@@ -498,9 +523,11 @@ export function useNotesOperations({
 
         return newFolder;
       } catch (error) {
+        const secureError = sanitizeError(error, 'Failed to create folder');
+        logSecureError(secureError, 'useNotesOperations.createFolder');
         secureLogger.error('Failed to create folder:', error);
-        setError('Failed to create folder');
-        throw error;
+        setError(secureError.userMessage);
+        throw secureError;
       }
     },
     [setFolders, webSocket, setError]
@@ -529,9 +556,11 @@ export function useNotesOperations({
 
         return updatedFolder;
       } catch (error) {
+        const secureError = sanitizeError(error, 'Failed to update folder');
+        logSecureError(secureError, 'useNotesOperations.updateFolder');
         secureLogger.error('Failed to update folder:', error);
-        setError('Failed to update folder');
-        throw error;
+        setError(secureError.userMessage);
+        throw secureError;
       }
     },
     [safeConvertDates, setFolders, webSocket, setError]
@@ -560,8 +589,10 @@ export function useNotesOperations({
           webSocket.sendFolderDeleted(folderId);
         }
       } catch (error) {
+        const secureError = sanitizeError(error, 'Failed to delete folder');
+        logSecureError(secureError, 'useNotesOperations.deleteFolder');
         secureLogger.error('Failed to delete folder:', error);
-        setError('Failed to delete folder');
+        setError(secureError.userMessage);
       }
     },
     [

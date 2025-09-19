@@ -6,6 +6,7 @@ import {
 } from './constants';
 import { secureStorage } from './secureStorage';
 import { SecureString } from '../utils/secureString';
+import { SecureError, SECURE_ERRORS, logSecureError } from '../errors/SecureError';
 
 export interface EncryptedNote {
   encryptedTitle: string;
@@ -34,8 +35,11 @@ class EncryptionService {
 
   constructor() {
     if (typeof window !== 'undefined' && !window.crypto?.subtle) {
-      throw new Error(
-        'Web Crypto API not available. HTTPS required for encryption.'
+      throw new SecureError(
+        'Web Crypto API not available in current environment',
+        'Encryption not available. Please use HTTPS.',
+        'CRYPTO_001',
+        'critical'
       );
     }
 
@@ -69,6 +73,15 @@ class EncryptionService {
     masterPassword: string | SecureString,
     userId: string
   ): Promise<void> {
+    if (!userId) {
+      throw new SecureError(
+        'Master password setup attempted without user ID',
+        'Authentication required',
+        'AUTH_001',
+        'high'
+      );
+    }
+
     const securePassword =
       typeof masterPassword === 'string'
         ? new SecureString(masterPassword)
@@ -113,6 +126,14 @@ class EncryptionService {
       if (localStorage.getItem(oldKey)) {
         localStorage.removeItem(oldKey);
       }
+    } catch (error) {
+      throw new SecureError(
+        `Master password setup failed: ${error}`,
+        'Failed to setup master password. Please try again.',
+        'CRYPTO_003',
+        'high',
+        error
+      );
     } finally {
       // Always clear the secure password from memory
       if (typeof masterPassword === 'string') {
@@ -191,7 +212,16 @@ class EncryptionService {
 
       return true;
     } catch (error) {
-      console.error('Failed to unlock with master password:', error);
+      logSecureError(
+        new SecureError(
+          `Master password unlock failed: ${error}`,
+          'Invalid password. Please try again.',
+          'CRYPTO_003',
+          'high',
+          error
+        ),
+        'unlockWithMasterPassword'
+      );
       return false;
     } finally {
       // Always clear the secure password from memory
@@ -231,8 +261,18 @@ class EncryptionService {
   }
 
   async deriveKey(userId: string, salt: Uint8Array): Promise<CryptoKey> {
-    const encoder = new TextEncoder();
-    const userSecret = await this.getUserSecret(userId);
+    if (!userId) {
+      throw new SecureError(
+        'Key derivation attempted without user ID',
+        'Authentication required',
+        'CRYPTO_003',
+        'high'
+      );
+    }
+
+    try {
+      const encoder = new TextEncoder();
+      const userSecret = await this.getUserSecret(userId);
 
     if (
       this.masterPasswordMode &&
@@ -273,6 +313,15 @@ class EncryptionService {
       false,
       ['encrypt', 'decrypt']
     );
+    } catch (error) {
+      throw new SecureError(
+        `Key derivation failed: ${error}`,
+        'Failed to generate encryption key',
+        'CRYPTO_003',
+        'high',
+        error
+      );
+    }
   }
 
   async encryptNote(
@@ -281,57 +330,72 @@ class EncryptionService {
     content: string
   ): Promise<EncryptedNote> {
     if (!userId) {
-      throw new Error('User ID is required for encryption');
+      throw new SecureError(
+        'Encryption attempted without user ID',
+        'Authentication required for encryption',
+        'CRYPTO_001',
+        'high'
+      );
     }
 
-    const salt = crypto.getRandomValues(
-      new Uint8Array(ENCRYPTION_CONFIG.SALT_LENGTH)
-    );
-    const iv = crypto.getRandomValues(
-      new Uint8Array(ENCRYPTION_CONFIG.IV_LENGTH)
-    );
-    const key = await this.deriveKey(userId, salt);
+    try {
+      const salt = crypto.getRandomValues(
+        new Uint8Array(ENCRYPTION_CONFIG.SALT_LENGTH)
+      );
+      const iv = crypto.getRandomValues(
+        new Uint8Array(ENCRYPTION_CONFIG.IV_LENGTH)
+      );
+      const key = await this.deriveKey(userId, salt);
 
-    const encoder = new TextEncoder();
-    const titleBytes = encoder.encode(title || '');
-    const contentBytes = encoder.encode(content || '');
+      const encoder = new TextEncoder();
+      const titleBytes = encoder.encode(title || '');
+      const contentBytes = encoder.encode(content || '');
 
-    const encryptedTitleBuffer = await crypto.subtle.encrypt(
-      { name: ENCRYPTION_CONFIG.ALGORITHM, iv },
-      key,
-      titleBytes
-    );
-
-    const encryptedContentBuffer = await crypto.subtle.encrypt(
-      { name: ENCRYPTION_CONFIG.ALGORITHM, iv },
-      key,
-      contentBytes
-    );
-
-    if (
-      this.masterPasswordMode &&
-      !localStorage.getItem(`test_encryption_${userId}`)
-    ) {
-      const testData = await crypto.subtle.encrypt(
+      const encryptedTitleBuffer = await crypto.subtle.encrypt(
         { name: ENCRYPTION_CONFIG.ALGORITHM, iv },
         key,
-        encoder.encode('test')
+        titleBytes
       );
-      localStorage.setItem(
-        `test_encryption_${userId}`,
-        JSON.stringify({
-          data: this.arrayBufferToBase64(testData),
-          iv: this.arrayBufferToBase64(iv),
-        })
+
+      const encryptedContentBuffer = await crypto.subtle.encrypt(
+        { name: ENCRYPTION_CONFIG.ALGORITHM, iv },
+        key,
+        contentBytes
+      );
+
+      if (
+        this.masterPasswordMode &&
+        !localStorage.getItem(`test_encryption_${userId}`)
+      ) {
+        const testData = await crypto.subtle.encrypt(
+          { name: ENCRYPTION_CONFIG.ALGORITHM, iv },
+          key,
+          encoder.encode('test')
+        );
+        localStorage.setItem(
+          `test_encryption_${userId}`,
+          JSON.stringify({
+            data: this.arrayBufferToBase64(testData),
+            iv: this.arrayBufferToBase64(iv),
+          })
+        );
+      }
+
+      return {
+        encryptedTitle: this.arrayBufferToBase64(encryptedTitleBuffer),
+        encryptedContent: this.arrayBufferToBase64(encryptedContentBuffer),
+        iv: this.arrayBufferToBase64(iv),
+        salt: this.arrayBufferToBase64(salt),
+      };
+    } catch (error) {
+      throw new SecureError(
+        `Encryption failed for user ${userId}: ${error}`,
+        'Failed to encrypt note. Please try again.',
+        'CRYPTO_001',
+        'high',
+        error
       );
     }
-
-    return {
-      encryptedTitle: this.arrayBufferToBase64(encryptedTitleBuffer),
-      encryptedContent: this.arrayBufferToBase64(encryptedContentBuffer),
-      iv: this.arrayBufferToBase64(iv),
-      salt: this.arrayBufferToBase64(salt),
-    };
   }
 
   async decryptNote(
@@ -387,8 +451,14 @@ class EncryptionService {
       });
 
       return result;
-    } catch {
-      throw new Error('Failed to decrypt note.');
+    } catch (error) {
+      throw new SecureError(
+        `Decryption failed for user ${userId}: ${error}`,
+        'Unable to decrypt note. Please check your password.',
+        'CRYPTO_002',
+        'high',
+        error
+      );
     }
   }
 

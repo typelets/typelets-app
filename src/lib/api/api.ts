@@ -3,12 +3,16 @@ import {
   decryptNoteData,
   isNoteEncrypted,
 } from '../encryption';
+import { SecureError, logSecureError, sanitizeError } from '../errors/SecureError';
 
 const VITE_API_URL = import.meta.env.VITE_API_URL as string;
 
 if (!VITE_API_URL) {
-  throw new Error(
-    'Missing API Base URL - Please add VITE_API_URL to your environment variables'
+  throw new SecureError(
+    'VITE_API_URL environment variable not set',
+    'Configuration error. Please contact support.',
+    'NETWORK_003',
+    'critical'
   );
 }
 
@@ -100,14 +104,22 @@ class ClerkEncryptedApiService {
     options: RequestInit = {}
   ): Promise<T> {
     if (!this.getToken) {
-      throw new Error(
-        'Token provider not set. Make sure to call setTokenProvider first.'
+      throw new SecureError(
+        'API token provider not configured',
+        'Authentication setup error. Please try logging in again.',
+        'AUTH_001',
+        'high'
       );
     }
 
     const token = await this.getToken();
     if (!token) {
-      throw new Error('No authentication token available');
+      throw new SecureError(
+        'No authentication token available from provider',
+        'Please log in to continue.',
+        'AUTH_002',
+        'high'
+      );
     }
 
     const url = `${VITE_API_URL.replace(/\/$/, '')}/${endpoint.replace(/^\//, '')}`;
@@ -125,25 +137,47 @@ class ClerkEncryptedApiService {
       const response = await fetch(url, config);
 
       if (response.status === 401) {
-        throw new Error('Authentication required');
+        throw new SecureError(
+          'API request returned 401 unauthorized',
+          'Your session has expired. Please log in again.',
+          'AUTH_002',
+          'high'
+        );
       }
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error(`API Error: ${response.status} - ${errorText}`);
-        throw new Error(`API Error: ${response.status} - ${errorText}`);
+        const secureError = new SecureError(
+          `API Error: ${response.status} - ${errorText}`,
+          response.status >= 500
+            ? 'Server error occurred. Please try again later.'
+            : 'Request failed. Please try again.',
+          response.status >= 500 ? 'NETWORK_003' : 'NETWORK_002',
+          response.status >= 500 ? 'medium' : 'low'
+        );
+        logSecureError(secureError, 'ApiService.request');
+        throw secureError;
       }
 
       return response.json() as Promise<T>;
     } catch (error) {
-      console.error('API Request failed:', error);
-      throw error;
+      if (error instanceof SecureError) {
+        throw error;
+      }
+      const secureError = sanitizeError(error, 'Network request failed. Please check your connection.');
+      logSecureError(secureError, 'ApiService.request');
+      throw secureError;
     }
   }
 
   private async decryptApiNote(apiNote: ApiNote): Promise<ApiNote> {
     if (!this.currentUserId) {
-      throw new Error('User ID not set for encryption');
+      throw new SecureError(
+        'Decryption attempted without user ID set',
+        'Authentication required for decryption',
+        'CRYPTO_002',
+        'high'
+      );
     }
 
     if (isNoteEncrypted(apiNote)) {
@@ -162,7 +196,8 @@ class ClerkEncryptedApiService {
           content,
         };
       } catch (error) {
-        console.error('Failed to decrypt note:', apiNote.id, error);
+        const secureError = sanitizeError(error, 'Failed to decrypt note');
+        logSecureError(secureError, `ApiService.decryptApiNote:${apiNote.id}`);
         return {
           ...apiNote,
           title: '🔒 Encrypted Note (Decryption Failed)',
@@ -185,7 +220,12 @@ class ClerkEncryptedApiService {
     salt: string;
   }> {
     if (!this.currentUserId) {
-      throw new Error('User ID not set for encryption');
+      throw new SecureError(
+        'Encryption attempted without user ID set',
+        'Authentication required for encryption',
+        'CRYPTO_001',
+        'high'
+      );
     }
 
     return encryptNoteData(this.currentUserId, title, content);

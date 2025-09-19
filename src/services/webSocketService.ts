@@ -16,6 +16,7 @@ import {
   verifyWebSocketMessage,
   clearMessageAuth,
 } from '@/lib/utils/messageAuth';
+import { SecureError, logSecureError, SECURE_ERRORS } from '@/lib/errors/SecureError';
 
 // Debug logging utility with security safeguards
 // Set to false to disable debug logs, or use DEBUG_WEBSOCKET=true env var to enable
@@ -134,9 +135,15 @@ class WebSocketService implements WebSocketServiceInterface {
       this.setupWebSocketHandlers();
     } catch (error) {
       debugLog('Connection', 'Connection failed', error);
-      this.handleConnectionError(
-        error instanceof Error ? error.message : 'Connection failed'
+      const secureError = new SecureError(
+        `WebSocket connection failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        'Unable to connect to server. Please check your internet connection.',
+        'WS_001',
+        'medium',
+        error
       );
+      logSecureError(secureError, 'WebSocketService.connect');
+      this.handleConnectionError(secureError.userMessage);
     }
   }
 
@@ -204,6 +211,14 @@ class WebSocketService implements WebSocketServiceInterface {
       this.messageAuthEnabled = true;
       debugLog('Auth', 'Message authentication initialized successfully');
     } catch (error) {
+      const secureError = new SecureError(
+        `Message authentication initialization failed: ${error}`,
+        'Security features temporarily unavailable',
+        'WS_002',
+        'high',
+        error
+      );
+      logSecureError(secureError, 'WebSocketService.initializeMessageAuth');
       debugLog('Auth', 'Failed to initialize message authentication', error);
       // Continue without message auth - graceful degradation
       this.messageAuthEnabled = false;
@@ -435,10 +450,17 @@ class WebSocketService implements WebSocketServiceInterface {
           );
 
           // SECURITY: Strict mode - disconnect on authentication failure
+          const authError = new SecureError(
+            'WebSocket message signature verification failed',
+            'Security validation failed. Reconnecting for safety.',
+            'WS_002',
+            'critical'
+          );
+          logSecureError(authError, 'WebSocketService.handleIncomingMessage');
+
           this.eventHandlers.onError?.({
             type: 'error',
-            message:
-              'Message authentication failed - connection terminated for security',
+            message: authError.userMessage,
             code: 'AUTH_FAILED_STRICT',
           });
 
@@ -508,9 +530,17 @@ class WebSocketService implements WebSocketServiceInterface {
           debugLog('Auth', `Authentication failed: ${message.message}`);
 
           // Emit auth failure to trigger token refresh in the hook
+          const authFailedError = new SecureError(
+            `WebSocket authentication failed: ${message.message}`,
+            'Authentication failed. Please log in again.',
+            'WS_002',
+            'high'
+          );
+          logSecureError(authFailedError, 'WebSocketService.auth_failed');
+
           this.eventHandlers.onError?.({
             type: 'error',
-            message: `Authentication failed: ${message.message}`,
+            message: authFailedError.userMessage,
             code: 'AUTH_FAILED',
           });
           break;
@@ -583,9 +613,18 @@ class WebSocketService implements WebSocketServiceInterface {
       debugLog('Receive', 'Error handling message', { error, rawMessage });
 
       // Emit error to handlers but don't crash the connection
+      const messageError = new SecureError(
+        `WebSocket message handling error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        'Connection error occurred. Please try again.',
+        'WS_003',
+        'medium',
+        error
+      );
+      logSecureError(messageError, 'WebSocketService.handleIncomingMessage');
+
       this.eventHandlers.onError?.({
         type: 'error',
-        message: `Message handling error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        message: messageError.userMessage,
         code: 'MESSAGE_HANDLING_ERROR',
       });
     }
@@ -617,9 +656,15 @@ class WebSocketService implements WebSocketServiceInterface {
             'Message signing failed, dropping message for security',
             error
           );
-          throw new Error(
-            'Message authentication failed - message dropped for security'
+          const signingError = new SecureError(
+            `WebSocket message signing failed: ${error}`,
+            'Unable to secure message. Please try again.',
+            'WS_002',
+            'high',
+            error
           );
+          logSecureError(signingError, 'WebSocketService.sendMessage');
+          throw signingError;
         }
       } else {
         // Only allow unsigned messages when message auth is not yet initialized
@@ -642,9 +687,14 @@ class WebSocketService implements WebSocketServiceInterface {
             'Send',
             'Rejecting unsigned message - authentication required'
           );
-          throw new Error(
-            'Cannot send unsigned message in authenticated session'
+          const unsignedError = new SecureError(
+            'Attempted to send unsigned message in authenticated session',
+            'Security error occurred. Please reconnect.',
+            'WS_002',
+            'critical'
           );
+          logSecureError(unsignedError, 'WebSocketService.sendMessage');
+          throw unsignedError;
         }
       }
 
