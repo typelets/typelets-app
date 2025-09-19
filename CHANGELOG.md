@@ -1,3 +1,10 @@
+## [1.16.2](https://github.com/typelets/typelets-app/compare/v1.16.1...v1.16.2) (2025-09-19)
+
+
+### Bug Fixes
+
+* only run attach-assets job for release events ([48bd108](https://github.com/typelets/typelets-app/commit/48bd1084cfbed3edf72d93ba0796d6ba64dac55f))
+
 ## [1.16.1](https://github.com/typelets/typelets-app/compare/v1.16.0...v1.16.1) (2025-09-19)
 
 
