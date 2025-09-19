@@ -1,3 +1,10 @@
+## [1.16.7](https://github.com/typelets/typelets-app/compare/v1.16.6...v1.16.7) (2025-09-19)
+
+
+### Bug Fixes
+
+* include desktop package.json in semantic-release assets and add build debugging ([ab67482](https://github.com/typelets/typelets-app/commit/ab674820929dbe8fea78b17dd52d578bf5e82192))
+
 ## [1.16.6](https://github.com/typelets/typelets-app/compare/v1.16.5...v1.16.6) (2025-09-19)
 
 
