@@ -1,3 +1,10 @@
+## [1.16.11](https://github.com/typelets/typelets-app/compare/v1.16.10...v1.16.11) (2025-09-19)
+
+
+### Bug Fixes
+
+* improve desktop workflow debugging and artifact upload ([af95e42](https://github.com/typelets/typelets-app/commit/af95e42fe410d40e2478eb2488d5c0563b967e19))
+
 ## [1.16.10](https://github.com/typelets/typelets-app/compare/v1.16.9...v1.16.10) (2025-09-19)
 
 
