@@ -52,16 +52,18 @@ jobs:
       - name: Build desktop app
         run: cd apps/desktop && npm run build:${{ matrix.platform }}
 
+      - name: List built files
+        run: |
+          echo "=== Contents of apps/desktop/dist ==="
+          ls -la apps/desktop/dist/ || echo "No dist directory"
+          find apps/desktop -name "*.exe" -o -name "*.dmg" -o -name "*.AppImage" || echo "No executables found"
+        shell: bash
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: typelets-${{ matrix.platform }}
-          path: |
-            apps/desktop/dist/*.exe
-            apps/desktop/dist/*.dmg
-            apps/desktop/dist/*.AppImage
-            apps/desktop/dist/*.deb
-            apps/desktop/dist/*.rpm
+          path: apps/desktop/dist/
           retention-days: 90
 
   attach-assets:
