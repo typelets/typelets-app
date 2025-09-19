@@ -1,3 +1,11 @@
+## [1.17.2](https://github.com/typelets/typelets-app/compare/v1.17.1...v1.17.2) (2025-09-19)
+
+
+### Bug Fixes
+
+* restore status bar word count and remove note ID display ([9d53e60](https://github.com/typelets/typelets-app/commit/9d53e6088ff6f37420938bb37d9b6e2a1de4f2c0))
+* restore status bar word count and remove note ID display ([881d69a](https://github.com/typelets/typelets-app/commit/881d69ac2e59eba702bff993b33c340e0155209d))
+
 ## [1.17.1](https://github.com/typelets/typelets-app/compare/v1.17.0...v1.17.1) (2025-09-19)
 
 
