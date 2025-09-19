@@ -1,3 +1,10 @@
+## [1.17.4](https://github.com/typelets/typelets-app/compare/v1.17.3...v1.17.4) (2025-09-19)
+
+
+### Bug Fixes
+
+* implement secure error handling system and improve README badges ([8930dc9](https://github.com/typelets/typelets-app/commit/8930dc9c092f948108d53d75aac0ba610ff087a5))
+
 ## [1.17.3](https://github.com/typelets/typelets-app/compare/v1.17.2...v1.17.3) (2025-09-19)
 
 
