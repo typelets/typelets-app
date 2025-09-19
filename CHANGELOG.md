@@ -1,3 +1,10 @@
+## [1.16.10](https://github.com/typelets/typelets-app/compare/v1.16.9...v1.16.10) (2025-09-19)
+
+
+### Bug Fixes
+
+* test desktop workflow trigger for v1.16.10 ([633dce3](https://github.com/typelets/typelets-app/commit/633dce37409ee96237c8efbf20d935deb2ca214d))
+
 ## [1.16.9](https://github.com/typelets/typelets-app/compare/v1.16.8...v1.16.9) (2025-09-19)
 
 
