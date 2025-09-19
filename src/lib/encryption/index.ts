@@ -6,7 +6,7 @@ import {
 } from './constants';
 import { secureStorage } from './secureStorage';
 import { SecureString } from '../utils/secureString';
-import { SecureError, SECURE_ERRORS, logSecureError } from '../errors/SecureError';
+import { SecureError, logSecureError } from '../errors/SecureError';
 
 export interface EncryptedNote {
   encryptedTitle: string;

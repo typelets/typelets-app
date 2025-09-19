@@ -16,7 +16,7 @@ import {
   verifyWebSocketMessage,
   clearMessageAuth,
 } from '@/lib/utils/messageAuth';
-import { SecureError, logSecureError, SECURE_ERRORS } from '@/lib/errors/SecureError';
+import { SecureError, logSecureError } from '@/lib/errors/SecureError';
 
 // Debug logging utility with security safeguards
 // Set to false to disable debug logs, or use DEBUG_WEBSOCKET=true env var to enable
@@ -524,7 +524,7 @@ class WebSocketService implements WebSocketServiceInterface {
           this.eventHandlers.onAuthenticated?.(message.userId);
           break;
 
-        case 'auth_failed':
+        case 'auth_failed': {
           this.state.isAuthenticated = false;
           this.state.userId = null;
           debugLog('Auth', `Authentication failed: ${message.message}`);
@@ -544,6 +544,7 @@ class WebSocketService implements WebSocketServiceInterface {
             code: 'AUTH_FAILED',
           });
           break;
+        }
 
         case 'note_sync':
           // Validate note sync message structure

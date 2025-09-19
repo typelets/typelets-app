@@ -102,7 +102,7 @@ export function logSecureError(error: SecureError, context?: string): void {
       console.warn('[SECURITY]', logData);
       break;
     case 'low':
-      console.info('[SECURITY]', logData);
+      console.warn('[SECURITY]', logData);
       break;
   }
 }
