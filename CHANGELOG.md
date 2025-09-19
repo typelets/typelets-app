@@ -1,3 +1,15 @@
+## [1.16.15](https://github.com/typelets/typelets-app/compare/v1.16.14...v1.16.15) (2025-09-19)
+
+
+### Bug Fixes
+
+* remove problematic empty environment variables for Windows build ([27fbe0a](https://github.com/typelets/typelets-app/commit/27fbe0a5817eb00cd592399ac3555fc408472bdb))
+
+
+### Reverts
+
+* use Windows runners for Windows builds ([7d82289](https://github.com/typelets/typelets-app/commit/7d822893af35085b4812b620a22a531bb61267c5))
+
 ## [1.16.14](https://github.com/typelets/typelets-app/compare/v1.16.13...v1.16.14) (2025-09-19)
 
 
