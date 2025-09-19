@@ -79,7 +79,7 @@ jobs:
     name: Build Desktop Apps
     needs: release
     runs-on: ${{ matrix.os }}
-    if: needs.release.outputs.released == 'true'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     strategy:
       matrix:
@@ -120,10 +120,16 @@ jobs:
       - name: Build desktop app
         run: cd apps/desktop && npm run build:${{ matrix.platform }}
 
+      - name: Get latest release
+        id: latest_release
+        run: |
+          LATEST_TAG=$(curl -s "https://api.github.com/repos/${{ github.repository }}/releases/latest" | jq -r .tag_name)
+          echo "tag=$LATEST_TAG" >> $GITHUB_OUTPUT
+
       - name: Upload artifacts to latest release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: v${{ needs.release.outputs.version }}
+          tag_name: ${{ steps.latest_release.outputs.tag }}
           files: |
             apps/desktop/dist/*.exe
             apps/desktop/dist/*.dmg
