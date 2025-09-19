@@ -1,3 +1,10 @@
+## [1.17.3](https://github.com/typelets/typelets-app/compare/v1.17.2...v1.17.3) (2025-09-19)
+
+
+### Bug Fixes
+
+* improve status bar display and scrollbar styling ([4cdeb8e](https://github.com/typelets/typelets-app/commit/4cdeb8e6b4a74a6092221e2a810f166395e2ac38))
+
 ## [1.17.2](https://github.com/typelets/typelets-app/compare/v1.17.1...v1.17.2) (2025-09-19)
 
 
