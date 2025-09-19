@@ -1,3 +1,10 @@
+## [1.16.13](https://github.com/typelets/typelets-app/compare/v1.16.12...v1.16.13) (2025-09-19)
+
+
+### Bug Fixes
+
+* enable asset attachment for manual workflow triggers ([60262d6](https://github.com/typelets/typelets-app/commit/60262d6c2a563b68960824eeb5bda6dab624a9b6))
+
 ## [1.16.12](https://github.com/typelets/typelets-app/compare/v1.16.11...v1.16.12) (2025-09-19)
 
 
