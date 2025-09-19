@@ -1,3 +1,10 @@
+## [1.16.5](https://github.com/typelets/typelets-app/compare/v1.16.4...v1.16.5) (2025-09-19)
+
+
+### Bug Fixes
+
+* use cross-platform GitHub script for getting latest release tag ([eb1c53d](https://github.com/typelets/typelets-app/commit/eb1c53d57a0e9be8b1d22891c519af18588b4f8a))
+
 ## [1.16.4](https://github.com/typelets/typelets-app/compare/v1.16.3...v1.16.4) (2025-09-19)
 
 
