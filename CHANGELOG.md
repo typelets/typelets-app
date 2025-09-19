@@ -1,3 +1,10 @@
+## [1.16.12](https://github.com/typelets/typelets-app/compare/v1.16.11...v1.16.12) (2025-09-19)
+
+
+### Bug Fixes
+
+* run Windows desktop build on Ubuntu to avoid permission issues ([1820e56](https://github.com/typelets/typelets-app/commit/1820e565c5e646bf2568334e702f82b7be185718))
+
 ## [1.16.11](https://github.com/typelets/typelets-app/compare/v1.16.10...v1.16.11) (2025-09-19)
 
 
