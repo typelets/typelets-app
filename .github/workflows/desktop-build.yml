@@ -76,13 +76,16 @@ jobs:
         with:
           path: release-artifacts
 
+      - name: List downloaded artifacts
+        run: find release-artifacts -type f -name "*" | head -20
+
       - name: Attach assets to release
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ github.event.release.tag_name }}
           files: |
-            release-artifacts/typelets-win/*.exe
-            release-artifacts/typelets-mac/*.dmg
-            release-artifacts/typelets-linux/*.AppImage
+            release-artifacts/**/*.exe
+            release-artifacts/**/*.dmg
+            release-artifacts/**/*.AppImage
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
