@@ -75,3 +75,11 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npx semantic-release
 
+      - name: Trigger Desktop Build
+        if: steps.semantic.outputs.new_release_published == 'true'
+        uses: peter-evans/repository-dispatch@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          event-type: desktop-build
+          client-payload: '{"version": "${{ steps.semantic.outputs.new_release_version }}"}'
+
