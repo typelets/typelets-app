@@ -120,21 +120,17 @@ jobs:
       - name: Build desktop app
         run: cd apps/desktop && npm run build:${{ matrix.platform }}
 
-      - name: Get latest release
-        id: latest_release
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const { data: release } = await github.rest.repos.getLatestRelease({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-            });
-            core.setOutput('tag', release.tag_name);
+      - name: Get current version
+        id: current_version
+        run: |
+          VERSION=$(grep -o "[0-9]\+\.[0-9]\+\.[0-9]\+" src/constants/version.ts)
+          echo "tag=v$VERSION" >> $GITHUB_OUTPUT
+        shell: bash
 
-      - name: Upload artifacts to latest release
+      - name: Upload artifacts to current release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ steps.latest_release.outputs.tag }}
+          tag_name: ${{ steps.current_version.outputs.tag }}
           files: |
             apps/desktop/dist/*.exe
             apps/desktop/dist/*.dmg
