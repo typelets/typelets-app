@@ -748,7 +748,6 @@ export default function Index({
           scrollPercentage={scrollPercentage}
           zoomLevel={zoomLevel}
           saveStatus={saveStatus}
-          noteId={note?.id}
           onZoomIn={handleZoomIn}
           onZoomOut={handleZoomOut}
           onResetZoom={resetZoom}

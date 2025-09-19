@@ -9,7 +9,6 @@ interface StatusBarProps {
   scrollPercentage: number;
   zoomLevel: number;
   saveStatus: 'saved' | 'saving' | 'error';
-  noteId?: string;
   onZoomIn: () => void;
   onZoomOut: () => void;
   onResetZoom: () => void;
@@ -29,7 +28,6 @@ export function StatusBar({
   scrollPercentage,
   zoomLevel,
   saveStatus,
-  noteId,
   onZoomIn,
   onZoomOut,
   onResetZoom,
