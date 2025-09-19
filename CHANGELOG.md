@@ -1,3 +1,10 @@
+## [1.16.4](https://github.com/typelets/typelets-app/compare/v1.16.3...v1.16.4) (2025-09-19)
+
+
+### Bug Fixes
+
+* ensure desktop builds always run on main pushes and use latest release tag ([a17d907](https://github.com/typelets/typelets-app/commit/a17d907bc261f19b4785fa9d6d299f7e013a4e82))
+
 ## [1.16.3](https://github.com/typelets/typelets-app/compare/v1.16.2...v1.16.3) (2025-09-19)
 
 
