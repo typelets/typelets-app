@@ -16,7 +16,7 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: ubuntu-latest
+          - os: windows-latest
             platform: win
             artifact: exe
           - os: macos-latest
@@ -39,12 +39,6 @@ jobs:
         with:
           node-version: '20'
           cache: 'pnpm'
-
-      - name: Install Wine (for Windows builds on Ubuntu)
-        if: matrix.platform == 'win'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y wine64
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
