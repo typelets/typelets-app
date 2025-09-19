@@ -1,14 +1,8 @@
 name: Desktop Build
 
 on:
-  push:
-    branches:
-      - main
-    tags:
-      - 'v*'
-  pull_request:
-    branches:
-      - main
+  release:
+    types: [published]
 
 permissions:
   contents: write
@@ -69,47 +63,24 @@ jobs:
             apps/desktop/dist/*.rpm
           retention-days: 90
 
-  release:
-    name: Create Release
+  attach-assets:
+    name: Attach Desktop Assets
     needs: build-desktop
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 2
-
-      - name: Check if version changed
-        id: version-check
-        run: |
-          if git diff HEAD~1 HEAD --name-only | grep -q "src/constants/version\.ts"; then
-            VERSION=$(node -p "const fs = require('fs'); const content = fs.readFileSync('src/constants/version.ts', 'utf8'); const match = content.match(/APP_VERSION = '([^']+)'/); match ? match[1] : '0.0.0'")
-            echo "version-changed=true" >> $GITHUB_OUTPUT
-            echo "new-version=v$VERSION" >> $GITHUB_OUTPUT
-          else
-            echo "version-changed=false" >> $GITHUB_OUTPUT
-          fi
-
       - name: Download all artifacts
-        if: steps.version-check.outputs.version-changed == 'true'
         uses: actions/download-artifact@v4
         with:
           path: release-artifacts
 
-      - name: Create Release
-        if: steps.version-check.outputs.version-changed == 'true'
+      - name: Attach assets to release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ steps.version-check.outputs.new-version }}
-          name: Release ${{ steps.version-check.outputs.new-version }}
+          tag_name: ${{ github.event.release.tag_name }}
           files: |
             release-artifacts/typelets-win/*.exe
             release-artifacts/typelets-mac/*.dmg
             release-artifacts/typelets-linux/*.AppImage
-          draft: false
-          prerelease: false
-          generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
