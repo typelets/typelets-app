@@ -27,7 +27,8 @@
 
 ## 📥 Download Desktop App
 
-[![Windows](https://img.shields.io/badge/Windows-Download-0078d4?style=for-the-badge&logo=windows)](https://github.com/typelets/typelets-app/releases/latest/download/Typelets-Setup.exe)
+[![Windows](https://img.shields.io/badge/Windows-Download-0078d4?style=for-the-badge&logo=windows)](
+  https://github.com/typelets/typelets-app/releases/latest)
 [![Mac](https://img.shields.io/badge/Mac-Coming%20Soon-lightgrey?style=for-the-badge&logo=apple)](https://github.com/typelets/typelets-app/releases)
 [![Linux](https://img.shields.io/badge/Linux-Coming%20Soon-lightgrey?style=for-the-badge&logo=linux)](https://github.com/typelets/typelets-app/releases)
 

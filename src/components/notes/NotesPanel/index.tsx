@@ -209,8 +209,7 @@ export default function FilesPanel({
   }
 
   return (
-    <div className="border-border bg-background flex h-full w-full flex-col overflow-hidden border-r transition-all duration-300 md:w-80"
-    >
+    <div className="border-border bg-background flex h-full w-full flex-col overflow-hidden border-r transition-all duration-300 md:w-80">
       <div className="border-border flex h-17 shrink-0 items-center justify-between border-b p-3">
         <div className="flex min-w-0 flex-1 items-center gap-4">
           {!isMobile && (

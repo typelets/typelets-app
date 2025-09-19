@@ -38,6 +38,7 @@ export function StatusBar({
   wsLastSync,
   onWsReconnect,
 }: StatusBarProps) {
+
   return (
     <div className="bg-primary/5 dark:bg-primary/10 flex items-center justify-between border-t px-3 py-0.5 font-sans text-[11px]">
       {/* Left side - Word, character count, and reading time */}
@@ -74,14 +75,14 @@ export function StatusBar({
         )}
 
         {/* Note ID */}
-        {noteId && (
+        {/* {noteId && (
           <span
             className="hover:bg-muted cursor-default rounded px-1.5 py-0.5"
             title="Note ID"
           >
             {noteId}
           </span>
-        )}
+        )} */}
 
         {/* Zoom controls */}
         <div className="flex items-center gap-1">
