@@ -1,3 +1,10 @@
+# [1.17.0](https://github.com/typelets/typelets-app/compare/v1.16.15...v1.17.0) (2025-09-19)
+
+
+### Features
+
+* implement repository_dispatch for automated desktop builds ([ec5b5ad](https://github.com/typelets/typelets-app/commit/ec5b5ad2ae2d938b5f4a62315b09530a141f7754))
+
 ## [1.16.15](https://github.com/typelets/typelets-app/compare/v1.16.14...v1.16.15) (2025-09-19)
 
 
