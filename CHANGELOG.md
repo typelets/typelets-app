@@ -1,3 +1,10 @@
+## [1.16.14](https://github.com/typelets/typelets-app/compare/v1.16.13...v1.16.14) (2025-09-19)
+
+
+### Bug Fixes
+
+* install Wine for Windows builds on Ubuntu ([f98529f](https://github.com/typelets/typelets-app/commit/f98529fff62f2a52f19fe772bcb3a01da614c7ac))
+
 ## [1.16.13](https://github.com/typelets/typelets-app/compare/v1.16.12...v1.16.13) (2025-09-19)
 
 
