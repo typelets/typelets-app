@@ -131,42 +131,35 @@
     font-family: var(--font-sans);
   }
 
-  /* Chrome scrollbar styling for Windows */
-  * {
-    scrollbar-width: thin;
-    scrollbar-color: oklch(0.556 0 0) transparent;
-  }
-
-  .dark * {
-    scrollbar-color: oklch(0.556 0 0) transparent;
-  }
-
-  /* Webkit scrollbars for Chrome/Safari */
+  /* Simple scrollbar styling */
   *::-webkit-scrollbar {
     width: 8px;
     height: 8px;
   }
 
   *::-webkit-scrollbar-track {
-    background: transparent;
+    background: #f1f1f1;
   }
 
   *::-webkit-scrollbar-thumb {
-    background-color: oklch(0.556 0 0);
+    background: #c1c1c1;
     border-radius: 4px;
-    border: 2px solid transparent;
-    background-clip: content-box;
   }
 
   *::-webkit-scrollbar-thumb:hover {
-    background-color: oklch(0.708 0 0);
+    background: #a8a8a8;
+  }
+
+  /* Dark mode */
+  .dark *::-webkit-scrollbar-track {
+    background: #2a2a2a;
   }
 
   .dark *::-webkit-scrollbar-thumb {
-    background-color: oklch(0.708 0 0);
+    background: #555;
   }
 
   .dark *::-webkit-scrollbar-thumb:hover {
-    background-color: oklch(0.556 0 0);
+    background: #777;
   }
 }

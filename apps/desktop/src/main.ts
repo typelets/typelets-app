@@ -31,8 +31,10 @@ function createWindow(): void {
     show: true
   });
 
+  // Always clear cache to ensure latest version
+  mainWindow.webContents.session.clearCache();
+
   if (isDev) {
-    mainWindow.webContents.session.clearCache();
     mainWindow.webContents.openDevTools();
   }
 

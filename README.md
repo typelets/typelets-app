@@ -6,6 +6,8 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![CI](https://github.com/typelets/typelets-app/actions/workflows/release.yml/badge.svg)](https://github.com/typelets/typelets-app/actions)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+[![Code Quality](https://img.shields.io/codefactor/grade/github/typelets/typelets-app?style=for-the-badge)](https://www.codefactor.io/repository/github/typelets/typelets-app)
+[![Commit Activity](https://img.shields.io/github/commit-activity/m/typelets/typelets-app?style=for-the-badge)](https://github.com/typelets/typelets-app/commits/main)
 
 [![React](https://img.shields.io/badge/React-19-blue?logo=react)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue?logo=typescript)](https://www.typescriptlang.org/)
