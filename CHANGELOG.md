@@ -3,6 +3,14 @@
 
 ### Bug Fixes
 
+* desktop build workflow artifact paths for release attachment ([36671c6](https://github.com/typelets/typelets-app/commit/36671c6449f703bc1c66b4f5e5c9ac319aa62cbc))
+* sync desktop app version to 1.16.6 ([c87e730](https://github.com/typelets/typelets-app/commit/c87e730a8c0d807d6fb51cef2c747663f9b48b3b))
+
+## [1.16.8](https://github.com/typelets/typelets-app/compare/v1.16.7...v1.16.8) (2025-09-19)
+
+
+### Bug Fixes
+
 * sync desktop app version to 1.16.6 ([7450817](https://github.com/typelets/typelets-app/commit/7450817b8e13821f28ac1c207279b3f8516252df))
 
 ## [1.16.7](https://github.com/typelets/typelets-app/compare/v1.16.6...v1.16.7) (2025-09-19)
