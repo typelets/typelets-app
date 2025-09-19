@@ -6,9 +6,6 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![CI](https://github.com/typelets/typelets-app/actions/workflows/release.yml/badge.svg)](https://github.com/typelets/typelets-app/actions)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
-[![Code Quality](https://img.shields.io/codefactor/grade/github/typelets/typelets-app?style=for-the-badge)](https://www.codefactor.io/repository/github/typelets/typelets-app)
-[![Commit Activity](https://img.shields.io/github/commit-activity/m/typelets/typelets-app?style=for-the-badge)](https://github.com/typelets/typelets-app/commits/main)
-
 [![React](https://img.shields.io/badge/React-19-blue?logo=react)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue?logo=typescript)](https://www.typescriptlang.org/)
 [![Vite](https://img.shields.io/badge/Vite-7-646CFF?logo=vite)](https://vitejs.dev/)
@@ -29,18 +26,16 @@
 
 ## 📥 Download Desktop App
 
-[![Windows](https://img.shields.io/badge/Windows-Download-0078d4?style=for-the-badge&logo=windows)](
-  https://github.com/typelets/typelets-app/releases/latest)
-[![Mac](https://img.shields.io/badge/Mac-Coming%20Soon-lightgrey?style=for-the-badge&logo=apple)](https://github.com/typelets/typelets-app/releases)
-[![Linux](https://img.shields.io/badge/Linux-Coming%20Soon-lightgrey?style=for-the-badge&logo=linux)](https://github.com/typelets/typelets-app/releases)
+[![Windows](https://img.shields.io/badge/Windows-Download-0078D4?style=for-the-badge)](https://github.com/typelets/typelets-app/releases/latest)
+[![Mac](https://img.shields.io/badge/Mac-Download-000000?style=for-the-badge)](https://github.com/typelets/typelets-app/releases)
+[![Linux](https://img.shields.io/badge/Linux-Download-E95420?style=for-the-badge)](https://github.com/typelets/typelets-app/releases)
 
-**Latest Release:** [![GitHub release](https://img.shields.io/github/v/release/typelets/typelets-app)](https://github.com/typelets/typelets-app/releases/latest)
+[![GitHub release](https://img.shields.io/github/v/release/typelets/typelets-app)](https://github.com/typelets/typelets-app/releases/latest)
 
 Get the native desktop experience with:
 - 🖥️ **Native desktop integration** - System tray, notifications, and OS-specific features
 - ⚡ **Better performance** - No browser overhead for faster note editing
 - 🔒 **Enhanced security** - Isolated environment with no browser extensions interference
-- 💾 **Offline-first** - Access your notes even without internet connection
 
 ## ✨ Features
 

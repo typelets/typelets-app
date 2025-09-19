@@ -4,6 +4,15 @@
 
 export type ErrorSeverity = 'low' | 'medium' | 'high' | 'critical';
 
+// Error codes:
+// AUTH_001-003: Authentication errors
+// CRYPTO_001-003: Encryption errors
+// NETWORK_001-003: Network errors
+// STORAGE_001-003: Storage errors
+// WS_001-003: WebSocket errors
+// FILE_001-003: File operation errors
+// VALIDATION_001-002: Validation errors
+// UNKNOWN_ERROR: Fallback
 export type ErrorCode =
   | 'AUTH_001' | 'AUTH_002' | 'AUTH_003'
   | 'CRYPTO_001' | 'CRYPTO_002' | 'CRYPTO_003'
@@ -15,15 +24,24 @@ export type ErrorCode =
   | 'UNKNOWN_ERROR';
 
 export class SecureError extends Error {
+  public readonly userMessage: string;
+  public readonly code: ErrorCode;
+  public readonly severity: ErrorSeverity;
+  public readonly originalError?: unknown;
+
   constructor(
     message: string,
-    public readonly userMessage: string,
-    public readonly code: ErrorCode,
-    public readonly severity: ErrorSeverity = 'medium',
-    public readonly originalError?: unknown
+    userMessage: string,
+    code: ErrorCode,
+    severity: ErrorSeverity = 'medium',
+    originalError?: unknown
   ) {
     super(message);
     this.name = 'SecureError';
+    this.userMessage = userMessage;
+    this.code = code;
+    this.severity = severity;
+    this.originalError = originalError;
   }
 
   /**
