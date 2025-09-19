@@ -1,3 +1,10 @@
+## [1.16.8](https://github.com/typelets/typelets-app/compare/v1.16.7...v1.16.8) (2025-09-19)
+
+
+### Bug Fixes
+
+* sync desktop app version to 1.16.6 ([7450817](https://github.com/typelets/typelets-app/commit/7450817b8e13821f28ac1c207279b3f8516252df))
+
 ## [1.16.7](https://github.com/typelets/typelets-app/compare/v1.16.6...v1.16.7) (2025-09-19)
 
 
