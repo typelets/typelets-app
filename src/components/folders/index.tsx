@@ -210,7 +210,7 @@ export default function FolderPanel({
 
   return (
     <>
-      <div className="border-border bg-background flex h-full w-full flex-col overflow-hidden border-r transition-all duration-300 md:w-64">
+      <div className="border-border bg-background flex h-full w-full flex-col overflow-hidden border-r transition-all duration-300 md:w-64 md:min-w-64 md:max-w-80">
         <div className="border-border h-17 shrink-0 border-b p-3">
           <div className="flex items-center justify-between">
             <h3 className="text-foreground text-lg font-semibold">Folders</h3>

@@ -23,10 +23,10 @@ export function DesktopLayout({
   editorProps,
 }: DesktopLayoutProps) {
   return (
-    <div className="bg-background flex h-screen">
+    <div className="bg-background flex h-screen overflow-hidden">
       <FolderPanel isOpen={folderSidebarOpen} {...folderPanelProps} />
       <NotesPanel isOpen={filesPanelOpen} {...filesPanelProps} />
-      <div className="flex flex-1 flex-col">
+      <div className="flex flex-1 flex-col min-w-0">
         <main className="flex-1 overflow-hidden">
           <Index {...editorProps} />
         </main>

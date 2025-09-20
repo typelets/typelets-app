@@ -10,6 +10,7 @@ import Color from '@tiptap/extension-color';
 import TextStyle from '@tiptap/extension-text-style';
 import { TableOfContents } from '../extensions/TableOfContents';
 import { ResizableImage } from '../extensions/ResizableImage';
+import { ExecutableCodeBlock } from '../extensions/ExecutableCodeBlock';
 import StarterKit from '@tiptap/starter-kit';
 import bash from 'highlight.js/lib/languages/bash';
 import cpp from 'highlight.js/lib/languages/cpp';
@@ -55,6 +56,12 @@ export function createEditorExtensions() {
       codeBlock: false,
       horizontalRule: false,
       dropcursor: false,
+    }),
+    ExecutableCodeBlock.configure({
+      defaultLanguage: 'javascript',
+      HTMLAttributes: {
+        class: 'executable-code-block',
+      },
     }),
     CodeBlockLowlight.configure({
       lowlight,

@@ -24,6 +24,7 @@ import {
   RemoveFormatting,
   Copy,
   Smile,
+  Codesandbox,
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button.tsx';
@@ -394,6 +395,15 @@ export function Toolbar({ editor }: ToolbarProps) {
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+
+      <Button
+        variant={editor.isActive('executableCodeBlock') ? 'default' : 'ghost'}
+        size="sm"
+        onClick={() => editor.chain().focus().setExecutableCodeBlock({ language: 'javascript', executable: true }).run()}
+        title="Executable Code Block"
+      >
+        <Codesandbox className="h-4 w-4" />
+      </Button>
 
       <Button
         variant={editor.isActive('blockquote') ? 'default' : 'ghost'}
