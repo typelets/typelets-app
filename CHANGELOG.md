@@ -1,3 +1,11 @@
+# [1.18.0](https://github.com/typelets/typelets-app/compare/v1.17.4...v1.18.0) (2025-09-20)
+
+
+### Features
+
+* add executable code blocks with 15+ languages, Monaco editor, and secure backend proxy ([c84c858](https://github.com/typelets/typelets-app/commit/c84c858520bed8c24f6fd51168e92efece1a2be3))
+* add executable code blocks with 15+ programming languages ([4d2febc](https://github.com/typelets/typelets-app/commit/4d2febcfe531e1af52380348e43adbfe95402087))
+
 ## [1.17.4](https://github.com/typelets/typelets-app/compare/v1.17.3...v1.17.4) (2025-09-19)
 
 
