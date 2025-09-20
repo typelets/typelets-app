@@ -399,7 +399,7 @@ export function Toolbar({ editor }: ToolbarProps) {
       <Button
         variant={editor.isActive('executableCodeBlock') ? 'default' : 'ghost'}
         size="sm"
-        onClick={() => editor.chain().focus().setExecutableCodeBlock({ language: 'javascript', executable: true }).run()}
+        onClick={() => editor.chain().focus().setExecutableCodeBlock({ language: 'javascript' }).run()}
         title="Executable Code Block"
       >
         <Codesandbox className="h-4 w-4" />

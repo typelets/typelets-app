@@ -60,12 +60,14 @@ interface ExecutableCodeBlockNodeViewProps {
     attrs: {
       language?: string;
       executable?: boolean;
+      output?: ExecutionResult | null;
     };
     textContent: string;
+    nodeSize: number;
   };
   updateAttributes: (attributes: Record<string, unknown>) => void;
   selected: boolean;
-  getPos: () => number;
+  getPos: () => number | undefined;
   editor: TiptapEditor;
 }
 
@@ -96,7 +98,7 @@ export function ExecutableCodeBlockNodeView({ node, updateAttributes, selected: 
   const [isResizing, setIsResizing] = useState(false);
   const [monacoThemeOverride, setMonacoThemeOverride] = useState<'light' | 'dark'>('dark');
   const nodeRef = useRef<HTMLDivElement>(null);
-  const updateTimeoutRef = useRef<NodeJS.Timeout>();
+  const updateTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const monacoRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const resizeStartY = useRef<number>(0);
   const resizeStartHeight = useRef<number>(300);
@@ -138,7 +140,9 @@ export function ExecutableCodeBlockNodeView({ node, updateAttributes, selected: 
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
       if (updateTimeoutRef.current) {
+        if (updateTimeoutRef.current) {
         clearTimeout(updateTimeoutRef.current);
+      }
       }
     };
   }, [isResizing]);
@@ -186,7 +190,9 @@ export function ExecutableCodeBlockNodeView({ node, updateAttributes, selected: 
     if (value !== undefined) {
       setCode(value);
       // Debounce the node content update to avoid performance issues
-      clearTimeout(updateTimeoutRef.current);
+      if (updateTimeoutRef.current) {
+        clearTimeout(updateTimeoutRef.current);
+      }
       updateTimeoutRef.current = setTimeout(() => {
         updateNodeContent(value);
       }, 300);
@@ -196,7 +202,7 @@ export function ExecutableCodeBlockNodeView({ node, updateAttributes, selected: 
   const updateNodeContent = (newCode: string) => {
     try {
       const pos = getPos();
-      if (pos >= 0) {
+      if (pos !== undefined && pos >= 0) {
         const transaction = editor.view.state.tr.replaceWith(
           pos + 1,
           pos + node.nodeSize - 1,

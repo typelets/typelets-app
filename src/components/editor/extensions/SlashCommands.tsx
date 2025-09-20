@@ -163,7 +163,7 @@ const commands: CommandItem[] = [
       editor.chain()
         .focus()
         .deleteRange(range)
-        .setExecutableCodeBlock({ language: 'javascript', executable: true })
+        .setExecutableCodeBlock({ language: 'javascript' })
         .insertContent('<p></p>')
         .run();
     },
