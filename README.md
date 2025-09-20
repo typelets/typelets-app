@@ -81,7 +81,7 @@ Get the native desktop experience with:
 
 ### ⚡ Executable Code Blocks
 
-![Execute Code Demo](https://github.com/typelets/typelets-app/blob/main/execute-code-demo.gif)
+![Execute Code Demo](https://github.com/typelets/typelets-app/blob/main/assets/execute-code-demo.gif)
 
 - 💻 **15+ Programming Languages** - JavaScript, TypeScript, Python, Java, C++, C#, Go, Rust, PHP, Ruby, Kotlin, Swift, Bash, SQL, and more
 - 🎨 **Monaco Editor Integration** - Professional VS Code-powered editor with IntelliSense and syntax highlighting
