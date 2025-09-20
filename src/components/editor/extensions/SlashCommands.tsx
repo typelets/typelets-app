@@ -24,6 +24,7 @@ import {
   Highlighter,
   FileText,
   Image,
+  Play,
 } from 'lucide-react';
 
 export interface CommandItem {
@@ -153,6 +154,18 @@ const commands: CommandItem[] = [
     icon: <Code className="h-4 w-4" />,
     command: ({ editor, range }) => {
       editor.chain().focus().deleteRange(range).toggleCodeBlock().run();
+    },
+  },
+  {
+    title: 'Executable Code Block',
+    icon: <Play className="h-4 w-4" />,
+    command: ({ editor, range }) => {
+      editor.chain()
+        .focus()
+        .deleteRange(range)
+        .setExecutableCodeBlock({ language: 'javascript' })
+        .insertContent('<p></p>')
+        .run();
     },
   },
   {

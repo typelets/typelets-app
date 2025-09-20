@@ -12,6 +12,7 @@ import Index from '@/components/common/SEO';
 import { SEO_CONFIG } from '@/constants';
 import { api } from '@/lib/api/api.ts';
 import { fileService } from '@/services/fileService';
+import { codeExecutionService } from '@/services/codeExecutionService';
 import { clearUserEncryptionData } from '@/lib/encryption';
 import MainApp from '@/pages/MainApp';
 
@@ -23,6 +24,7 @@ function AppContent() {
   useEffect(() => {
     api.setTokenProvider(getToken);
     fileService.setTokenProvider(getToken);
+    codeExecutionService.setTokenProvider(getToken);
   }, [getToken]);
 
   useEffect(() => {

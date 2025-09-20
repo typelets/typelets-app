@@ -64,6 +64,7 @@ Get the native desktop experience with:
 - 💾 **Auto-save** - Real-time saving with visual indicators
 - 🔗 **Links & references** - Easy link insertion and management
 - 🧮 **Code support** - Inline code and code blocks with syntax highlighting
+- ⚡ **Executable code blocks** - Run JavaScript, Python, Java, C++, and 10+ other languages directly in your notes
 
 ### 📊 Professional Status Bar
 - 📈 **Real-time statistics** - Word count, character count, reading time estimates
@@ -77,6 +78,20 @@ Get the native desktop experience with:
 - 📊 **Usage tracking** - Monitor storage and notes limits with visual progress indicators
 - 🌐 **Cross-platform** - Responsive web app that works seamlessly on desktop, tablet, and mobile
 - 🖨️ **Print support** - Clean printing with proper formatting
+
+### ⚡ Executable Code Blocks
+
+![Execute Code Demo](https://github.com/typelets/typelets-app/blob/main/execute-code-demo.gif)
+
+- 💻 **15+ Programming Languages** - JavaScript, TypeScript, Python, Java, C++, C#, Go, Rust, PHP, Ruby, Kotlin, Swift, Bash, SQL, and more
+- 🎨 **Monaco Editor Integration** - Professional VS Code-powered editor with IntelliSense and syntax highlighting
+- ⚡ **One-click Execution** - Run code instantly with the play button or `Ctrl+Enter` keyboard shortcut
+- 📊 **Real-time Status Updates** - Live execution progress from "In Queue" → "Processing" → "Complete"
+- 🔄 **Resizable Code Blocks** - Drag to adjust editor height for optimal viewing
+- 🌙 **Theme Toggle** - Switch between light and dark Monaco editor themes
+- 💾 **Persistent Results** - Code output is automatically saved with your notes
+- 🔒 **Secure Sandboxed Execution** - Code runs in isolated environments via Judge0 API
+- 📋 **Error Handling** - Clear error messages and compilation details for debugging
 
 ## 🔒 Security First
 
@@ -146,7 +161,13 @@ VITE_APP_NAME=Typelets
 VITE_APP_VERSION=0.5.0
 ```
 
-Get your Clerk keys from [dashboard.clerk.com](https://dashboard.clerk.com)
+**Authentication Setup:**
+- Get your Clerk keys from [dashboard.clerk.com](https://dashboard.clerk.com)
+
+**Code Execution Setup:**
+- Code execution is handled securely by your backend API
+- The backend proxy manages Judge0 API integration
+- No client-side API keys required for security
 
 ### Development Proxy
 
@@ -374,6 +395,8 @@ typelets/
 - **Build Tool:** Vite 7 with development proxy
 - **Styling:** Tailwind CSS v4
 - **Editor:** TipTap with code highlighting
+- **Code Editor:** Monaco Editor (VS Code engine)
+- **Code Execution:** Judge0 API for 15+ programming languages
 - **Authentication:** Clerk
 - **UI Components:** Radix UI
 - **Encryption:** Web Crypto API with AES-256-GCM
