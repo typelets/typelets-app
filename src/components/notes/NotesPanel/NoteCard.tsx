@@ -1,5 +1,5 @@
 import { memo, useMemo } from 'react';
-import { Star, Paperclip } from 'lucide-react';
+import { Star, Paperclip, Codesandbox } from 'lucide-react';
 import type { Note, Folder as FolderType } from '@/types/note.ts';
 
 interface NoteCardProps {
@@ -90,6 +90,15 @@ function NoteCard({
     return folders.find((f) => f.id === note.folderId) || null;
   }, [note?.folder, note?.folderId, folders]);
 
+  const hasExecutableCode = useMemo(() => {
+    if (!note?.content) return false;
+
+    // Check for executable code block markers
+    return note.content.includes('data-executable="true"') ||
+           note.content.includes('class="executable-code-block"') ||
+           note.content.includes('executableCodeBlock');
+  }, [note?.content]);
+
   if (!note) {
     return null;
   }
@@ -105,7 +114,7 @@ function NoteCard({
         <div className="bg-primary absolute top-0 bottom-0 left-0 w-0.5" />
       )}
 
-      <div className="p-4 pl-5">
+      <div className="p-2.5 pl-3.5">
         <div className="mb-1 flex items-start justify-between">
           <h3
             className={`pr-2 text-sm leading-5 font-medium ${
@@ -115,9 +124,14 @@ function NoteCard({
             {note.title || 'Untitled'}
           </h3>
           <div className="flex items-center gap-1">
+            {hasExecutableCode && (
+              <div className="flex items-center text-xs" title="Contains executable code">
+                <Codesandbox className="h-3.5 w-3.5 text-purple-500" />
+              </div>
+            )}
             {note.attachments && note.attachments.length > 0 && (
-              <div className="text-muted-foreground flex items-center gap-0.5 text-xs">
-                <Paperclip className="h-3 w-3" />
+              <div className="flex items-center gap-1 text-xs text-blue-500">
+                <Paperclip className="h-3.5 w-3.5" />
                 <span>{note.attachments.length}</span>
               </div>
             )}
@@ -126,7 +140,7 @@ function NoteCard({
                 e.stopPropagation();
                 onToggleStar(note.id);
               }}
-              className="hover:bg-muted shrink-0 rounded p-1"
+              className="hover:bg-muted shrink-0 rounded"
             >
               <Star
                 className={`h-3.5 w-3.5 ${
