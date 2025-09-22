@@ -1,3 +1,10 @@
+## [1.18.2](https://github.com/typelets/typelets-app/compare/v1.18.1...v1.18.2) (2025-09-22)
+
+
+### Bug Fixes
+
+* resolve TipTap v3 compatibility issues and clean up Monaco editor sync ([dcbde51](https://github.com/typelets/typelets-app/commit/dcbde5101183a365f8e431ce53f4e8dfe459f061))
+
 ## [1.18.1](https://github.com/typelets/typelets-app/compare/v1.18.0...v1.18.1) (2025-09-22)
 
 
