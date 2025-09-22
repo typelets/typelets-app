@@ -30,7 +30,7 @@ export function useEditorEffects({
     const currentContent = editor.getHTML();
     if (note.content !== currentContent) {
       const { from, to } = editor.state.selection;
-      editor.commands.setContent(note.content || '', false);
+      editor.commands.setContent(note.content || '', { emitUpdate: false });
       lastContentRef.current = note.content || '';
 
       // Update word and character counts
