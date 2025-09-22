@@ -1,3 +1,11 @@
+## [1.18.1](https://github.com/typelets/typelets-app/compare/v1.18.0...v1.18.1) (2025-09-22)
+
+
+### Bug Fixes
+
+* resolve TipTap v3 compatibility and CSS import order issues ([898e245](https://github.com/typelets/typelets-app/commit/898e245d987b691585d1ab38629a3387726d9697))
+* resolve TypeScript 5.9 crypto API compatibility issues ([e424192](https://github.com/typelets/typelets-app/commit/e424192580c2bfb51b7307bcf0a7ff5410e49159))
+
 # [1.18.0](https://github.com/typelets/typelets-app/compare/v1.17.4...v1.18.0) (2025-09-20)
 
 
