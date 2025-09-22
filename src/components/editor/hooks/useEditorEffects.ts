@@ -23,29 +23,42 @@ export function useEditorEffects({
   setBaseFontSize,
   lastContentRef,
 }: UseEditorEffectsProps) {
+
   // Sync editor content with note changes
   useEffect(() => {
     if (!editor || !note) return;
 
     const currentContent = editor.getHTML();
     if (note.content !== currentContent) {
-      const { from, to } = editor.state.selection;
-      editor.commands.setContent(note.content || '', { emitUpdate: false });
-      lastContentRef.current = note.content || '';
+      const editorHasFocus = editor.isFocused;
 
-      // Update word and character counts
-      const text = editor.state.doc.textContent;
-      updateCounts(text);
+      if (!editorHasFocus) {
+        const { from, to } = editor.state.selection;
 
-      try {
-        const docSize = editor.state.doc.content.size;
-        if (from <= docSize && to <= docSize) {
-          editor.commands.setTextSelection({ from, to });
+        editor.commands.setContent(note.content || '', {
+          emitUpdate: false,
+          parseOptions: {
+            preserveWhitespace: 'full'
+          }
+        });
+        lastContentRef.current = note.content || '';
+
+        const text = editor.state.doc.textContent;
+        updateCounts(text);
+
+        try {
+          const docSize = editor.state.doc.content.size;
+          if (from <= docSize && to <= docSize) {
+            editor.commands.setTextSelection({ from, to });
+          }
+        } catch {
+          // Ignore cursor restoration errors
         }
-      } catch {
-        // Ignore cursor restoration errors
+      } else {
+        lastContentRef.current = currentContent;
       }
     }
+
   }, [note, editor, updateCounts, lastContentRef]);
 
   // Initialize word count when editor is ready

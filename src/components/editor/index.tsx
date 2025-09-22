@@ -319,11 +319,11 @@ export default function Index({
               setSaveStatus('error');
               console.error('Failed to save note:', error);
             }
-          }, 1000); // Wait 1 second after user stops typing
+          }, 300); // Reduced from 1000ms to 300ms for faster sync
         }
       },
     },
-    [note?.id, note?.hidden, updateCounts]
+    [note?.id]
   );
 
   // Use custom hook for editor effects
@@ -342,6 +342,7 @@ export default function Index({
   useEffect(() => {
     if (editor && note) {
       const currentContent = editor.getHTML();
+
 
       // Only update if content actually changed
       if (note.hidden && currentContent !== '[HIDDEN]') {
