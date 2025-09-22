@@ -47,9 +47,6 @@ lowlight.register('markdown', markdown);
 export function createEditorExtensions() {
   return [
     StarterKit.configure({
-      history: {
-        depth: 10,
-      },
       heading: {
         levels: [1, 2, 3],
       },
@@ -57,6 +54,8 @@ export function createEditorExtensions() {
       horizontalRule: false,
       dropcursor: false,
       // Disable built-in extensions we're adding separately
+      link: false,
+      underline: false,
     }),
     ExecutableCodeBlock.configure({
       defaultLanguage: 'javascript',

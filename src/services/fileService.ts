@@ -84,7 +84,7 @@ export class FileService {
 
     // Decrypt the file content
     const decryptedBuffer = await crypto.subtle.decrypt(
-      { name: 'AES-GCM', iv: ivBytes },
+      { name: 'AES-GCM', iv: ivBytes.buffer as ArrayBuffer },
       key,
       encryptedBytes
     );
@@ -121,7 +121,7 @@ export class FileService {
     return bytes.buffer.slice(
       bytes.byteOffset,
       bytes.byteOffset + bytes.byteLength
-    );
+    ) as ArrayBuffer;
   }
 
   async uploadFiles(

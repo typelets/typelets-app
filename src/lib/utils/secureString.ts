@@ -120,7 +120,7 @@ export class SecureString {
 
     const keyMaterial = await crypto.subtle.importKey(
       'raw',
-      this.data,
+      this.data.buffer as ArrayBuffer,
       { name: 'PBKDF2' },
       false,
       ['deriveKey']
@@ -129,7 +129,7 @@ export class SecureString {
     return crypto.subtle.deriveKey(
       {
         name: 'PBKDF2',
-        salt,
+        salt: salt.buffer as ArrayBuffer,
         iterations,
         hash: 'SHA-256',
       },

@@ -93,7 +93,7 @@ class EncryptionService {
 
       const keyMaterial = await crypto.subtle.importKey(
         'raw',
-        securePassword.getBytes(),
+        securePassword.getBytes().buffer as ArrayBuffer,
         { name: 'PBKDF2' },
         false,
         ['deriveKey']
@@ -102,7 +102,7 @@ class EncryptionService {
       const key = await crypto.subtle.deriveKey(
         {
           name: 'PBKDF2',
-          salt: userSalt,
+          salt: userSalt.buffer as ArrayBuffer,
           iterations: ENCRYPTION_CONFIG.ITERATIONS,
           hash: 'SHA-256',
         },
@@ -157,7 +157,7 @@ class EncryptionService {
 
       const keyMaterial = await crypto.subtle.importKey(
         'raw',
-        securePassword.getBytes(),
+        securePassword.getBytes().buffer as ArrayBuffer,
         { name: 'PBKDF2' },
         false,
         ['deriveKey']
@@ -166,7 +166,7 @@ class EncryptionService {
       const key = await crypto.subtle.deriveKey(
         {
           name: 'PBKDF2',
-          salt: userSalt,
+          salt: userSalt.buffer as ArrayBuffer,
           iterations: ENCRYPTION_CONFIG.ITERATIONS,
           hash: 'SHA-256',
         },
@@ -192,7 +192,7 @@ class EncryptionService {
           const encryptedData = this.base64ToArrayBuffer(testObj.data);
 
           await crypto.subtle.decrypt(
-            { name: ENCRYPTION_CONFIG.ALGORITHM, iv },
+            { name: ENCRYPTION_CONFIG.ALGORITHM, iv: iv.buffer as ArrayBuffer },
             key,
             encryptedData
           );
@@ -281,7 +281,7 @@ class EncryptionService {
       const keyData = this.base64ToUint8Array(userSecret);
       return crypto.subtle.importKey(
         'raw',
-        keyData,
+        keyData.buffer as ArrayBuffer,
         { name: ENCRYPTION_CONFIG.ALGORITHM },
         false,
         ['encrypt', 'decrypt']
@@ -301,7 +301,7 @@ class EncryptionService {
     return crypto.subtle.deriveKey(
       {
         name: 'PBKDF2',
-        salt,
+        salt: salt.buffer as ArrayBuffer,
         iterations: ENCRYPTION_CONFIG.ITERATIONS,
         hash: 'SHA-256',
       },
@@ -421,13 +421,13 @@ class EncryptionService {
       const contentBuffer = this.base64ToArrayBuffer(encryptedContent);
 
       const decryptedTitleBuffer = await crypto.subtle.decrypt(
-        { name: ENCRYPTION_CONFIG.ALGORITHM, iv },
+        { name: ENCRYPTION_CONFIG.ALGORITHM, iv: iv.buffer as ArrayBuffer },
         key,
         titleBuffer
       );
 
       const decryptedContentBuffer = await crypto.subtle.decrypt(
-        { name: ENCRYPTION_CONFIG.ALGORITHM, iv },
+        { name: ENCRYPTION_CONFIG.ALGORITHM, iv: iv.buffer as ArrayBuffer },
         key,
         contentBuffer
       );
@@ -496,7 +496,7 @@ class EncryptionService {
     return bytes.buffer.slice(
       bytes.byteOffset,
       bytes.byteOffset + bytes.byteLength
-    );
+    ) as ArrayBuffer;
   }
 
   private base64ToUint8Array(base64: string): Uint8Array {

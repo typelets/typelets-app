@@ -21,7 +21,7 @@ class MessageAuthenticator {
     const encoder = new TextEncoder();
     const keyMaterial = await crypto.subtle.importKey(
       'raw',
-      encoder.encode(sessionSecret),
+      encoder.encode(sessionSecret).buffer as ArrayBuffer,
       { name: 'HMAC', hash: 'SHA-256' },
       false,
       ['sign', 'verify']
@@ -57,7 +57,7 @@ class MessageAuthenticator {
     };
 
     const encoder = new TextEncoder();
-    const dataToSign = encoder.encode(JSON.stringify(messageData));
+    const dataToSign = encoder.encode(JSON.stringify(messageData)).buffer as ArrayBuffer;
 
     // Generate HMAC signature
     const signatureBuffer = await crypto.subtle.sign(
@@ -107,7 +107,7 @@ class MessageAuthenticator {
       };
 
       const encoder = new TextEncoder();
-      const dataToVerify = encoder.encode(JSON.stringify(messageData));
+      const dataToVerify = encoder.encode(JSON.stringify(messageData)).buffer as ArrayBuffer;
       const signatureBuffer = this.base64ToArrayBuffer(message.signature);
 
       // Verify HMAC signature
@@ -131,7 +131,7 @@ class MessageAuthenticator {
   private generateNonce(): string {
     const array = new Uint8Array(16);
     crypto.getRandomValues(array);
-    return this.arrayBufferToBase64(array);
+    return this.arrayBufferToBase64(array.buffer as ArrayBuffer);
   }
 
   private arrayBufferToBase64(buffer: ArrayBuffer): string {
