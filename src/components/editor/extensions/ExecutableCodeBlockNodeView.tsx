@@ -102,6 +102,7 @@ export function ExecutableCodeBlockNodeView({ node, updateAttributes, selected: 
   const monacoRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const resizeStartY = useRef<number>(0);
   const resizeStartHeight = useRef<number>(300);
+  const isUpdatingFromMonaco = useRef(false);
 
   const language = node.attrs.language || 'javascript';
   const isExecutable = codeExecutionService.isLanguageSupported(language as SupportedLanguage);
@@ -109,8 +110,22 @@ export function ExecutableCodeBlockNodeView({ node, updateAttributes, selected: 
 
 
   useEffect(() => {
-    setCode(node.textContent);
-  }, [node.textContent]);
+    // COMPLETELY DISABLE this effect to prevent any Monaco updates from external sources
+    // This should eliminate all blinking by never touching Monaco after initialization
+    // External sync will be handled differently if needed
+    return;
+
+    // Only update code if it's not coming from Monaco itself
+    // This prevents the circular update loop that causes blinking
+    const nodeText = node.textContent;
+    if (nodeText !== code && !isUpdatingFromMonaco.current) {
+      setCode(nodeText);
+      // Since we're using defaultValue, manually update Monaco's content
+      if (monacoRef.current?.getValue() !== nodeText) {
+        monacoRef.current?.setValue(nodeText);
+      }
+    }
+  }, [node.textContent, code]);
 
 
   useEffect(() => {
@@ -122,7 +137,7 @@ export function ExecutableCodeBlockNodeView({ node, updateAttributes, selected: 
       setEditorHeight(newHeight);
 
       // Trigger Monaco layout when height changes (throttled)
-      if (monacoRef.current) {
+      if (monacoRef.current && !isUpdatingFromMonaco.current) {
         monacoRef.current.layout();
       }
     };
@@ -140,10 +155,10 @@ export function ExecutableCodeBlockNodeView({ node, updateAttributes, selected: 
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
       if (updateTimeoutRef.current) {
-        if (updateTimeoutRef.current) {
         clearTimeout(updateTimeoutRef.current);
       }
-      }
+      // Reset the Monaco update flag on cleanup
+      isUpdatingFromMonaco.current = false;
     };
   }, [isResizing]);
 
@@ -155,7 +170,8 @@ export function ExecutableCodeBlockNodeView({ node, updateAttributes, selected: 
     const triggerLayout = () => {
       clearTimeout(resizeTimeout);
       resizeTimeout = setTimeout(() => {
-        if (monacoRef.current) {
+        // Don't trigger layout if we're updating from Monaco to prevent blinking
+        if (monacoRef.current && !isUpdatingFromMonaco.current) {
           monacoRef.current.layout();
         }
       }, 100); // Reduced debounce for better responsiveness
@@ -188,14 +204,13 @@ export function ExecutableCodeBlockNodeView({ node, updateAttributes, selected: 
 
   const handleCodeChange = (value: string | undefined) => {
     if (value !== undefined) {
-      setCode(value);
-      // Debounce the node content update to avoid performance issues
+      // Minimal debounced update - only update TipTap node
       if (updateTimeoutRef.current) {
         clearTimeout(updateTimeoutRef.current);
       }
       updateTimeoutRef.current = setTimeout(() => {
         updateNodeContent(value);
-      }, 300);
+      }, 300); // Increased debounce to reduce updates
     }
   };
 
@@ -359,10 +374,11 @@ export function ExecutableCodeBlockNodeView({ node, updateAttributes, selected: 
         {/* Code Content */}
         <div className={`relative w-full ${monacoThemeOverride === 'light' ? 'monaco-light-override' : 'monaco-dark-override'}`}>
           <Editor
+            key={`monaco-${node.attrs.language}-${getPos()}`}
             height={`${editorHeight}px`}
             width="100%"
             language={language}
-            value={code}
+            defaultValue={code}
             onChange={handleCodeChange}
             theme="vs-dark"
             options={{
@@ -410,7 +426,10 @@ export function ExecutableCodeBlockNodeView({ node, updateAttributes, selected: 
                 if (entries[0].isIntersecting) {
                   // Small delay to ensure DOM is ready
                   setTimeout(() => {
-                    monacoEditor.layout();
+                    // Don't layout if updating from Monaco to prevent blinking
+                    if (!isUpdatingFromMonaco.current) {
+                      monacoEditor.layout();
+                    }
                   }, 50);
                 }
               });

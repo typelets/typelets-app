@@ -148,7 +148,7 @@ export function useNotesOperations({
         clearTimeout(existingTimeout);
       }
 
-      const immediateUpdates = ['starred', 'archived', 'deleted', 'folderId'];
+      const immediateUpdates = ['starred', 'archived', 'deleted', 'folderId', 'title'];
       const needsImmediateSave = Object.keys(updates).some((key) =>
         immediateUpdates.includes(key)
       );
@@ -204,6 +204,11 @@ export function useNotesOperations({
           void loadData();
         }
       } else {
+        // Send WebSocket update immediately for instant cross-tab sync
+        if (webSocket.isAuthenticated) {
+          webSocket.sendNoteUpdate(noteId, updates);
+        }
+
         const timeout = setTimeout(async () => {
           try {
             if (
@@ -218,6 +223,7 @@ export function useNotesOperations({
               );
             }
 
+            // API call for server persistence (follows WebSocket update)
             await api.updateNote(noteId, {
               title: updates.title,
               content: updates.content,
@@ -227,11 +233,6 @@ export function useNotesOperations({
               deleted: updates.deleted,
               tags: updates.tags,
             });
-
-            // Send WebSocket notification about note update (delayed updates)
-            if (webSocket.isAuthenticated) {
-              webSocket.sendNoteUpdate(noteId, updates);
-            }
 
             saveTimeoutsRef.current.delete(noteId);
           } catch (error) {
@@ -245,7 +246,7 @@ export function useNotesOperations({
             }
             void loadData();
           }
-        }, 1500);
+        }, 500); // Reduced from 1500ms to 500ms for faster sync
 
         saveTimeoutsRef.current.set(noteId, timeout);
       }
