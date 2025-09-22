@@ -1,17 +1,17 @@
-import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
-import TaskItem from '@tiptap/extension-task-item';
-import TaskList from '@tiptap/extension-task-list';
-import Underline from '@tiptap/extension-underline';
-import Link from '@tiptap/extension-link';
-import HorizontalRule from '@tiptap/extension-horizontal-rule';
-import Highlight from '@tiptap/extension-highlight';
+import { CodeBlockLowlight } from '@tiptap/extension-code-block-lowlight';
+import { TaskItem } from '@tiptap/extension-task-item';
+import { TaskList } from '@tiptap/extension-task-list';
+import { Underline } from '@tiptap/extension-underline';
+import { Link } from '@tiptap/extension-link';
+import { HorizontalRule } from '@tiptap/extension-horizontal-rule';
+import { Highlight } from '@tiptap/extension-highlight';
 import { Dropcursor } from '@tiptap/extension-dropcursor';
-import Color from '@tiptap/extension-color';
-import TextStyle from '@tiptap/extension-text-style';
+import { Color } from '@tiptap/extension-color';
+import { TextStyle } from '@tiptap/extension-text-style';
 import { TableOfContents } from '../extensions/TableOfContents';
 import { ResizableImage } from '../extensions/ResizableImage';
 import { ExecutableCodeBlock } from '../extensions/ExecutableCodeBlock';
-import StarterKit from '@tiptap/starter-kit';
+import { StarterKit } from '@tiptap/starter-kit';
 import bash from 'highlight.js/lib/languages/bash';
 import cpp from 'highlight.js/lib/languages/cpp';
 import csharp from 'highlight.js/lib/languages/csharp';
@@ -56,6 +56,7 @@ export function createEditorExtensions() {
       codeBlock: false,
       horizontalRule: false,
       dropcursor: false,
+      // Disable built-in extensions we're adding separately
     }),
     ExecutableCodeBlock.configure({
       defaultLanguage: 'javascript',
