@@ -1,3 +1,10 @@
+## [1.18.3](https://github.com/typelets/typelets-app/compare/v1.18.2...v1.18.3) (2025-09-23)
+
+
+### Bug Fixes
+
+* improve title input UX and toolbar performance ([2175e45](https://github.com/typelets/typelets-app/commit/2175e45c5e17e8e4c0825fbe138acf7cb7236059))
+
 ## [1.18.2](https://github.com/typelets/typelets-app/compare/v1.18.1...v1.18.2) (2025-09-22)
 
 
