@@ -1,4 +1,5 @@
 import { type Editor } from '@tiptap/react';
+import { memo, useState, useEffect } from 'react';
 import { ImageUpload } from '../extensions/ImageUpload';
 import {
   Bold,
@@ -42,7 +43,25 @@ interface ToolbarProps {
   editor: Editor | null;
 }
 
-export function Toolbar({ editor }: ToolbarProps) {
+function ToolbarComponent({ editor }: ToolbarProps) {
+  const [, forceUpdate] = useState({});
+
+  useEffect(() => {
+    if (!editor) return;
+
+    const handleSelectionUpdate = () => {
+      forceUpdate({});
+    };
+
+    editor.on('selectionUpdate', handleSelectionUpdate);
+    editor.on('transaction', handleSelectionUpdate);
+
+    return () => {
+      editor.off('selectionUpdate', handleSelectionUpdate);
+      editor.off('transaction', handleSelectionUpdate);
+    };
+  }, [editor]);
+
   if (!editor) {
     return null;
   }
@@ -630,3 +649,5 @@ export function Toolbar({ editor }: ToolbarProps) {
     </div>
   );
 }
+
+export const Toolbar = memo(ToolbarComponent);

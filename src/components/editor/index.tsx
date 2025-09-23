@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import {
   Star,
   Archive,
@@ -107,6 +107,9 @@ export default function Index({
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [deletingIds, setDeletingIds] = useState<string[]>([]);
+  const [localTitle, setLocalTitle] = useState(note?.title || '');
+  const titleTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isEditingTitleRef = useRef(false);
 
   // Use custom hook for editor state management
   const {
@@ -355,32 +358,73 @@ export default function Index({
     }
   }, [editor, note]);
 
-  // Cleanup timeout on unmount
+  // Cleanup timeouts on unmount
   useEffect(() => {
     return () => {
       if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current);
       }
+      if (titleTimeoutRef.current) {
+        clearTimeout(titleTimeoutRef.current);
+      }
     };
   }, [saveTimeoutRef]);
 
+  // Sync local title when note changes, but not when actively editing
+  useEffect(() => {
+    if (!isEditingTitleRef.current) {
+      setLocalTitle(note?.title || '');
+    }
+    // Reset editing state when switching notes
+    if (note?.id) {
+      isEditingTitleRef.current = false;
+    }
+  }, [note?.id, note?.title]);
+
+  const saveTitleToServer = useCallback((title: string) => {
+    if (!note || title === note.title) return;
+
+    setSaveStatus('saving');
+    try {
+      onUpdateNote(note.id, { title });
+      setTimeout(() => {
+        setSaveStatus('saved');
+        isEditingTitleRef.current = false; // Mark editing as complete
+      }, 500);
+    } catch (error) {
+      setSaveStatus('error');
+      console.error('Failed to save title:', error);
+      isEditingTitleRef.current = false; // Mark editing as complete even on error
+    }
+  }, [note, onUpdateNote, setSaveStatus]);
+
   const handleTitleChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      if (!note) return;
       const newTitle = e.target.value;
-      setSaveStatus('saving');
-      try {
-        onUpdateNote(note.id, { title: newTitle });
-        setTimeout(() => {
-          setSaveStatus('saved');
-        }, 500);
-      } catch (error) {
-        setSaveStatus('error');
-        console.error('Failed to save title:', error);
+      setLocalTitle(newTitle);
+      isEditingTitleRef.current = true; // Mark as actively editing
+
+      // Clear existing timeout
+      if (titleTimeoutRef.current) {
+        clearTimeout(titleTimeoutRef.current);
       }
+
+      // Debounce the save operation
+      titleTimeoutRef.current = setTimeout(() => {
+        saveTitleToServer(newTitle);
+      }, 1000); // Save after 1 second of no typing
     },
-    [note, onUpdateNote, setSaveStatus]
+    [saveTitleToServer]
   );
+
+  const handleTitleBlur = useCallback(() => {
+    // Clear timeout and save immediately on blur
+    if (titleTimeoutRef.current) {
+      clearTimeout(titleTimeoutRef.current);
+      titleTimeoutRef.current = null;
+    }
+    saveTitleToServer(localTitle);
+  }, [localTitle, saveTitleToServer]);
 
   const handleMoveNote = useCallback(
     (targetFolderId: string | null) => {
@@ -575,8 +619,9 @@ export default function Index({
               )}
               <input
                 type="text"
-                value={note.title || ''}
+                value={localTitle}
                 onChange={handleTitleChange}
+                onBlur={handleTitleBlur}
                 className="text-foreground placeholder-muted-foreground min-w-0 flex-1 border-none bg-transparent text-2xl font-bold outline-none"
                 placeholder="Untitled Note"
                 disabled={note.hidden}
