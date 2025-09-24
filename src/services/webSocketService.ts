@@ -33,7 +33,6 @@ const sanitizeLogData = (data: unknown): unknown => {
   // Handle auth messages - redact token
   if (
     typeof data === 'object' &&
-    data !== null &&
     'type' in data &&
     'token' in data
   ) {
@@ -210,6 +209,9 @@ class WebSocketService implements WebSocketServiceInterface {
       await initializeMessageAuth(sessionSecret);
       this.messageAuthEnabled = true;
       debugLog('Auth', 'Message authentication initialized successfully');
+
+      // Process any queued messages that were waiting for auth
+      void this.processMessageQueue();
     } catch (error) {
       const secureError = new SecureError(
         `Message authentication initialization failed: ${error}`,
@@ -243,7 +245,7 @@ class WebSocketService implements WebSocketServiceInterface {
       return;
     }
 
-    if (!noteId || typeof noteId !== 'string') {
+    if (!noteId) {
       return;
     }
 
@@ -259,7 +261,7 @@ class WebSocketService implements WebSocketServiceInterface {
       return;
     }
 
-    if (!noteId || typeof noteId !== 'string') {
+    if (!noteId) {
       return;
     }
 
@@ -275,7 +277,7 @@ class WebSocketService implements WebSocketServiceInterface {
       return;
     }
 
-    if (!noteId || typeof noteId !== 'string') {
+    if (!noteId) {
       return;
     }
 
@@ -486,7 +488,7 @@ class WebSocketService implements WebSocketServiceInterface {
       }
 
       // Runtime validation for critical message properties
-      if (!message || typeof message.type !== 'string') {
+      if (!message || !message.type) {
         debugLog('Receive', 'Invalid message structure', message);
         return;
       }
@@ -665,15 +667,24 @@ class WebSocketService implements WebSocketServiceInterface {
             error
           );
           logSecureError(signingError, 'WebSocketService.sendMessage');
-          throw signingError;
+          // Re-queue failed message instead of throwing
+          this.messageQueue.push(message);
+          return;
         }
       } else {
         // Only allow unsigned messages when message auth is not yet initialized
-        // This covers the initial auth handshake case
+        // This covers the initial auth handshake case and system messages
         if (message.type === 'auth' && !this.state.isAuthenticated) {
           debugLog(
             'Send',
             'Sending initial auth message unsigned (message auth not yet initialized)'
+          );
+          messageToSend = JSON.stringify(message);
+        } else if (message.type === 'ping') {
+          // Allow unsigned ping messages for heartbeat - these don't contain sensitive data
+          debugLog(
+            'Send',
+            'Sending ping message unsigned (system heartbeat)'
           );
           messageToSend = JSON.stringify(message);
         } else if (DISABLE_MESSAGE_AUTH) {
@@ -695,7 +706,9 @@ class WebSocketService implements WebSocketServiceInterface {
             'critical'
           );
           logSecureError(unsignedError, 'WebSocketService.sendMessage');
-          throw unsignedError;
+          // Re-queue message instead of throwing - it might become valid after re-auth
+          this.messageQueue.push(message);
+          return;
         }
       }
 
@@ -763,7 +776,8 @@ class WebSocketService implements WebSocketServiceInterface {
     this.heartbeatTimer = setInterval(() => {
       if (this.ws?.readyState === WebSocket.OPEN) {
         // Send ping message to keep connection alive
-        this.ws.send(JSON.stringify({ type: 'ping' }));
+        // Use sendMessage to ensure proper authentication flow
+        void this.sendMessage({ type: 'ping' });
       }
     }, this.config.heartbeatInterval);
   }

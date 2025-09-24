@@ -20,7 +20,8 @@ export interface WebSocketOutgoingMessage {
     | 'note_deleted'
     | 'folder_created'
     | 'folder_updated'
-    | 'folder_deleted';
+    | 'folder_deleted'
+    | 'ping';
 }
 
 export interface AuthMessage extends WebSocketOutgoingMessage {
@@ -88,6 +89,10 @@ export interface FolderDeletedMessage extends WebSocketOutgoingMessage {
   folderId: string;
 }
 
+export interface PingMessage extends WebSocketOutgoingMessage {
+  type: 'ping';
+}
+
 export type OutgoingMessage =
   | AuthMessage
   | JoinNoteMessage
@@ -97,7 +102,8 @@ export type OutgoingMessage =
   | NoteDeletedMessage
   | FolderCreatedMessage
   | FolderUpdatedMessage
-  | FolderDeletedMessage;
+  | FolderDeletedMessage
+  | PingMessage;
 
 // Incoming Messages (Server → Client)
 export interface WebSocketIncomingMessage {

@@ -19,15 +19,13 @@ class MessageAuthenticator {
   async initialize(sessionSecret: string): Promise<void> {
     // Always reinitialize - this handles token refresh scenarios
     const encoder = new TextEncoder();
-    const keyMaterial = await crypto.subtle.importKey(
+    this.authKey = await crypto.subtle.importKey(
       'raw',
       encoder.encode(sessionSecret).buffer as ArrayBuffer,
       { name: 'HMAC', hash: 'SHA-256' },
       false,
       ['sign', 'verify']
     );
-
-    this.authKey = keyMaterial;
   }
 
   /**
@@ -86,16 +84,16 @@ class MessageAuthenticator {
     try {
       // Check message age (prevent replay attacks)
       const messageAge = Date.now() - message.timestamp;
-      const MAX_MESSAGE_AGE = 5 * 60 * 1000; // 5 minutes
+      const MAX_MESSAGE_AGE = 10 * 60 * 1000; // 10 minutes - increased for better UX
+      const MAX_FUTURE_SKEW = 2 * 60 * 1000; // Allow 2 minutes clock skew
 
       if (messageAge > MAX_MESSAGE_AGE) {
         // Message too old - potential replay attack
         return false;
       }
 
-      if (messageAge < -60000) {
-        // Allow 1 minute clock skew
-        // Message timestamp in future - potential attack
+      if (messageAge < -MAX_FUTURE_SKEW) {
+        // Message timestamp too far in future - potential attack
         return false;
       }
 
@@ -111,14 +109,12 @@ class MessageAuthenticator {
       const signatureBuffer = this.base64ToArrayBuffer(message.signature);
 
       // Verify HMAC signature
-      const isValid = await crypto.subtle.verify(
+      return await crypto.subtle.verify(
         'HMAC',
         this.authKey,
         signatureBuffer,
         dataToVerify
       );
-
-      return isValid;
     } catch {
       // Message verification failed - silent fail for security
       return false;
