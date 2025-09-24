@@ -1,3 +1,10 @@
+## [1.18.4](https://github.com/typelets/typelets-app/compare/v1.18.3...v1.18.4) (2025-09-24)
+
+
+### Bug Fixes
+
+* resolve WebSocket authentication timeout and type errors ([9283e11](https://github.com/typelets/typelets-app/commit/9283e118f613b8c5a6751ef0a0d6ced23e3fc04b))
+
 ## [1.18.3](https://github.com/typelets/typelets-app/compare/v1.18.2...v1.18.3) (2025-09-23)
 
 
