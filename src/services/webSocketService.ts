@@ -397,7 +397,7 @@ class WebSocketService implements WebSocketServiceInterface {
       this.state.isConnected = true;
       this.state.reconnectAttempts = 0;
       this.updateStatus('connected');
-      this.startHeartbeat();
+      // Don't start heartbeat until after authentication
       void this.processMessageQueue();
       this.eventHandlers.onConnect?.();
     };
@@ -514,7 +514,7 @@ class WebSocketService implements WebSocketServiceInterface {
               'Auth',
               'Session secret received, initializing message authentication'
             );
-            this.initializeMessageAuth(message.sessionSecret);
+            await this.initializeMessageAuth(message.sessionSecret);
           } else {
             debugLog(
               'Auth',
@@ -522,6 +522,9 @@ class WebSocketService implements WebSocketServiceInterface {
             );
             this.messageAuthEnabled = false;
           }
+
+          // Start heartbeat after successful authentication
+          this.startHeartbeat();
 
           this.eventHandlers.onAuthenticated?.(message.userId);
           break;
