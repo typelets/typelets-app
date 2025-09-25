@@ -1,3 +1,10 @@
+## [1.18.6](https://github.com/typelets/typelets-app/compare/v1.18.5...v1.18.6) (2025-09-25)
+
+
+### Bug Fixes
+
+* enforce encrypted data validation to prevent plaintext exposure ([7b1f799](https://github.com/typelets/typelets-app/commit/7b1f7991f171b5fd27607549192fc88b464a3712))
+
 ## [1.18.5](https://github.com/typelets/typelets-app/compare/v1.18.4...v1.18.5) (2025-09-24)
 
 
