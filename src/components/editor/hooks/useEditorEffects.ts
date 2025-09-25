@@ -26,7 +26,7 @@ export function useEditorEffects({
 
   // Sync editor content with note changes
   useEffect(() => {
-    if (!editor || !note) return;
+    if (!editor || !note || !editor.view) return;
 
     const currentContent = editor.getHTML();
     if (note.content !== currentContent) {
@@ -63,7 +63,7 @@ export function useEditorEffects({
 
   // Initialize word count when editor is ready
   useEffect(() => {
-    if (!editor) return;
+    if (!editor || !editor.view) return;
 
     // Calculate initial word count
     const text = editor.state.doc.textContent;
@@ -72,7 +72,7 @@ export function useEditorEffects({
 
   // Track scroll percentage
   useEffect(() => {
-    if (!editor) return;
+    if (!editor || !editor.view) return;
 
     const updateScrollPercentage = () => {
       const editorView = editor.view;
@@ -102,7 +102,7 @@ export function useEditorEffects({
 
   // Store the original font size when editor is first created
   useEffect(() => {
-    if (!editor || baseFontSize) return;
+    if (!editor || !editor.view || baseFontSize) return;
 
     const editorElement = editor.view.dom as HTMLElement;
     const computedStyle = window.getComputedStyle(editorElement);
@@ -112,7 +112,7 @@ export function useEditorEffects({
 
   // Apply zoom level to editor
   useEffect(() => {
-    if (!editor || !baseFontSize) return;
+    if (!editor || !editor.view || !baseFontSize) return;
 
     const editorElement = editor.view.dom as HTMLElement;
 

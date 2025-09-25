@@ -228,7 +228,33 @@ class ClerkEncryptedApiService {
       );
     }
 
-    return encryptNoteData(this.currentUserId, title, content);
+    try {
+      const result = await encryptNoteData(this.currentUserId, title, content);
+
+      // Validate that encryption actually worked
+      if (!result.encryptedTitle || !result.encryptedContent || !result.iv || !result.salt) {
+        throw new SecureError(
+          'Encryption returned invalid data',
+          'Failed to encrypt note data',
+          'CRYPTO_001',
+          'high'
+        );
+      }
+
+      return result;
+    } catch (error) {
+      // Never allow unencrypted fallback - always throw errors
+      if (error instanceof SecureError) {
+        throw error;
+      }
+      throw new SecureError(
+        `Note encryption failed: ${error}`,
+        'Failed to encrypt note. Please try again.',
+        'CRYPTO_001',
+        'high',
+        error
+      );
+    }
   }
 
   async getCurrentUser(includeUsage = false): Promise<ApiUser> {
@@ -292,14 +318,27 @@ class ClerkEncryptedApiService {
 
     const { title: _, content: __, ...restNoteData } = noteData;
 
+    const notePayload = {
+      ...restNoteData,
+      // Set title and content to [ENCRYPTED] to indicate encrypted data
+      title: "[ENCRYPTED]",
+      content: "[ENCRYPTED]",
+      ...encryptedData,
+    };
+
+    // Final validation: ensure no unencrypted data is sent
+    if (!notePayload.encryptedTitle || !notePayload.encryptedContent || !notePayload.iv || !notePayload.salt) {
+      throw new SecureError(
+        'Attempted to send note without proper encryption',
+        'Failed to encrypt note. Please try again.',
+        'CRYPTO_001',
+        'high'
+      );
+    }
+
     const apiNote = await this.request<ApiNote>('/notes', {
       method: 'POST',
-      body: JSON.stringify({
-        ...restNoteData,
-        // Temporary placeholder until API is updated to make title optional
-        title: "temp",
-        ...encryptedData,
-      }),
+      body: JSON.stringify(notePayload),
     });
 
     return this.decryptApiNote(apiNote);
@@ -330,8 +369,23 @@ class ClerkEncryptedApiService {
       const { title: _, content: __, ...restUpdates } = updates;
       encryptedUpdates = {
         ...restUpdates,
+        // Set title and content to [ENCRYPTED] to indicate encrypted data
+        title: "[ENCRYPTED]",
+        content: "[ENCRYPTED]",
         ...encrypted,
       };
+
+      // Validate that content/title updates have proper encryption
+      if (updates.title !== undefined || updates.content !== undefined) {
+        if (!encrypted.encryptedTitle || !encrypted.encryptedContent || !encrypted.iv || !encrypted.salt) {
+          throw new SecureError(
+            'Attempted to update note without proper encryption',
+            'Failed to encrypt note update. Please try again.',
+            'CRYPTO_001',
+            'high'
+          );
+        }
+      }
     }
 
     // Simplified approach - only send defined properties from encryptedUpdates
