@@ -336,6 +336,24 @@ class ClerkEncryptedApiService {
       );
     }
 
+    // CRITICAL SECURITY CHECK: Ensure no unencrypted title/content is being sent
+    if (notePayload.title && notePayload.title !== "[ENCRYPTED]") {
+      throw new SecureError(
+        'Attempted to send unencrypted title in note creation',
+        'Security violation: unencrypted data detected',
+        'CRYPTO_001',
+        'critical'
+      );
+    }
+    if (notePayload.content && notePayload.content !== "[ENCRYPTED]") {
+      throw new SecureError(
+        'Attempted to send unencrypted content in note creation',
+        'Security violation: unencrypted data detected',
+        'CRYPTO_001',
+        'critical'
+      );
+    }
+
     const apiNote = await this.request<ApiNote>('/notes', {
       method: 'POST',
       body: JSON.stringify(notePayload),
@@ -404,6 +422,24 @@ class ClerkEncryptedApiService {
         }
       }
     });
+
+    // CRITICAL SECURITY CHECK: Ensure no unencrypted title/content is being sent
+    if (cleanedUpdates.title && cleanedUpdates.title !== "[ENCRYPTED]") {
+      throw new SecureError(
+        'Attempted to send unencrypted title in note update',
+        'Security violation: unencrypted data detected',
+        'CRYPTO_001',
+        'critical'
+      );
+    }
+    if (cleanedUpdates.content && cleanedUpdates.content !== "[ENCRYPTED]") {
+      throw new SecureError(
+        'Attempted to send unencrypted content in note update',
+        'Security violation: unencrypted data detected',
+        'CRYPTO_001',
+        'critical'
+      );
+    }
 
     const requestBody = JSON.stringify(cleanedUpdates);
 
