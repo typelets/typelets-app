@@ -1,3 +1,17 @@
+# [1.19.0](https://github.com/typelets/typelets-app/compare/v1.18.9...v1.19.0) (2025-10-07)
+
+
+### Bug Fixes
+
+* **mobile:** resolve security vulnerabilities and remove sensitive logging ([2cdd4df](https://github.com/typelets/typelets-app/commit/2cdd4df95bb99fea75b639a2e9b987719bc0969e))
+* **mobile:** resolve security vulnerabilities and remove sensitive logging ([46e6ea9](https://github.com/typelets/typelets-app/commit/46e6ea91b4ed047108078518b7b41211cf9cd620))
+
+
+### Features
+
+* add mobile app v1 ([abc3d54](https://github.com/typelets/typelets-app/commit/abc3d548b7cb5ce9b7da4cfff32b92e7c04f7a3e))
+* **mobile:** initial React Native mobile app with encryption ([eca837a](https://github.com/typelets/typelets-app/commit/eca837a3a4a9117bf21ecd04d52bf10dd7019fda))
+
 ## [1.18.9](https://github.com/typelets/typelets-app/compare/v1.18.8...v1.18.9) (2025-10-07)
 
 
