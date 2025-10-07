@@ -1,6 +1,6 @@
 {
   "name": "typelets-desktop",
-  "version": "1.19.0",
+  "version": "1.19.1",
   "description": "Typelets Desktop - Secure Note Taking App",
   "main": "dist/main.js",
   "author": "Typelets Team",
