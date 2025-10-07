@@ -24,19 +24,6 @@
 
 ![Typelets Demo](https://github.com/typelets/typelets-app/blob/main/assets/demo.gif)
 
-## 📥 Download Desktop App
-
-[![Windows](https://img.shields.io/badge/Windows-Download-0078D4?style=for-the-badge)](https://github.com/typelets/typelets-app/releases/latest)
-[![Mac](https://img.shields.io/badge/Mac-Download-000000?style=for-the-badge)](https://github.com/typelets/typelets-app/releases)
-[![Linux](https://img.shields.io/badge/Linux-Download-E95420?style=for-the-badge)](https://github.com/typelets/typelets-app/releases)
-
-[![GitHub release](https://img.shields.io/github/v/release/typelets/typelets-app)](https://github.com/typelets/typelets-app/releases/latest)
-
-Get the native desktop experience with:
-- 🖥️ **Native desktop integration** - System tray, notifications, and OS-specific features
-- ⚡ **Better performance** - No browser overhead for faster note editing
-- 🔒 **Enhanced security** - Isolated environment with no browser extensions interference
-
 ## ✨ Features
 
 ### 🔒 Security & Privacy
