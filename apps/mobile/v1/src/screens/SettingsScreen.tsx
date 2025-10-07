@@ -63,7 +63,9 @@ export default function SettingsScreen({ onLogout, navigation }: Props) {
           setViewMode(savedMode);
         }
       } catch (error) {
-        if (__DEV__) console.error('Failed to load view mode:', error);
+        if (__DEV__) {
+          console.error('Failed to load view mode:', error);
+        }
       }
     };
     loadViewMode();
