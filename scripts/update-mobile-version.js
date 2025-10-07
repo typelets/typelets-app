@@ -6,16 +6,33 @@ import { execSync } from 'child_process';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Get commits since last release
-function getCommitsSinceLastRelease() {
+// Get commits since last mobile version bump
+function getCommitsSinceLastMobileBump() {
   try {
-    const commits = execSync('git log $(git describe --tags --abbrev=0)..HEAD --pretty=format:"%s"', { encoding: 'utf8' });
-    return commits.split('\n').filter(Boolean);
-  } catch (error) {
-    // If no previous tag exists, get all commits
-    try {
-      const commits = execSync('git log --pretty=format:"%s"', { encoding: 'utf8' });
+    // Find the last commit that changed mobile package.json version
+    // This is typically a "chore(mobile): bump mobile app version" commit
+    const lastBumpCommit = execSync(
+      'git log -1 --format=%H --grep="chore(mobile): bump mobile app version" -- apps/mobile/v1/package.json',
+      { encoding: 'utf8' }
+    ).trim();
+
+    if (lastBumpCommit) {
+      // Get commits since that bump commit
+      const commits = execSync(
+        `git log ${lastBumpCommit}..HEAD --pretty=format:"%s"`,
+        { encoding: 'utf8' }
+      );
       return commits.split('\n').filter(Boolean);
+    }
+
+    // If no bump commit found, just get the last commit
+    const lastCommit = execSync('git log -1 --pretty=format:"%s"', { encoding: 'utf8' });
+    return lastCommit ? [lastCommit] : [];
+  } catch (error) {
+    // Fallback to last commit
+    try {
+      const lastCommit = execSync('git log -1 --pretty=format:"%s"', { encoding: 'utf8' });
+      return lastCommit ? [lastCommit] : [];
     } catch {
       return [];
     }
@@ -27,21 +44,21 @@ function hasMobileCommits(commits) {
   return commits.some(commit => commit.includes('(mobile)'));
 }
 
-// Determine version bump type for mobile
+// Determine version bump type for mobile based on the HIGHEST priority commit
 function getMobileVersionBump(commits) {
   const mobileCommits = commits.filter(commit => commit.includes('(mobile)'));
 
-  // Check for breaking changes
+  // Check for breaking changes (highest priority)
   if (mobileCommits.some(commit => commit.includes('BREAKING CHANGE') || commit.startsWith('feat(mobile)!'))) {
     return 'major';
   }
 
-  // Check for features
+  // Check for features (medium priority)
   if (mobileCommits.some(commit => commit.startsWith('feat(mobile)'))) {
     return 'minor';
   }
 
-  // Check for fixes
+  // Check for fixes (low priority)
   if (mobileCommits.some(commit => commit.startsWith('fix(mobile)'))) {
     return 'patch';
   }
@@ -71,7 +88,7 @@ function bumpVersion(version, type) {
 }
 
 // Main execution
-const commits = getCommitsSinceLastRelease();
+const commits = getCommitsSinceLastMobileBump();
 
 if (!hasMobileCommits(commits)) {
   console.log('No mobile commits found, skipping mobile version bump');
