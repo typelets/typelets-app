@@ -1,3 +1,16 @@
+# [1.20.0](https://github.com/typelets/typelets-app/compare/v1.19.1...v1.20.0) (2025-10-07)
+
+
+### Bug Fixes
+
+* **mobile:** sync mobile app version and enable automatic version bumping ([5a4703e](https://github.com/typelets/typelets-app/commit/5a4703ecb68320726c8f968bc3daa982058d8b02))
+* **mobile:** sync mobile app version and enable automatic version bumping ([1db1c04](https://github.com/typelets/typelets-app/commit/1db1c0406cee189ddaa397705803c4ad7710ba4d))
+
+
+### Features
+
+* **mobile:** configure independent mobile and web versioning ([2d6fcbc](https://github.com/typelets/typelets-app/commit/2d6fcbcb2bd6539919eed6c326ce980a405218fd))
+
 ## [1.19.1](https://github.com/typelets/typelets-app/compare/v1.19.0...v1.19.1) (2025-10-07)
 
 
