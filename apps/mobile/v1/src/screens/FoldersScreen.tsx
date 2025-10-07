@@ -1,15 +1,14 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, RefreshControl, TextInput, Alert, Keyboard, Animated } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, RefreshControl, Alert, Keyboard, Animated } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useTheme } from '../theme';
 import { Ionicons } from '@expo/vector-icons';
-import { useApiService, type Folder, type Note } from '../services/api';
-import BottomNavigation from '../components/BottomNavigation';
-import { FOLDER_CARD, ACTION_BUTTON, SECTION, FOLDER_COLORS } from '../constants/ui';
-import { BottomSheetModal, BottomSheetView, BottomSheetBackdrop, BottomSheetTextInput, BottomSheetScrollView } from '@gorhom/bottom-sheet';
+import { useApiService, type Folder } from '../services/api';
+import { FOLDER_CARD, ACTION_BUTTON, FOLDER_COLORS } from '../constants/ui';
+import { BottomSheetModal, BottomSheetView, BottomSheetBackdrop, BottomSheetTextInput } from '@gorhom/bottom-sheet';
 
 interface Props {
   navigation?: any;
@@ -107,7 +106,7 @@ export default function FoldersScreen({ navigation }: Props) {
   useEffect(() => {
     loadFoldersData();
     loadViewMode();
-  }, [api]);
+  }, [api, loadFoldersData]);
 
   const loadViewMode = async () => {
     try {
@@ -131,7 +130,7 @@ export default function FoldersScreen({ navigation }: Props) {
     return () => clearTimeout(timer);
   }, [loading]);
 
-  const loadFoldersData = async (isRefresh = false) => {
+  const loadFoldersData = useCallback(async (isRefresh = false) => {
     try {
       if (!isRefresh) {
         setLoading(true);
@@ -199,7 +198,7 @@ export default function FoldersScreen({ navigation }: Props) {
         setLoading(false);
       }
     }
-  };
+  }, [api]);
 
   const onRefresh = async () => {
     try {

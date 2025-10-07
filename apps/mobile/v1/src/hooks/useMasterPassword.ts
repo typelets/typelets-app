@@ -35,39 +35,21 @@ export function useMasterPassword() {
     try {
       setIsChecking(true);
 
-      if (__DEV__) {
-        console.log('🔍 Checking master password status for user:', userId);
-      }
-
       // Check if user has a master password set up
       const hasPassword = await hasMasterPassword(userId);
-
-      if (__DEV__) {
-        console.log('🔐 Has master password:', hasPassword);
-      }
 
       if (!hasPassword) {
         // No master password set up yet
         setIsNewSetup(true);
         setNeedsUnlock(true);
-        if (__DEV__) {
-          console.log('🆕 Setting up new master password');
-        }
       } else {
         // Has master password, check if it's unlocked
         const isUnlocked = await isMasterPasswordUnlocked(userId);
-
-        if (__DEV__) {
-          console.log('🔓 Is master password unlocked:', isUnlocked);
-        }
 
         if (!isUnlocked) {
           // Has password but needs to unlock
           setIsNewSetup(false);
           setNeedsUnlock(true);
-          if (__DEV__) {
-            console.log('🔒 Need to unlock master password');
-          }
         } else {
           // Already unlocked
           setIsNewSetup(false);
@@ -122,7 +104,7 @@ export function useMasterPassword() {
 
   const onPasswordSuccess = async (password: string) => {
     if (__DEV__) {
-      console.log('🔑 onPasswordSuccess called with password length:', password.length);
+      console.log('🔑 onPasswordSuccess called');
       console.log('🔑 userId:', userId);
       console.log('🔑 isNewSetup:', isNewSetup);
     }

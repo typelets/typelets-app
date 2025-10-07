@@ -1,12 +1,11 @@
 import React, { useState, useRef, useMemo, useCallback, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, Linking, Animated } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useAuth, useUser } from '@clerk/clerk-expo';
+import { useUser } from '@clerk/clerk-expo';
 import { useRouter } from 'expo-router';
 import { useTheme } from '../theme';
 import { LIGHT_THEME_PRESETS, DARK_THEME_PRESETS } from '../theme/presets';
-import { Button } from '../components/ui/Button';
-import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
+import { Card } from '../components/ui/Card';
 import { Ionicons } from '@expo/vector-icons';
 import { clearUserEncryptionData } from '../lib/encryption';
 import { forceGlobalMasterPasswordRefresh } from '../hooks/useMasterPassword';

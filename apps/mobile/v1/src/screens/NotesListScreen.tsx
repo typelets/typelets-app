@@ -1,13 +1,12 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { View, Text, ScrollView, StyleSheet, Pressable, Alert, ActivityIndicator, TouchableOpacity, TextInput, RefreshControl, Animated, Platform, Keyboard } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, Pressable, Alert, ActivityIndicator, TouchableOpacity, RefreshControl, Animated, Keyboard } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { useTheme } from '../theme';
 import { useApiService, type Note, type Folder } from '../services/api';
 import { Ionicons } from '@expo/vector-icons';
-import { NOTE_CARD, FOLDER_CARD, ACTION_BUTTON, SECTION, FOLDER_COLORS } from '../constants/ui';
+import { NOTE_CARD, FOLDER_CARD, SECTION, FOLDER_COLORS } from '../constants/ui';
 import { BottomSheetModal, BottomSheetView, BottomSheetBackdrop, BottomSheetTextInput } from '@gorhom/bottom-sheet';
 
 interface Props {
@@ -17,42 +16,26 @@ interface Props {
   scrollY?: Animated.Value;
 }
 
-// Helper functions for view types
-function getViewTitle(viewType: string): string {
-  switch (viewType) {
-    case 'all': return 'All Notes';
-    case 'starred': return 'Starred';
-    case 'archived': return 'Archived';
-    case 'trash': return 'Trash';
-    default: return 'Notes';
-  }
-}
-
-function getViewSubtitle(viewType: string): string {
-  switch (viewType) {
-    case 'all': return 'All your active notes';
-    case 'starred': return 'Your starred notes';
-    case 'archived': return 'Your archived notes';
-    case 'trash': return 'Your deleted notes';
-    default: return 'Your secure notes';
-  }
-}
-
 // Helper function to strip HTML tags and decode entities
 function stripHtmlTags(html: string): string {
   if (!html) return '';
 
-  // Remove HTML tags
-  let text = html.replace(/<[^>]*>/g, '');
+  // Remove HTML tags (apply repeatedly to handle nested/incomplete tags)
+  let previous;
+  let text = html;
+  do {
+    previous = text;
+    text = text.replace(/<[^>]*>/g, '');
+  } while (text !== previous);
 
-  // Decode common HTML entities
+  // Decode common HTML entities (decode &amp; last to prevent double-unescaping)
   text = text
-    .replace(/&amp;/g, '&')
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')
     .replace(/&quot;/g, '"')
     .replace(/&#39;/g, "'")
-    .replace(/&nbsp;/g, ' ');
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&');
 
   // Remove extra whitespace and normalize
   text = text.replace(/\s+/g, ' ').trim();
@@ -63,7 +46,7 @@ function stripHtmlTags(html: string): string {
 export default function NotesListScreen({ navigation, route, renderHeader, scrollY: parentScrollY }: Props) {
   const theme = useTheme();
   const api = useApiService();
-  const { folderId, folderName, viewType, searchQuery } = route?.params || {};
+  const { folderId, viewType, searchQuery } = route?.params || {};
 
   const [notes, setNotes] = useState<Note[]>([]);
   const [subfolders, setSubfolders] = useState<Folder[]>([]);
@@ -76,7 +59,6 @@ export default function NotesListScreen({ navigation, route, renderHeader, scrol
   const [newFolderName, setNewFolderName] = useState('');
   const [selectedColor, setSelectedColor] = useState('#3b82f6');
   const [isCreatingFolder, setIsCreatingFolder] = useState(false);
-  const [showFabMenu, setShowFabMenu] = useState(false);
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
 
   // Bottom sheet ref
