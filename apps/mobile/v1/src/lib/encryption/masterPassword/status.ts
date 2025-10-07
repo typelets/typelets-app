@@ -9,14 +9,10 @@ import { hasMasterPasswordFlag, getMasterKey } from '../storage/secureStorage';
  */
 export async function hasMasterPassword(userId: string): Promise<boolean> {
   try {
-    const result = await hasMasterPasswordFlag(userId);
-    if (__DEV__) {
-      console.log(`🔍 hasMasterPassword(${userId}): ${result}`);
-    }
-    return result;
+    return await hasMasterPasswordFlag(userId);
   } catch (error) {
     if (__DEV__) {
-      console.log(`❌ hasMasterPassword(${userId}) error:`, error);
+      console.error('hasMasterPassword error:', error);
     }
     return false;
   }
@@ -28,17 +24,10 @@ export async function hasMasterPassword(userId: string): Promise<boolean> {
 export async function isMasterPasswordUnlocked(userId: string): Promise<boolean> {
   try {
     const masterKey = await getMasterKey(userId);
-    const result = masterKey !== null;
-    if (__DEV__) {
-      console.log(`🔍 isMasterPasswordUnlocked(${userId}): ${result}`);
-      if (masterKey) {
-        console.log(`🔍 masterKey preview: ${masterKey.substring(0, 10)}...`);
-      }
-    }
-    return result;
+    return masterKey !== null;
   } catch (error) {
     if (__DEV__) {
-      console.log(`❌ isMasterPasswordUnlocked(${userId}) error:`, error);
+      console.error('isMasterPasswordUnlocked error:', error);
     }
     return false;
   }

@@ -44,15 +44,6 @@ export function MasterPasswordForm({
   } = usePasswordValidation();
 
   const handleSubmit = async () => {
-    if (__DEV__) {
-      console.log('🚨 HANDLESUBMIT CALLED - THIS SHOULD ALWAYS SHOW!');
-      console.log('🔐 MasterPasswordDialog handleSubmit called');
-      console.log('🔐 isNewSetup:', isNewSetup);
-      console.log('🔐 password length:', password.length);
-      console.log('🔐 confirmPassword length:', confirmPassword.length);
-      console.log('🔐 passwords match:', password === confirmPassword);
-    }
-
     // Validate passwords
     const validation = validatePasswords(password, confirmPassword, isNewSetup);
 
@@ -61,20 +52,8 @@ export function MasterPasswordForm({
       return;
     }
 
-    if (__DEV__) {
-      console.log('🔐 Validation passed, calling onSubmit');
-    }
-
     try {
-      if (__DEV__) {
-        console.log('🔐 About to call onSubmit with password');
-      }
-
       await onSubmit(password);
-
-      if (__DEV__) {
-        console.log('🔐 onSubmit completed successfully');
-      }
 
       // Clear password fields on success
       setPassword('');
@@ -84,17 +63,13 @@ export function MasterPasswordForm({
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'An error occurred';
       if (__DEV__) {
-        console.log('🔐 onSubmit failed with error:', errorMessage);
+        console.error('Master password error:', errorMessage);
       }
       setPasswordError(
         isNewSetup ? 'Failed to setup master password' : 'Invalid password'
       );
-      if (__DEV__) console.error('Master password error:', errorMessage);
     } finally {
       setIsLoading(false);
-      if (__DEV__) {
-        console.log('🔐 handleSubmit completed, isLoading set to false');
-      }
     }
   };
 
