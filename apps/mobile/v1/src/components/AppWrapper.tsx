@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ActivityIndicator } from 'react-native';
+import { View, ActivityIndicator } from 'react-native';
 import { useAuth, useUser } from '@clerk/clerk-expo';
 import { useTheme } from '../theme';
 import AuthScreen from '../screens/AuthScreen';

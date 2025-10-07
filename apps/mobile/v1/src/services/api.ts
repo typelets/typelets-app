@@ -241,7 +241,7 @@ export const useApiService = () => {
             allNotes.map(async (note) => {
               try {
                 return await decryptNote(note, user.id);
-              } catch (error) {
+              } catch {
                 // Return note with fallback content if decryption fails
                 return {
                   ...note,

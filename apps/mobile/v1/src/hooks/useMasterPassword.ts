@@ -23,7 +23,6 @@ export function useMasterPassword() {
   const [needsUnlock, setNeedsUnlock] = useState(false);
   const [isNewSetup, setIsNewSetup] = useState(false);
   const [isChecking, setIsChecking] = useState(true);
-  const [lastCheckTime, setLastCheckTime] = useState(0);
 
   const userId = user?.id;
 

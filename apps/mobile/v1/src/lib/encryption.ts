@@ -37,10 +37,6 @@ const CACHE_LIMITS = {
   DECRYPT_CACHE_SIZE: 100,
 } as const;
 
-const ENCODING = {
-  CHUNK_SIZE: 0x8000,
-} as const;
-
 class MobileEncryptionService {
   private decryptCache = new Map<string, CacheEntry>();
   private userSecrets = new Map<string, string>();
@@ -240,7 +236,7 @@ class MobileEncryptionService {
       }
 
       return true;
-    } catch (error) {
+    } catch {
       return false;
     }
   }

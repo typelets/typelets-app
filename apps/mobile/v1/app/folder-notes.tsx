@@ -1,11 +1,10 @@
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { TouchableOpacity, View, StyleSheet, Text, Animated, ScrollView, Image, Modal, Alert, Keyboard, Pressable } from 'react-native';
+import { TouchableOpacity, View, StyleSheet, Text, Animated, Alert, Keyboard, Pressable } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '@/src/theme';
 import NotesListScreen from '@/src/screens/NotesListScreen';
-import BottomNavigation from '@/src/components/BottomNavigation';
 import { useApiService, type Folder } from '@/src/services/api';
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { Input } from '@/src/components/ui/Input';
@@ -122,7 +121,7 @@ export default function FolderNotesScreen() {
     };
 
     buildBreadcrumbs();
-  }, [params.folderId, params.folderName, params.viewType]);
+  }, [params.folderId, params.folderName, params.viewType, api]);
 
   // Format breadcrumbs for display
   const formatBreadcrumbs = (crumbs: string[]): string => {

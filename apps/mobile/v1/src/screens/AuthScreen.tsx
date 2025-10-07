@@ -5,7 +5,6 @@ import {
   StyleSheet,
   Alert,
   ScrollView,
-  KeyboardAvoidingView,
   Platform,
   Keyboard,
   Animated,
@@ -34,16 +33,13 @@ export default function AuthScreen() {
   const passwordRef = useRef<TextInput>(null);
 
   // Keyboard handling
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
   const animatedValue = useRef(new Animated.Value(0)).current;
-  const screenHeight = Dimensions.get('window').height;
 
   useEffect(() => {
     const keyboardWillShowListener = Keyboard.addListener(
       Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
       (event) => {
         const { height: keyboardHeight } = event.endCoordinates;
-        setKeyboardHeight(keyboardHeight);
 
         // Calculate how much to move up (less aggressive than full keyboard height)
         const moveUpValue = keyboardHeight * 0.5; // Move up by half the keyboard height
@@ -59,7 +55,6 @@ export default function AuthScreen() {
     const keyboardWillHideListener = Keyboard.addListener(
       Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
       () => {
-        setKeyboardHeight(0);
         Animated.timing(animatedValue, {
           toValue: 0,
           duration: Platform.OS === 'ios' ? 250 : 200,
@@ -87,7 +82,7 @@ export default function AuthScreen() {
       if (result.status === 'complete') {
         await setActive({ session: result.createdSessionId });
       }
-    } catch (err: any) {
+    } catch {
       Alert.alert('Sign In Error', 'Invalid email or password. Please try again.');
     } finally {
       setLoading(false);
@@ -110,7 +105,7 @@ export default function AuthScreen() {
         // Handle email verification if needed
         Alert.alert('Verification Required', 'Please check your email to verify your account.');
       }
-    } catch (err: any) {
+    } catch {
       Alert.alert('Sign Up Error', 'Unable to create account. Please check your email and try again.');
     } finally {
       setLoading(false);
@@ -145,7 +140,7 @@ export default function AuthScreen() {
         identifier: email,
       });
       setIsForgotPassword(false);
-    } catch (err: any) {
+    } catch {
       Alert.alert('Error', 'Failed to send reset email. Please try again.');
     } finally {
       setLoading(false);

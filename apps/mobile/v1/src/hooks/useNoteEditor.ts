@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { Alert } from 'react-native';
 import { useEditorBridge, TenTapStartKit, type EditorBridge } from '@10play/tentap-editor';
 import { useRouter } from 'expo-router';

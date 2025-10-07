@@ -1,17 +1,14 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { View, Text, ScrollView, StyleSheet, Pressable, Alert, ActivityIndicator, TouchableOpacity, Modal, TextInput, RefreshControl, Animated, Platform, Keyboard } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, Pressable, Alert, ActivityIndicator, TouchableOpacity, TextInput, RefreshControl, Animated, Platform, Keyboard } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { useTheme } from '../theme';
-import { Button } from '../components/ui/Button';
-import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
-import { Input } from '../components/ui/Input';
 import { useApiService, type Note, type Folder } from '../services/api';
 import { Ionicons } from '@expo/vector-icons';
 import { NOTE_CARD, FOLDER_CARD, ACTION_BUTTON, SECTION, FOLDER_COLORS } from '../constants/ui';
-import { BottomSheetModal, BottomSheetView, BottomSheetBackdrop, BottomSheetScrollView, BottomSheetTextInput } from '@gorhom/bottom-sheet';
+import { BottomSheetModal, BottomSheetView, BottomSheetBackdrop, BottomSheetTextInput } from '@gorhom/bottom-sheet';
 
 interface Props {
   navigation?: any;
@@ -437,7 +434,7 @@ export default function NotesListScreen({ navigation, route, renderHeader, scrol
                   </View>
                 </TouchableOpacity>
 
-                {subfolders.map((subfolder, index) => (
+                {subfolders.map((subfolder) => (
                   <TouchableOpacity
                     key={subfolder.id}
                     style={[

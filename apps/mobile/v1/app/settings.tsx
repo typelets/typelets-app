@@ -1,15 +1,10 @@
 import { useRouter, Stack } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { TouchableOpacity, View, StyleSheet, Text } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth, useUser } from '@clerk/clerk-expo';
-import { useTheme } from '@/src/theme';
 import { clearUserEncryptionData } from '@/src/lib/encryption';
 import SettingsScreen from '@/src/screens/SettingsScreen';
 
 export default function SettingsPage() {
   const router = useRouter();
-  const theme = useTheme();
   const { signOut } = useAuth();
   const { user } = useUser();
 
@@ -65,34 +60,3 @@ export default function SettingsPage() {
     </>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderBottomWidth: 0.5,
-    position: 'relative',
-    minHeight: 44,
-  },
-  backButton: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-  },
-  headerTitle: {
-    flex: 1,
-    marginLeft: 8,
-    textAlign: 'left',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  content: {
-    flex: 1,
-  },
-});

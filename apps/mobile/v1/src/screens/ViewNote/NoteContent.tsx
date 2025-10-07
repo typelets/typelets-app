@@ -85,7 +85,7 @@ export function NoteContent({ note, htmlContent, scrollY, scrollViewRef, theme }
                   if (data.type === 'height' && data.height) {
                     setWebViewHeight(Math.max(data.height, 200));
                   }
-                } catch (e) {
+                } catch {
                   // Ignore parse errors
                 }
               }}

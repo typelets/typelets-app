@@ -1,6 +1,6 @@
 import { DarkTheme, DefaultTheme, ThemeProvider as NavigationThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
-import { StatusBar, setStatusBarBackgroundColor } from 'expo-status-bar';
+import { StatusBar } from 'expo-status-bar';
 import { View } from 'react-native';
 import 'react-native-reanimated';
 import { ClerkProvider, ClerkLoaded } from '@clerk/clerk-expo';
@@ -8,7 +8,6 @@ import { tokenCache } from '@clerk/clerk-expo/token-cache';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 
-import { useColorScheme } from '@/hooks/use-color-scheme';
 import { ThemeProvider, useTheme } from '@/src/theme';
 import { AppWrapper } from '@/src/components/AppWrapper';
 import ErrorBoundary from '@/src/components/ErrorBoundary';

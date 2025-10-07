@@ -1,5 +1,5 @@
 import React, { useState, useRef, useMemo, useCallback, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, Modal, Linking, Animated } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, Linking, Animated } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth, useUser } from '@clerk/clerk-expo';
 import { useRouter } from 'expo-router';
@@ -132,7 +132,7 @@ export default function SettingsScreen({ onLogout, navigation }: Props) {
           onPress: () => {
             Alert.alert(
               'Logout',
-              'Are you sure you want to logout? You\'ll need to enter your master password again.',
+              'Are you sure you want to logout? You&apos;ll need to enter your master password again.',
               [
                 { text: 'Cancel', style: 'cancel' },
                 { text: 'Logout', style: 'destructive', onPress: onLogout }
@@ -194,7 +194,7 @@ export default function SettingsScreen({ onLogout, navigation }: Props) {
           onPress: () => Linking.openURL('https://github.com/typelets/typelets-app'),
         },
         {
-          title: "What's New",
+          title: "What&apos;s New",
           subtitle: 'See latest updates and changes',
           icon: 'newspaper-outline',
           onPress: () => Linking.openURL('https://github.com/typelets/typelets-app/blob/main/CHANGELOG.md'),
@@ -262,7 +262,7 @@ export default function SettingsScreen({ onLogout, navigation }: Props) {
                 {section.section}
               </Text>
 
-            {section.items.map((item, index) => (
+            {section.items.map((item) => (
               <View key={item.title} style={styles.settingCardContainer}>
                 <Card>
                   <TouchableOpacity
@@ -542,7 +542,7 @@ export default function SettingsScreen({ onLogout, navigation }: Props) {
                   </Text>
                 </View>
                 <Text style={[styles.securityFeatureDescription, { color: theme.colors.mutedForeground }]}>
-                  Your master password is the only key to decrypt your notes. It's never stored on our servers and cannot be recovered if lost.
+                  Your master password is the only key to decrypt your notes. It&apos;s never stored on our servers and cannot be recovered if lost.
                 </Text>
               </View>
 
@@ -566,7 +566,7 @@ export default function SettingsScreen({ onLogout, navigation }: Props) {
                   </Text>
                 </View>
                 <Text style={[styles.securityFeatureDescription, { color: theme.colors.mutedForeground }]}>
-                  We can't read your notes, recover your password, or access your data. Your privacy is guaranteed by design.
+                  We can&apos;t read your notes, recover your password, or access your data. Your privacy is guaranteed by design.
                 </Text>
               </View>
             </View>

@@ -4,14 +4,12 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  Alert,
   StyleSheet,
   ActivityIndicator,
   Keyboard,
   Animated,
   Platform,
   ScrollView,
-  KeyboardAvoidingView,
   Dimensions,
 } from 'react-native';
 import * as Haptics from 'expo-haptics';
@@ -26,7 +24,6 @@ interface MasterPasswordScreenProps {
 }
 
 export function MasterPasswordScreen({
-  userId,
   isNewSetup,
   onSuccess,
 }: MasterPasswordScreenProps) {
@@ -41,11 +38,8 @@ export function MasterPasswordScreen({
   const [passwordError, setPasswordError] = useState('');
   const [confirmPasswordError, setConfirmPasswordError] = useState('');
 
-
   // Keyboard handling
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
   const animatedValue = useRef(new Animated.Value(0)).current;
-  const screenHeight = Dimensions.get('window').height;
 
   useEffect(() => {
     // Vibrate when component mounts
