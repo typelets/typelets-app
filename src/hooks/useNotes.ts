@@ -118,7 +118,18 @@ export function useNotes() {
         foldersResponse.total / foldersResponse.limit
       );
       hasMorePages = page < totalPages;
+
+      // Also check if we received fewer folders than the limit, which means we're on the last page
+      if (convertedFolders.length < foldersResponse.limit) {
+        hasMorePages = false;
+      }
+
       page++;
+
+      // Safety break to prevent infinite loops
+      if (page > 50) {
+        hasMorePages = false;
+      }
 
       // Add small delay between requests to avoid rate limiting
       if (hasMorePages) {
@@ -220,7 +231,18 @@ export function useNotes() {
       // Check if we have more pages
       const totalPages = Math.ceil(notesResponse.total / notesResponse.limit);
       hasMorePages = page < totalPages;
+
+      // Also check if we received fewer notes than the limit, which means we're on the last page
+      if (convertedNotes.length < notesResponse.limit) {
+        hasMorePages = false;
+      }
+
       page++;
+
+      // Safety break to prevent infinite loops
+      if (page > 50) {
+        hasMorePages = false;
+      }
 
       // Add small delay between requests to avoid rate limiting
       if (hasMorePages) {
