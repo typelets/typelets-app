@@ -1,13 +1,21 @@
 {
   "branches": ["main"],
   "plugins": [
-    "@semantic-release/commit-analyzer",
+    [
+      "@semantic-release/commit-analyzer",
+      {
+        "releaseRules": [
+          { "scope": "mobile", "release": false }
+        ]
+      }
+    ],
     "@semantic-release/release-notes-generator",
     "@semantic-release/changelog",
     [
       "@semantic-release/exec",
       {
-        "prepareCmd": "node scripts/update-version.js ${nextRelease.version}"
+        "prepareCmd": "node scripts/update-version.js ${nextRelease.version}",
+        "publishCmd": "node scripts/update-mobile-version.js"
       }
     ],
     [
@@ -17,7 +25,9 @@
           "CHANGELOG.md",
           "package.json",
           "src/constants/version.ts",
-          "apps/desktop/package.json"
+          "apps/desktop/package.json",
+          "apps/mobile/v1/package.json",
+          "apps/mobile/v1/app.json"
         ],
         "message": "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
       }

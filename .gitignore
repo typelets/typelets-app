@@ -242,7 +242,7 @@ temp/
 # Add your project-specific ignores here
 uploads/
 public/uploads/
-storage/
+/storage/
 
 # Drizzle
 drizzle/

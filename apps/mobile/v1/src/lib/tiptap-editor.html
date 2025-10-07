@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      overflow: hidden;
+    }
+
+    .editor-container {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    .ProseMirror {
+      flex: 1;
+      padding: 16px;
+      outline: none;
+      overflow-y: auto;
+      font-size: 16px;
+      line-height: 1.6;
+    }
+
+    .ProseMirror p.is-editor-empty:first-child::before {
+      content: attr(data-placeholder);
+      float: left;
+      color: #9ca3af;
+      pointer-events: none;
+      height: 0;
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 4px;
+      padding: 8px;
+      border-top: 1px solid #e5e7eb;
+      background: white;
+      flex-wrap: wrap;
+      position: sticky;
+      bottom: 0;
+    }
+
+    .toolbar button {
+      padding: 8px 12px;
+      border: none;
+      background: #f3f4f6;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      min-width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .toolbar button.is-active {
+      background: #3b82f6;
+      color: white;
+    }
+
+    .toolbar button:active {
+      opacity: 0.7;
+    }
+
+    /* Dark mode */
+    body.dark {
+      background: #1f2937;
+      color: #f9fafb;
+    }
+
+    body.dark .ProseMirror {
+      background: #1f2937;
+      color: #f9fafb;
+    }
+
+    body.dark .toolbar {
+      background: #111827;
+      border-top-color: #374151;
+    }
+
+    body.dark .toolbar button {
+      background: #374151;
+      color: #f9fafb;
+    }
+
+    body.dark .toolbar button.is-active {
+      background: #3b82f6;
+    }
+  </style>
+</head>
+<body>
+  <div class="editor-container">
+    <div id="editor"></div>
+    <div class="toolbar">
+      <button onclick="editor.chain().focus().toggleBold().run()" id="bold">B</button>
+      <button onclick="editor.chain().focus().toggleItalic().run()" id="italic">I</button>
+      <button onclick="editor.chain().focus().toggleUnderline().run()" id="underline">U</button>
+      <button onclick="editor.chain().focus().toggleStrike().run()" id="strike">S</button>
+      <button onclick="editor.chain().focus().toggleHeading({ level: 1 }).run()" id="h1">H1</button>
+      <button onclick="editor.chain().focus().toggleHeading({ level: 2 }).run()" id="h2">H2</button>
+      <button onclick="editor.chain().focus().toggleHeading({ level: 3 }).run()" id="h3">H3</button>
+      <button onclick="editor.chain().focus().toggleBulletList().run()" id="ul">•</button>
+      <button onclick="editor.chain().focus().toggleOrderedList().run()" id="ol">1.</button>
+      <button onclick="editor.chain().focus().toggleCodeBlock().run()" id="code">&lt;/&gt;</button>
+      <button onclick="editor.chain().focus().toggleBlockquote().run()" id="quote">"</button>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/@tiptap/core@2.1.13/dist/tiptap-core.umd.js"></script>
+  <script src="https://unpkg.com/@tiptap/starter-kit@2.1.13/dist/tiptap-starter-kit.umd.js"></script>
+  <script src="https://unpkg.com/@tiptap/extension-underline@2.1.13/dist/tiptap-extension-underline.umd.js"></script>
+
+  <script>
+    const { Editor } = window.Tiptap;
+    const { StarterKit } = window.TiptapStarterKit;
+    const { Underline } = window.TiptapUnderline;
+
+    let editor = new Editor({
+      element: document.getElementById('editor'),
+      extensions: [
+        StarterKit,
+        Underline,
+      ],
+      content: '',
+      editorProps: {
+        attributes: {
+          'data-placeholder': 'Start writing your note...',
+        },
+      },
+      onUpdate: ({ editor }) => {
+        const html = editor.getHTML();
+        window.ReactNativeWebView?.postMessage(JSON.stringify({ type: 'content', html }));
+      },
+    });
+
+    // Update active states
+    setInterval(() => {
+      document.getElementById('bold').classList.toggle('is-active', editor.isActive('bold'));
+      document.getElementById('italic').classList.toggle('is-active', editor.isActive('italic'));
+      document.getElementById('underline').classList.toggle('is-active', editor.isActive('underline'));
+      document.getElementById('strike').classList.toggle('is-active', editor.isActive('strike'));
+      document.getElementById('h1').classList.toggle('is-active', editor.isActive('heading', { level: 1 }));
+      document.getElementById('h2').classList.toggle('is-active', editor.isActive('heading', { level: 2 }));
+      document.getElementById('h3').classList.toggle('is-active', editor.isActive('heading', { level: 3 }));
+      document.getElementById('ul').classList.toggle('is-active', editor.isActive('bulletList'));
+      document.getElementById('ol').classList.toggle('is-active', editor.isActive('orderedList'));
+      document.getElementById('code').classList.toggle('is-active', editor.isActive('codeBlock'));
+      document.getElementById('quote').classList.toggle('is-active', editor.isActive('blockquote'));
+    }, 100);
+
+    // Listen for messages from React Native
+    window.addEventListener('message', (event) => {
+      const data = JSON.parse(event.data);
+
+      if (data.type === 'setContent') {
+        editor.commands.setContent(data.html);
+      } else if (data.type === 'getContent') {
+        const html = editor.getHTML();
+        window.ReactNativeWebView?.postMessage(JSON.stringify({ type: 'contentResponse', html }));
+      } else if (data.type === 'setTheme') {
+        document.body.className = data.theme === 'dark' ? 'dark' : '';
+      }
+    });
+
+    // Signal ready
+    window.ReactNativeWebView?.postMessage(JSON.stringify({ type: 'ready' }));
+  </script>
+</body>
+</html>
