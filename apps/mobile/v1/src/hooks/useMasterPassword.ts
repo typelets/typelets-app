@@ -23,6 +23,7 @@ export function useMasterPassword() {
   const [needsUnlock, setNeedsUnlock] = useState(false);
   const [isNewSetup, setIsNewSetup] = useState(false);
   const [isChecking, setIsChecking] = useState(true);
+  const [, setLastCheckTime] = useState<number>(0);
 
   const userId = user?.id;
 
@@ -117,42 +118,35 @@ export function useMasterPassword() {
       throw new Error('Password is required');
     }
 
-    try {
-      if (isNewSetup) {
-        // Setting up new master password
-        if (__DEV__) {
-          console.log('🔑 Setting up new master password...');
-        }
-        await setupMasterPassword(password, userId);
-        if (__DEV__) {
-          console.log('🔑 Master password setup completed');
-        }
-      } else {
-        // Unlocking with existing password
-        if (__DEV__) {
-          console.log('🔑 Unlocking with existing password...');
-        }
-        const success = await unlockWithMasterPassword(password, userId);
-        if (!success) {
-          throw new Error('Invalid password');
-        }
-        if (__DEV__) {
-          console.log('🔑 Master password unlock completed');
-        }
-      }
-
-      // Successfully authenticated
+    if (isNewSetup) {
+      // Setting up new master password
       if (__DEV__) {
-        console.log('🔑 Setting needsUnlock=false, isNewSetup=false');
+        console.log('🔑 Setting up new master password...');
       }
-      setNeedsUnlock(false);
-      setIsNewSetup(false);
-    } catch (error) {
+      await setupMasterPassword(password, userId);
       if (__DEV__) {
-        console.log('🔑 onPasswordSuccess error:', error);
+        console.log('🔑 Master password setup completed');
       }
-      throw error; // Re-throw to let the UI handle the error
+    } else {
+      // Unlocking with existing password
+      if (__DEV__) {
+        console.log('🔑 Unlocking with existing password...');
+      }
+      const success = await unlockWithMasterPassword(password, userId);
+      if (!success) {
+        throw new Error('Invalid password');
+      }
+      if (__DEV__) {
+        console.log('🔑 Master password unlock completed');
+      }
     }
+
+    // Successfully authenticated
+    if (__DEV__) {
+      console.log('🔑 Setting needsUnlock=false, isNewSetup=false');
+    }
+    setNeedsUnlock(false);
+    setIsNewSetup(false);
   };
 
   const signOut = async () => {
