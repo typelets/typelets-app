@@ -69,8 +69,34 @@ jobs:
       - name: Build
         run: pnpm build
 
+      - name: Check for mobile-only commits
+        id: check_commits
+        run: |
+          COMMITS=$(git log $(git describe --tags --abbrev=0 2>/dev/null || echo "")..HEAD --pretty=format:"%s" || git log --pretty=format:"%s")
+          HAS_MOBILE=$(echo "$COMMITS" | grep -c "(mobile)" || echo "0")
+          HAS_NON_MOBILE=$(echo "$COMMITS" | grep -v "(mobile)" | grep -v "\[skip ci\]" | grep -c "" || echo "0")
+
+          if [ "$HAS_MOBILE" -gt 0 ] && [ "$HAS_NON_MOBILE" -eq 0 ]; then
+            echo "skip_release=true" >> $GITHUB_OUTPUT
+            echo "Mobile-only commits detected, skipping semantic-release"
+          else
+            echo "skip_release=false" >> $GITHUB_OUTPUT
+            echo "Non-mobile commits detected, running semantic-release"
+          fi
+
+      - name: Bump mobile version only
+        if: steps.check_commits.outputs.skip_release == 'true'
+        run: |
+          node scripts/update-mobile-version.js
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add apps/mobile/v1/package.json apps/mobile/v1/app.json
+          git diff --staged --quiet || git commit -m "chore(mobile): bump mobile app version [skip ci]"
+          git push
+
       - name: Release
         id: semantic
+        if: steps.check_commits.outputs.skip_release != 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npx semantic-release

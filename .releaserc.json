@@ -22,7 +22,6 @@
           "CHANGELOG.md",
           "package.json",
           "src/constants/version.ts",
-          "apps/desktop/package.json",
           "apps/mobile/v1/package.json",
           "apps/mobile/v1/app.json"
         ],
