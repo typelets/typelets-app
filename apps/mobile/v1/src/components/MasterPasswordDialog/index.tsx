@@ -1,0 +1,71 @@
+import React, { useEffect, useState } from 'react';
+import { Animated, ScrollView } from 'react-native';
+import * as Haptics from 'expo-haptics';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTheme } from '../../theme';
+import { useKeyboardHandler } from './useKeyboardHandler';
+import { MasterPasswordForm } from './MasterPasswordForm';
+import { LoadingView } from './LoadingView';
+import { styles } from './styles';
+
+interface MasterPasswordScreenProps {
+  userId: string;
+  isNewSetup: boolean;
+  onSuccess: (password: string) => Promise<void>;
+}
+
+/**
+ * Master Password Screen Component
+ * Handles master password setup and unlock flows
+ */
+export function MasterPasswordScreen({
+  isNewSetup,
+  onSuccess,
+}: MasterPasswordScreenProps) {
+  const theme = useTheme();
+  const [isLoading, setIsLoading] = useState(false);
+  const animatedValue = useKeyboardHandler();
+
+  useEffect(() => {
+    // Vibrate when component mounts
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+  }, []);
+
+  const handleFormSubmit = async (password: string) => {
+    setIsLoading(true);
+    try {
+      await onSuccess(password);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <Animated.View
+        style={[
+          styles.animatedContainer,
+          {
+            transform: [{ translateY: animatedValue }],
+          },
+        ]}
+      >
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+          bounces={false}
+        >
+          {!isLoading ? (
+            <MasterPasswordForm
+              isNewSetup={isNewSetup}
+              onSubmit={handleFormSubmit}
+            />
+          ) : (
+            <LoadingView isNewSetup={isNewSetup} />
+          )}
+        </ScrollView>
+      </Animated.View>
+    </SafeAreaView>
+  );
+}
