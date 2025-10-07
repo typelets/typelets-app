@@ -71,10 +71,11 @@ export default function SettingsScreen({ onLogout, navigation }: Props) {
 
   const saveViewMode = async (mode: 'list' | 'grid') => {
     try {
-      await AsyncStorage.setItem('viewMode', mode);
       setViewMode(mode);
+      await AsyncStorage.setItem('viewMode', mode);
     } catch (error) {
       if (__DEV__) console.error('Failed to save view mode:', error);
+      Alert.alert('Error', 'Failed to save view mode preference');
     }
   };
 
