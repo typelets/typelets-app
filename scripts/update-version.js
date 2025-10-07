@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { execSync } from 'child_process';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -10,6 +11,28 @@ const version = process.argv[2];
 if (!version) {
   console.error('Version not provided');
   process.exit(1);
+}
+
+// Check if this release is mobile-only
+function isMobileOnlyRelease() {
+  try {
+    const commits = execSync('git log $(git describe --tags --abbrev=0)..HEAD --pretty=format:"%s"', { encoding: 'utf8' });
+    const commitList = commits.split('\n').filter(Boolean);
+
+    // Check if all commits are mobile-scoped
+    const hasMobile = commitList.some(commit => commit.includes('(mobile)'));
+    const hasNonMobile = commitList.some(commit => !commit.includes('(mobile)') && !commit.includes('[skip ci]'));
+
+    return hasMobile && !hasNonMobile;
+  } catch (error) {
+    return false;
+  }
+}
+
+// Skip web version updates if this is a mobile-only release
+if (isMobileOnlyRelease()) {
+  console.log('Mobile-only release detected, skipping web version updates');
+  process.exit(0);
 }
 
 // Update version constants file

@@ -4,9 +4,7 @@
     [
       "@semantic-release/commit-analyzer",
       {
-        "releaseRules": [
-          { "scope": "mobile", "release": false }
-        ]
+        "releaseRules": []
       }
     ],
     "@semantic-release/release-notes-generator",
@@ -14,8 +12,7 @@
     [
       "@semantic-release/exec",
       {
-        "prepareCmd": "node scripts/update-version.js ${nextRelease.version}",
-        "publishCmd": "node scripts/update-mobile-version.js"
+        "prepareCmd": "node scripts/update-version.js ${nextRelease.version} && node scripts/update-mobile-version.js"
       }
     ],
     [
