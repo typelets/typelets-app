@@ -113,14 +113,20 @@ export function useNotes() {
       const convertedFolders = foldersResponse.folders.map(convertApiFolder);
       allFolders = [...allFolders, ...convertedFolders];
 
-      // Check if we have more pages
-      const totalPages = Math.ceil(
-        foldersResponse.total / foldersResponse.limit
-      );
-      hasMorePages = page < totalPages;
+      // Check if we have more pages - handle different API response structures
+      if (foldersResponse.total !== undefined && foldersResponse.limit !== undefined) {
+        // Use API total if available
+        const totalPages = Math.ceil(
+          foldersResponse.total / foldersResponse.limit
+        );
+        hasMorePages = page < totalPages;
+      } else {
+        // Fallback - assume more pages if we got a full page
+        hasMorePages = convertedFolders.length >= 50;
+      }
 
       // Also check if we received fewer folders than the limit, which means we're on the last page
-      if (convertedFolders.length < foldersResponse.limit) {
+      if (convertedFolders.length < 50) {
         hasMorePages = false;
       }
 
@@ -228,12 +234,18 @@ export function useNotes() {
       const convertedNotes = notesResponse.notes.map(convertApiNote);
       allNotes = [...allNotes, ...convertedNotes];
 
-      // Check if we have more pages
-      const totalPages = Math.ceil(notesResponse.total / notesResponse.limit);
-      hasMorePages = page < totalPages;
+      // Check if we have more pages - handle different API response structures
+      if (notesResponse.total !== undefined && notesResponse.limit !== undefined) {
+        // Use API total if available
+        const totalPages = Math.ceil(notesResponse.total / notesResponse.limit);
+        hasMorePages = page < totalPages;
+      } else {
+        // Fallback - assume more pages if we got a full page
+        hasMorePages = convertedNotes.length >= 50;
+      }
 
       // Also check if we received fewer notes than the limit, which means we're on the last page
-      if (convertedNotes.length < notesResponse.limit) {
+      if (convertedNotes.length < 50) {
         hasMorePages = false;
       }
 
