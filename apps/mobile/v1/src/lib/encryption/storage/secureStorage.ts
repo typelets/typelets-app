@@ -17,10 +17,13 @@ const userSecretsCache = new Map<string, string>();
  * Get or generate a user-specific secret
  */
 export async function getUserSecret(userId: string): Promise<string> {
-  // Check master key first
+  // Check master key first - if it exists, we're in master password mode
   try {
     const masterKey = await SecureStore.getItemAsync(STORAGE_KEYS.MASTER_KEY(userId));
     if (masterKey) {
+      // Import here to avoid circular dependency
+      const { encryptionService } = await import('../index');
+      encryptionService.enableMasterPasswordMode();
       return masterKey;
     }
   } catch {

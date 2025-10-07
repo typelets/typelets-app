@@ -106,7 +106,7 @@ export default function FoldersScreen({ navigation }: Props) {
   useEffect(() => {
     loadFoldersData();
     loadViewMode();
-  }, [api, loadFoldersData]);
+  }, []); // Only run on mount
 
   const loadViewMode = async () => {
     try {

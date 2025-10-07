@@ -68,8 +68,12 @@ function determineHasMorePages<T>(
 
   // Check for pagination object
   if (resp.pagination) {
-    const { page, totalPages } = resp.pagination;
-    return page < totalPages;
+    const { page, totalPages, pages } = resp.pagination as any;
+    // API uses 'pages' not 'totalPages'
+    const total = totalPages || pages;
+    if (total !== undefined) {
+      return page < total;
+    }
   }
 
   // Check for total/limit properties

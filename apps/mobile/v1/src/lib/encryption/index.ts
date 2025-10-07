@@ -87,7 +87,12 @@ export async function hasMasterPassword(userId: string): Promise<boolean> {
  * Check if master password is unlocked
  */
 export async function isMasterPasswordUnlocked(userId: string): Promise<boolean> {
-  return isMPUnlocked(userId);
+  const isUnlocked = await isMPUnlocked(userId);
+  if (isUnlocked) {
+    // Enable master password mode if unlocked
+    encryptionService.enableMasterPasswordMode();
+  }
+  return isUnlocked;
 }
 
 /**

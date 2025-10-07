@@ -72,24 +72,15 @@ export function useMasterPassword() {
     }
   }, [userLoaded, userId, isSignedIn]);
 
+  // Check master password status when user is loaded and signed in
   useEffect(() => {
-    checkMasterPasswordStatus();
-  }, [checkMasterPasswordStatus]);
-
-  // Force recheck when user signs in (important for logout/login scenarios)
-  useEffect(() => {
-    if (isSignedIn && userId) {
-      // Add a small delay to ensure Clerk auth is fully initialized
-      const timer = setTimeout(() => {
-        if (__DEV__) {
-          console.log('🔄 User signed in, rechecking master password status');
-        }
-        checkMasterPasswordStatus();
-      }, 100);
-
-      return () => clearTimeout(timer);
+    if (isSignedIn && userLoaded && userId) {
+      if (__DEV__) {
+        console.log('🔄 Checking master password status');
+      }
+      checkMasterPasswordStatus();
     }
-  }, [isSignedIn, userId, checkMasterPasswordStatus]);
+  }, [isSignedIn, userLoaded, userId]);
 
   // Listen for global refresh events (for coordinating across hook instances)
   useEffect(() => {
