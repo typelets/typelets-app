@@ -13,6 +13,7 @@ import {
 
 // Re-export types
 export type { EncryptedNote, PotentiallyEncrypted, DecryptedData } from './types';
+import type { PotentiallyEncrypted } from './types';
 
 // Create singleton instance
 export const encryptionService = new MobileEncryptionService();
@@ -51,7 +52,7 @@ export async function decryptNoteData(
  * Check if note is encrypted
  */
 export function isNoteEncrypted(note: unknown) {
-  return encryptionService.isEncrypted(note as any);
+  return encryptionService.isEncrypted(note as PotentiallyEncrypted);
 }
 
 /**
