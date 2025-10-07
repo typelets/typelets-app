@@ -8,8 +8,6 @@ lerna-debug.log*
 .vite/
 
 # Environment variables
-.env
-myKEYs.OLD
 .env.local
 .env.development.local
 .env.test.local
