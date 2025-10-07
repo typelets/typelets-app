@@ -114,4 +114,10 @@ if (mobileAppJson.expo.android) {
 fs.writeFileSync(mobileAppJsonPath, JSON.stringify(mobileAppJson, null, 2) + '\n');
 console.log(`Updated mobile app.json to version ${newVersion}`);
 
+// Update mobile version.ts
+const mobileVersionPath = path.join(__dirname, '../apps/mobile/v1/src/constants/version.ts');
+const mobileVersionContent = `export const APP_VERSION = '${newVersion}';\n`;
+fs.writeFileSync(mobileVersionPath, mobileVersionContent);
+console.log(`Updated mobile version.ts to ${newVersion}`);
+
 console.log(`\n✅ Mobile app version bumped: ${oldVersion} → ${newVersion} (${bumpType})`);

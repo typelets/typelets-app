@@ -23,7 +23,8 @@
           "package.json",
           "src/constants/version.ts",
           "apps/mobile/v1/package.json",
-          "apps/mobile/v1/app.json"
+          "apps/mobile/v1/app.json",
+          "apps/mobile/v1/src/constants/version.ts"
         ],
         "message": "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
       }

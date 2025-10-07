@@ -11,6 +11,7 @@ import { clearUserEncryptionData } from '../lib/encryption';
 import { forceGlobalMasterPasswordRefresh } from '../hooks/useMasterPassword';
 import { BottomSheetModal, BottomSheetView, BottomSheetBackdrop, BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { APP_VERSION } from '../constants/version';
 
 interface Props {
   onLogout?: () => void;
@@ -182,7 +183,7 @@ export default function SettingsScreen({ onLogout, navigation }: Props) {
       items: [
         {
           title: 'Version',
-          subtitle: '1.0.0',
+          subtitle: APP_VERSION,
           icon: 'information-circle-outline',
           onPress: undefined,
         },
