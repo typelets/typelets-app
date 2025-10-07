@@ -1,3 +1,10 @@
+## [1.18.8](https://github.com/typelets/typelets-app/compare/v1.18.7...v1.18.8) (2025-10-07)
+
+
+### Bug Fixes
+
+* improve pagination to fetch all notes and folders ([eb2e701](https://github.com/typelets/typelets-app/commit/eb2e701d090c998f1eb49a4e818c9130c28e583f))
+
 ## [1.18.7](https://github.com/typelets/typelets-app/compare/v1.18.6...v1.18.7) (2025-09-25)
 
 
