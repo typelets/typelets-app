@@ -8,7 +8,7 @@ import { CACHE_CONFIG } from '../config';
 
 export class DecryptionCache {
   private cache = new Map<string, CacheEntry>();
-  private cleanupInterval: NodeJS.Timeout;
+  private cleanupInterval: ReturnType<typeof setInterval>;
 
   constructor() {
     // Clean expired cache every 5 minutes

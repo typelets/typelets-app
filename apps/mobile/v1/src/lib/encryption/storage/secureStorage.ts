@@ -6,7 +6,7 @@
 import * as SecureStore from 'expo-secure-store';
 import * as Crypto from 'expo-crypto';
 import { STORAGE_KEYS } from './storageKeys';
-import { arrayBufferToBase64 } from '../core/crypto';
+import forge from 'node-forge';
 
 /**
  * User secret management - in-memory cache
@@ -28,8 +28,9 @@ export async function getUserSecret(userId: string): Promise<string> {
   }
 
   // Check memory cache
-  if (userSecretsCache.has(userId)) {
-    return userSecretsCache.get(userId)!;
+  const cachedSecret = userSecretsCache.get(userId);
+  if (cachedSecret) {
+    return cachedSecret;
   }
 
   // Use secure storage for user secrets
@@ -40,7 +41,9 @@ export async function getUserSecret(userId: string): Promise<string> {
     if (!secret) {
       // Generate new random secret and store it securely
       const randomBytes = await Crypto.getRandomBytesAsync(64);
-      secret = arrayBufferToBase64(randomBytes);
+      // Convert Uint8Array to base64 using node-forge
+      const randomString = String.fromCharCode.apply(null, Array.from(randomBytes));
+      secret = forge.util.encode64(randomString);
       await SecureStore.setItemAsync(storageKey, secret);
     }
 

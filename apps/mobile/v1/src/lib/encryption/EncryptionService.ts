@@ -4,11 +4,11 @@
  */
 
 import * as Crypto from 'expo-crypto';
+import forge from 'node-forge';
 import { EncryptedNote, DecryptedData, PotentiallyEncrypted } from './types';
 import { ENCRYPTION_CONFIG } from './config';
 import { encryptWithAESGCM, decryptWithAESGCM } from './core/aes';
 import { deriveEncryptionKey } from './core/keyDerivation';
-import { arrayBufferToBase64 } from './core/crypto';
 import { getUserSecret, getMasterKey, clearUserStorageData } from './storage/secureStorage';
 import { DecryptionCache } from './storage/cache';
 
@@ -61,9 +61,11 @@ export class MobileEncryptionService {
       const saltBytes = await Crypto.getRandomBytesAsync(ENCRYPTION_CONFIG.SALT_LENGTH);
       const ivBytes = await Crypto.getRandomBytesAsync(ENCRYPTION_CONFIG.IV_LENGTH);
 
-      // Convert to base64
-      const saltBase64 = arrayBufferToBase64(saltBytes);
-      const ivBase64 = arrayBufferToBase64(ivBytes);
+      // Convert Uint8Array to base64 using node-forge
+      const saltString = String.fromCharCode.apply(null, Array.from(saltBytes));
+      const ivString = String.fromCharCode.apply(null, Array.from(ivBytes));
+      const saltBase64 = forge.util.encode64(saltString);
+      const ivBase64 = forge.util.encode64(ivString);
 
       // Derive encryption key
       const key = await this.deriveKey(userId, saltBase64);
