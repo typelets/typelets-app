@@ -1,3 +1,10 @@
+## [1.18.9](https://github.com/typelets/typelets-app/compare/v1.18.8...v1.18.9) (2025-10-07)
+
+
+### Bug Fixes
+
+* handle API responses without pagination metadata ([993d4cf](https://github.com/typelets/typelets-app/commit/993d4cfbdffba45f07b7af65f624d51a8863ed29))
+
 ## [1.18.8](https://github.com/typelets/typelets-app/compare/v1.18.7...v1.18.8) (2025-10-07)
 
 
