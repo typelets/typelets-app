@@ -10,10 +10,10 @@ import {
   hasMasterPassword as hasMP,
   isMasterPasswordUnlocked as isMPUnlocked,
 } from './masterPassword/status';
+import type { PotentiallyEncrypted } from './types';
 
 // Re-export types
 export type { EncryptedNote, PotentiallyEncrypted, DecryptedData } from './types';
-import type { PotentiallyEncrypted } from './types';
 
 // Create singleton instance
 export const encryptionService = new MobileEncryptionService();
