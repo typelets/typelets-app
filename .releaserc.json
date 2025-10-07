@@ -5,8 +5,7 @@
       "@semantic-release/commit-analyzer",
       {
         "releaseRules": [
-          { "scope": "mobile", "release": false },
-          { "scope": "web", "release": true }
+          { "scope": "mobile", "release": false }
         ]
       }
     ],
