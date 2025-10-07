@@ -1,3 +1,10 @@
+# [1.21.0](https://github.com/typelets/typelets-app/compare/v1.20.0...v1.21.0) (2025-10-07)
+
+
+### Features
+
+* **mobile:** improve app store description ([df5a4fc](https://github.com/typelets/typelets-app/commit/df5a4fc256c4c1cc8950743024a502005ae172ef))
+
 # [1.20.0](https://github.com/typelets/typelets-app/compare/v1.19.1...v1.20.0) (2025-10-07)
 
 
