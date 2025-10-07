@@ -1,3 +1,10 @@
+## [1.21.1](https://github.com/typelets/typelets-app/compare/v1.21.0...v1.21.1) (2025-10-07)
+
+
+### Bug Fixes
+
+* **ci:** improve mobile-only commit detection in release workflow ([2711b1b](https://github.com/typelets/typelets-app/commit/2711b1b00bbeb391a8aade3c863091b56347b9c5))
+
 # [1.21.0](https://github.com/typelets/typelets-app/compare/v1.20.0...v1.21.0) (2025-10-07)
 
 
