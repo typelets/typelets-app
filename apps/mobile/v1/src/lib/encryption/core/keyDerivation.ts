@@ -5,7 +5,7 @@
 
 import forge from 'node-forge';
 import { ENCRYPTION_CONFIG } from '../config';
-import { stringToUint8Array } from './crypto';
+
 
 /**
  * PBKDF2 implementation using node-forge to match web app
@@ -20,9 +20,8 @@ export async function pbkdf2(
     // Convert inputs to proper format to match web app
     const passwordBytes = forge.util.encodeUtf8(password);
 
-    // Convert salt string to bytes using TextEncoder equivalent
-    const saltUint8Array = stringToUint8Array(salt);
-    const saltBytes = forge.util.createBuffer(saltUint8Array).data;
+    // Salt is already a string, use it directly
+    const saltBytes = forge.util.encodeUtf8(salt);
 
     // Perform PBKDF2 computation (will block for ~2 minutes with 250k iterations)
     const derivedKey = forge.pkcs5.pbkdf2(
