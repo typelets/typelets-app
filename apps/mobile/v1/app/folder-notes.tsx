@@ -121,7 +121,8 @@ export default function FolderNotesScreen() {
     };
 
     buildBreadcrumbs();
-  }, [params.folderId, params.folderName, params.viewType, api]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [params.folderId, params.folderName, params.viewType]); // api is stable, don't include it
 
   // Format breadcrumbs for display
   const formatBreadcrumbs = (crumbs: string[]): string => {
