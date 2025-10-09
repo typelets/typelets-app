@@ -12,7 +12,7 @@
     [
       "@semantic-release/exec",
       {
-        "prepareCmd": "node scripts/update-version.js ${nextRelease.version} && node scripts/update-mobile-version.js"
+        "prepareCmd": "node scripts/update-version.js ${nextRelease.version} && node scripts/update-mobile-version.js ${nextRelease.version}"
       }
     ],
     [
