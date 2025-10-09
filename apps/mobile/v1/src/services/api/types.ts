@@ -83,3 +83,30 @@ export interface EmptyTrashResponse {
   message: string;
   deletedCount: number;
 }
+
+export interface ApiUserUsage {
+  storage: {
+    totalBytes: number;
+    totalMB: number;
+    totalGB: number;
+    limitGB: number;
+    usagePercent: number;
+    isOverLimit: boolean;
+  };
+  notes: {
+    count: number;
+    limit: number;
+    usagePercent: number;
+    isOverLimit: boolean;
+  };
+}
+
+export interface ApiUser {
+  id: string;
+  email: string;
+  firstName: string | null;
+  lastName: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+  usage?: ApiUserUsage;
+}

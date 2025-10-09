@@ -85,6 +85,16 @@ export function generateEditorStyles(themeColors: {
     }
     li {
       margin: 4px 0;
+      color: ${themeColors.foreground} !important;
+    }
+    li::marker {
+      color: ${themeColors.foreground} !important;
+    }
+    ul li, ol li {
+      color: ${themeColors.foreground} !important;
+    }
+    li * {
+      color: ${themeColors.foreground} !important;
     }
     /* Task list styling - override TenTap defaults with higher specificity */
     ul[data-type="taskList"] {

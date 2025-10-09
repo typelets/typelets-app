@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, Animated, useWindowDimensions } from 'react-native';
+import React, { useRef } from 'react';
+import { View, Text, StyleSheet, Animated } from 'react-native';
 import { WebView } from 'react-native-webview';
 import type { Note } from '../../services/api';
 
@@ -13,124 +13,128 @@ interface NoteContentProps {
       foreground: string;
       mutedForeground: string;
       border: string;
+      muted: string;
+      primary: string;
     };
+    isDark: boolean;
   };
 }
-export function NoteContent({ note, htmlContent, scrollY, scrollViewRef, theme }: NoteContentProps) {
-  const { height } = useWindowDimensions();
-  const [webViewHeight, setWebViewHeight] = useState(height);
 
-  const titleOpacity = scrollY.interpolate({
-    inputRange: [0, 80],
-    outputRange: [1, 0],
-    extrapolate: 'clamp',
-  });
+/**
+ * Note content component that displays note in a WebView
+ * Supports rich text formatting, code blocks with syntax highlighting,
+ * and communicates scroll position to React Native
+ */
+export function NoteContent({ note, htmlContent, scrollY, scrollViewRef, theme }: NoteContentProps) {
+  const webViewRef = useRef<any>(null);
+
+  // Enhanced HTML with title and metadata
+  const fullHtml = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+      <style>
+        ${htmlContent.match(/<style>([\s\S]*?)<\/style>/)?.[1] || ''}
+
+        .note-header {
+          padding: 8px 16px 0 16px;
+        }
+        .note-title {
+          font-size: 24px;
+          font-weight: 600;
+          margin-bottom: 8px;
+          line-height: 32px;
+          color: ${theme.colors.foreground};
+        }
+        .note-metadata {
+          font-size: 12px;
+          color: ${theme.colors.mutedForeground};
+          margin-bottom: 12px;
+        }
+        .note-divider {
+          height: 0.5px;
+          background: ${theme.colors.border};
+          margin: 0 -16px 16px -16px;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="note-header" id="header">
+        <div class="note-title">${note.title}</div>
+        <div class="note-metadata">
+          Created ${new Date(note.createdAt).toLocaleDateString()}${
+            note.updatedAt !== note.createdAt
+              ? ` • Updated ${new Date(note.updatedAt).toLocaleDateString()}`
+              : ''
+          }
+        </div>
+        <div class="note-divider"></div>
+      </div>
+      ${htmlContent.match(/<body>([\s\S]*?)<\/body>/)?.[1] || note.content}
+      <script>
+        document.querySelectorAll('pre code').forEach((block) => {
+          hljs.highlightElement(block);
+        });
+      </script>
+    </body>
+    </html>
+  `;
 
   return (
-    <Animated.ScrollView
-      ref={scrollViewRef}
-      style={styles.scrollView}
-      onScroll={Animated.event(
-        [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-        { useNativeDriver: true }
-      )}
-      scrollEventThrottle={16}
-      showsVerticalScrollIndicator={false}
-    >
-      <Animated.View style={[styles.titleContainer, { opacity: titleOpacity }]}>
-        <Text style={[styles.title, { color: theme.colors.foreground }]}>
-          {note.title}
-        </Text>
-
-        <View style={styles.metadata}>
-          <Text style={[styles.date, { color: theme.colors.mutedForeground }]}>
-            Created {new Date(note.createdAt).toLocaleDateString()}
-            {note.updatedAt !== note.createdAt &&
-              ` • Updated ${new Date(note.updatedAt).toLocaleDateString()}`}
+    <View style={styles.container}>
+      {note.hidden ? (
+        <View style={styles.hiddenContainer}>
+          <Text style={[styles.hiddenText, { color: theme.colors.mutedForeground }]}>
+            [HIDDEN]
           </Text>
         </View>
-
-        <View style={[styles.divider, { backgroundColor: theme.colors.border, marginHorizontal: -16 }]} />
-      </Animated.View>
-
-      <View style={styles.contentContainer}>
-        {note.hidden ? (
-          <View style={styles.hiddenContainer}>
-            <Text style={[styles.hiddenText, { color: theme.colors.mutedForeground }]}>
-              [HIDDEN]
-            </Text>
-          </View>
-        ) : (
-          <View style={{ height: webViewHeight }}>
-            <WebView
-              source={{ html: htmlContent }}
-              style={styles.webView}
-              scrollEnabled={false}
-              showsVerticalScrollIndicator={false}
-              originWhitelist={['*']}
-              startInLoadingState={false}
-              javaScriptEnabled={true}
-              injectedJavaScript={`
-                setTimeout(function() {
-                  window.ReactNativeWebView.postMessage(JSON.stringify({
-                    type: 'height',
-                    height: document.documentElement.scrollHeight
-                  }));
-                }, 100);
-                true;
-              `}
-              onMessage={(event) => {
-                try {
-                  const data = JSON.parse(event.nativeEvent.data);
-                  if (data.type === 'height' && data.height) {
-                    setWebViewHeight(Math.max(data.height, 200));
-                  }
-                } catch {
-                  // Ignore parse errors
-                }
-              }}
-            />
-          </View>
-        )}
-      </View>
-    </Animated.ScrollView>
+      ) : (
+        <WebView
+          ref={webViewRef}
+          source={{ html: fullHtml }}
+          style={styles.webview}
+          scrollEnabled={true}
+          showsVerticalScrollIndicator={true}
+          showsHorizontalScrollIndicator={false}
+          originWhitelist={['*']}
+          onMessage={(event) => {
+            try {
+              const data = JSON.parse(event.nativeEvent.data);
+              if (data.type === 'scroll' && scrollY) {
+                scrollY.setValue(data.scrollY);
+              }
+            } catch {
+              // Ignore parse errors from invalid message data
+            }
+          }}
+          injectedJavaScript={`
+            window.addEventListener('scroll', () => {
+              window.ReactNativeWebView.postMessage(JSON.stringify({
+                type: 'scroll',
+                scrollY: window.scrollY
+              }));
+            }, { passive: true });
+            true;
+          `}
+        />
+      )}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  scrollView: {
+  container: {
     flex: 1,
   },
-  titleContainer: {
-    paddingHorizontal: 16,
-    paddingTop: 8,
-    paddingBottom: 0,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: '600',
-    marginBottom: 8,
-    lineHeight: 32,
-  },
-  metadata: {
-    gap: 4,
-  },
-  date: {
-    fontSize: 12,
-  },
-  divider: {
-    height: 0.5,
-    marginTop: 12,
-  },
-  contentContainer: {
-    paddingTop: 0,
-  },
-  webView: {
+  webview: {
     flex: 1,
     backgroundColor: 'transparent',
   },
   hiddenContainer: {
-    minHeight: 400,
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 16,

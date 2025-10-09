@@ -348,9 +348,9 @@ export default function NotesListScreen({ navigation, route, renderHeader, scrol
 
             {/* Subfolders Section */}
             {!viewType && (
-            <View style={styles.subfoldersSection}>
+            <>
               <View style={styles.sectionHeader}>
-                <Text style={[styles.sectionTitle, { color: theme.colors.mutedForeground, marginBottom: 0, paddingHorizontal: 0 }]}>
+                <Text style={[styles.sectionTitle, { color: theme.colors.mutedForeground }]}>
                   FOLDERS ({String(subfolders?.length || 0)})
                 </Text>
                 <View style={styles.viewModeToggle}>
@@ -368,6 +368,7 @@ export default function NotesListScreen({ navigation, route, renderHeader, scrol
                         if (__DEV__) console.error('Failed to save view mode:', error);
                       }
                     }}
+                    activeOpacity={0.7}
                   >
                     <Ionicons
                       name="list"
@@ -389,6 +390,7 @@ export default function NotesListScreen({ navigation, route, renderHeader, scrol
                         if (__DEV__) console.error('Failed to save view mode:', error);
                       }
                     }}
+                    activeOpacity={0.7}
                   >
                     <Ionicons
                       name="grid"
@@ -401,12 +403,13 @@ export default function NotesListScreen({ navigation, route, renderHeader, scrol
 
               <View style={viewMode === 'grid' ? styles.subfoldersGrid : styles.subfoldersList}>
                 {/* Create Folder Button */}
-                <TouchableOpacity
+                <Pressable
                   style={[
                     viewMode === 'grid' ? styles.subfolderItemGrid : styles.subfolderItem,
                     { backgroundColor: theme.isDark ? theme.colors.card : theme.colors.secondary, borderColor: theme.colors.border }
                   ]}
                   onPress={() => createFolderSheetRef.current?.present()}
+                  android_ripple={{ color: theme.colors.muted }}
                 >
                   <View style={viewMode === 'grid' ? styles.subfolderContentGrid : styles.subfolderContent}>
                     <Ionicons name="add" size={viewMode === 'grid' ? 24 : 16} color={theme.colors.primary} style={{ marginRight: viewMode === 'grid' ? 0 : 12, marginBottom: viewMode === 'grid' ? 8 : 0 }} />
@@ -414,10 +417,10 @@ export default function NotesListScreen({ navigation, route, renderHeader, scrol
                       Create Folder
                     </Text>
                   </View>
-                </TouchableOpacity>
+                </Pressable>
 
                 {subfolders.map((subfolder) => (
-                  <TouchableOpacity
+                  <Pressable
                     key={subfolder.id}
                     style={[
                       viewMode === 'grid' ? styles.subfolderItemGrid : styles.subfolderItem,
@@ -427,6 +430,7 @@ export default function NotesListScreen({ navigation, route, renderHeader, scrol
                       }
                     ]}
                     onPress={() => navigation?.navigate('Notes', { folderId: subfolder.id, folderName: subfolder.name })}
+                    android_ripple={{ color: theme.colors.muted }}
                   >
                     <View style={viewMode === 'grid' ? styles.subfolderContentGrid : styles.subfolderContent}>
                       {viewMode === 'list' && (
@@ -443,10 +447,10 @@ export default function NotesListScreen({ navigation, route, renderHeader, scrol
                         </Text>
                       </View>
                     )}
-                  </TouchableOpacity>
+                  </Pressable>
                 ))}
               </View>
-            </View>
+            </>
             )}
 
             {/* Notes Section */}
@@ -503,12 +507,12 @@ export default function NotesListScreen({ navigation, route, renderHeader, scrol
                   const getFolderPath = (folder: typeof noteFolder): string => {
                     if (!folder) return '';
                     const path: string[] = [];
-                    let currentFolder = folder;
+                    let currentFolder: Folder | undefined = folder;
 
                     while (currentFolder) {
                       path.unshift(currentFolder.name);
                       if (currentFolder.parentId) {
-                        currentFolder = allFolders.find(f => f.id === currentFolder.parentId);
+                        currentFolder = allFolders.find(f => f.id === currentFolder?.parentId);
                       } else {
                         break;
                       }
@@ -524,10 +528,8 @@ export default function NotesListScreen({ navigation, route, renderHeader, scrol
                     <View key={note.id} style={styles.noteListItemWrapper}>
                       <Pressable
                         onPress={() => navigation?.navigate('ViewNote', { noteId: note.id })}
-                        style={({ pressed }) => [
-                          styles.noteListItem,
-                          { backgroundColor: pressed ? theme.colors.muted : 'transparent' }
-                        ]}
+                        style={styles.noteListItem}
+                        android_ripple={{ color: theme.colors.muted }}
                       >
                         <View style={styles.noteListContent}>
                         <View style={styles.noteListHeader}>
@@ -769,8 +771,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   subfoldersList: {
-    gap: FOLDER_CARD.SPACING,
     paddingHorizontal: 16,
+    gap: 12,
   },
   subfoldersGrid: {
     flexDirection: 'row',

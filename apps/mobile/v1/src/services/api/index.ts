@@ -6,9 +6,10 @@
 import { useAuth, useUser } from '@clerk/clerk-expo';
 import { createNotesApi } from './notes';
 import { createFoldersApi } from './folders';
+import { createUserApi } from './user';
 
 // Re-export types for convenience
-export type { Folder, Note, NoteQueryParams, EmptyTrashResponse } from './types';
+export type { Folder, Note, NoteQueryParams, EmptyTrashResponse, ApiUser, ApiUserUsage } from './types';
 
 /**
  * Main API service hook
@@ -23,6 +24,7 @@ export const useApiService = () => {
   // Create API modules
   const notesApi = createNotesApi(getToken, getUserId);
   const foldersApi = createFoldersApi(getToken);
+  const userApi = createUserApi(getToken);
 
   // Return combined API surface
   return {
@@ -41,5 +43,8 @@ export const useApiService = () => {
     createFolder: foldersApi.createFolder,
     updateFolder: foldersApi.updateFolder,
     deleteFolder: foldersApi.deleteFolder,
+
+    // User methods
+    getCurrentUser: userApi.getCurrentUser,
   };
 };

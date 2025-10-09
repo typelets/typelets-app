@@ -76,13 +76,15 @@ export default function ViewNoteScreen() {
         />
       </View>
 
-      <NoteContent
-        note={note}
-        htmlContent={htmlContent}
-        scrollY={scrollY}
-        scrollViewRef={scrollViewRef}
-        theme={theme}
-      />
+      <View style={{ flex: 1 }}>
+        <NoteContent
+          note={note}
+          htmlContent={htmlContent}
+          scrollY={scrollY}
+          scrollViewRef={scrollViewRef}
+          theme={theme}
+        />
+      </View>
     </SafeAreaView>
   );
 }
