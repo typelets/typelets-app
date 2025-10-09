@@ -85,8 +85,8 @@ export function useViewNote(noteId: string): UseViewNoteReturn {
   };
 
   const htmlContent = useMemo(
-    () => note ? generateNoteHtml(note.content, theme.colors) : '',
-    [note, theme.colors]
+    () => note ? generateNoteHtml(note.content, theme.colors, theme.isDark) : '',
+    [note, theme.colors, theme.isDark]
   );
 
   return {

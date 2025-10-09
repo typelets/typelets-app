@@ -10,7 +10,8 @@ export function generateNoteHtml(
     mutedForeground: string;
     muted: string;
     primary: string;
-  }
+  },
+  isDark: boolean = false
 ): string {
   return `
     <!DOCTYPE html>
@@ -118,14 +119,14 @@ export function generateNoteHtml(
         }
         code {
           background-color: ${themeColors.muted};
-          color: ${themeColors.foreground};
+          color: ${isDark ? themeColors.foreground : '#000000'};
           padding: 2px 4px;
           border-radius: 4px;
           font-family: 'Courier New', monospace;
         }
         pre {
           background-color: ${themeColors.muted};
-          color: ${themeColors.foreground};
+          color: ${isDark ? themeColors.foreground : '#000000'};
           padding: 16px;
           border-radius: 8px;
           overflow-x: auto;
@@ -140,10 +141,49 @@ export function generateNoteHtml(
           font-family: 'Courier New', Consolas, Monaco, monospace;
           font-size: 14px;
           line-height: 1.5;
+          color: ${isDark ? themeColors.foreground : '#000000'};
         }
         .hljs {
           background: ${themeColors.muted} !important;
         }
+
+        /* Override syntax highlighting colors for light theme with darker, readable colors */
+        ${!isDark ? `
+        .hljs {
+          color: #000000 !important;
+        }
+        .hljs-keyword,
+        .hljs-selector-tag,
+        .hljs-literal,
+        .hljs-tag {
+          color: #0033cc !important;
+        }
+        .hljs-string,
+        .hljs-title,
+        .hljs-section,
+        .hljs-attribute,
+        .hljs-attr {
+          color: #008000 !important;
+        }
+        .hljs-number,
+        .hljs-regexp {
+          color: #cc0000 !important;
+        }
+        .hljs-comment,
+        .hljs-quote {
+          color: #555555 !important;
+          font-style: italic !important;
+        }
+        .hljs-function,
+        .hljs-name,
+        .hljs-built_in {
+          color: #6600cc !important;
+        }
+        .hljs-variable,
+        .hljs-template-variable {
+          color: #cc6600 !important;
+        }
+        ` : ''}
 
         /* Scrollbar styling */
         pre::-webkit-scrollbar {
