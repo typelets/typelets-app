@@ -1,3 +1,10 @@
+## [1.22.1](https://github.com/typelets/typelets-app/compare/v1.22.0...v1.22.1) (2025-10-09)
+
+
+### Bug Fixes
+
+* **mobile:** resolve master password setup hang and add New Relic monitoring ([343ef33](https://github.com/typelets/typelets-app/commit/343ef33ad62964b5b5d496c3bd6b079eb022fb9c))
+
 # [1.22.0](https://github.com/typelets/typelets-app/compare/v1.21.1...v1.22.0) (2025-10-09)
 
 
