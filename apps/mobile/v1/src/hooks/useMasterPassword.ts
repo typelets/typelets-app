@@ -11,9 +11,6 @@ import {
 
 // Global function to force all hook instances to refresh
 export function forceGlobalMasterPasswordRefresh() {
-  if (__DEV__) {
-    console.log('🌍 Emitting global master password refresh event');
-  }
   DeviceEventEmitter.emit('masterPasswordForceRefresh');
 }
 
@@ -75,19 +72,14 @@ export function useMasterPassword() {
   // Check master password status when user is loaded and signed in
   useEffect(() => {
     if (isSignedIn && userLoaded && userId) {
-      if (__DEV__) {
-        console.log('🔄 Checking master password status');
-      }
       checkMasterPasswordStatus();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isSignedIn, userLoaded, userId]);
 
   // Listen for global refresh events (for coordinating across hook instances)
   useEffect(() => {
     const subscription = DeviceEventEmitter.addListener('masterPasswordForceRefresh', () => {
-      if (__DEV__) {
-        console.log('🔄 Global master password refresh triggered');
-      }
       checkMasterPasswordStatus();
     });
 
@@ -95,12 +87,6 @@ export function useMasterPassword() {
   }, [checkMasterPasswordStatus]);
 
   const onPasswordSuccess = async (password: string) => {
-    if (__DEV__) {
-      console.log('🔑 onPasswordSuccess called');
-      console.log('🔑 userId:', userId);
-      console.log('🔑 isNewSetup:', isNewSetup);
-    }
-
     if (!userId) {
       throw new Error('No user ID available');
     }
@@ -109,35 +95,26 @@ export function useMasterPassword() {
       throw new Error('Password is required');
     }
 
-    if (isNewSetup) {
-      // Setting up new master password
-      if (__DEV__) {
-        console.log('🔑 Setting up new master password...');
+    try {
+      if (isNewSetup) {
+        // Setting up new master password
+        await setupMasterPassword(password, userId);
+      } else {
+        // Unlocking with existing password
+        const success = await unlockWithMasterPassword(password, userId);
+        if (!success) {
+          throw new Error('Invalid password');
+        }
       }
-      await setupMasterPassword(password, userId);
-      if (__DEV__) {
-        console.log('🔑 Master password setup completed');
-      }
-    } else {
-      // Unlocking with existing password
-      if (__DEV__) {
-        console.log('🔑 Unlocking with existing password...');
-      }
-      const success = await unlockWithMasterPassword(password, userId);
-      if (!success) {
-        throw new Error('Invalid password');
-      }
-      if (__DEV__) {
-        console.log('🔑 Master password unlock completed');
-      }
-    }
 
-    // Successfully authenticated
-    if (__DEV__) {
-      console.log('🔑 Setting needsUnlock=false, isNewSetup=false');
+      // Successfully authenticated - update state
+      setNeedsUnlock(false);
+      setIsNewSetup(false);
+      setIsChecking(false);
+    } catch (error) {
+      // Re-throw to let the UI handle the error
+      throw error;
     }
-    setNeedsUnlock(false);
-    setIsNewSetup(false);
   };
 
   const signOut = async () => {

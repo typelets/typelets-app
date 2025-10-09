@@ -35,9 +35,15 @@ export function MasterPasswordScreen({
     setIsLoading(true);
     try {
       await onSuccess(password);
-    } finally {
+    } catch (error) {
+      // Always clear loading state on error so user can retry
       setIsLoading(false);
+
+      // Re-throw to let parent handle
+      throw error;
     }
+
+    // Don't clear loading here on success - let parent state change handle it
   };
 
   return (
