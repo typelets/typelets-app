@@ -31,6 +31,12 @@ export function MasterPasswordScreen({
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
   }, []);
 
+  // Reset loading state when component mounts or isNewSetup changes
+  // This ensures the form is shown after sign out/sign in
+  useEffect(() => {
+    setIsLoading(false);
+  }, [isNewSetup]);
+
   const handleFormSubmit = async (password: string) => {
     setIsLoading(true);
     try {
