@@ -17,7 +17,22 @@ export function generateNoteHtml(
     <html>
     <head>
       <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+      <script>
+        document.addEventListener('DOMContentLoaded', (event) => {
+          document.querySelectorAll('pre code').forEach((block) => {
+            hljs.highlightElement(block);
+          });
+        });
+      </script>
       <style>
+        * {
+          box-sizing: border-box;
+        }
+        html {
+          height: 100%;
+        }
         body {
           font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
           font-size: 16px;
@@ -26,6 +41,8 @@ export function generateNoteHtml(
           background-color: ${themeColors.background};
           padding: 0 16px 16px 16px;
           margin: 0;
+          max-width: 100vw;
+          min-height: 100%;
         }
         p {
           margin: 0 0 16px 0;
@@ -112,8 +129,74 @@ export function generateNoteHtml(
           padding: 16px;
           border-radius: 8px;
           overflow-x: auto;
+          overflow-y: hidden;
+          -webkit-overflow-scrolling: touch;
+          max-width: calc(100vw - 32px);
+          margin: 16px 0;
+        }
+        pre code {
+          display: block;
+          white-space: pre;
+          font-family: 'Courier New', Consolas, Monaco, monospace;
+          font-size: 14px;
+          line-height: 1.5;
+        }
+        .hljs {
+          background: ${themeColors.muted} !important;
+        }
+
+        /* Scrollbar styling */
+        pre::-webkit-scrollbar {
+          height: 6px;
+        }
+        pre::-webkit-scrollbar-thumb {
+          background: ${themeColors.foreground}30;
+          border-radius: 3px;
         }
       </style>
+      <script>
+        // Enable horizontal scrolling on code blocks
+        document.addEventListener('DOMContentLoaded', () => {
+          document.querySelectorAll('pre').forEach(pre => {
+            let startX, startY, scrollLeft;
+            let isDragging = false;
+            let direction = null;
+
+            pre.addEventListener('touchstart', (e) => {
+              startX = e.touches[0].clientX;
+              startY = e.touches[0].clientY;
+              scrollLeft = pre.scrollLeft;
+              isDragging = false;
+              direction = null;
+            }, { passive: true });
+
+            pre.addEventListener('touchmove', (e) => {
+              const currentX = e.touches[0].clientX;
+              const currentY = e.touches[0].clientY;
+              const diffX = startX - currentX;
+              const diffY = startY - currentY;
+
+              // Determine scroll direction on first move
+              if (direction === null && (Math.abs(diffX) > 3 || Math.abs(diffY) > 3)) {
+                direction = Math.abs(diffX) > Math.abs(diffY) ? 'horizontal' : 'vertical';
+              }
+
+              // If horizontal scroll, handle it and prevent default
+              if (direction === 'horizontal') {
+                e.preventDefault();
+                e.stopPropagation();
+                isDragging = true;
+                pre.scrollLeft = scrollLeft + diffX;
+              }
+            }, { passive: false });
+
+            pre.addEventListener('touchend', () => {
+              isDragging = false;
+              direction = null;
+            });
+          });
+        });
+      </script>
     </head>
     <body>
       ${content || '<p>No content</p>'}

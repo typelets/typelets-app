@@ -12,6 +12,7 @@ import { forceGlobalMasterPasswordRefresh } from '../hooks/useMasterPassword';
 import { BottomSheetModal, BottomSheetView, BottomSheetBackdrop, BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { APP_VERSION } from '../constants/version';
+import { UsageBottomSheet } from '../components/settings/UsageBottomSheet';
 
 interface Props {
   onLogout?: () => void;
@@ -28,6 +29,7 @@ export default function SettingsScreen({ onLogout, navigation }: Props) {
   const themeColorSheetRef = useRef<BottomSheetModal>(null);
   const securitySheetRef = useRef<BottomSheetModal>(null);
   const viewModeSheetRef = useRef<BottomSheetModal>(null);
+  const usageSheetRef = useRef<BottomSheetModal>(null);
 
   // Scroll tracking
   const scrollY = useRef(new Animated.Value(0)).current;
@@ -40,6 +42,7 @@ export default function SettingsScreen({ onLogout, navigation }: Props) {
   const themeColorSnapPoints = useMemo(() => ['80%'], []);
   const securitySnapPoints = useMemo(() => ['70%'], []);
   const viewModeSnapPoints = useMemo(() => ['40%'], []);
+  const usageSnapPoints = useMemo(() => ['50%'], []);
 
   // Backdrop component
   const renderBackdrop = useCallback(
@@ -148,6 +151,12 @@ export default function SettingsScreen({ onLogout, navigation }: Props) {
     {
       section: 'DATA',
       items: [
+        {
+          title: 'Usage & Limits',
+          subtitle: 'View storage and note limits',
+          icon: 'pie-chart-outline',
+          onPress: () => usageSheetRef.current?.present(),
+        },
         {
           title: 'Sync Status',
           subtitle: 'Last synced: Just now',
@@ -633,6 +642,9 @@ export default function SettingsScreen({ onLogout, navigation }: Props) {
           </View>
         </BottomSheetView>
       </BottomSheetModal>
+
+      {/* Usage Bottom Sheet */}
+      <UsageBottomSheet sheetRef={usageSheetRef} snapPoints={usageSnapPoints} />
 
     </SafeAreaView>
   );
