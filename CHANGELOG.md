@@ -1,3 +1,10 @@
+## [1.22.2](https://github.com/typelets/typelets-app/compare/v1.22.1...v1.22.2) (2025-10-09)
+
+
+### Bug Fixes
+
+* implement unified versioning for main and mobile apps ([9cee425](https://github.com/typelets/typelets-app/commit/9cee4257d6b643648b51006a7ec5521647e8d957))
+
 ## [1.22.1](https://github.com/typelets/typelets-app/compare/v1.22.0...v1.22.1) (2025-10-09)
 
 
