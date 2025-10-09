@@ -13,27 +13,7 @@ if (!version) {
   process.exit(1);
 }
 
-// Check if this release is mobile-only
-function isMobileOnlyRelease() {
-  try {
-    const commits = execSync('git log $(git describe --tags --abbrev=0)..HEAD --pretty=format:"%s"', { encoding: 'utf8' });
-    const commitList = commits.split('\n').filter(Boolean);
-
-    // Check if all commits are mobile-scoped
-    const hasMobile = commitList.some(commit => commit.includes('(mobile)'));
-    const hasNonMobile = commitList.some(commit => !commit.includes('(mobile)') && !commit.includes('[skip ci]'));
-
-    return hasMobile && !hasNonMobile;
-  } catch (error) {
-    return false;
-  }
-}
-
-// Skip web version updates if this is a mobile-only release
-if (isMobileOnlyRelease()) {
-  console.log('Mobile-only release detected, skipping web version updates');
-  process.exit(0);
-}
+console.log(`\n🔄 Updating main app version to ${version}...`);
 
 // Update version constants file
 const versionFilePath = path.join(__dirname, '../src/constants/version.ts');
