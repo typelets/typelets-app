@@ -1,3 +1,25 @@
+# [1.22.0](https://github.com/typelets/typelets-app/compare/v1.21.1...v1.22.0) (2025-10-09)
+
+
+### Bug Fixes
+
+* **mobile:** correct version bump calculation to check commits since last bump ([233f6b4](https://github.com/typelets/typelets-app/commit/233f6b43537884488de0dc33931ab072016ec74b))
+* **mobile:** improve code consistency in view mode loader ([f8bb08e](https://github.com/typelets/typelets-app/commit/f8bb08e3115777d3093d46328d5e9f1fce8f89f3))
+* **mobile:** improve view mode preference error handling ([da67f39](https://github.com/typelets/typelets-app/commit/da67f399bae706f8280de3d131e7b96978540e33))
+* **mobile:** replace all arrayBufferToBase64 usage with node-forge ([29cf11e](https://github.com/typelets/typelets-app/commit/29cf11ecc9caa20f5f522d8cf8f5f7672baec7eb))
+* **mobile:** resolve infinite loop in folder-notes screen ([80c79f6](https://github.com/typelets/typelets-app/commit/80c79f620bf85131fac33096324c027c170f1b2f))
+* **mobile:** resolve master password mode and pagination issues ([22ab604](https://github.com/typelets/typelets-app/commit/22ab604b59ad6c633ce2d211fc86614331698511))
+* **mobile:** resolve node-forge type compatibility in key derivation ([588df9c](https://github.com/typelets/typelets-app/commit/588df9cc3509c22753575eb15c7c0a2eeea020d6))
+* **mobile:** resolve TypeScript errors and remove unused code ([7b47f37](https://github.com/typelets/typelets-app/commit/7b47f37b7ea166ab22e984db1a22cf0c45dffd1a))
+* **mobile:** update privacy policy URL to app subdomain ([c875258](https://github.com/typelets/typelets-app/commit/c87525800c064b9997f375751d668fd07d475398))
+
+
+### Features
+
+* **mobile:** add dynamic version display in settings ([5f27ed8](https://github.com/typelets/typelets-app/commit/5f27ed8237f9bb28590a8df803eabae4e7c6b052))
+* **mobile:** add dynamic version display in settings ([df9b70c](https://github.com/typelets/typelets-app/commit/df9b70cb6b374f109a9d49702ee11b54edf17501))
+* **mobile:** enhance authentication flow and fix note viewing ([83ce1f8](https://github.com/typelets/typelets-app/commit/83ce1f806fcceb3a5e68ef7dbec4bfd8e4299475))
+
 ## [1.21.1](https://github.com/typelets/typelets-app/compare/v1.21.0...v1.21.1) (2025-10-07)
 
 
