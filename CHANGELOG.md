@@ -1,3 +1,11 @@
+## [1.22.3](https://github.com/typelets/typelets-app/compare/v1.22.2...v1.22.3) (2025-10-09)
+
+
+### Bug Fixes
+
+* **mobile:** reset loading state on master password screen mount ([cedac17](https://github.com/typelets/typelets-app/commit/cedac17fa1dc52212ebff385b3ef88a50c9c25ba))
+* **mobile:** reset loading state on master password screen mount ([09b7493](https://github.com/typelets/typelets-app/commit/09b7493952ceb68fc4218557352b0b7b54d4145a))
+
 ## [1.22.2](https://github.com/typelets/typelets-app/compare/v1.22.1...v1.22.2) (2025-10-09)
 
 
