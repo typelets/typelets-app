@@ -1,3 +1,10 @@
+## [1.22.4](https://github.com/typelets/typelets-app/compare/v1.22.3...v1.22.4) (2025-10-09)
+
+
+### Bug Fixes
+
+* **mobile:** improve code block readability and New Relic integration ([83c6e52](https://github.com/typelets/typelets-app/commit/83c6e5247f3cddd2879f4bb048e0cf81a8db3c09))
+
 ## [1.22.3](https://github.com/typelets/typelets-app/compare/v1.22.2...v1.22.3) (2025-10-09)
 
 
