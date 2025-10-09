@@ -7,7 +7,6 @@ export default function HomeScreen() {
   // Create navigation object that pushes to new screens
   const navigation = {
     navigate: (screen: string, params?: any) => {
-      console.log(`Navigate to ${screen} with params:`, params);
       if (screen === 'Notes') {
         // Navigate to a new notes screen as a modal or pushed screen
         const queryParams = new URLSearchParams();

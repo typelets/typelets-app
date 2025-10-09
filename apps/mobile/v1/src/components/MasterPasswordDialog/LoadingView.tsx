@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, ActivityIndicator } from 'react-native';
 import { useTheme } from '../../theme';
 import { styles } from './styles';
@@ -9,10 +9,23 @@ interface LoadingViewProps {
 
 /**
  * Loading view component
- * Shows during PBKDF2 key derivation
+ * Shows during PBKDF2 key derivation with progress indicator
  */
 export function LoadingView({ isNewSetup }: LoadingViewProps) {
   const theme = useTheme();
+  const [dots, setDots] = useState('');
+
+  // Animate dots to show the app is not frozen
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setDots(prev => {
+        if (prev === '...') return '';
+        return prev + '.';
+      });
+    }, 500);
+
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <View style={styles.loadingContent}>
@@ -24,7 +37,7 @@ export function LoadingView({ isNewSetup }: LoadingViewProps) {
         />
 
         <Text style={[styles.loadingTitle, { color: theme.colors.foreground }]}>
-          Securing Your Data
+          Securing Your Data{dots}
         </Text>
 
         <View
@@ -44,10 +57,10 @@ export function LoadingView({ isNewSetup }: LoadingViewProps) {
           <Text
             style={[
               styles.noticeText,
-              { color: theme.colors.foreground, marginTop: 12 },
+              { color: theme.colors.foreground, marginTop: 12, fontWeight: '600' },
             ]}
           >
-            This can take up to 5 minutes to complete.
+            This process can take 2-5 minutes. The app may appear frozen but it&apos;s working{dots}
           </Text>
         </View>
       </View>
