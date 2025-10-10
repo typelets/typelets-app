@@ -1,3 +1,10 @@
+## [1.22.7](https://github.com/typelets/typelets-app/compare/v1.22.6...v1.22.7) (2025-10-10)
+
+
+### Bug Fixes
+
+* **mobile:** prevent master password screen freeze during user transitions ([2f149c3](https://github.com/typelets/typelets-app/commit/2f149c3f0931ba597b0f65ce35650d97b60a5e9c))
+
 ## [1.22.6](https://github.com/typelets/typelets-app/compare/v1.22.5...v1.22.6) (2025-10-10)
 
 

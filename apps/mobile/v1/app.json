@@ -2,7 +2,7 @@
   "expo": {
     "name": "Typelets",
     "slug": "typelets",
-    "version": "1.22.6",
+    "version": "1.22.7",
     "orientation": "default",
     "icon": "./assets/images/icon.png",
     "scheme": "typelets",
@@ -28,7 +28,7 @@
     ],
     "ios": {
       "bundleIdentifier": "com.typelets.notes",
-      "buildNumber": "11",
+      "buildNumber": "12",
       "supportsTablet": true,
       "infoPlist": {
         "NSCameraUsageDescription": "This app uses the camera to capture photos for your notes.",
@@ -38,7 +38,7 @@
     },
     "android": {
       "package": "com.typelets.notes",
-      "versionCode": 11,
+      "versionCode": 12,
       "softwareKeyboardLayoutMode": "resize",
       "adaptiveIcon": {
         "backgroundColor": "#FFFFFF",
