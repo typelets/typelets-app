@@ -1,3 +1,10 @@
+## [1.22.5](https://github.com/typelets/typelets-app/compare/v1.22.4...v1.22.5) (2025-10-10)
+
+
+### Bug Fixes
+
+* **mobile:** resolve master password stuck button and improve editor toolbar ([08e64ea](https://github.com/typelets/typelets-app/commit/08e64ea90f4893a33b5157fbb9fcda2a77819a76))
+
 ## [1.22.4](https://github.com/typelets/typelets-app/compare/v1.22.3...v1.22.4) (2025-10-09)
 
 
