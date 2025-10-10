@@ -18,21 +18,33 @@ export function forceGlobalMasterPasswordRefresh() {
 export function useMasterPassword() {
   const { user, isLoaded: userLoaded } = useUser();
   const { isSignedIn } = useAuth();
-  const [needsUnlock, setNeedsUnlock] = useState(false);
+  const [needsUnlock, setNeedsUnlock] = useState(true); // Default to true to prevent premature loading
   const [isNewSetup, setIsNewSetup] = useState(false);
   const [isChecking, setIsChecking] = useState(true);
   const [, setLastCheckTime] = useState<number>(0);
 
   const userId = user?.id;
 
+  // Reset state when user changes (sign out/sign in)
+  useEffect(() => {
+    if (userId) {
+      // New user signed in - reset to locked state
+      setNeedsUnlock(true);
+      setIsChecking(true);
+      setIsNewSetup(false);
+    }
+  }, [userId]);
+
   const checkMasterPasswordStatus = useCallback(async () => {
     if (!userLoaded || !userId || !isSignedIn) {
       setIsChecking(true);
+      setNeedsUnlock(true); // Assume locked when no user
       return;
     }
 
     try {
       setIsChecking(true);
+      setNeedsUnlock(true); // Assume locked while checking
 
       // Check if user has a master password set up
       const hasPassword = await hasMasterPassword(userId);
@@ -53,9 +65,6 @@ export function useMasterPassword() {
           // Already unlocked
           setIsNewSetup(false);
           setNeedsUnlock(false);
-          if (__DEV__) {
-            console.log('✅ Master password already unlocked');
-          }
         }
       }
 

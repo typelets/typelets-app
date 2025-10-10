@@ -26,16 +26,12 @@ export function MasterPasswordScreen({
   const [isLoading, setIsLoading] = useState(false);
   const animatedValue = useKeyboardHandler();
 
-  useEffect(() => {
-    // Vibrate when component mounts
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-  }, []);
-
-  // Reset loading state when component mounts or isNewSetup changes
+  // Reset loading state and vibrate when component mounts
   // This ensures the form is shown after sign out/sign in
   useEffect(() => {
     setIsLoading(false);
-  }, [isNewSetup]);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+  }, []);
 
   const handleFormSubmit = async (password: string) => {
     setIsLoading(true);
@@ -70,6 +66,7 @@ export function MasterPasswordScreen({
         >
           {!isLoading ? (
             <MasterPasswordForm
+              key={`password-form-${isNewSetup}`} // Force remount when setup state changes
               isNewSetup={isNewSetup}
               onSubmit={handleFormSubmit}
             />

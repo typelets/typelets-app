@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, ActivityIndicator } from 'react-native';
 import { useAuth, useUser } from '@clerk/clerk-expo';
 import { useTheme } from '../theme';
@@ -24,8 +24,27 @@ export const AppWrapper: React.FC<AppWrapperProps> = ({ children }) => {
   } = useMasterPassword();
 
   const [showLoading, setShowLoading] = useState(false);
+  const lastUserIdRef = useRef<string | undefined>(undefined);
+  const [userChanging, setUserChanging] = useState(false);
 
-  const isLoading = !isLoaded || (isSignedIn && !userLoaded) || (isSignedIn && userLoaded && !user) || (isSignedIn && user && isChecking);
+  // Detect userId change SYNCHRONOUSLY in render
+  if (userId !== lastUserIdRef.current) {
+    lastUserIdRef.current = userId;
+    if (userId && !userChanging) {
+      // User just signed in - block app from rendering
+      setUserChanging(true);
+    }
+  }
+
+  // Clear userChanging flag once master password state is determined
+  useEffect(() => {
+    if (userChanging && !isChecking) {
+      setUserChanging(false);
+    }
+  }, [userChanging, isChecking]);
+
+  // Simple logic: show loading only for initial Clerk loading, nothing else
+  const isLoading = !isLoaded || (isSignedIn && !userLoaded) || (isSignedIn && userLoaded && !user);
 
   // Handle loading delay
   useEffect(() => {
@@ -62,19 +81,6 @@ export const AppWrapper: React.FC<AppWrapperProps> = ({ children }) => {
     }
   }, [isSignedIn, user?.id, user?.primaryEmailAddress?.emailAddress, user?.username]);
 
-  if (__DEV__) {
-    console.log('AppWrapper Auth status:', {
-      isSignedIn,
-      isLoaded,
-      userLoaded,
-      userId: user?.id,
-      hasSession: !!user,
-      needsUnlock,
-      isNewSetup,
-      isChecking,
-    });
-  }
-
   // Show loading while Clerk initializes, user loads, or checking master password
   if (showLoading) {
     return (
@@ -104,8 +110,10 @@ export const AppWrapper: React.FC<AppWrapperProps> = ({ children }) => {
     return <AuthScreen />;
   }
 
-  // User is signed in - show master password screen or main app
-  if (needsUnlock) {
+  // User is signed in - check master password state
+  // IMPORTANT: If we're checking OR need unlock OR user just changed, show master password screen
+  // This prevents notes from loading prematurely
+  if (needsUnlock || isChecking || userChanging) {
     return (
       <MasterPasswordScreen
         key={userId} // Force remount when userId changes to reset all state
@@ -116,6 +124,6 @@ export const AppWrapper: React.FC<AppWrapperProps> = ({ children }) => {
     );
   }
 
-  // Show main app
+  // Only render main app when explicitly unlocked and stable
   return <>{children}</>;
 };
