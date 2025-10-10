@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { Highlighter } from 'lucide-react-native';
 import type { EditorBridge } from '@10play/tentap-editor';
 
 interface EditorToolbarProps {
@@ -50,6 +51,20 @@ export function EditorToolbar({ editor, keyboardHeight, theme }: EditorToolbarPr
           style={styles.toolbarButton}
         >
           <Text style={[styles.toolbarButtonText, { color: theme.colors.foreground, textDecorationLine: 'underline' }]}>U</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={() => editor.toggleStrike()}
+          style={styles.toolbarButton}
+        >
+          <Text style={[styles.toolbarButtonText, { color: theme.colors.foreground, textDecorationLine: 'line-through' }]}>S</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={() => editor.toggleHighlight('#FFFF00')}
+          style={styles.toolbarButton}
+        >
+          <Highlighter size={18} color={theme.colors.foreground} />
         </TouchableOpacity>
 
         <View style={[styles.toolbarDivider, { backgroundColor: theme.colors.border }]} />
@@ -125,14 +140,14 @@ const styles = StyleSheet.create({
   toolbarButtons: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    flex: 1,
+    gap: 4,
+    paddingHorizontal: 4,
   },
   toolbarButton: {
-    paddingHorizontal: 6,
+    paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 4,
-    flex: 1,
+    minWidth: 40,
     alignItems: 'center',
     justifyContent: 'center',
   },

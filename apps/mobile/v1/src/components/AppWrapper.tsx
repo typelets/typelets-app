@@ -83,6 +83,7 @@ export const AppWrapper: React.FC<AppWrapperProps> = ({ children }) => {
   if (needsUnlock) {
     return (
       <MasterPasswordScreen
+        key={userId} // Force remount when userId changes to reset all state
         userId={userId || ''}
         isNewSetup={isNewSetup}
         onSuccess={onPasswordSuccess}

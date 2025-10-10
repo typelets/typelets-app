@@ -36,7 +36,7 @@ export async function decryptNote(note: Note, userId: string): Promise<Note> {
     };
   } catch (error) {
     if (__DEV__) {
-      console.error('Failed to decrypt note:', note.id, error);
+      console.log('Failed to decrypt note (likely wrong master password):', note.id);
     }
     // Return note with placeholder content if decryption fails
     return {

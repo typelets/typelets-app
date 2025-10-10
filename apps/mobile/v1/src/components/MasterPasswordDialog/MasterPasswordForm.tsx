@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -42,6 +42,12 @@ export function MasterPasswordForm({
     checkPasswordMatch,
     setPasswordError,
   } = usePasswordValidation();
+
+  // Reset loading state when component mounts
+  // This fixes the stuck button issue after logout/login
+  useEffect(() => {
+    setIsLoading(false);
+  }, []);
 
   const handleSubmit = async () => {
     // Validate passwords
@@ -199,7 +205,7 @@ export function MasterPasswordForm({
             // Small delay to allow UI to render the loading state before blocking computation
             await new Promise((resolve) => setTimeout(resolve, 100));
 
-            handleSubmit();
+            await handleSubmit();
           }}
           disabled={isLoading}
           activeOpacity={0.7}
