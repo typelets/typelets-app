@@ -1,3 +1,10 @@
+## [1.22.6](https://github.com/typelets/typelets-app/compare/v1.22.5...v1.22.6) (2025-10-10)
+
+
+### Bug Fixes
+
+* **mobile:** integrate NewRelic monitoring with comprehensive logging ([f5ac870](https://github.com/typelets/typelets-app/commit/f5ac870880c95552b47bbc6d9a041b986d686fb2))
+
 ## [1.22.5](https://github.com/typelets/typelets-app/compare/v1.22.4...v1.22.5) (2025-10-10)
 
 

@@ -28,7 +28,7 @@
     ],
     "ios": {
       "bundleIdentifier": "com.typelets.notes",
-      "buildNumber": "10",
+      "buildNumber": "11",
       "supportsTablet": true,
       "infoPlist": {
         "NSCameraUsageDescription": "This app uses the camera to capture photos for your notes.",
@@ -38,7 +38,7 @@
     },
     "android": {
       "package": "com.typelets.notes",
-      "versionCode": 10,
+      "versionCode": 11,
       "softwareKeyboardLayoutMode": "resize",
       "adaptiveIcon": {
         "backgroundColor": "#FFFFFF",
