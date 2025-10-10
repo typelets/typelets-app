@@ -5,6 +5,7 @@
 
 import { API_BASE_URL } from './utils/constants';
 import { ApiError, getUserFriendlyErrorMessage } from './utils/errors';
+import { logger } from '../../lib/logger';
 
 export type AuthTokenGetter = () => Promise<string | null>;
 
@@ -36,15 +37,16 @@ export function createHttpClient(getToken: AuthTokenGetter) {
       if (!response.ok) {
         const errorText = await response.text();
 
-        // Log detailed error for development
-        if (__DEV__) {
-          console.error('API Error Response:', {
+        // Log API error to NewRelic with context
+        logger.error('API request failed', new Error(`HTTP ${response.status}: ${response.statusText}`), {
+          attributes: {
+            endpoint,
             status: response.status,
             statusText: response.statusText,
-            body: errorText,
-            endpoint,
-          });
-        }
+            errorBody: errorText.substring(0, 500), // Limit error body length
+            method: options.method || 'GET',
+          },
+        });
 
         const userMessage = getUserFriendlyErrorMessage(response.status);
         throw new ApiError(userMessage, response.status, errorText);
@@ -53,18 +55,19 @@ export function createHttpClient(getToken: AuthTokenGetter) {
       const data = await response.json();
       return data as T;
     } catch (error) {
-      // Log detailed error for development
-      if (__DEV__) {
-        console.error('API Request Failed:', {
-          endpoint,
-          error,
-        });
-      }
-
-      // Re-throw if already an ApiError
+      // Re-throw if already an ApiError (already logged above)
       if (error instanceof ApiError) {
         throw error;
       }
+
+      // Log network/parsing errors to NewRelic
+      logger.error('Network request failed', error as Error, {
+        attributes: {
+          endpoint,
+          errorType: error instanceof Error ? error.name : 'Unknown',
+          method: options.method || 'GET',
+        },
+      });
 
       // Wrap other errors
       throw new ApiError(

@@ -2,6 +2,8 @@
  * API Error Handling Utilities
  */
 
+import { logger } from '../../../lib/logger';
+
 export class ApiError extends Error {
   constructor(
     message: string,
@@ -34,9 +36,15 @@ export function getUserFriendlyErrorMessage(status: number): string {
 }
 
 export function handleApiError(error: unknown, context: string): never {
-  if (__DEV__) {
-    console.error(`API Error (${context}):`, error);
-  }
+  // Log to NewRelic with context
+  logger.error(`API error in ${context}`, error as Error, {
+    attributes: {
+      context,
+      errorType: error instanceof Error ? error.name : 'Unknown',
+      isApiError: error instanceof ApiError,
+      statusCode: error instanceof ApiError ? error.statusCode : undefined,
+    },
+  });
 
   if (error instanceof ApiError) {
     throw error;

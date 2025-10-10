@@ -2,7 +2,7 @@
   "expo": {
     "name": "Typelets",
     "slug": "typelets",
-    "version": "1.22.5",
+    "version": "1.22.6",
     "orientation": "default",
     "icon": "./assets/images/icon.png",
     "scheme": "typelets",
@@ -58,6 +58,7 @@
     },
     "plugins": [
       "expo-router",
+      "newrelic-react-native-agent",
       [
         "expo-splash-screen",
         {

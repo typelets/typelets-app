@@ -19,6 +19,7 @@ import { useTheme } from '../theme';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Ionicons } from '@expo/vector-icons';
+import { logger } from '../lib/logger';
 
 /**
  * Display a toast notification (Android) or log message (iOS)
@@ -111,8 +112,17 @@ export default function AuthScreen() {
 
       if (result.status === 'complete') {
         await setActive({ session: result.createdSessionId });
+        logger.recordEvent('sign_in_success', {
+          email,
+        });
       }
     } catch (err: any) {
+      logger.error('Sign in failed', err, {
+        attributes: {
+          email,
+          errorMessage: err.errors?.[0]?.message,
+        },
+      });
       showToast(err.errors?.[0]?.message || 'Invalid email or password');
     } finally {
       setLoading(false);
@@ -137,18 +147,24 @@ export default function AuthScreen() {
         legalAccepted: true, // Required by Clerk Dashboard configuration
       } as any);
 
-      if (__DEV__) console.log('Sign up result:', result);
-
       // Send email verification code
       await signUp.prepareEmailAddressVerification({ strategy: 'email_code' });
-
-      if (__DEV__) console.log('Email verification prepared');
 
       // Show verification screen
       setPendingVerification(true);
       showToast(`Verification code sent to ${email}`);
+      logger.recordEvent('sign_up_verification_sent', {
+        email,
+      });
     } catch (err: any) {
-      if (__DEV__) console.error('Sign up error:', err);
+      logger.error('Sign up failed', err, {
+        attributes: {
+          email,
+          firstName,
+          lastName,
+          errorMessage: err.errors?.[0]?.message,
+        },
+      });
       showToast(err.errors?.[0]?.message || 'Unable to create account');
     } finally {
       setLoading(false);
@@ -164,26 +180,20 @@ export default function AuthScreen() {
     setLoading(true);
 
     try {
-      if (__DEV__) console.log('Attempting email verification with code:', verificationCode);
-
       // Try multiple approaches to set legal acceptance (fallback for different Clerk configurations)
       try {
         // Approach 1: Update with legalAccepted field
         await signUp.update({
           legalAccepted: true,
         } as any);
-        if (__DEV__) console.log('Legal accepted field set (approach 1)');
       } catch (err1: any) {
-        if (__DEV__) console.log('Legal update error (approach 1):', err1.errors?.[0]?.message);
-
         try {
           // Approach 2: Update with legalAcceptedAt timestamp
           await signUp.update({
             legalAcceptedAt: new Date().getTime(),
           } as any);
-          if (__DEV__) console.log('Legal accepted timestamp set (approach 2)');
         } catch (err2: any) {
-          if (__DEV__) console.log('Legal update error (approach 2):', err2.errors?.[0]?.message);
+          if (__DEV__) console.log('Legal update error:', err2.errors?.[0]?.message);
         }
       }
 
@@ -192,19 +202,28 @@ export default function AuthScreen() {
         code: verificationCode,
       });
 
-      if (__DEV__) console.log('Verification result:', completeSignUp);
-
       if (completeSignUp.status === 'complete') {
-        if (__DEV__) console.log('Sign up complete, setting active session');
         await setActiveSignUp({ session: completeSignUp.createdSessionId });
-        if (__DEV__) console.log('Session activated successfully');
+        logger.recordEvent('sign_up_complete', {
+          email,
+        });
       } else {
-        if (__DEV__) console.log('Sign up not complete, status:', completeSignUp.status);
-        if (__DEV__) console.log('Missing fields:', completeSignUp.missingFields);
+        logger.warn('Sign up incomplete after verification', {
+          attributes: {
+            status: completeSignUp.status,
+            missingFields: completeSignUp.missingFields,
+            email,
+          },
+        });
         showToast('Unable to complete sign up. Check Clerk Dashboard settings.');
       }
     } catch (err: any) {
-      if (__DEV__) console.error('Verification error:', err);
+      logger.error('Email verification failed', err, {
+        attributes: {
+          email,
+          errorMessage: err.errors?.[0]?.message,
+        },
+      });
       showToast(err.errors?.[0]?.message || 'Invalid code');
     } finally {
       setLoading(false);

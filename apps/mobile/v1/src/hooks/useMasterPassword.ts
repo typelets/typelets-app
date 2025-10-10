@@ -8,6 +8,7 @@ import {
   unlockWithMasterPassword,
   clearUserEncryptionData,
 } from '../lib/encryption';
+import { logger } from '../lib/logger';
 
 // Global function to force all hook instances to refresh
 export function forceGlobalMasterPasswordRefresh() {
@@ -60,7 +61,11 @@ export function useMasterPassword() {
 
       setLastCheckTime(Date.now());
     } catch (error) {
-      if (__DEV__) console.error('Error checking master password status:', error);
+      logger.error('Error checking master password status', error as Error, {
+        attributes: {
+          userId,
+        },
+      });
       // On error, assume needs setup
       setIsNewSetup(true);
       setNeedsUnlock(true);
@@ -99,12 +104,23 @@ export function useMasterPassword() {
       if (isNewSetup) {
         // Setting up new master password
         await setupMasterPassword(password, userId);
+        logger.recordEvent('master_password_setup', {
+          userId,
+        });
       } else {
         // Unlocking with existing password
         const success = await unlockWithMasterPassword(password, userId);
         if (!success) {
+          logger.warn('Invalid master password attempt', {
+            attributes: {
+              userId,
+            },
+          });
           throw new Error('Invalid password');
         }
+        logger.recordEvent('master_password_unlocked', {
+          userId,
+        });
       }
 
       // Successfully authenticated - update state
@@ -122,7 +138,11 @@ export function useMasterPassword() {
       try {
         await clearUserEncryptionData(userId);
       } catch (error) {
-        if (__DEV__) console.error('Error clearing encryption data:', error);
+        logger.error('Error clearing encryption data on sign out', error as Error, {
+          attributes: {
+            userId,
+          },
+        });
       }
     }
   };

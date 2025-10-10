@@ -8,6 +8,7 @@ import { Note, NoteQueryParams, NotesResponse, EmptyTrashResponse } from './type
 import { decryptNote, decryptNotes, encryptNoteForApi, clearEncryptionCache } from './encryption';
 import { fetchAllPages, createPaginationParams } from './utils/pagination';
 import { handleApiError } from './utils/errors';
+import { logger } from '../../lib/logger';
 
 export function createNotesApi(getToken: AuthTokenGetter, getUserId: () => string | undefined) {
   const { makeRequest } = createHttpClient(getToken);
@@ -89,11 +90,24 @@ export function createNotesApi(getToken: AuthTokenGetter, getUserId: () => strin
         clearEncryptionCache(userId);
 
         // Decrypt and return the created note
-        return await decryptNote(createdNote, userId);
+        const decryptedNote = await decryptNote(createdNote, userId);
+
+        // Log successful note creation
+        logger.recordEvent('note_created', {
+          noteId: createdNote.id,
+          hasTitle: !!note.title,
+          contentLength: content.length,
+          encrypted: true,
+        });
+
+        return decryptedNote;
       } catch (error) {
-        if (__DEV__) {
-          console.error('Failed to create note:', error);
-        }
+        logger.error('Failed to create note', error as Error, {
+          attributes: {
+            operation: 'createNote',
+            hasTitle: !!note.title,
+          },
+        });
         throw error;
       }
     },
@@ -132,11 +146,23 @@ export function createNotesApi(getToken: AuthTokenGetter, getUserId: () => strin
         clearEncryptionCache(userId);
 
         // Decrypt and return the updated note
-        return await decryptNote(updatedNote, userId);
+        const decryptedNote = await decryptNote(updatedNote, userId);
+
+        // Log successful note update
+        logger.recordEvent('note_updated', {
+          noteId,
+          updatedFields: Object.keys(updates),
+        });
+
+        return decryptedNote;
       } catch (error) {
-        if (__DEV__) {
-          console.error('Failed to update note:', error);
-        }
+        logger.error('Failed to update note', error as Error, {
+          attributes: {
+            operation: 'updateNote',
+            noteId,
+            updatedFields: Object.keys(updates),
+          },
+        });
         throw error;
       }
     },

@@ -11,6 +11,7 @@ import { encryptWithAESGCM, decryptWithAESGCM } from './core/aes';
 import { deriveEncryptionKey } from './core/keyDerivation';
 import { getUserSecret, getMasterKey, clearUserStorageData } from './storage/secureStorage';
 import { DecryptionCache } from './storage/cache';
+import { logger } from '../logger';
 
 export class MobileEncryptionService {
   private cache: DecryptionCache;
@@ -161,9 +162,11 @@ export class MobileEncryptionService {
    * Clear all data for a user
    */
   async clearUserData(userId: string): Promise<void> {
-    if (__DEV__) {
-      console.log('🗑️ Starting clearUserData for user:', userId);
-    }
+    logger.info('Clearing user encryption data', {
+      attributes: {
+        userId,
+      },
+    });
 
     // Clear storage
     await clearUserStorageData(userId);
@@ -174,9 +177,11 @@ export class MobileEncryptionService {
     // Reset master password mode
     this.masterPasswordMode = false;
 
-    if (__DEV__) {
-      console.log('✅ clearUserData completed');
-    }
+    logger.info('User encryption data cleared successfully', {
+      attributes: {
+        userId,
+      },
+    });
   }
 
   /**

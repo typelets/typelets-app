@@ -5,6 +5,7 @@ import { useTheme } from '../theme';
 import AuthScreen from '../screens/AuthScreen';
 import { MasterPasswordScreen } from './MasterPasswordDialog';
 import { useMasterPassword } from '../hooks/useMasterPassword';
+import { logger } from '../lib/logger';
 
 interface AppWrapperProps {
   children: React.ReactNode;
@@ -36,6 +37,30 @@ export const AppWrapper: React.FC<AppWrapperProps> = ({ children }) => {
     }
     return () => clearTimeout(timer);
   }, [isLoading]);
+
+  // Track user authentication state in logger and New Relic
+  useEffect(() => {
+    if (isSignedIn && user?.id) {
+      // User is signed in - set user ID and session attributes
+      logger.setUserId(user.id);
+      logger.setSessionAttributes({
+        email: user.primaryEmailAddress?.emailAddress,
+        username: user.username,
+        isSignedIn: true,
+      });
+
+      logger.info('User signed in', {
+        attributes: {
+          userId: user.id,
+          email: user.primaryEmailAddress?.emailAddress,
+        },
+      });
+    } else if (!isSignedIn) {
+      // User signed out - clear session
+      logger.info('User signed out');
+      logger.clearSessionAttributes();
+    }
+  }, [isSignedIn, user?.id, user?.primaryEmailAddress?.emailAddress, user?.username]);
 
   if (__DEV__) {
     console.log('AppWrapper Auth status:', {

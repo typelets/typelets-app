@@ -3,7 +3,8 @@ import { APP_VERSION } from './src/constants/version';
 
 // Initialize New Relic with error handling
 try {
-  const NewRelic = require('newrelic-react-native-agent');
+  const NewRelicModule = require('newrelic-react-native-agent');
+  const NewRelic = NewRelicModule.default || NewRelicModule;
 
   if (NewRelic && NewRelic.startAgent) {
     let appToken;
@@ -56,10 +57,21 @@ try {
     NewRelic.startAgent(appToken, agentConfiguration);
     NewRelic.setJSAppVersion(APP_VERSION);
 
-    console.log('[New Relic] Agent started successfully with version:', APP_VERSION);
-    console.log('[New Relic] Platform:', Platform.OS);
+    if (__DEV__) {
+      console.log('[New Relic] Agent started successfully with version:', APP_VERSION);
+      console.log('[New Relic] Platform:', Platform.OS);
+    }
+
+    // Send initialization log to NewRelic
+    if (NewRelic.logInfo) {
+      NewRelic.logInfo('NewRelic agent initialized', {
+        platform: Platform.OS,
+        version: APP_VERSION,
+        timestamp: new Date().toISOString(),
+      });
+    }
   } else {
-    console.warn('[New Relic] Agent module not available');
+    console.warn('[New Relic] Agent module loaded but startAgent not available');
   }
 } catch (error) {
   console.warn('[New Relic] Failed to initialize:', error.message);
