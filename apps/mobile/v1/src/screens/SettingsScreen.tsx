@@ -9,10 +9,13 @@ import { Card } from '../components/ui/Card';
 import { Ionicons } from '@expo/vector-icons';
 import { clearUserEncryptionData } from '../lib/encryption';
 import { forceGlobalMasterPasswordRefresh } from '../hooks/useMasterPassword';
-import { BottomSheetModal, BottomSheetView, BottomSheetBackdrop, BottomSheetScrollView } from '@gorhom/bottom-sheet';
+import { BottomSheetModal, BottomSheetView, BottomSheetBackdrop, BottomSheetScrollView, BottomSheetBackdropProps } from '@gorhom/bottom-sheet';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { APP_VERSION } from '../constants/version';
 import { UsageBottomSheet } from '../components/settings/UsageBottomSheet';
+
+// Type for valid Ionicons names
+type IconName = keyof typeof Ionicons.glyphMap;
 
 interface Props {
   onLogout?: () => void;
@@ -45,7 +48,7 @@ export default function SettingsScreen({ onLogout }: Props) {
 
   // Backdrop component
   const renderBackdrop = useCallback(
-    (props: any) => (
+    (props: BottomSheetBackdropProps) => (
       <BottomSheetBackdrop
         {...props}
         disappearsOnIndex={-1}
@@ -288,7 +291,7 @@ export default function SettingsScreen({ onLogout }: Props) {
                         }
                       ]}>
                         <Ionicons
-                          name={item.icon as any}
+                          name={item.icon as IconName}
                           size={20}
                           color={theme.colors.foreground}
                         />
@@ -370,12 +373,12 @@ export default function SettingsScreen({ onLogout }: Props) {
                 key={option.mode}
                 style={[styles.optionItem, { backgroundColor: theme.colors.card, borderColor: theme.colors.border }]}
                 onPress={() => {
-                  theme.setThemeMode(option.mode as any);
+                  theme.setThemeMode(option.mode);
                   themeModeSheetRef.current?.dismiss();
                 }}
               >
                 <View style={[styles.optionIcon, { backgroundColor: theme.colors.muted }]}>
-                  <Ionicons name={option.icon as any} size={20} color={theme.colors.foreground} />
+                  <Ionicons name={option.icon as IconName} size={20} color={theme.colors.foreground} />
                   </View>
                   <View style={styles.optionText}>
                     <Text style={[styles.optionTitle, { color: theme.colors.foreground }]}>
@@ -436,7 +439,7 @@ export default function SettingsScreen({ onLogout }: Props) {
                     { backgroundColor: theme.colors.card, borderColor: theme.colors.border }
                   ]}
                   onPress={() => {
-                    theme.setLightTheme(preset.id as any);
+                    theme.setLightTheme(preset.id);
                   }}
                 >
                   <View style={[styles.colorPreview, {
@@ -476,7 +479,7 @@ export default function SettingsScreen({ onLogout }: Props) {
                     { backgroundColor: theme.colors.card, borderColor: theme.colors.border }
                   ]}
                   onPress={() => {
-                    theme.setDarkTheme(preset.id as any);
+                    theme.setDarkTheme(preset.id);
                   }}
                 >
                   <View style={[styles.colorPreview, {
@@ -623,7 +626,7 @@ export default function SettingsScreen({ onLogout }: Props) {
                 }}
               >
                 <View style={[styles.optionIcon, { backgroundColor: theme.colors.muted }]}>
-                  <Ionicons name={option.icon as any} size={20} color={theme.colors.foreground} />
+                  <Ionicons name={option.icon as IconName} size={20} color={theme.colors.foreground} />
                 </View>
                 <View style={styles.optionText}>
                   <Text style={[styles.optionTitle, { color: theme.colors.foreground }]}>

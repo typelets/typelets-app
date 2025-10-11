@@ -5,7 +5,23 @@
 
 import { Platform } from 'react-native';
 
-let NewRelic: any = null;
+/**
+ * Type definitions for New Relic SDK
+ * Based on newrelic-react-native-agent API
+ */
+interface NewRelicSDK {
+  setUserId?: (userId: string) => void;
+  setAttribute?: (name: string, value: string | number | boolean) => void;
+  recordError?: (error: Error) => void;
+  logDebug?: (message: string, attributes?: Record<string, unknown>) => void;
+  logInfo?: (message: string, attributes?: Record<string, unknown>) => void;
+  logWarning?: (message: string, attributes?: Record<string, unknown>) => void;
+  logError?: (message: string, attributes?: Record<string, unknown>) => void;
+  recordCustomEvent?: (eventName: string, attributes?: Record<string, unknown>) => void;
+  recordBreadcrumb?: (name: string, attributes?: Record<string, unknown>) => void;
+}
+
+let NewRelic: NewRelicSDK | null = null;
 
 // Initialize New Relic reference
 try {
@@ -24,7 +40,7 @@ export enum LogLevel {
 
 interface LogOptions {
   /** Additional attributes to attach to the log */
-  attributes?: Record<string, any>;
+  attributes?: Record<string, unknown>;
   /** Whether to only send to New Relic (skip console) */
   newRelicOnly?: boolean;
 }
@@ -35,7 +51,7 @@ interface LogOptions {
 class Logger {
   private isNewRelicAvailable: boolean;
   private userId: string | null = null;
-  private sessionAttributes: Record<string, any> = {};
+  private sessionAttributes: Record<string, unknown> = {};
 
   constructor() {
     this.isNewRelicAvailable = NewRelic !== null;
@@ -57,7 +73,7 @@ class Logger {
   /**
    * Set session-level attributes that will be included in all logs
    */
-  setSessionAttributes(attributes: Record<string, any>): void {
+  setSessionAttributes(attributes: Record<string, unknown>): void {
     this.sessionAttributes = { ...this.sessionAttributes, ...attributes };
 
     // Set each attribute in New Relic
@@ -197,7 +213,7 @@ class Logger {
   /**
    * Record a custom event in New Relic
    */
-  recordEvent(eventName: string, attributes?: Record<string, any>): void {
+  recordEvent(eventName: string, attributes?: Record<string, unknown>): void {
     if (this.isNewRelicAvailable && NewRelic.recordCustomEvent) {
       NewRelic.recordCustomEvent(eventName, attributes);
     }
@@ -223,7 +239,7 @@ class Logger {
   /**
    * Record a breadcrumb (useful for tracking user flow)
    */
-  breadcrumb(name: string, attributes?: Record<string, any>): void {
+  breadcrumb(name: string, attributes?: Record<string, unknown>): void {
     if (this.isNewRelicAvailable && NewRelic.recordBreadcrumb) {
       NewRelic.recordBreadcrumb(name, attributes);
     }

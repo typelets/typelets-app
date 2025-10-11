@@ -8,7 +8,7 @@ import { useTheme } from '../theme';
 import { Ionicons } from '@expo/vector-icons';
 import { useApiService, type Folder } from '../services/api';
 import { FOLDER_CARD, ACTION_BUTTON, FOLDER_COLORS } from '../constants/ui';
-import { BottomSheetModal, BottomSheetView, BottomSheetBackdrop, BottomSheetTextInput } from '@gorhom/bottom-sheet';
+import { BottomSheetModal, BottomSheetView, BottomSheetBackdrop, BottomSheetTextInput, BottomSheetBackdropProps } from '@gorhom/bottom-sheet';
 
 // Special views configuration matching web app
 const SPECIAL_VIEWS = [
@@ -74,7 +74,7 @@ export default function FoldersScreen() {
 
   // Backdrop component
   const renderBackdrop = useCallback(
-    (props: any) => (
+    (props: BottomSheetBackdropProps) => (
       <BottomSheetBackdrop
         {...props}
         disappearsOnIndex={-1}

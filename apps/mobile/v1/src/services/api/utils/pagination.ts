@@ -11,7 +11,8 @@ interface PaginationResponse<T> {
     total: number;
     limit: number;
     page: number;
-    totalPages: number;
+    totalPages?: number;
+    pages?: number; // Some APIs use 'pages' instead of 'totalPages'
   };
   total?: number;
   limit?: number;
@@ -68,9 +69,9 @@ function determineHasMorePages<T>(
 
   // Check for pagination object
   if (resp.pagination) {
-    const { page, totalPages, pages } = resp.pagination as any;
-    // API uses 'pages' not 'totalPages'
-    const total = totalPages || pages;
+    const { page, totalPages, pages } = resp.pagination;
+    // API uses 'pages' not 'totalPages', so check both
+    const total = totalPages ?? pages;
     if (total !== undefined) {
       return page < total;
     }

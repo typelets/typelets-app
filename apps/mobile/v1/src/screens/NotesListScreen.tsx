@@ -7,7 +7,7 @@ import { useTheme } from '../theme';
 import { useApiService, type Note, type Folder } from '../services/api';
 import { Ionicons } from '@expo/vector-icons';
 import { NOTE_CARD, FOLDER_CARD, SECTION, FOLDER_COLORS } from '../constants/ui';
-import { BottomSheetModal, BottomSheetView, BottomSheetBackdrop, BottomSheetTextInput } from '@gorhom/bottom-sheet';
+import { BottomSheetModal, BottomSheetView, BottomSheetBackdrop, BottomSheetTextInput, BottomSheetBackdropProps } from '@gorhom/bottom-sheet';
 
 interface RouteParams {
   folderId?: string;
@@ -81,7 +81,7 @@ export default function NotesListScreen({ navigation, route, renderHeader, scrol
 
   // Backdrop component
   const renderBackdrop = useCallback(
-    (props: any) => (
+    (props: BottomSheetBackdropProps) => (
       <BottomSheetBackdrop
         {...props}
         disappearsOnIndex={-1}

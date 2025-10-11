@@ -5,6 +5,7 @@ import {
   BottomSheetView,
   BottomSheetBackdrop,
   BottomSheetScrollView,
+  BottomSheetBackdropProps,
 } from '@gorhom/bottom-sheet';
 import { Ionicons } from '@expo/vector-icons';
 import { useApiService, type ApiUserUsage } from '@/src/services/api';
@@ -50,7 +51,7 @@ export function UsageBottomSheet({ sheetRef, snapPoints }: UsageBottomSheetProps
   };
 
   const renderBackdrop = React.useCallback(
-    (props: any) => (
+    (props: BottomSheetBackdropProps) => (
       <BottomSheetBackdrop
         {...props}
         disappearsOnIndex={-1}
