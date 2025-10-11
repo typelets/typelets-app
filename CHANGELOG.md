@@ -1,3 +1,11 @@
+## [1.22.9](https://github.com/typelets/typelets-app/compare/v1.22.8...v1.22.9) (2025-10-11)
+
+
+### Bug Fixes
+
+* **mobile:** improve TypeScript type safety across authentication and navigation ([595fd91](https://github.com/typelets/typelets-app/commit/595fd91109dddb0c17623d558b19abe5b98a15ce))
+* **mobile:** resolve all high priority type safety issues ([076000d](https://github.com/typelets/typelets-app/commit/076000d3ff740e9c573163197d575c48241bc73e))
+
 ## [1.22.8](https://github.com/typelets/typelets-app/compare/v1.22.7...v1.22.8) (2025-10-11)
 
 
