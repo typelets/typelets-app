@@ -22,6 +22,30 @@ import { Ionicons } from '@expo/vector-icons';
 import { logger } from '../lib/logger';
 
 /**
+ * Type definitions for Clerk SDK with legal acceptance fields
+ * These fields are documented in Clerk but not in the official TypeScript types
+ */
+interface ClerkSignUpParams {
+  emailAddress: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  legalAccepted?: boolean;
+}
+
+interface ClerkUpdateParams {
+  legalAccepted?: boolean;
+  legalAcceptedAt?: number;
+}
+
+/**
+ * Type for Clerk error objects
+ */
+interface ClerkError {
+  errors?: Array<{ message?: string }>;
+}
+
+/**
  * Display a toast notification (Android) or log message (iOS)
  * @param message - The message to display
  */
@@ -116,14 +140,15 @@ export default function AuthScreen() {
           email,
         });
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const error = err as ClerkError;
       logger.error('Sign in failed', err, {
         attributes: {
           email,
-          errorMessage: err.errors?.[0]?.message,
+          errorMessage: error.errors?.[0]?.message,
         },
       });
-      showToast(err.errors?.[0]?.message || 'Invalid email or password');
+      showToast(error.errors?.[0]?.message || 'Invalid email or password');
     } finally {
       setLoading(false);
     }
@@ -145,7 +170,7 @@ export default function AuthScreen() {
         firstName,
         lastName,
         legalAccepted: true, // Required by Clerk Dashboard configuration
-      } as any);
+      } as ClerkSignUpParams);
 
       // Send email verification code
       await signUp.prepareEmailAddressVerification({ strategy: 'email_code' });
@@ -156,16 +181,17 @@ export default function AuthScreen() {
       logger.recordEvent('sign_up_verification_sent', {
         email,
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const error = err as ClerkError;
       logger.error('Sign up failed', err, {
         attributes: {
           email,
           firstName,
           lastName,
-          errorMessage: err.errors?.[0]?.message,
+          errorMessage: error.errors?.[0]?.message,
         },
       });
-      showToast(err.errors?.[0]?.message || 'Unable to create account');
+      showToast(error.errors?.[0]?.message || 'Unable to create account');
     } finally {
       setLoading(false);
     }
@@ -185,15 +211,18 @@ export default function AuthScreen() {
         // Approach 1: Update with legalAccepted field
         await signUp.update({
           legalAccepted: true,
-        } as any);
-      } catch (err1: any) {
+        } as ClerkUpdateParams);
+      } catch (err1: unknown) {
         try {
           // Approach 2: Update with legalAcceptedAt timestamp
           await signUp.update({
             legalAcceptedAt: new Date().getTime(),
-          } as any);
-        } catch (err2: any) {
-          if (__DEV__) console.log('Legal update error:', err2.errors?.[0]?.message);
+          } as ClerkUpdateParams);
+        } catch (err2: unknown) {
+          if (__DEV__) {
+            const error = err2 as { errors?: Array<{ message?: string }> };
+            console.log('Legal update error:', error.errors?.[0]?.message);
+          }
         }
       }
 
@@ -217,14 +246,15 @@ export default function AuthScreen() {
         });
         showToast('Unable to complete sign up. Check Clerk Dashboard settings.');
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const error = err as ClerkError;
       logger.error('Email verification failed', err, {
         attributes: {
           email,
-          errorMessage: err.errors?.[0]?.message,
+          errorMessage: error.errors?.[0]?.message,
         },
       });
-      showToast(err.errors?.[0]?.message || 'Invalid code');
+      showToast(error.errors?.[0]?.message || 'Invalid code');
     } finally {
       setLoading(false);
     }

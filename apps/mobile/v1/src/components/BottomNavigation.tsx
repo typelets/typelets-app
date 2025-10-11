@@ -5,11 +5,10 @@ import { useRouter } from 'expo-router';
 import { useTheme } from '../theme';
 
 interface BottomNavigationProps {
-  navigation?: any;
   activeTab?: 'folders' | 'add' | 'settings';
 }
 
-export default function BottomNavigation({ navigation, activeTab = 'folders' }: BottomNavigationProps) {
+export default function BottomNavigation({ activeTab = 'folders' }: BottomNavigationProps) {
   const theme = useTheme();
   const router = useRouter();
 

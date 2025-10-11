@@ -9,9 +9,20 @@ import { Ionicons } from '@expo/vector-icons';
 import { NOTE_CARD, FOLDER_CARD, SECTION, FOLDER_COLORS } from '../constants/ui';
 import { BottomSheetModal, BottomSheetView, BottomSheetBackdrop, BottomSheetTextInput } from '@gorhom/bottom-sheet';
 
+interface RouteParams {
+  folderId?: string;
+  viewType?: 'all' | 'starred' | 'archived' | 'trash';
+  searchQuery?: string;
+  folderName?: string;
+}
+
 interface Props {
-  navigation?: any;
-  route?: any;
+  navigation?: {
+    navigate: (screen: string, params?: Record<string, unknown>) => void;
+  };
+  route?: {
+    params?: RouteParams;
+  };
   renderHeader?: () => React.ReactNode;
   scrollY?: Animated.Value;
 }

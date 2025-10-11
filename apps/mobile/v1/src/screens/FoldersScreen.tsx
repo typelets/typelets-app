@@ -10,10 +10,6 @@ import { useApiService, type Folder } from '../services/api';
 import { FOLDER_CARD, ACTION_BUTTON, FOLDER_COLORS } from '../constants/ui';
 import { BottomSheetModal, BottomSheetView, BottomSheetBackdrop, BottomSheetTextInput } from '@gorhom/bottom-sheet';
 
-interface Props {
-  navigation?: any;
-}
-
 // Special views configuration matching web app
 const SPECIAL_VIEWS = [
   {
@@ -46,7 +42,7 @@ function getTimeOfDay(): string {
   return 'evening';
 }
 
-export default function FoldersScreen({ navigation }: Props) {
+export default function FoldersScreen() {
   const theme = useTheme();
   const api = useApiService();
   const router = useRouter();

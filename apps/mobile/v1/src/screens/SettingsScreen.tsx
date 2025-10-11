@@ -16,10 +16,9 @@ import { UsageBottomSheet } from '../components/settings/UsageBottomSheet';
 
 interface Props {
   onLogout?: () => void;
-  navigation?: any;
 }
 
-export default function SettingsScreen({ onLogout, navigation }: Props) {
+export default function SettingsScreen({ onLogout }: Props) {
   const theme = useTheme();
   const { user } = useUser();
   const router = useRouter();
