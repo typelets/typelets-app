@@ -1,3 +1,10 @@
+## [1.22.8](https://github.com/typelets/typelets-app/compare/v1.22.7...v1.22.8) (2025-10-11)
+
+
+### Bug Fixes
+
+* **mobile:** prevent cursor from hiding behind keyboard and toolbar on Android ([a11e835](https://github.com/typelets/typelets-app/commit/a11e835a89a6c1c6ba52f84b2f8babd35d197b21))
+
 ## [1.22.7](https://github.com/typelets/typelets-app/compare/v1.22.6...v1.22.7) (2025-10-10)
 
 
