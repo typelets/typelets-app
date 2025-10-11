@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Alert, TextInput } from 'react-native';
+import { View, Text, StyleSheet, Alert, TextInput, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import * as Haptics from 'expo-haptics';
@@ -175,7 +175,7 @@ export default function EditNoteScreen() {
         <View style={[styles.divider, { backgroundColor: theme.colors.border, marginHorizontal: -16 }]} />
       </View>
 
-      <View style={styles.editorContainer}>
+      <View style={[styles.editorContainer, Platform.OS === 'android' && keyboardHeight > 0 && { marginBottom: keyboardHeight + 60 }]}>
         <RichText
           editor={editor}
           style={{ flex: 1, backgroundColor: theme.colors.background }}
@@ -183,6 +183,36 @@ export default function EditNoteScreen() {
           webViewProps={{
             bounces: false,
             overScrollMode: 'never',
+            injectedJavaScript: Platform.OS === 'android' ? `
+              (function() {
+                function scrollToCursor() {
+                  const selection = window.getSelection();
+                  if (selection && selection.rangeCount > 0) {
+                    const range = selection.getRangeAt(0);
+                    const rect = range.getBoundingClientRect();
+                    const scrollBuffer = 220; // Extra space for toolbar
+
+                    // Check if cursor is too low on screen
+                    if (rect.bottom > window.innerHeight - scrollBuffer) {
+                      window.scrollBy({
+                        top: rect.bottom - (window.innerHeight - scrollBuffer),
+                        behavior: 'smooth'
+                      });
+                    }
+                  }
+                }
+
+                // Listen for selection changes
+                document.addEventListener('selectionchange', scrollToCursor);
+
+                // Listen for input events
+                document.addEventListener('input', scrollToCursor);
+
+                // Listen for click events
+                document.addEventListener('click', scrollToCursor);
+              })();
+              true;
+            ` : undefined,
           }}
         />
       </View>

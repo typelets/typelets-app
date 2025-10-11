@@ -28,7 +28,7 @@ export function useNoteEditor(noteId?: string): UseNoteEditorReturn {
   // Initialize editor with TenTapStartKit
   const editor = useEditorBridge({
     autofocus: false,
-    avoidIosKeyboard: false,
+    avoidIosKeyboard: true,
     initialContent: '<p></p>',
     bridgeExtensions: TenTapStartKit,
   });
