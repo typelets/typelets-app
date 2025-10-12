@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useRef } from 'react';
 import { Alert } from 'react-native';
 import { useEditorBridge, TenTapStartKit, type EditorBridge } from '@10play/tentap-editor';
 import { useRouter } from 'expo-router';
@@ -6,7 +6,7 @@ import { useTheme } from '../theme';
 import { useApiService, type Note } from '../services/api';
 import { generateEditorStyles } from '../screens/EditNote/styles';
 
-const EDITOR_LOAD_DELAY = 300;
+const EDITOR_LOAD_DELAY = 500;
 const CSS_INJECTION_DELAY = 100;
 
 interface UseNoteEditorReturn {
@@ -24,6 +24,8 @@ export function useNoteEditor(noteId?: string): UseNoteEditorReturn {
   const theme = useTheme();
   const api = useApiService();
   const router = useRouter();
+  const editorReadyRef = useRef(false);
+  const pendingContentRef = useRef<string | null>(null);
 
   // Initialize editor with TenTapStartKit
   const editor = useEditorBridge({
@@ -46,6 +48,16 @@ export function useNoteEditor(noteId?: string): UseNoteEditorReturn {
     // Also inject after a slight delay to ensure it overrides TenTap's default styles
     setTimeout(() => {
       editor.injectCSS(customCSS, 'theme-css');
+
+      // Mark editor as ready and set pending content if any
+      editorReadyRef.current = true;
+      if (pendingContentRef.current !== null) {
+        if (__DEV__) {
+          console.log('Setting pending content after editor ready...');
+        }
+        editor.setContent(pendingContentRef.current);
+        pendingContentRef.current = null;
+      }
     }, CSS_INJECTION_DELAY);
   }, [editor, customCSS]);
 
@@ -59,13 +71,23 @@ export function useNoteEditor(noteId?: string): UseNoteEditorReturn {
         console.log('Loaded note:', { id: note.id, title: note.title, contentLength: note.content?.length });
       }
 
-      // Wait for editor to mount, then set content
-      setTimeout(() => {
+      const content = note.content || '';
+
+      // If editor is ready, set content immediately
+      if (editorReadyRef.current) {
+        setTimeout(() => {
+          if (__DEV__) {
+            console.log('Setting editor content (editor ready)...');
+          }
+          editor.setContent(content);
+        }, 100);
+      } else {
+        // Otherwise, store content to be set when editor is ready
         if (__DEV__) {
-          console.log('Setting editor content...');
+          console.log('Editor not ready yet, storing content...');
         }
-        editor.setContent(note.content || '');
-      }, EDITOR_LOAD_DELAY);
+        pendingContentRef.current = content;
+      }
 
       return note;
     } catch (error) {

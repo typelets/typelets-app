@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { View, Text, StyleSheet, Animated } from 'react-native';
 import { WebView } from 'react-native-webview';
 import type { Note } from '../../services/api';
@@ -8,6 +8,7 @@ interface NoteContentProps {
   htmlContent: string;
   scrollY: Animated.Value;
   scrollViewRef: React.RefObject<any>;
+  showTitle?: boolean;
   theme: {
     colors: {
       foreground: string;
@@ -25,10 +26,11 @@ interface NoteContentProps {
  * Supports rich text formatting, code blocks with syntax highlighting,
  * and communicates scroll position to React Native
  */
-export function NoteContent({ note, htmlContent, scrollY, scrollViewRef, theme }: NoteContentProps) {
+export function NoteContent({ note, htmlContent, scrollY, scrollViewRef, showTitle = true, theme }: NoteContentProps) {
   const webViewRef = useRef<any>(null);
+  const [webViewHeight, setWebViewHeight] = useState(300);
 
-  // Enhanced HTML with title and metadata
+  // Enhanced HTML with optional title and metadata
   const fullHtml = `
     <!DOCTYPE html>
     <html>
@@ -62,6 +64,7 @@ export function NoteContent({ note, htmlContent, scrollY, scrollViewRef, theme }
       </style>
     </head>
     <body>
+      ${showTitle ? `
       <div class="note-header" id="header">
         <div class="note-title">${note.title}</div>
         <div class="note-metadata">
@@ -73,11 +76,30 @@ export function NoteContent({ note, htmlContent, scrollY, scrollViewRef, theme }
         </div>
         <div class="note-divider"></div>
       </div>
+      ` : ''}
       ${htmlContent.match(/<body>([\s\S]*?)<\/body>/)?.[1] || note.content}
       <script>
         document.querySelectorAll('pre code').forEach((block) => {
           hljs.highlightElement(block);
         });
+
+        // Send content height to React Native
+        function sendHeight() {
+          const height = document.documentElement.scrollHeight;
+          window.ReactNativeWebView.postMessage(JSON.stringify({
+            type: 'height',
+            height: height
+          }));
+        }
+
+        // Send height when content is loaded
+        if (document.readyState === 'complete') {
+          setTimeout(sendHeight, 100);
+        } else {
+          window.addEventListener('load', () => {
+            setTimeout(sendHeight, 100);
+          });
+        }
       </script>
     </body>
     </html>
@@ -95,30 +117,21 @@ export function NoteContent({ note, htmlContent, scrollY, scrollViewRef, theme }
         <WebView
           ref={webViewRef}
           source={{ html: fullHtml }}
-          style={styles.webview}
-          scrollEnabled={true}
-          showsVerticalScrollIndicator={true}
+          style={[styles.webview, { height: webViewHeight }]}
+          scrollEnabled={false}
+          showsVerticalScrollIndicator={false}
           showsHorizontalScrollIndicator={false}
           originWhitelist={['*']}
           onMessage={(event) => {
             try {
               const data = JSON.parse(event.nativeEvent.data);
-              if (data.type === 'scroll' && scrollY) {
-                scrollY.setValue(data.scrollY);
+              if (data.type === 'height') {
+                setWebViewHeight(data.height);
               }
             } catch {
-              // Ignore parse errors from invalid message data
+              // Ignore parse errors
             }
           }}
-          injectedJavaScript={`
-            window.addEventListener('scroll', () => {
-              window.ReactNativeWebView.postMessage(JSON.stringify({
-                type: 'scroll',
-                scrollY: window.scrollY
-              }));
-            }, { passive: true });
-            true;
-          `}
         />
       )}
     </View>
@@ -127,14 +140,12 @@ export function NoteContent({ note, htmlContent, scrollY, scrollViewRef, theme }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
   },
   webview: {
-    flex: 1,
     backgroundColor: 'transparent',
   },
   hiddenContainer: {
-    flex: 1,
+    minHeight: 200,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 16,

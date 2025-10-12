@@ -225,7 +225,6 @@ export default function NotesListScreen({ navigation, route, renderHeader, scrol
       // Add note counts to subfolders (including nested subfolder notes)
       const subfoldersWithCounts = currentFolderSubfolders.map(folder => {
         const allNestedFolderIds = getAllNestedFolderIds(folder.id);
-        // Use allNotesData (not notesData) to get accurate counts
         const folderNotes = allNotesData.filter(note =>
           allNestedFolderIds.includes(note.folderId || '') &&
           !note.deleted &&
@@ -552,6 +551,16 @@ export default function NotesListScreen({ navigation, route, renderHeader, scrol
                             {String(note.title || 'Untitled')}
                           </Text>
                           <View style={styles.noteListMeta}>
+                            {((note.attachments?.length ?? 0) > 0 || (note.attachmentCount ?? 0) > 0) && (
+                              <View style={styles.attachmentBadge}>
+                                <View style={{ transform: [{ rotate: '45deg' }] }}>
+                                  <Ionicons name="attach-outline" size={14} color="#3b82f6" />
+                                </View>
+                                <Text style={[styles.attachmentCount, { color: '#3b82f6' }]}>
+                                  {note.attachments?.length || note.attachmentCount || 0}
+                                </Text>
+                              </View>
+                            )}
                             {note.starred && (
                               <Ionicons name="star" size={14} color="#f59e0b" style={{ marginRight: 8 }} />
                             )}
@@ -906,6 +915,16 @@ const styles = StyleSheet.create({
   noteListMeta: {
     flexDirection: 'row',
     alignItems: 'center',
+  },
+  attachmentBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    marginRight: 8,
+  },
+  attachmentCount: {
+    fontSize: 12,
+    fontWeight: '500',
   },
   noteListTime: {
     fontSize: 14,
