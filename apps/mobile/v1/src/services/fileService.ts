@@ -11,7 +11,6 @@ import forge from 'node-forge';
 import { encryptWithAESGCM, decryptWithAESGCM } from '../lib/encryption/core/aes';
 import { deriveEncryptionKey } from '../lib/encryption/core/keyDerivation';
 import { ENCRYPTION_CONFIG } from '../lib/encryption/config';
-import { encryptionService } from '../lib/encryption';
 import { getUserSecret, getMasterKey } from '../lib/encryption/storage/secureStorage';
 import type { FileAttachment } from './api/types';
 
@@ -70,7 +69,7 @@ class FileService {
    */
   private base64ToArrayBuffer(base64: string): ArrayBuffer {
     const bytes = this.base64ToUint8Array(base64);
-    return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
+    return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
   }
 
   /**

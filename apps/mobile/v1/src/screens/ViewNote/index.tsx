@@ -26,7 +26,6 @@ export default function ViewNoteScreen() {
   const { note, loading, htmlContent, handleEdit, handleToggleStar, handleToggleHidden } = useViewNote(noteId as string);
 
   useEffect(() => {
-    // Reset scroll position when note changes
     scrollY.setValue(0);
     if (scrollViewRef.current) {
       scrollViewRef.current.scrollTo({ y: 0, animated: false });
@@ -54,7 +53,6 @@ export default function ViewNoteScreen() {
     }
   }, [noteId, api]);
 
-  // Load attachments when note loads
   useEffect(() => {
     if (noteId && lastLoadedNoteId.current !== noteId) {
       loadAttachments();
@@ -69,11 +67,8 @@ export default function ViewNoteScreen() {
 
     try {
       setDownloadingId(attachment.id);
-      console.log('Starting download for:', attachment.originalName);
       const fileUri = await api.downloadFile(attachment);
-      console.log('File downloaded to:', fileUri);
       await api.shareFile(fileUri);
-      console.log('Share dialog opened');
     } catch (error) {
       console.error('Failed to download attachment:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
@@ -88,19 +83,15 @@ export default function ViewNoteScreen() {
     }
   };
 
-  // Reload attachments when coming back to this screen
   useFocusEffect(
     useCallback(() => {
-      // Reset scroll position when screen comes into focus
       scrollY.setValue(0);
       if (scrollViewRef.current) {
         scrollViewRef.current.scrollTo({ y: 0, animated: false });
       }
 
-      // Force reload attachments when coming back (e.g., from EditNote)
-      // But only if this is our note and we're not already loading
       if (noteId && lastLoadedNoteId.current === noteId && !loadingRef.current) {
-        lastLoadedNoteId.current = null; // Reset to force reload
+        lastLoadedNoteId.current = null;
         loadAttachments();
       }
       // eslint-disable-next-line react-hooks/exhaustive-deps

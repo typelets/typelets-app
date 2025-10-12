@@ -10,7 +10,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useTheme } from '../theme';
-import { useApiService, type FileAttachment, type PickedFile } from '../services/api';
+import { useApiService, type FileAttachment } from '../services/api';
 
 interface FileUploadProps {
   noteId: string;
@@ -37,7 +37,7 @@ export function FileUpload({
       const files = await api.pickFiles();
 
       if (files.length === 0) {
-        return; // User cancelled
+        return;
       }
 
       setIsUploading(true);

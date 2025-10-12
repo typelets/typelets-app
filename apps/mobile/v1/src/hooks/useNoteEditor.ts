@@ -6,7 +6,6 @@ import { useTheme } from '../theme';
 import { useApiService, type Note } from '../services/api';
 import { generateEditorStyles } from '../screens/EditNote/styles';
 
-const EDITOR_LOAD_DELAY = 500;
 const CSS_INJECTION_DELAY = 100;
 
 interface UseNoteEditorReturn {
@@ -27,7 +26,6 @@ export function useNoteEditor(noteId?: string): UseNoteEditorReturn {
   const editorReadyRef = useRef(false);
   const pendingContentRef = useRef<string | null>(null);
 
-  // Initialize editor with TenTapStartKit
   const editor = useEditorBridge({
     autofocus: false,
     avoidIosKeyboard: true,
@@ -35,21 +33,18 @@ export function useNoteEditor(noteId?: string): UseNoteEditorReturn {
     bridgeExtensions: TenTapStartKit,
   });
 
-  // Generate custom CSS memoized on theme colors
   const customCSS = useMemo(
     () => generateEditorStyles(theme.colors),
     [theme.colors]
   );
 
-  // Handler for when WebView loads - inject CSS at the right time
   const handleEditorLoad = useCallback(() => {
     editor.injectCSS(customCSS, 'theme-css');
 
-    // Also inject after a slight delay to ensure it overrides TenTap's default styles
+    // Inject after delay to override TenTap's default styles
     setTimeout(() => {
       editor.injectCSS(customCSS, 'theme-css');
 
-      // Mark editor as ready and set pending content if any
       editorReadyRef.current = true;
       if (pendingContentRef.current !== null) {
         if (__DEV__) {
@@ -61,7 +56,6 @@ export function useNoteEditor(noteId?: string): UseNoteEditorReturn {
     }, CSS_INJECTION_DELAY);
   }, [editor, customCSS]);
 
-  // Load note content if editing
   const loadNote = useCallback(async () => {
     if (!noteId) return;
 
@@ -73,7 +67,6 @@ export function useNoteEditor(noteId?: string): UseNoteEditorReturn {
 
       const content = note.content || '';
 
-      // If editor is ready, set content immediately
       if (editorReadyRef.current) {
         setTimeout(() => {
           if (__DEV__) {
@@ -82,7 +75,6 @@ export function useNoteEditor(noteId?: string): UseNoteEditorReturn {
           editor.setContent(content);
         }, 100);
       } else {
-        // Otherwise, store content to be set when editor is ready
         if (__DEV__) {
           console.log('Editor not ready yet, storing content...');
         }

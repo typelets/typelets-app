@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Alert, TextInput, Platform, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, Alert, TextInput, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import * as Haptics from 'expo-haptics';
@@ -40,7 +40,6 @@ export default function EditNoteScreen() {
           setNoteData(note || null);
           setTitle(note?.title || '');
 
-          // Load attachments
           if (note) {
             const noteAttachments = await api.getAttachments(noteId as string);
             setAttachments(noteAttachments);
@@ -92,6 +91,7 @@ export default function EditNoteScreen() {
           starred: false,
           archived: false,
           deleted: false,
+          hidden: false,
         });
       }
 
@@ -195,7 +195,6 @@ export default function EditNoteScreen() {
           </View>
         )}
 
-        {/* File Attachments - only show when toggled */}
         {isEditing && noteId && showAttachments && (
           <View style={styles.attachmentsSection}>
             <FileUpload
