@@ -4,14 +4,18 @@
  */
 
 import { createHttpClient, AuthTokenGetter } from './client';
-import { Note, NoteQueryParams, NotesResponse, EmptyTrashResponse } from './types';
+import { Note, NoteQueryParams, NotesResponse, EmptyTrashResponse, FileAttachment } from './types';
 import { decryptNote, decryptNotes, encryptNoteForApi, clearEncryptionCache } from './encryption';
 import { fetchAllPages, createPaginationParams } from './utils/pagination';
 import { handleApiError } from './utils/errors';
 import { logger } from '../../lib/logger';
+import { fileService, type PickedFile } from '../fileService';
 
 export function createNotesApi(getToken: AuthTokenGetter, getUserId: () => string | undefined) {
   const { makeRequest } = createHttpClient(getToken);
+
+  // Initialize fileService with token provider
+  fileService.setTokenProvider(getToken);
 
   return {
     /**
@@ -232,5 +236,144 @@ export function createNotesApi(getToken: AuthTokenGetter, getUserId: () => strin
         return handleApiError(error, 'emptyTrash');
       }
     },
+
+    /**
+     * Pick files from device
+     */
+    async pickFiles(): Promise<PickedFile[]> {
+      try {
+        return await fileService.pickFiles();
+      } catch (error) {
+        logger.error('Failed to pick files', error as Error, {
+          attributes: { operation: 'pickFiles' },
+        });
+        throw error;
+      }
+    },
+
+    /**
+     * Upload files to a note
+     */
+    async uploadFiles(
+      noteId: string,
+      files: PickedFile[],
+      onProgress?: (progress: { loaded: number; total: number; percentage: number }) => void
+    ): Promise<FileAttachment[]> {
+      try {
+        const userId = getUserId();
+        if (!userId) {
+          throw new Error('User ID required for file upload');
+        }
+
+        const uploadedFiles = await fileService.uploadFiles(noteId, files, userId, onProgress);
+
+        logger.recordEvent('files_uploaded', {
+          noteId,
+          fileCount: files.length,
+          totalSize: files.reduce((sum, f) => sum + (f.size || 0), 0),
+        });
+
+        return uploadedFiles;
+      } catch (error) {
+        logger.error('Failed to upload files', error as Error, {
+          attributes: {
+            operation: 'uploadFiles',
+            noteId,
+            fileCount: files.length,
+          },
+        });
+        throw error;
+      }
+    },
+
+    /**
+     * Get attachments for a note
+     */
+    async getAttachments(noteId: string): Promise<FileAttachment[]> {
+      try {
+        return await fileService.getAttachments(noteId);
+      } catch (error) {
+        logger.error('Failed to get attachments', error as Error, {
+          attributes: { operation: 'getAttachments', noteId },
+        });
+        throw error;
+      }
+    },
+
+    /**
+     * Download and decrypt a file attachment
+     */
+    async downloadFile(attachment: FileAttachment): Promise<string> {
+      try {
+        const userId = getUserId();
+        if (!userId) {
+          throw new Error('User ID required for file download');
+        }
+
+        const fileUri = await fileService.downloadFile(attachment, userId);
+
+        logger.recordEvent('file_downloaded', {
+          fileId: attachment.id,
+          fileName: attachment.originalName,
+          fileSize: attachment.size,
+        });
+
+        return fileUri;
+      } catch (error) {
+        logger.error('Failed to download file', error as Error, {
+          attributes: {
+            operation: 'downloadFile',
+            fileId: attachment.id,
+          },
+        });
+        throw error;
+      }
+    },
+
+    /**
+     * Share a downloaded file
+     */
+    async shareFile(fileUri: string): Promise<void> {
+      try {
+        await fileService.shareFile(fileUri);
+        logger.recordEvent('file_shared', { fileUri });
+      } catch (error) {
+        logger.error('Failed to share file', error as Error, {
+          attributes: { operation: 'shareFile' },
+        });
+        throw error;
+      }
+    },
+
+    /**
+     * Delete a file attachment
+     */
+    async deleteAttachment(attachmentId: string): Promise<void> {
+      try {
+        await fileService.deleteFile(attachmentId);
+
+        logger.recordEvent('file_deleted', {
+          fileId: attachmentId,
+        });
+      } catch (error) {
+        logger.error('Failed to delete attachment', error as Error, {
+          attributes: {
+            operation: 'deleteAttachment',
+            fileId: attachmentId,
+          },
+        });
+        throw error;
+      }
+    },
+
+    /**
+     * Format file size for display
+     */
+    formatFileSize: (bytes: number) => fileService.formatFileSize(bytes),
+
+    /**
+     * Get file icon emoji based on MIME type
+     */
+    getFileIcon: (mimeType: string) => fileService.getFileIcon(mimeType),
   };
 }

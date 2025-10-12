@@ -7,9 +7,12 @@ interface ViewHeaderProps {
   isHidden: boolean;
   title: string;
   scrollY: Animated.Value;
+  attachmentsCount: number;
+  showAttachments: boolean;
   onBack: () => void;
   onToggleStar: () => void;
   onToggleHidden: () => void;
+  onToggleAttachments: () => void;
   onEdit: () => void;
   theme: {
     colors: {
@@ -30,9 +33,12 @@ export function ViewHeader({
   isHidden,
   title,
   scrollY,
+  attachmentsCount,
+  showAttachments,
   onBack,
   onToggleStar,
   onToggleHidden,
+  onToggleAttachments,
   onEdit,
   theme,
 }: ViewHeaderProps) {
@@ -69,6 +75,30 @@ export function ViewHeader({
         </Animated.View>
 
         <View style={styles.headerActions}>
+          {attachmentsCount > 0 && (
+            <TouchableOpacity
+              style={[styles.editButton, { backgroundColor: showAttachments ? 'rgba(59, 130, 246, 0.15)' : theme.colors.muted }]}
+              onPress={onToggleAttachments}
+            >
+              <View style={styles.attachmentButtonContent}>
+                <View style={{ transform: [{ rotate: '45deg' }] }}>
+                  <Ionicons
+                    name="attach-outline"
+                    size={20}
+                    color={showAttachments ? "#3b82f6" : theme.colors.mutedForeground}
+                  />
+                </View>
+                {attachmentsCount > 0 && (
+                  <View style={[styles.attachmentBadge, { backgroundColor: showAttachments ? "#3b82f6" : theme.colors.mutedForeground }]}>
+                    <Text style={styles.attachmentBadgeText}>
+                      {attachmentsCount > 9 ? '9+' : attachmentsCount}
+                    </Text>
+                  </View>
+                )}
+              </View>
+            </TouchableOpacity>
+          )}
+
           <TouchableOpacity
             style={[styles.editButton, { backgroundColor: theme.colors.muted }]}
             onPress={onToggleStar}
@@ -152,5 +182,26 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 17,
+  },
+  attachmentButtonContent: {
+    position: 'relative',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  attachmentBadge: {
+    position: 'absolute',
+    top: -6,
+    right: -6,
+    minWidth: 16,
+    height: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+  },
+  attachmentBadgeText: {
+    color: '#ffffff',
+    fontSize: 10,
+    fontWeight: '600',
   },
 });

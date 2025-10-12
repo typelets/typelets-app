@@ -5,11 +5,12 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { RichText } from '@10play/tentap-editor';
 import { useTheme } from '../../theme';
-import { useApiService, type Note } from '../../services/api';
+import { useApiService, type Note, type FileAttachment } from '../../services/api';
 import { useKeyboardHeight } from '../../hooks/useKeyboardHeight';
 import { useNoteEditor } from '../../hooks/useNoteEditor';
 import { EditorHeader } from './EditorHeader';
 import { EditorToolbar } from './EditorToolbar';
+import { FileUpload } from '../../components/FileUpload';
 
 const NAVIGATION_DELAY = 100;
 
@@ -25,6 +26,8 @@ export default function EditNoteScreen() {
   const [isSaving, setIsSaving] = useState(false);
   const [loading, setLoading] = useState(false);
   const [noteData, setNoteData] = useState<Note | null>(null);
+  const [attachments, setAttachments] = useState<FileAttachment[]>([]);
+  const [showAttachments, setShowAttachments] = useState(false);
 
   const keyboardHeight = useKeyboardHeight();
   const { editor, handleEditorLoad, loadNote } = useNoteEditor(noteId as string);
@@ -36,6 +39,11 @@ export default function EditNoteScreen() {
           const note = await loadNote();
           setNoteData(note || null);
           setTitle(note?.title || '');
+
+          if (note) {
+            const noteAttachments = await api.getAttachments(noteId as string);
+            setAttachments(noteAttachments);
+          }
         } finally {
           setLoading(false);
         }
@@ -44,6 +52,17 @@ export default function EditNoteScreen() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [noteId, isEditing]);
+
+  const refreshAttachments = async () => {
+    if (isEditing && noteId) {
+      try {
+        const noteAttachments = await api.getAttachments(noteId as string);
+        setAttachments(noteAttachments);
+      } catch (error) {
+        console.error('Failed to refresh attachments:', error);
+      }
+    }
+  };
 
   const handleSave = async () => {
     if (!title.trim()) {
@@ -72,6 +91,7 @@ export default function EditNoteScreen() {
           starred: false,
           archived: false,
           deleted: false,
+          hidden: false,
         });
       }
 
@@ -147,9 +167,12 @@ export default function EditNoteScreen() {
         isEditing={isEditing}
         noteData={noteData}
         isSaving={isSaving}
+        attachmentsCount={attachments.length}
+        showAttachments={showAttachments}
         onBack={() => router.back()}
         onDelete={handleDelete}
         onSave={handleSave}
+        onToggleAttachments={() => setShowAttachments(!showAttachments)}
         theme={theme}
       />
 
@@ -169,6 +192,17 @@ export default function EditNoteScreen() {
               {noteData.updatedAt !== noteData.createdAt &&
                 ` • Updated ${new Date(noteData.updatedAt).toLocaleDateString()}`}
             </Text>
+          </View>
+        )}
+
+        {isEditing && noteId && showAttachments && (
+          <View style={styles.attachmentsSection}>
+            <FileUpload
+              noteId={noteId as string}
+              attachments={attachments}
+              onUploadComplete={refreshAttachments}
+              onDeleteComplete={refreshAttachments}
+            />
           </View>
         )}
 
@@ -247,6 +281,9 @@ const styles = StyleSheet.create({
   },
   date: {
     fontSize: 12,
+  },
+  attachmentsSection: {
+    marginTop: 12,
   },
   divider: {
     height: 0.5,

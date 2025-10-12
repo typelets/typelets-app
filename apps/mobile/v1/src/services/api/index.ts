@@ -9,7 +9,16 @@ import { createFoldersApi } from './folders';
 import { createUserApi } from './user';
 
 // Re-export types for convenience
-export type { Folder, Note, NoteQueryParams, EmptyTrashResponse, ApiUser, ApiUserUsage } from './types';
+export type {
+  Folder,
+  Note,
+  NoteQueryParams,
+  EmptyTrashResponse,
+  ApiUser,
+  ApiUserUsage,
+  FileAttachment
+} from './types';
+export type { PickedFile } from '../fileService';
 
 /**
  * Main API service hook
@@ -37,6 +46,16 @@ export const useApiService = () => {
     hideNote: notesApi.hideNote,
     unhideNote: notesApi.unhideNote,
     emptyTrash: notesApi.emptyTrash,
+
+    // File attachment methods
+    pickFiles: notesApi.pickFiles,
+    uploadFiles: notesApi.uploadFiles,
+    getAttachments: notesApi.getAttachments,
+    downloadFile: notesApi.downloadFile,
+    shareFile: notesApi.shareFile,
+    deleteAttachment: notesApi.deleteAttachment,
+    formatFileSize: notesApi.formatFileSize,
+    getFileIcon: notesApi.getFileIcon,
 
     // Folders methods
     getFolders: foldersApi.getFolders,

@@ -3,6 +3,16 @@
  * Shared types for the API service
  */
 
+export interface FileAttachment {
+  id: string;
+  noteId: string;
+  filename: string;
+  originalName: string;
+  mimeType: string;
+  size: number;
+  uploadedAt: string;
+}
+
 export interface Folder {
   id: string;
   name: string;
@@ -30,6 +40,8 @@ export interface Note {
   hiddenAt?: string | null;
   createdAt: string;
   updatedAt: string;
+  attachments?: FileAttachment[];
+  attachmentCount?: number; // Backend can populate this for performance
   // Encrypted fields (if note is encrypted)
   encryptedTitle?: string;
   encryptedContent?: string;
