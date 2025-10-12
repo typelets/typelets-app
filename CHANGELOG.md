@@ -1,3 +1,10 @@
+# [1.23.0](https://github.com/typelets/typelets-app/compare/v1.22.9...v1.23.0) (2025-10-12)
+
+
+### Features
+
+* **mobile:** add attachment badges to note cards with backend integration ([b74f81c](https://github.com/typelets/typelets-app/commit/b74f81cd50c5a39de64593b97f45b49f648acb52))
+
 ## [1.22.9](https://github.com/typelets/typelets-app/compare/v1.22.8...v1.22.9) (2025-10-11)
 
 
