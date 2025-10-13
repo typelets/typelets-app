@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Alert, TextInput, Platform } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { RichText } from '@10play/tentap-editor';
@@ -21,6 +21,7 @@ export default function EditNoteScreen() {
   const params = useLocalSearchParams();
   const { noteId, folderId } = params;
   const isEditing = !!noteId;
+  const insets = useSafeAreaInsets();
 
   const [title, setTitle] = useState('');
   const [isSaving, setIsSaving] = useState(false);
@@ -31,6 +32,13 @@ export default function EditNoteScreen() {
 
   const keyboardHeight = useKeyboardHeight();
   const { editor, handleEditorLoad, loadNote } = useNoteEditor(noteId as string);
+
+  // Calculate toolbar height (toolbar itself + padding + keyboard)
+  // iOS: 60px toolbar + keyboard height + minimal padding for curved keyboard
+  // Android: 60px toolbar + keyboard height
+  const toolbarHeight = Platform.OS === 'ios'
+    ? 60 + keyboardHeight + (keyboardHeight > 0 ? 4 : 0)
+    : 60 + keyboardHeight;
   useEffect(() => {
     if (isEditing && noteId) {
       const load = async () => {
@@ -209,7 +217,11 @@ export default function EditNoteScreen() {
         <View style={[styles.divider, { backgroundColor: theme.colors.border, marginHorizontal: -16 }]} />
       </View>
 
-      <View style={[styles.editorContainer, Platform.OS === 'android' && keyboardHeight > 0 && { marginBottom: keyboardHeight + 60 }]}>
+      <View style={[
+        styles.editorContainer,
+        Platform.OS === 'ios' && keyboardHeight > 0 && { marginBottom: toolbarHeight },
+        Platform.OS === 'android' && keyboardHeight > 0 && { marginBottom: keyboardHeight + 60 }
+      ]}>
         <RichText
           editor={editor}
           style={{ flex: 1, backgroundColor: theme.colors.background }}
@@ -217,6 +229,7 @@ export default function EditNoteScreen() {
           webViewProps={{
             bounces: false,
             overScrollMode: 'never',
+            contentInset: Platform.OS === 'ios' ? { bottom: toolbarHeight } : undefined,
             injectedJavaScript: Platform.OS === 'android' ? `
               (function() {
                 function scrollToCursor() {
@@ -254,6 +267,7 @@ export default function EditNoteScreen() {
       <EditorToolbar
         editor={editor}
         keyboardHeight={keyboardHeight}
+        bottomInset={insets.bottom}
         theme={theme}
       />
     </SafeAreaView>

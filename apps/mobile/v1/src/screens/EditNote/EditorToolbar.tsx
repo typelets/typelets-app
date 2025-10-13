@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform, Keyboard } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Highlighter } from 'lucide-react-native';
 import type { EditorBridge } from '@10play/tentap-editor';
@@ -7,6 +7,7 @@ import type { EditorBridge } from '@10play/tentap-editor';
 interface EditorToolbarProps {
   editor: EditorBridge;
   keyboardHeight: number;
+  bottomInset: number;
   theme: {
     colors: {
       background: string;
@@ -15,7 +16,13 @@ interface EditorToolbarProps {
     };
   };
 }
-export function EditorToolbar({ editor, keyboardHeight, theme }: EditorToolbarProps) {
+export function EditorToolbar({ editor, keyboardHeight, bottomInset, theme }: EditorToolbarProps) {
+  // Calculate padding for iOS curved keyboard
+  // When keyboard is open, use minimal padding
+  const paddingBottom = Platform.OS === 'ios' && keyboardHeight > 0
+    ? 4 // Minimal padding for curved keyboard
+    : 24; // Default padding when keyboard is closed
+
   return (
     <View
       style={[
@@ -24,6 +31,7 @@ export function EditorToolbar({ editor, keyboardHeight, theme }: EditorToolbarPr
           backgroundColor: theme.colors.background,
           borderTopColor: theme.colors.border,
           bottom: keyboardHeight,
+          paddingBottom,
         },
       ]}
     >
@@ -32,6 +40,21 @@ export function EditorToolbar({ editor, keyboardHeight, theme }: EditorToolbarPr
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.toolbarButtons}
       >
+        {keyboardHeight > 0 && (
+          <>
+            <TouchableOpacity
+              onPress={() => {
+                Keyboard.dismiss();
+                editor.blur();
+              }}
+              style={styles.toolbarButton}
+            >
+              <Ionicons name="chevron-down" size={20} color={theme.colors.foreground} />
+            </TouchableOpacity>
+            <View style={[styles.toolbarDivider, { backgroundColor: theme.colors.border }]} />
+          </>
+        )}
+
         <TouchableOpacity
           onPress={() => editor.toggleBold()}
           style={styles.toolbarButton}
@@ -134,7 +157,6 @@ const styles = StyleSheet.create({
     bottom: 0,
     borderTopWidth: 0.5,
     paddingTop: 8,
-    paddingBottom: 24,
     paddingHorizontal: 8,
   },
   toolbarButtons: {

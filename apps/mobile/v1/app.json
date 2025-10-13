@@ -27,6 +27,7 @@
       "android"
     ],
     "ios": {
+      "icon": "./assets/images/ios-icon-dark.png",
       "bundleIdentifier": "com.typelets.mobile.ios",
       "buildNumber": "16",
       "supportsTablet": true,
