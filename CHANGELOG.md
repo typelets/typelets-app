@@ -1,3 +1,10 @@
+# [1.24.0](https://github.com/typelets/typelets-app/compare/v1.23.0...v1.24.0) (2025-10-13)
+
+
+### Features
+
+* **mobile:** add iOS support and fix editor loading issues ([8022b3a](https://github.com/typelets/typelets-app/commit/8022b3a7eda9fe36fd7352b24da9385add5a9f0b))
+
 # [1.23.0](https://github.com/typelets/typelets-app/compare/v1.22.9...v1.23.0) (2025-10-12)
 
 
