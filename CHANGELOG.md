@@ -1,3 +1,10 @@
+## [1.24.4](https://github.com/typelets/typelets-app/compare/v1.24.3...v1.24.4) (2025-10-13)
+
+
+### Bug Fixes
+
+* **mobile:** improve note editor UX and theme consistency ([458fd0c](https://github.com/typelets/typelets-app/commit/458fd0c6ad7a04f78aacb0266fd8520d30f63292))
+
 ## [1.24.3](https://github.com/typelets/typelets-app/compare/v1.24.2...v1.24.3) (2025-10-13)
 
 
