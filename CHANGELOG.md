@@ -1,3 +1,10 @@
+## [1.24.3](https://github.com/typelets/typelets-app/compare/v1.24.2...v1.24.3) (2025-10-13)
+
+
+### Bug Fixes
+
+* **mobile:** improve UI/UX and fix iOS-specific issues ([d5d2791](https://github.com/typelets/typelets-app/commit/d5d27918a7dc72bd12f6b2bfe04ed0a8cf26ae0d))
+
 ## [1.24.2](https://github.com/typelets/typelets-app/compare/v1.24.1...v1.24.2) (2025-10-13)
 
 
