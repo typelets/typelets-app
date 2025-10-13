@@ -223,13 +223,13 @@ export default function EditNoteScreen() {
         Platform.OS === 'android' && keyboardHeight > 0 && { marginBottom: keyboardHeight + 60 }
       ]}>
         <RichText
+          key={noteId as string || 'new-note'}
           editor={editor}
           style={{ flex: 1, backgroundColor: theme.colors.background }}
           onLoad={handleEditorLoad}
           webViewProps={{
             bounces: false,
             overScrollMode: 'never',
-            contentInset: Platform.OS === 'ios' ? { bottom: toolbarHeight } : undefined,
             injectedJavaScript: Platform.OS === 'android' ? `
               (function() {
                 function scrollToCursor() {

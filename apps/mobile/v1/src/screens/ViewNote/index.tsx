@@ -252,7 +252,7 @@ const styles = StyleSheet.create({
   },
   divider: {
     height: StyleSheet.hairlineWidth,
-    marginHorizontal: 16,
+    marginHorizontal: 0,
   },
   attachmentsContainer: {
     borderBottomWidth: StyleSheet.hairlineWidth,

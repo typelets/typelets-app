@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef } from 'react';
+import { useCallback, useMemo, useRef, useEffect } from 'react';
 import { Alert } from 'react-native';
 import { useEditorBridge, TenTapStartKit, type EditorBridge } from '@10play/tentap-editor';
 import { useRouter } from 'expo-router';
@@ -29,8 +29,8 @@ export function useNoteEditor(noteId?: string): UseNoteEditorReturn {
 
   const editor = useEditorBridge({
     autofocus: false,
-    avoidIosKeyboard: true,
-    initialContent: '<p></p>',
+    avoidIosKeyboard: false,
+    initialContent: '',
     bridgeExtensions: TenTapStartKit,
   });
 
@@ -38,6 +38,13 @@ export function useNoteEditor(noteId?: string): UseNoteEditorReturn {
     () => generateEditorStyles(theme.colors),
     [theme.colors]
   );
+
+  // Reset refs when noteId changes
+  useEffect(() => {
+    editorReadyRef.current = false;
+    pendingContentRef.current = null;
+    contentSetRef.current = false;
+  }, [noteId]);
 
   const handleEditorLoad = useCallback(() => {
     editor.injectCSS(customCSS, 'theme-css');
@@ -59,6 +66,35 @@ export function useNoteEditor(noteId?: string): UseNoteEditorReturn {
           if (!contentSetRef.current) {
             editor.setContent(pendingContentRef.current!);
             contentSetRef.current = true;
+
+            // Position content at top before showing
+            setTimeout(() => {
+              editor.webviewRef?.current?.injectJavaScript(`
+                function scrollToTop() {
+                  window.scrollTo(0, 0);
+                  document.documentElement.scrollTop = 0;
+                  document.body.scrollTop = 0;
+
+                  const prosemirror = document.querySelector('.ProseMirror');
+                  if (prosemirror) {
+                    prosemirror.scrollTop = 0;
+                  }
+                }
+
+                // Scroll immediately
+                scrollToTop();
+
+                // Show content after positioning with smooth fade
+                requestAnimationFrame(() => {
+                  scrollToTop();
+                  requestAnimationFrame(() => {
+                    document.body.classList.add('ready');
+                  });
+                });
+                true;
+              `);
+            }, 50);
+
             if (__DEV__) {
               console.log('[iOS Fix] Content set successfully');
             }
@@ -89,6 +125,35 @@ export function useNoteEditor(noteId?: string): UseNoteEditorReturn {
             }
             editor.setContent(content);
             contentSetRef.current = true;
+
+            // Position content at top before showing
+            setTimeout(() => {
+              editor.webviewRef?.current?.injectJavaScript(`
+                function scrollToTop() {
+                  window.scrollTo(0, 0);
+                  document.documentElement.scrollTop = 0;
+                  document.body.scrollTop = 0;
+
+                  const prosemirror = document.querySelector('.ProseMirror');
+                  if (prosemirror) {
+                    prosemirror.scrollTop = 0;
+                  }
+                }
+
+                // Scroll immediately
+                scrollToTop();
+
+                // Show content after positioning with smooth fade
+                requestAnimationFrame(() => {
+                  scrollToTop();
+                  requestAnimationFrame(() => {
+                    document.body.classList.add('ready');
+                  });
+                });
+                true;
+              `);
+            }, 50);
+
             if (__DEV__) {
               console.log('[iOS Fix] Content set successfully from loadNote');
             }

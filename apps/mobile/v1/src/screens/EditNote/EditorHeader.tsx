@@ -63,7 +63,7 @@ export function EditorHeader({
               </View>
               {attachmentsCount > 0 && (
                 <View style={[styles.attachmentBadge, { backgroundColor: showAttachments ? "#3b82f6" : theme.colors.mutedForeground }]}>
-                  <Text style={styles.attachmentBadgeText}>
+                  <Text style={[styles.attachmentBadgeText, { color: showAttachments ? '#ffffff' : theme.colors.muted }]}>
                     {attachmentsCount > 9 ? '9+' : attachmentsCount}
                   </Text>
                 </View>
@@ -149,7 +149,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
   },
   attachmentBadgeText: {
-    color: '#ffffff',
     fontSize: 10,
     fontWeight: '600',
   },

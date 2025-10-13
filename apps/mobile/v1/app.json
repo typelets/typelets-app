@@ -34,7 +34,8 @@
       "infoPlist": {
         "NSCameraUsageDescription": "This app uses the camera to capture photos for your notes.",
         "NSPhotoLibraryUsageDescription": "This app accesses your photo library to attach images to your notes.",
-        "NSMicrophoneUsageDescription": "This app uses the microphone to record audio notes."
+        "NSMicrophoneUsageDescription": "This app uses the microphone to record audio notes.",
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {

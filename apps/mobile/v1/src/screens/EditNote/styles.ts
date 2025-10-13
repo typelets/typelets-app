@@ -14,6 +14,9 @@ export function generateEditorStyles(themeColors: {
       overflow-x: hidden !important;
       width: 100vw !important;
       background-color: ${themeColors.background} !important;
+      scroll-padding-top: 0 !important;
+      overflow-anchor: none !important;
+      scroll-restoration: manual !important;
     }
     *:not(input[type="checkbox"]):not(input[type="checkbox"]::after) {
       color: ${themeColors.foreground} !important;
@@ -32,22 +35,34 @@ export function generateEditorStyles(themeColors: {
       overscroll-behavior: contain !important;
       width: 100vw !important;
       max-width: 100vw !important;
+      scroll-behavior: auto !important;
+      overflow-anchor: none !important;
+      opacity: 0 !important;
+      transition: opacity 0.15s ease-in !important;
+    }
+    body.ready {
+      opacity: 1 !important;
     }
     .ProseMirror {
       outline: none;
       overflow-x: hidden !important;
+      overflow-anchor: none !important;
       width: calc(100vw - 24px) !important; /* 16px left + 8px right padding */
       max-width: calc(100vw - 24px) !important;
       line-height: 1.5 !important;
       padding: 0 !important;
       padding-right: 16px !important; /* Extra padding to keep text away from scrollbar */
-      padding-bottom: 200px !important; /* Extra space at the end for comfortable editing */
       margin: 0 !important;
     }
-    @media (min-width: 600px) {
-      .ProseMirror {
-        padding-bottom: 250px !important;
-      }
+    /* Hide placeholder text */
+    .ProseMirror p.is-editor-empty:first-child::before,
+    .ProseMirror p.is-empty:first-child::before {
+      display: none !important;
+    }
+    .ProseMirror::after {
+      content: '';
+      display: block;
+      height: 80px;
     }
     .ProseMirror > *:not(ul[data-type="taskList"]):not(ul[data-type="taskList"] *) {
       max-width: 100% !important;
@@ -63,7 +78,7 @@ export function generateEditorStyles(themeColors: {
       color: ${themeColors.foreground} !important;
     }
     .ProseMirror > p:first-child {
-      margin-top: 12px !important;
+      margin-top: 8px !important;
     }
     li[data-type="taskItem"] > div > p:first-child {
       margin-top: 0 !important;
@@ -74,7 +89,7 @@ export function generateEditorStyles(themeColors: {
       color: ${themeColors.foreground} !important;
     }
     h1:first-child, h2:first-child, h3:first-child, h4:first-child, h5:first-child, h6:first-child {
-      margin-top: 12px;
+      margin-top: 8px;
     }
     h1 { font-size: 2em; }
     h2 { font-size: 1.5em; }
