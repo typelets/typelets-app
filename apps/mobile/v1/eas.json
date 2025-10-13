@@ -6,15 +6,21 @@
   "build": {
     "development": {
       "developmentClient": true,
-      "distribution": "internal"
+      "distribution": "internal",
+      "env": {
+        "RCT_NEW_ARCH_ENABLED": "1"
+      }
     },
     "preview": {
-      "distribution": "internal"
+      "distribution": "internal",
+      "env": {
+        "RCT_NEW_ARCH_ENABLED": "1"
+      }
     },
     "production": {
       "autoIncrement": true,
       "env": {
-        "RCT_NEW_ARCH_ENABLED": "0"
+        "RCT_NEW_ARCH_ENABLED": "1"
       }
     }
   },

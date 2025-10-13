@@ -25,6 +25,7 @@ export function useNoteEditor(noteId?: string): UseNoteEditorReturn {
   const router = useRouter();
   const editorReadyRef = useRef(false);
   const pendingContentRef = useRef<string | null>(null);
+  const contentSetRef = useRef(false); // Track if content has been set
 
   const editor = useEditorBridge({
     autofocus: false,
@@ -45,13 +46,25 @@ export function useNoteEditor(noteId?: string): UseNoteEditorReturn {
     setTimeout(() => {
       editor.injectCSS(customCSS, 'theme-css');
 
+      // Mark editor as ready
       editorReadyRef.current = true;
-      if (pendingContentRef.current !== null) {
+
+      // Set pending content if available and not already set
+      if (pendingContentRef.current !== null && !contentSetRef.current) {
         if (__DEV__) {
-          console.log('Setting pending content after editor ready...');
+          console.log('[iOS Fix] Setting pending content after editor ready...');
         }
-        editor.setContent(pendingContentRef.current);
-        pendingContentRef.current = null;
+        // Add extra delay on iOS for stability
+        setTimeout(() => {
+          if (!contentSetRef.current) {
+            editor.setContent(pendingContentRef.current!);
+            contentSetRef.current = true;
+            if (__DEV__) {
+              console.log('[iOS Fix] Content set successfully');
+            }
+          }
+          pendingContentRef.current = null;
+        }, 200);
       }
     }, CSS_INJECTION_DELAY);
   }, [editor, customCSS]);
@@ -67,16 +80,24 @@ export function useNoteEditor(noteId?: string): UseNoteEditorReturn {
 
       const content = note.content || '';
 
-      if (editorReadyRef.current) {
+      if (editorReadyRef.current && !contentSetRef.current) {
+        // Editor is ready, set content with increased delay for iOS
         setTimeout(() => {
-          if (__DEV__) {
-            console.log('Setting editor content (editor ready)...');
+          if (!contentSetRef.current) {
+            if (__DEV__) {
+              console.log('[iOS Fix] Setting editor content (editor ready)...');
+            }
+            editor.setContent(content);
+            contentSetRef.current = true;
+            if (__DEV__) {
+              console.log('[iOS Fix] Content set successfully from loadNote');
+            }
           }
-          editor.setContent(content);
-        }, 100);
-      } else {
+        }, 200);
+      } else if (!contentSetRef.current) {
+        // Editor not ready yet, store content to be set later
         if (__DEV__) {
-          console.log('Editor not ready yet, storing content...');
+          console.log('[iOS Fix] Editor not ready yet, storing content...');
         }
         pendingContentRef.current = content;
       }

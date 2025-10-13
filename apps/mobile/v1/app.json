@@ -27,13 +27,14 @@
       "android"
     ],
     "ios": {
-      "bundleIdentifier": "com.typelets.notes",
+      "bundleIdentifier": "com.typelets.mobile.ios",
       "buildNumber": "15",
       "supportsTablet": true,
       "infoPlist": {
         "NSCameraUsageDescription": "This app uses the camera to capture photos for your notes.",
         "NSPhotoLibraryUsageDescription": "This app accesses your photo library to attach images to your notes.",
-        "NSMicrophoneUsageDescription": "This app uses the microphone to record audio notes."
+        "NSMicrophoneUsageDescription": "This app uses the microphone to record audio notes.",
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
