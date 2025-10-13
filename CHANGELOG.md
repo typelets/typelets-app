@@ -1,3 +1,10 @@
+## [1.24.2](https://github.com/typelets/typelets-app/compare/v1.24.1...v1.24.2) (2025-10-13)
+
+
+### Bug Fixes
+
+* **mobile:** improve UI alignment and error handling ([cf00862](https://github.com/typelets/typelets-app/commit/cf00862145d4578ba33231fafb028dee7eda1a9d))
+
 ## [1.24.1](https://github.com/typelets/typelets-app/compare/v1.24.0...v1.24.1) (2025-10-13)
 
 
