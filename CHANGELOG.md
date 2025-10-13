@@ -1,3 +1,10 @@
+## [1.24.5](https://github.com/typelets/typelets-app/compare/v1.24.4...v1.24.5) (2025-10-13)
+
+
+### Bug Fixes
+
+* **mobile:** remove border above editor toolbar on keyboard open ([c6234d1](https://github.com/typelets/typelets-app/commit/c6234d10be45ffc3e7d40e7fd6136a5716f41955))
+
 ## [1.24.4](https://github.com/typelets/typelets-app/compare/v1.24.3...v1.24.4) (2025-10-13)
 
 
