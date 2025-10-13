@@ -29,7 +29,6 @@ export function EditorToolbar({ editor, keyboardHeight, bottomInset, theme }: Ed
         styles.toolbarContainer,
         {
           backgroundColor: theme.colors.background,
-          borderTopColor: theme.colors.border,
           bottom: keyboardHeight,
           paddingBottom,
         },
@@ -155,7 +154,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    borderTopWidth: 0.5,
+    borderTopWidth: 0,
     paddingTop: 8,
     paddingHorizontal: 8,
   },

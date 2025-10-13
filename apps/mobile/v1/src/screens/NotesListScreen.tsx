@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { View, Text, ScrollView, StyleSheet, Pressable, Alert, ActivityIndicator, TouchableOpacity, RefreshControl, Animated, Keyboard } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, Pressable, Alert, ActivityIndicator, TouchableOpacity, RefreshControl, Animated, Keyboard, useWindowDimensions } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
 import { useFocusEffect } from '@react-navigation/native';
@@ -58,6 +58,7 @@ export default function NotesListScreen({ navigation, route, renderHeader, scrol
   const theme = useTheme();
   const api = useApiService();
   const { folderId, viewType, searchQuery } = route?.params || {};
+  const { height: windowHeight } = useWindowDimensions();
 
   const [notes, setNotes] = useState<Note[]>([]);
   const [subfolders, setSubfolders] = useState<Folder[]>([]);
@@ -336,7 +337,10 @@ export default function NotesListScreen({ navigation, route, renderHeader, scrol
         <ScrollView
           ref={scrollViewRef}
           style={styles.scrollView}
+          contentContainerStyle={[styles.scrollViewContent, { minHeight: windowHeight }]}
           showsVerticalScrollIndicator={false}
+          alwaysBounceVertical={true}
+          bounces={true}
           onScroll={Animated.event(
             [{ nativeEvent: { contentOffset: { y: scrollY } } }],
             { useNativeDriver: false }
@@ -352,7 +356,7 @@ export default function NotesListScreen({ navigation, route, renderHeader, scrol
           }
         >
           {!loading && (
-          <>
+          <Pressable style={{ flex: 1 }} onPress={() => {}}>
             {/* Header from parent */}
             {renderHeader && renderHeader()}
 
@@ -595,7 +599,10 @@ export default function NotesListScreen({ navigation, route, renderHeader, scrol
                 </View>
               )}
             </View>
-          </>
+
+            {/* Spacer to ensure content fills screen */}
+            <View style={{ flex: 1, minHeight: 100 }} />
+          </Pressable>
           )}
         </ScrollView>
       )}
@@ -701,6 +708,9 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 0,
     paddingTop: 0,
+  },
+  scrollViewContent: {
+    flexGrow: 1,
   },
   noteCardContainer: {
     marginBottom: NOTE_CARD.SPACING,

@@ -144,7 +144,7 @@ export default function ViewNoteScreen() {
       <Animated.ScrollView
         ref={scrollViewRef}
         style={{ flex: 1 }}
-        showsVerticalScrollIndicator={true}
+        showsVerticalScrollIndicator={false}
         onScroll={Animated.event(
           [{ nativeEvent: { contentOffset: { y: scrollY } } }],
           { useNativeDriver: false }
