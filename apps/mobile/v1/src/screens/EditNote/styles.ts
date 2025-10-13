@@ -23,7 +23,8 @@ export function generateEditorStyles(themeColors: {
       font-size: 16px !important;
       line-height: 1.5 !important;
       background-color: ${themeColors.background} !important;
-      padding: 0 16px !important;
+      padding: 0 16px 0 16px !important;
+      padding-right: 8px !important; /* Minimal right padding, scrollbar stays outside */
       margin: 0 !important;
       overflow-x: hidden !important;
       overflow-y: auto !important;
@@ -35,15 +36,17 @@ export function generateEditorStyles(themeColors: {
     .ProseMirror {
       outline: none;
       overflow-x: hidden !important;
-      width: calc(100vw - 32px) !important;
-      max-width: calc(100vw - 32px) !important;
+      width: calc(100vw - 24px) !important; /* 16px left + 8px right padding */
+      max-width: calc(100vw - 24px) !important;
       line-height: 1.5 !important;
       padding: 0 !important;
+      padding-right: 16px !important; /* Extra padding to keep text away from scrollbar */
+      padding-bottom: 200px !important; /* Extra space at the end for comfortable editing */
       margin: 0 !important;
     }
     @media (min-width: 600px) {
       .ProseMirror {
-        padding-bottom: 100px !important;
+        padding-bottom: 250px !important;
       }
     }
     .ProseMirror > *:not(ul[data-type="taskList"]):not(ul[data-type="taskList"] *) {
