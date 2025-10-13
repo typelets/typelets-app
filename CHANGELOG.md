@@ -1,3 +1,10 @@
+## [1.24.1](https://github.com/typelets/typelets-app/compare/v1.24.0...v1.24.1) (2025-10-13)
+
+
+### Bug Fixes
+
+* **mobile:** improve keyboard handling and add custom icon ([219576b](https://github.com/typelets/typelets-app/commit/219576b8e71d315b3db85d435f64358572b8c9ec))
+
 # [1.24.0](https://github.com/typelets/typelets-app/compare/v1.23.0...v1.24.0) (2025-10-13)
 
 
