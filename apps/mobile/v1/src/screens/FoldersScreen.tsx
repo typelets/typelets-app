@@ -61,7 +61,7 @@ export default function FoldersScreen() {
   const [newFolderName, setNewFolderName] = useState('');
   const [selectedColor, setSelectedColor] = useState('#3b82f6');
   const [isCreatingFolder, setIsCreatingFolder] = useState(false);
-  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid');
 
   // Bottom sheet ref
   const createFolderSheetRef = useRef<BottomSheetModal>(null);
@@ -237,7 +237,7 @@ export default function FoldersScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]} edges={['top', 'left', 'right']}>
       {showLoading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={theme.colors.primary} />

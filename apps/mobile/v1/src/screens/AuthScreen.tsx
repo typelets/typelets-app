@@ -82,6 +82,7 @@ export default function AuthScreen() {
   const [pendingVerification, setPendingVerification] = useState(false);
   const [verificationCode, setVerificationCode] = useState('');
   const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
   const passwordRef = useRef<TextInput>(null);
 
   // Keyboard handling
@@ -127,6 +128,7 @@ export default function AuthScreen() {
   const handleSignIn = async () => {
     if (!signInLoaded) return;
     setLoading(true);
+    setErrorMessage('');
 
     try {
       const result = await signIn.create({
@@ -142,13 +144,23 @@ export default function AuthScreen() {
       }
     } catch (err: unknown) {
       const error = err as ClerkError;
+      const originalMessage = error.errors?.[0]?.message || '';
+      // Replace confusing Clerk messages with user-friendly ones
+      let message = 'Invalid email or password';
+      if (originalMessage.toLowerCase().includes('identifier')) {
+        message = 'Email or password is incorrect';
+      } else if (originalMessage) {
+        message = originalMessage;
+      }
+
       logger.error('Sign in failed', err, {
         attributes: {
           email,
-          errorMessage: error.errors?.[0]?.message,
+          errorMessage: originalMessage,
         },
       });
-      showToast(error.errors?.[0]?.message || 'Invalid email or password');
+      setErrorMessage(message);
+      showToast(message);
     } finally {
       setLoading(false);
     }
@@ -450,7 +462,7 @@ export default function AuthScreen() {
                         style={[
                           styles.passwordInput,
                           {
-                            borderColor: theme.colors.input,
+                            borderColor: errorMessage ? '#ef4444' : theme.colors.input,
                             color: theme.colors.foreground,
                             backgroundColor: theme.colors.background,
                           }
@@ -458,7 +470,10 @@ export default function AuthScreen() {
                         placeholder="Enter your password"
                         placeholderTextColor={theme.colors.mutedForeground}
                         defaultValue=""
-                        onChangeText={setPassword}
+                        onChangeText={(text) => {
+                          setPassword(text);
+                          if (errorMessage) setErrorMessage('');
+                        }}
                         secureTextEntry={!showPassword}
                         autoCapitalize="none"
                         autoCorrect={false}
@@ -478,6 +493,11 @@ export default function AuthScreen() {
                         />
                       </TouchableOpacity>
                     </View>
+                    {errorMessage ? (
+                      <Text style={[styles.errorText, { color: '#ef4444' }]}>
+                        {errorMessage}
+                      </Text>
+                    ) : null}
                   </View>
                 )}
 
@@ -628,13 +648,24 @@ const styles = StyleSheet.create({
     paddingRight: 48,
     fontSize: 14,
     minHeight: 40,
+    // iOS-specific fix for centered placeholder text
+    ...(Platform.OS === 'ios' && {
+      paddingTop: 10,
+      paddingBottom: 10,
+    }),
   },
   eyeButton: {
     position: 'absolute',
     right: 12,
-    top: '50%',
-    transform: [{ translateY: -12 }],
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
     padding: 4,
+  },
+  errorText: {
+    fontSize: 14,
+    marginTop: 4,
+    marginLeft: 4,
   },
   forgotPasswordButton: {
     alignSelf: 'flex-end',

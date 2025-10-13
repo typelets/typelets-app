@@ -1,4 +1,4 @@
-import { StyleSheet, Dimensions } from 'react-native';
+import { StyleSheet, Dimensions, Platform } from 'react-native';
 
 export const styles = StyleSheet.create({
   container: {
@@ -43,11 +43,19 @@ export const styles = StyleSheet.create({
     padding: 12,
     paddingRight: 48,
     fontSize: 16,
+    // iOS-specific fix for centered placeholder text
+    ...(Platform.OS === 'ios' && {
+      paddingTop: 12,
+      paddingBottom: 12,
+    }),
   },
   eyeButton: {
     position: 'absolute',
     right: 12,
-    top: 12,
+    top: 0,
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
     padding: 4,
   },
   errorText: {

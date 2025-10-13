@@ -1,5 +1,5 @@
 import React, { forwardRef } from 'react';
-import { TextInput, TextInputProps, ViewStyle } from 'react-native';
+import { TextInput, TextInputProps, ViewStyle, Platform } from 'react-native';
 import { useTheme } from '../../theme';
 
 export interface InputProps extends TextInputProps {
@@ -23,6 +23,11 @@ export const Input = forwardRef<TextInput, InputProps>(({ style, ...props }, ref
           color: theme.colors.foreground,
           backgroundColor: theme.colors.background,
           minHeight: 40,
+          // iOS-specific fix for centered placeholder text
+          ...(Platform.OS === 'ios' && {
+            paddingTop: 10,
+            paddingBottom: 10,
+          }),
         },
         style,
       ]}
