@@ -1,3 +1,10 @@
+## [1.24.6](https://github.com/typelets/typelets-app/compare/v1.24.5...v1.24.6) (2025-10-14)
+
+
+### Bug Fixes
+
+* **mobile:** improve authentication UX and iPad layout ([fe16d12](https://github.com/typelets/typelets-app/commit/fe16d123d8f4e1d5ec7694665ee5e663077ada8b))
+
 ## [1.24.5](https://github.com/typelets/typelets-app/compare/v1.24.4...v1.24.5) (2025-10-13)
 
 
