@@ -1,3 +1,10 @@
+# [1.25.0](https://github.com/typelets/typelets-app/compare/v1.24.7...v1.25.0) (2025-10-14)
+
+
+### Features
+
+* **mobile:** add attachment support for new notes and UI improvements ([d7ed215](https://github.com/typelets/typelets-app/commit/d7ed215a4a8f23d30ce195afe3daa9bdc75f6976))
+
 ## [1.24.7](https://github.com/typelets/typelets-app/compare/v1.24.6...v1.24.7) (2025-10-14)
 
 
