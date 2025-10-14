@@ -149,8 +149,10 @@ export default function AuthScreen() {
       let message = 'Invalid email or password';
       if (originalMessage.toLowerCase().includes('identifier')) {
         message = 'Email or password is incorrect';
+      } else if (originalMessage.toLowerCase().includes('account')) {
+        message = 'Email or password is incorrect';
       } else if (originalMessage) {
-        message = originalMessage;
+        message = 'Email or password is incorrect';
       }
 
       logger.error('Sign in failed', err, {
@@ -173,6 +175,7 @@ export default function AuthScreen() {
   const handleSignUp = async () => {
     if (!signUpLoaded) return;
     setLoading(true);
+    setErrorMessage('');
 
     try {
       // Create sign up with all required fields including legal acceptance
@@ -195,15 +198,27 @@ export default function AuthScreen() {
       });
     } catch (err: unknown) {
       const error = err as ClerkError;
+      const originalMessage = error.errors?.[0]?.message || '';
+      // Replace specific Clerk messages with generic ones
+      let message = 'Unable to create account';
+      if (originalMessage.toLowerCase().includes('email') && originalMessage.toLowerCase().includes('taken')) {
+        message = 'Unable to create account with this email';
+      } else if (originalMessage.toLowerCase().includes('password') && originalMessage.toLowerCase().includes('strong')) {
+        message = 'Password must contain uppercase, lowercase, number, and special character';
+      } else if (originalMessage) {
+        message = 'Unable to create account';
+      }
+
       logger.error('Sign up failed', err, {
         attributes: {
           email,
           firstName,
           lastName,
-          errorMessage: error.errors?.[0]?.message,
+          errorMessage: originalMessage,
         },
       });
-      showToast(error.errors?.[0]?.message || 'Unable to create account');
+      setErrorMessage(message);
+      showToast(message);
     } finally {
       setLoading(false);
     }
@@ -216,6 +231,7 @@ export default function AuthScreen() {
   const handleVerifyEmail = async () => {
     if (!signUpLoaded) return;
     setLoading(true);
+    setErrorMessage('');
 
     try {
       // Try multiple approaches to set legal acceptance (fallback for different Clerk configurations)
@@ -249,6 +265,7 @@ export default function AuthScreen() {
           email,
         });
       } else {
+        const message = 'Unable to complete sign up. Please try again.';
         logger.warn('Sign up incomplete after verification', {
           attributes: {
             status: completeSignUp.status,
@@ -256,35 +273,65 @@ export default function AuthScreen() {
             email,
           },
         });
-        showToast('Unable to complete sign up. Check Clerk Dashboard settings.');
+        setErrorMessage(message);
+        showToast(message);
       }
     } catch (err: unknown) {
       const error = err as ClerkError;
+      const message = error.errors?.[0]?.message || 'Invalid verification code';
       logger.error('Email verification failed', err, {
         attributes: {
           email,
-          errorMessage: error.errors?.[0]?.message,
+          errorMessage: message,
         },
       });
-      showToast(error.errors?.[0]?.message || 'Invalid code');
+      setErrorMessage(message);
+      showToast(message);
     } finally {
       setLoading(false);
     }
   };
 
   const handleSubmit = () => {
-    if (!email.trim() || !password.trim()) {
-      showToast('Please fill in all fields');
+    if (isSignUp && !firstName.trim()) {
+      const message = 'Please enter your first name';
+      setErrorMessage(message);
+      showToast(message);
       return;
     }
 
-    if (isSignUp && (!firstName.trim() || !lastName.trim())) {
-      showToast('Please enter your first and last name');
+    if (isSignUp && !lastName.trim()) {
+      const message = 'Please enter your last name';
+      setErrorMessage(message);
+      showToast(message);
+      return;
+    }
+
+    if (!email.trim()) {
+      const message = 'Please enter your email';
+      setErrorMessage(message);
+      showToast(message);
+      return;
+    }
+
+    if (!password.trim()) {
+      const message = 'Please enter your password';
+      setErrorMessage(message);
+      showToast(message);
+      return;
+    }
+
+    if (isSignUp && password.length < 8) {
+      const message = 'Password must be at least 8 characters';
+      setErrorMessage(message);
+      showToast(message);
       return;
     }
 
     if (isSignUp && !acceptedTerms) {
-      showToast('Please accept the Terms of Service and Privacy Policy');
+      const message = 'Please accept the Terms of Service and Privacy Policy';
+      setErrorMessage(message);
+      showToast(message);
       return;
     }
 
@@ -368,7 +415,7 @@ export default function AuthScreen() {
                           style={[
                             styles.pinBox,
                             {
-                              borderColor: isFocused ? theme.colors.primary : theme.colors.border,
+                              borderColor: errorMessage ? '#ef4444' : (isFocused ? theme.colors.primary : theme.colors.border),
                               backgroundColor: theme.colors.background,
                             }
                           ]}
@@ -385,13 +432,22 @@ export default function AuthScreen() {
                   <TextInput
                     ref={passwordRef}
                     value={verificationCode}
-                    onChangeText={(text) => setVerificationCode(text.replace(/[^0-9]/g, '').slice(0, 6))}
+                    onChangeText={(text) => {
+                      setVerificationCode(text.replace(/[^0-9]/g, '').slice(0, 6));
+                      if (errorMessage) setErrorMessage('');
+                    }}
                     keyboardType="number-pad"
                     maxLength={6}
                     autoFocus
                     style={styles.hiddenInput}
                   />
                 </TouchableOpacity>
+
+                {errorMessage ? (
+                  <Text style={[styles.errorText, { color: '#ef4444', textAlign: 'center', marginTop: -24, marginBottom: 16 }]}>
+                    {errorMessage}
+                  </Text>
+                ) : null}
 
                 <Button
                   onPress={handleVerifyEmail}
@@ -406,6 +462,7 @@ export default function AuthScreen() {
                   onPress={() => {
                     setPendingVerification(false);
                     setVerificationCode('');
+                    setErrorMessage('');
                   }}
                   style={styles.switchButton}
                 >
@@ -422,10 +479,19 @@ export default function AuthScreen() {
                       <Input
                         placeholder="Enter your first name"
                         value={firstName}
-                        onChangeText={setFirstName}
+                        onChangeText={(text) => {
+                          setFirstName(text);
+                          if (errorMessage) setErrorMessage('');
+                        }}
                         autoCapitalize="words"
                         autoComplete="name-given"
+                        style={(errorMessage && errorMessage.toLowerCase().includes('first name')) ? { borderColor: '#ef4444' } : undefined}
                       />
+                      {errorMessage && errorMessage.toLowerCase().includes('first name') ? (
+                        <Text style={[styles.errorText, { color: '#ef4444' }]}>
+                          {errorMessage}
+                        </Text>
+                      ) : null}
                     </View>
 
                     <View style={styles.inputContainer}>
@@ -433,10 +499,19 @@ export default function AuthScreen() {
                       <Input
                         placeholder="Enter your last name"
                         value={lastName}
-                        onChangeText={setLastName}
+                        onChangeText={(text) => {
+                          setLastName(text);
+                          if (errorMessage) setErrorMessage('');
+                        }}
                         autoCapitalize="words"
                         autoComplete="name-family"
+                        style={(errorMessage && errorMessage.toLowerCase().includes('last name')) ? { borderColor: '#ef4444' } : undefined}
                       />
+                      {errorMessage && errorMessage.toLowerCase().includes('last name') ? (
+                        <Text style={[styles.errorText, { color: '#ef4444' }]}>
+                          {errorMessage}
+                        </Text>
+                      ) : null}
                     </View>
                   </>
                 )}
@@ -446,11 +521,28 @@ export default function AuthScreen() {
                   <Input
                     placeholder="Enter your email"
                     value={email}
-                    onChangeText={setEmail}
+                    onChangeText={(text) => {
+                      setEmail(text);
+                      if (errorMessage) setErrorMessage('');
+                    }}
                     keyboardType="email-address"
                     autoCapitalize="none"
                     autoComplete="email"
+                    style={(errorMessage && (
+                      (isSignUp && (errorMessage.toLowerCase().includes('email') || errorMessage.toLowerCase().includes('account'))) ||
+                      errorMessage.toLowerCase() === 'please enter your email' ||
+                      (!isSignUp && (errorMessage.toLowerCase().includes('invalid') || errorMessage.toLowerCase().includes('incorrect')))
+                    )) ? { borderColor: '#ef4444' } : undefined}
                   />
+                  {errorMessage && (
+                    (isSignUp && (errorMessage.toLowerCase().includes('email') || errorMessage.toLowerCase().includes('account'))) ||
+                    errorMessage.toLowerCase() === 'please enter your email' ||
+                    (!isSignUp && (errorMessage.toLowerCase().includes('invalid') || errorMessage.toLowerCase().includes('incorrect')))
+                  ) ? (
+                    <Text style={[styles.errorText, { color: '#ef4444' }]}>
+                      {errorMessage}
+                    </Text>
+                  ) : null}
                 </View>
 
                 {!isForgotPassword && (
@@ -462,7 +554,12 @@ export default function AuthScreen() {
                         style={[
                           styles.passwordInput,
                           {
-                            borderColor: errorMessage ? '#ef4444' : theme.colors.input,
+                            borderColor: (errorMessage && (
+                              errorMessage.toLowerCase().includes('password') ||
+                              errorMessage.toLowerCase().includes('characters') ||
+                              errorMessage.toLowerCase().includes('contain') ||
+                              (!isSignUp && (errorMessage.toLowerCase().includes('invalid') || errorMessage.toLowerCase().includes('incorrect')))
+                            )) ? '#ef4444' : theme.colors.input,
                             color: theme.colors.foreground,
                             backgroundColor: theme.colors.background,
                           }
@@ -493,7 +590,11 @@ export default function AuthScreen() {
                         />
                       </TouchableOpacity>
                     </View>
-                    {errorMessage ? (
+                    {errorMessage && (
+                      errorMessage.toLowerCase().includes('password') ||
+                      errorMessage.toLowerCase().includes('characters') ||
+                      errorMessage.toLowerCase().includes('contain')
+                    ) ? (
                       <Text style={[styles.errorText, { color: '#ef4444' }]}>
                         {errorMessage}
                       </Text>
@@ -503,7 +604,10 @@ export default function AuthScreen() {
 
                 {!isSignUp && !isForgotPassword && (
                   <TouchableOpacity
-                    onPress={() => setIsForgotPassword(true)}
+                    onPress={() => {
+                      setIsForgotPassword(true);
+                      setErrorMessage('');
+                    }}
                     style={styles.forgotPasswordButton}
                   >
                     <Text style={[styles.forgotPasswordText, { color: theme.colors.primary }]}>
@@ -559,7 +663,10 @@ export default function AuthScreen() {
                 {isForgotPassword ? (
                   <Button
                     variant="ghost"
-                    onPress={() => setIsForgotPassword(false)}
+                    onPress={() => {
+                      setIsForgotPassword(false);
+                      setErrorMessage('');
+                    }}
                     style={styles.switchButton}
                   >
                     Back to Sign In
@@ -567,7 +674,10 @@ export default function AuthScreen() {
                 ) : (
                   <Button
                     variant="ghost"
-                    onPress={() => setIsSignUp(!isSignUp)}
+                    onPress={() => {
+                      setIsSignUp(!isSignUp);
+                      setErrorMessage('');
+                    }}
                     style={styles.switchButton}
                   >
                     {isSignUp ? 'Already have an account? Sign In' : "Don't have an account? Sign Up"}
@@ -705,13 +815,13 @@ const styles = StyleSheet.create({
   },
   pinContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     marginBottom: 32,
     marginTop: 24,
     gap: 8,
   },
   pinBox: {
-    flex: 1,
+    width: 56,
     height: 56,
     borderWidth: 2,
     borderRadius: 12,

@@ -11,7 +11,12 @@ export const styles = StyleSheet.create({
     flexGrow: 1,
     padding: 24,
     justifyContent: 'center',
+    alignItems: 'center',
     minHeight: Dimensions.get('window').height - 100,
+  },
+  contentWrapper: {
+    width: '100%',
+    maxWidth: 480,
   },
   header: {
     alignItems: 'center',

@@ -101,7 +101,7 @@ export function MasterPasswordForm({
     : 'Enter your master password to decrypt your notes';
 
   return (
-    <>
+    <View style={styles.contentWrapper}>
       <View style={styles.header}>
         <Text style={[styles.title, { color: theme.colors.foreground }]}>{title}</Text>
         <Text style={[styles.subtitle, { color: theme.colors.mutedForeground }]}>
@@ -244,6 +244,6 @@ export function MasterPasswordForm({
           </Text>
         </View>
       )}
-    </>
+    </View>
   );
 }
