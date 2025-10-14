@@ -29,9 +29,10 @@ export default function EditNoteScreen() {
   const [noteData, setNoteData] = useState<Note | null>(null);
   const [attachments, setAttachments] = useState<FileAttachment[]>([]);
   const [showAttachments, setShowAttachments] = useState(false);
+  const [createdNoteId, setCreatedNoteId] = useState<string | null>(null);
 
   const keyboardHeight = useKeyboardHeight();
-  const { editor, handleEditorLoad, loadNote } = useNoteEditor(noteId as string);
+  const { editor, handleEditorLoad, loadNote } = useNoteEditor(noteId as string || createdNoteId || undefined);
 
   // Calculate toolbar height (toolbar itself + padding + keyboard)
   // iOS: 60px toolbar + keyboard height + minimal padding for curved keyboard
@@ -62,9 +63,10 @@ export default function EditNoteScreen() {
   }, [noteId, isEditing]);
 
   const refreshAttachments = async () => {
-    if (isEditing && noteId) {
+    const currentNoteId = (noteId as string) || createdNoteId;
+    if (currentNoteId) {
       try {
-        const noteAttachments = await api.getAttachments(noteId as string);
+        const noteAttachments = await api.getAttachments(currentNoteId);
         setAttachments(noteAttachments);
       } catch (error) {
         console.error('Failed to refresh attachments:', error);
@@ -72,11 +74,8 @@ export default function EditNoteScreen() {
     }
   };
 
-  const handleSave = async () => {
-    if (!title.trim()) {
-      Alert.alert('Error', 'Please enter a title for your note');
-      return;
-    }
+  const handleSave = async (options?: { skipNavigation?: boolean }) => {
+    const titleToUse = title.trim() || 'Untitled';
 
     setIsSaving(true);
 
@@ -86,14 +85,16 @@ export default function EditNoteScreen() {
         console.log('Content to save:', content);
       }
 
-      if (isEditing && noteId) {
-        await api.updateNote(noteId as string, {
-          title: title.trim(),
+      let savedNote: Note;
+
+      if ((isEditing && noteId) || createdNoteId) {
+        savedNote = await api.updateNote((noteId as string) || createdNoteId!, {
+          title: titleToUse,
           content,
         });
       } else {
-        await api.createNote({
-          title: title.trim(),
+        savedNote = await api.createNote({
+          title: titleToUse,
           content,
           folderId: folderId as string | undefined,
           starred: false,
@@ -101,19 +102,55 @@ export default function EditNoteScreen() {
           deleted: false,
           hidden: false,
         });
+        setCreatedNoteId(savedNote.id);
+        setTitle(titleToUse);
       }
 
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 
-      setTimeout(() => {
-        router.back();
-      }, NAVIGATION_DELAY);
+      if (!options?.skipNavigation) {
+        setTimeout(() => {
+          router.back();
+        }, NAVIGATION_DELAY);
+      } else {
+        setIsSaving(false);
+        // Refresh attachments if we just created the note and staying on the page
+        if (!noteId && savedNote.id) {
+          try {
+            const noteAttachments = await api.getAttachments(savedNote.id);
+            setAttachments(noteAttachments);
+          } catch (error) {
+            console.error('Failed to refresh attachments:', error);
+          }
+        }
+      }
+
+      return savedNote;
     } catch (error) {
       if (__DEV__) console.error('Failed to save note:', error);
-      Alert.alert('Error', `Failed to ${isEditing ? 'update' : 'create'} note`);
+      Alert.alert('Error', `Failed to ${isEditing || createdNoteId ? 'update' : 'create'} note`);
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       setIsSaving(false);
+      return null;
     }
+  };
+
+  const handleToggleAttachments = () => {
+    setShowAttachments(!showAttachments);
+  };
+
+  const handleBeforeUpload = async (): Promise<string | null> => {
+    // If it's a new note (no noteId and no createdNoteId), prompt to save first
+    if (!noteId && !createdNoteId) {
+      Alert.alert(
+        'Save Note First',
+        'Please save your note before adding attachments.',
+        [{ text: 'OK' }]
+      );
+      return null;
+    }
+
+    return (noteId as string) || createdNoteId;
   };
 
   const handleDelete = async () => {
@@ -179,8 +216,8 @@ export default function EditNoteScreen() {
         showAttachments={showAttachments}
         onBack={() => router.back()}
         onDelete={handleDelete}
-        onSave={handleSave}
-        onToggleAttachments={() => setShowAttachments(!showAttachments)}
+        onSave={() => handleSave({ skipNavigation: showAttachments && !noteId && !createdNoteId })}
+        onToggleAttachments={handleToggleAttachments}
         theme={theme}
       />
 
@@ -203,13 +240,14 @@ export default function EditNoteScreen() {
           </View>
         )}
 
-        {isEditing && noteId && showAttachments && (
+        {showAttachments && (
           <View style={styles.attachmentsSection}>
             <FileUpload
-              noteId={noteId as string}
+              noteId={(noteId as string) || createdNoteId || undefined}
               attachments={attachments}
               onUploadComplete={refreshAttachments}
               onDeleteComplete={refreshAttachments}
+              onBeforeUpload={handleBeforeUpload}
             />
           </View>
         )}
@@ -223,7 +261,7 @@ export default function EditNoteScreen() {
         Platform.OS === 'android' && keyboardHeight > 0 && { marginBottom: keyboardHeight + 60 }
       ]}>
         <RichText
-          key={noteId as string || 'new-note'}
+          key={(noteId as string) || createdNoteId || 'new-note'}
           editor={editor}
           style={{ flex: 1, backgroundColor: theme.colors.background }}
           onLoad={handleEditorLoad}

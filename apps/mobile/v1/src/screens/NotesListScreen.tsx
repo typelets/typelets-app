@@ -601,7 +601,7 @@ export default function NotesListScreen({ navigation, route, renderHeader, scrol
             </View>
 
             {/* Spacer to ensure content fills screen */}
-            <View style={{ flex: 1, minHeight: 100 }} />
+            <View style={{ flex: 1, minHeight: 40 }} />
           </Pressable>
           )}
         </ScrollView>

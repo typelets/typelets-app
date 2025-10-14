@@ -25,8 +25,8 @@ export const Input = forwardRef<TextInput, InputProps>(({ style, ...props }, ref
           minHeight: 40,
           // iOS-specific fix for centered placeholder text
           ...(Platform.OS === 'ios' && {
-            paddingTop: 10,
-            paddingBottom: 10,
+            paddingTop: 12,
+            paddingBottom: 12,
           }),
         },
         style,

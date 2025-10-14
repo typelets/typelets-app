@@ -13,17 +13,19 @@ import { useTheme } from '../theme';
 import { useApiService, type FileAttachment } from '../services/api';
 
 interface FileUploadProps {
-  noteId: string;
+  noteId?: string;
   attachments?: FileAttachment[];
   onUploadComplete?: (attachments: FileAttachment[]) => void;
   onDeleteComplete?: () => void;
+  onBeforeUpload?: () => Promise<string | null>;
 }
 
 export function FileUpload({
-  noteId,
+  noteId: initialNoteId,
   attachments = [],
   onUploadComplete,
   onDeleteComplete,
+  onBeforeUpload,
 }: FileUploadProps) {
   const theme = useTheme();
   const api = useApiService();
@@ -34,6 +36,22 @@ export function FileUpload({
   const handlePickFiles = async () => {
     try {
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+
+      // If no noteId, get it from onBeforeUpload callback
+      let noteId = initialNoteId;
+      if (!noteId && onBeforeUpload) {
+        noteId = await onBeforeUpload();
+        if (!noteId) {
+          // Upload was cancelled or failed to create note
+          return;
+        }
+      }
+
+      if (!noteId) {
+        Alert.alert('Error', 'Note must be saved before adding attachments');
+        return;
+      }
+
       const files = await api.pickFiles();
 
       if (files.length === 0) {

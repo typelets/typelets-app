@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, StyleSheet, TouchableOpacity, ActivityIndicator, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { Check } from 'lucide-react-native';
 
 interface EditorHeaderProps {
   isEditing: boolean;
@@ -48,7 +49,7 @@ export function EditorHeader({
       <View style={styles.titleSpacer} />
 
       <View style={styles.headerActions}>
-        {isEditing && onToggleAttachments && (
+        {onToggleAttachments && (
           <TouchableOpacity
             style={[styles.actionButton, { backgroundColor: showAttachments ? 'rgba(59, 130, 246, 0.15)' : theme.colors.muted }]}
             onPress={onToggleAttachments}
@@ -89,7 +90,7 @@ export function EditorHeader({
           {isSaving ? (
             <ActivityIndicator size="small" color={theme.colors.mutedForeground} />
           ) : (
-            <Ionicons name="checkmark" size={20} color={theme.colors.mutedForeground} />
+            <Check size={20} color={theme.colors.mutedForeground} strokeWidth={2.5} />
           )}
         </TouchableOpacity>
       </View>

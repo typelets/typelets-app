@@ -118,6 +118,17 @@ export default function SettingsScreen({ onLogout }: Props) {
 
   const settingsItems = [
     {
+      section: 'ACCOUNT',
+      items: [
+        {
+          title: user?.fullName || user?.emailAddresses?.[0]?.emailAddress || 'User',
+          subtitle: user?.emailAddresses?.[0]?.emailAddress || '',
+          icon: 'person-circle-outline',
+          onPress: undefined,
+        },
+      ],
+    },
+    {
       section: 'SECURITY',
       items: [
         {
@@ -243,7 +254,7 @@ export default function SettingsScreen({ onLogout }: Props) {
   });
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]} edges={['top', 'left', 'right']}>
       {/* Header with back button */}
       <View>
         <View style={styles.headerBar}>
@@ -681,7 +692,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: 16,
   },
   sectionsContainer: {
     paddingHorizontal: 16,
