@@ -1,3 +1,10 @@
+## [1.24.7](https://github.com/typelets/typelets-app/compare/v1.24.6...v1.24.7) (2025-10-14)
+
+
+### Bug Fixes
+
+* **mobile:** enable editor interaction for new notes ([74b256e](https://github.com/typelets/typelets-app/commit/74b256e3ab65c645b450efb9cd888de8dca1d3b1))
+
 ## [1.24.6](https://github.com/typelets/typelets-app/compare/v1.24.5...v1.24.6) (2025-10-14)
 
 
