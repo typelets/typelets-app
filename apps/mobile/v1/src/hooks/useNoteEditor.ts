@@ -101,9 +101,21 @@ export function useNoteEditor(noteId?: string): UseNoteEditorReturn {
           }
           pendingContentRef.current = null;
         }, 200);
+      } else if (!contentSetRef.current && !noteId) {
+        // For new notes (no noteId), show the editor immediately
+        if (__DEV__) {
+          console.log('[New Note] Showing editor for new note...');
+        }
+        setTimeout(() => {
+          editor.webviewRef?.current?.injectJavaScript(`
+            document.body.classList.add('ready');
+            true;
+          `);
+          contentSetRef.current = true;
+        }, 200);
       }
     }, CSS_INJECTION_DELAY);
-  }, [editor, customCSS]);
+  }, [editor, customCSS, noteId]);
 
   const loadNote = useCallback(async () => {
     if (!noteId) return;

@@ -38,6 +38,7 @@ export function EditorToolbar({ editor, keyboardHeight, bottomInset, theme }: Ed
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.toolbarButtons}
+        centerContent={true}
       >
         {keyboardHeight > 0 && (
           <>
@@ -157,6 +158,8 @@ const styles = StyleSheet.create({
     borderTopWidth: 0,
     paddingTop: 8,
     paddingHorizontal: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   toolbarButtons: {
     flexDirection: 'row',
