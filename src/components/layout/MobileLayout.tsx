@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { hasMasterPassword } from '@/lib/encryption';
 import { APP_VERSION } from '@/constants/version';
+import { useVersionNotification } from '@/hooks/useVersionNotification';
 import FolderPanel from '@/components/folders';
 import NotesPanel from '@/components/notes/NotesPanel';
 import Index from '@/components/editor';
@@ -33,6 +34,7 @@ export function MobileLayout({
   editorProps,
 }: MobileLayoutProps) {
   const { user } = useUser();
+  const { hasNewVersion, markVersionAsSeen } = useVersionNotification();
   const [currentView, setCurrentView] = useState<MobileView>(
     selectedNote ? 'editor' : 'folders'
   );
@@ -193,14 +195,15 @@ export function MobileLayout({
         <div className="absolute right-0 bottom-0 left-0 border-t p-4">
           <div className="mb-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <UserButton
-                appearance={{
-                  elements: {
-                    avatarBox: 'w-10 h-10',
-                    userButtonPopoverCard: 'w-64',
-                  },
-                }}
-              >
+              <div className="relative">
+                <UserButton
+                  appearance={{
+                    elements: {
+                      avatarBox: 'w-10 h-10',
+                      userButtonPopoverCard: 'w-64',
+                    },
+                  }}
+                >
                 <UserButton.MenuItems>
                   <UserButton.Action
                     label="Typelets Open Source"
@@ -247,12 +250,13 @@ export function MobileLayout({
                         <path d="m9 16 2 2 4-4" />
                       </svg>
                     }
-                    onClick={() =>
+                    onClick={() => {
+                      markVersionAsSeen();
                       window.open(
                         'https://github.com/typelets/typelets-app/blob/main/CHANGELOG.md',
                         '_blank'
-                      )
-                    }
+                      );
+                    }}
                   />
                   <UserButton.Action
                     label="Support"
@@ -311,6 +315,10 @@ export function MobileLayout({
                   )}
                 </UserButton.MenuItems>
               </UserButton>
+              {hasNewVersion && (
+                <div className="absolute -top-0.5 -right-0.5 h-3 w-3 rounded-full bg-red-500 ring-2 ring-background" />
+              )}
+              </div>
               <div className="min-w-0 flex-1">
                 <div className="text-foreground truncate text-sm font-medium">
                   {user?.fullName ??

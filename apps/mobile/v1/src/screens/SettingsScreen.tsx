@@ -13,6 +13,7 @@ import { BottomSheetModal, BottomSheetView, BottomSheetBackdrop, BottomSheetScro
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { APP_VERSION } from '../constants/version';
 import { UsageBottomSheet } from '../components/settings/UsageBottomSheet';
+import { useVersionNotification } from '../hooks/useVersionNotification';
 
 // Type for valid Ionicons names
 type IconName = keyof typeof Ionicons.glyphMap;
@@ -35,6 +36,7 @@ export default function SettingsScreen({ onLogout }: Props) {
   const theme = useTheme();
   const { user } = useUser();
   const router = useRouter();
+  const { hasNewVersion, markVersionAsSeen } = useVersionNotification();
 
   // Bottom sheet refs
   const themeModeSheetRef = useRef<BottomSheetModal>(null);
@@ -232,7 +234,10 @@ export default function SettingsScreen({ onLogout }: Props) {
           title: "What's New",
           subtitle: 'See latest updates and changes',
           icon: 'newspaper-outline',
-          onPress: () => Linking.openURL('https://github.com/typelets/typelets-app/blob/main/CHANGELOG.md'),
+          onPress: async () => {
+            await markVersionAsSeen();
+            Linking.openURL('https://github.com/typelets/typelets-app/blob/main/CHANGELOG.md');
+          },
         },
         {
           title: 'Support',
@@ -316,6 +321,9 @@ export default function SettingsScreen({ onLogout }: Props) {
                           size={20}
                           color={theme.colors.foreground}
                         />
+                        {item.title === "What's New" && hasNewVersion && (
+                          <View style={styles.notificationBadge} />
+                        )}
                       </View>
                       <View style={styles.settingItemText}>
                         <Text style={[
@@ -932,5 +940,14 @@ const styles = StyleSheet.create({
     letterSpacing: 0.8,
     marginBottom: 12,
     marginTop: 8,
+  },
+  notificationBadge: {
+    position: 'absolute',
+    top: 2,
+    right: 2,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#ef4444',
   },
 });

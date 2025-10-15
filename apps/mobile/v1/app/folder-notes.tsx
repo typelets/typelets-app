@@ -10,6 +10,7 @@ import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { Input } from '@/src/components/ui/Input';
 import { BottomSheetModal, BottomSheetView, BottomSheetBackdrop, BottomSheetScrollView, BottomSheetTextInput } from '@gorhom/bottom-sheet';
 import { FOLDER_COLORS } from '@/src/constants/ui';
+import { useVersionNotification } from '@/src/hooks/useVersionNotification';
 
 function getViewTitle(viewType: string): string {
   switch (viewType) {
@@ -26,6 +27,7 @@ export default function FolderNotesScreen() {
   const router = useRouter();
   const theme = useTheme();
   const api = useApiService();
+  const { hasNewVersion } = useVersionNotification();
   const [breadcrumbs, setBreadcrumbs] = useState<string[]>([]);
   const [breadcrumbFolders, setBreadcrumbFolders] = useState<Folder[]>([]);
   const [allFolders, setAllFolders] = useState<Folder[]>([]);
@@ -325,6 +327,9 @@ export default function FolderNotesScreen() {
                     onPress={() => setShowSettingsDropdown(!showSettingsDropdown)}
                   >
                     <Ionicons name="settings-outline" size={20} color={theme.colors.mutedForeground} />
+                    {hasNewVersion && (
+                      <View style={styles.notificationBadge} />
+                    )}
                   </TouchableOpacity>
 
                   {showSettingsDropdown && (
@@ -758,5 +763,14 @@ const styles = StyleSheet.create({
   },
   headerDivider: {
     height: StyleSheet.hairlineWidth,
+  },
+  notificationBadge: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#ef4444',
   },
 });

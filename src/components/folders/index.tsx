@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { APP_VERSION } from '@/constants/version';
 import { hasMasterPassword } from '@/lib/encryption';
+import { useVersionNotification } from '@/hooks/useVersionNotification';
 import type { ViewMode, Folder as FolderType } from '@/types/note';
 import {
   buildFolderTree,
@@ -77,6 +78,7 @@ export default function FolderPanel({
   onSearchChange,
 }: FolderPanelProps) {
   const { user } = useUser();
+  const { hasNewVersion, markVersionAsSeen } = useVersionNotification();
   const [isCreateFolderModalOpen, setIsCreateFolderModalOpen] = useState(false);
   const [isDeleteFolderModalOpen, setIsDeleteFolderModalOpen] = useState(false);
   const [folderToDelete, setFolderToDelete] = useState<FolderType | null>(null);
@@ -295,15 +297,16 @@ export default function FolderPanel({
 
         <div className="border-border mt-auto hidden border-t p-4 md:block">
           <div className="flex items-center gap-3">
-            <UserButton
-              appearance={{
-                elements: {
-                  avatarBox: 'w-8 h-8',
-                  userButtonPopoverCard: 'w-64',
-                },
-              }}
-              afterSignOutUrl="/"
-            >
+            <div className="relative">
+              <UserButton
+                appearance={{
+                  elements: {
+                    avatarBox: 'w-8 h-8',
+                    userButtonPopoverCard: 'w-64',
+                  },
+                }}
+                afterSignOutUrl="/"
+              >
               <UserButton.MenuItems>
                 <UserButton.Action
                   label="Usage"
@@ -370,12 +373,13 @@ export default function FolderPanel({
                       <path d="m9 16 2 2 4-4" />
                     </svg>
                   }
-                  onClick={() =>
+                  onClick={() => {
+                    markVersionAsSeen();
                     window.open(
                       'https://github.com/typelets/typelets-app/blob/main/CHANGELOG.md',
                       '_blank'
-                    )
-                  }
+                    );
+                  }}
                 />
                 <UserButton.Action
                   label="Support"
@@ -462,6 +466,10 @@ export default function FolderPanel({
                 )}
               </UserButton.MenuItems>
             </UserButton>
+            {hasNewVersion && (
+              <div className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-background" />
+            )}
+            </div>
             <div className="min-w-0 flex-1">
               <div className="text-foreground truncate text-sm font-medium">
                 {user?.fullName ??
