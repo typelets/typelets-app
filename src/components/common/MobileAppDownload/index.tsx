@@ -1,4 +1,4 @@
-import { Lock, Zap, Cloud, ExternalLink } from 'lucide-react';
+import { Lock, Cloud, ExternalLink } from 'lucide-react';
 import { useMobilePlatform } from '@/hooks/useIsMobile';
 import { useState } from 'react';
 
@@ -22,7 +22,7 @@ export function MobileAppDownload() {
         </div>
 
         {/* Title */}
-        <div className="-mt-2 space-y-2">
+        <div className="-mt-4 space-y-2">
           <h1 className="text-foreground text-3xl font-bold">Typelets</h1>
           <p className="text-muted-foreground text-lg">
             Secure, encrypted note-taking
@@ -39,18 +39,6 @@ export function MobileAppDownload() {
               <h3 className="text-foreground font-semibold">End-to-End Encrypted</h3>
               <p className="text-muted-foreground text-sm">
                 Your notes are encrypted on your device
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-start gap-3 text-left">
-            <div className="bg-muted rounded-lg p-2">
-              <Zap className="text-foreground h-5 w-5" />
-            </div>
-            <div className="flex-1">
-              <h3 className="text-foreground font-semibold">Fast & Intuitive</h3>
-              <p className="text-muted-foreground text-sm">
-                Native performance and smooth experience
               </p>
             </div>
           </div>
