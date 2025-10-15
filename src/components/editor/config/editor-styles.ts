@@ -9,6 +9,7 @@ export const editorStyles = `
     font-size: 14px;
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
+    caret-color: hsl(var(--foreground));
 }
 
 .ProseMirror h1 {

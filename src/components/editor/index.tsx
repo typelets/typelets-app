@@ -11,6 +11,7 @@ import {
   Eye,
   PanelRightClose,
   PanelRightOpen,
+  RefreshCw,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -71,6 +72,7 @@ interface NoteEditorProps {
   onToggleStar: (noteId: string) => void;
   onHideNote: (noteId: string) => void;
   onUnhideNote: (noteId: string) => void;
+  onRefreshNote?: (noteId: string) => void;
   userId?: string;
   isNotesPanelOpen?: boolean;
   onToggleNotesPanel?: () => void;
@@ -92,6 +94,7 @@ export default function Index({
   onToggleStar,
   onHideNote,
   onUnhideNote,
+  onRefreshNote,
   userId = 'current-user',
   isNotesPanelOpen,
   onToggleNotesPanel,
@@ -108,6 +111,7 @@ export default function Index({
   const [uploadProgress, setUploadProgress] = useState(0);
   const [deletingIds, setDeletingIds] = useState<string[]>([]);
   const [localTitle, setLocalTitle] = useState(note?.title || '');
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const titleTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isEditingTitleRef = useRef(false);
 
@@ -239,8 +243,7 @@ export default function Index({
                 if (result && typeof result === 'string') {
                   const { schema } = view.state;
                   const node = schema.nodes.image.create({ src: result });
-                  const transaction = view.state.tr.replaceSelectionWith(node);
-                  view.dispatch(transaction);
+                  view.dispatch(view.state.tr.replaceSelectionWith(node));
                 }
               };
               reader.readAsDataURL(file);
@@ -279,11 +282,9 @@ export default function Index({
 
                   if (coordinates) {
                     const node = schema.nodes.image.create({ src: result });
-                    const transaction = view.state.tr.insert(
-                      coordinates.pos,
-                      node
+                    view.dispatch(
+                      view.state.tr.insert(coordinates.pos, node)
                     );
-                    view.dispatch(transaction);
                   }
                 }
               };
@@ -517,7 +518,7 @@ export default function Index({
     // Build the HTML structure safely
     printDoc.write(`
       <!DOCTYPE html>
-      <html>
+      <html lang="en">
         <head>
           <meta charset="UTF-8">
           <title></title>
@@ -573,14 +574,22 @@ export default function Index({
     printWindow.close();
   }, [note]);
 
-  const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    }).format(date);
+  const formatDate = (date: Date | string) => {
+    try {
+      const dateObj = typeof date === 'string' ? new Date(date) : date;
+      if (isNaN(dateObj.getTime())) {
+        return 'Invalid date';
+      }
+      return new Intl.DateTimeFormat('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      }).format(dateObj);
+    } catch {
+      return 'Invalid date';
+    }
   };
 
   const getCurrentFolder = () => {
@@ -685,6 +694,26 @@ export default function Index({
                   <Eye className="h-4 w-4" />
                 )}
               </Button>
+
+              {onRefreshNote && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={async () => {
+                    setIsRefreshing(true);
+                    try {
+                      await onRefreshNote(note.id);
+                    } finally {
+                      setIsRefreshing(false);
+                    }
+                  }}
+                  className="text-muted-foreground"
+                  title="Refresh note from server"
+                  disabled={isRefreshing}
+                >
+                  <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                </Button>
+              )}
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>

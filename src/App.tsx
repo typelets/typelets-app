@@ -9,6 +9,8 @@ import {
   useUser,
 } from '@clerk/clerk-react';
 import Index from '@/components/common/SEO';
+import { MobileAppDownload } from '@/components/common/MobileAppDownload';
+import { useIsMobileDevice } from '@/hooks/useIsMobile';
 import { SEO_CONFIG } from '@/constants';
 import { api } from '@/lib/api/api.ts';
 import { fileService } from '@/services/fileService';
@@ -20,6 +22,7 @@ function AppContent() {
   const { getToken, isSignedIn } = useAuth();
   const { user } = useUser();
   const previousUserId = useRef<string | null>(null);
+  const isMobileDevice = useIsMobileDevice();
 
   useEffect(() => {
     api.setTokenProvider(getToken);
@@ -41,6 +44,10 @@ function AppContent() {
 
   const isSignInPage = window.location.pathname === '/sign-in';
   const isSignUpPage = window.location.pathname === '/sign-up';
+
+  if (isMobileDevice && !isSignedIn) {
+    return <MobileAppDownload />;
+  }
 
   if (isSignInPage) {
     return (

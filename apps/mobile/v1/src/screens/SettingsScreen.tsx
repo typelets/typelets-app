@@ -5,7 +5,7 @@ import { useUser } from '@clerk/clerk-expo';
 import { useRouter } from 'expo-router';
 import { useTheme } from '../theme';
 import { LIGHT_THEME_PRESETS, DARK_THEME_PRESETS } from '../theme/presets';
-import { Card } from '../components/ui/Card';
+import { Card } from '@/src/components/ui';
 import { Ionicons } from '@expo/vector-icons';
 import { clearUserEncryptionData } from '../lib/encryption';
 import { forceGlobalMasterPasswordRefresh } from '../hooks/useMasterPassword';
@@ -19,6 +19,16 @@ type IconName = keyof typeof Ionicons.glyphMap;
 
 interface Props {
   onLogout?: () => void;
+}
+
+interface SettingItem {
+  title: string;
+  subtitle: string;
+  icon: string;
+  onPress?: (() => void) | (() => Promise<void>) | undefined;
+  isDestructive?: boolean;
+  toggle?: boolean;
+  value?: boolean;
 }
 
 export default function SettingsScreen({ onLogout }: Props) {
@@ -116,7 +126,7 @@ export default function SettingsScreen({ onLogout }: Props) {
     );
   };
 
-  const settingsItems = [
+  const settingsItems: { section: string; items: SettingItem[] }[] = [
     {
       section: 'ACCOUNT',
       items: [
@@ -228,7 +238,7 @@ export default function SettingsScreen({ onLogout }: Props) {
           title: 'Support',
           subtitle: 'Get help and report issues',
           icon: 'help-circle-outline',
-          onPress: () => Linking.openURL('https://github.com/typelets/typelets-app/issues'),
+          onPress: () => Linking.openURL('https://typelets.com/support'),
         },
         {
           title: 'Privacy Policy',
@@ -375,11 +385,11 @@ export default function SettingsScreen({ onLogout }: Props) {
           </View>
           <View style={[styles.divider, { backgroundColor: theme.colors.border }]} />
           <View style={[styles.bottomSheetContent, { paddingTop: 16 }]}>
-            {[
-              { mode: 'light', title: 'Light', subtitle: 'Always use light theme', icon: 'sunny-outline' },
-              { mode: 'dark', title: 'Dark', subtitle: 'Always use dark theme', icon: 'moon-outline' },
-              { mode: 'system', title: 'System', subtitle: 'Follow system setting', icon: 'phone-portrait-outline' }
-            ].map((option) => (
+            {([
+              { mode: 'light' as const, title: 'Light', subtitle: 'Always use light theme', icon: 'sunny-outline' },
+              { mode: 'dark' as const, title: 'Dark', subtitle: 'Always use dark theme', icon: 'moon-outline' },
+              { mode: 'system' as const, title: 'System', subtitle: 'Follow system setting', icon: 'phone-portrait-outline' }
+            ] as const).map((option) => (
               <TouchableOpacity
                 key={option.mode}
                 style={[styles.optionItem, { backgroundColor: theme.colors.card, borderColor: theme.colors.border }]}
@@ -450,7 +460,7 @@ export default function SettingsScreen({ onLogout }: Props) {
                     { backgroundColor: theme.colors.card, borderColor: theme.colors.border }
                   ]}
                   onPress={() => {
-                    theme.setLightTheme(preset.id);
+                    theme.setLightTheme(preset.id as any);
                   }}
                 >
                   <View style={[styles.colorPreview, {
@@ -490,7 +500,7 @@ export default function SettingsScreen({ onLogout }: Props) {
                     { backgroundColor: theme.colors.card, borderColor: theme.colors.border }
                   ]}
                   onPress={() => {
-                    theme.setDarkTheme(preset.id);
+                    theme.setDarkTheme(preset.id as any);
                   }}
                 >
                   <View style={[styles.colorPreview, {
@@ -657,7 +667,7 @@ export default function SettingsScreen({ onLogout }: Props) {
       </BottomSheetModal>
 
       {/* Usage Bottom Sheet */}
-      <UsageBottomSheet sheetRef={usageSheetRef} snapPoints={usageSnapPoints} />
+      <UsageBottomSheet sheetRef={usageSheetRef as React.RefObject<BottomSheetModal>} snapPoints={usageSnapPoints} />
 
     </SafeAreaView>
   );
@@ -686,6 +696,7 @@ const styles = StyleSheet.create({
     width: 34,
   },
   headerDivider: {
+    // @ts-ignore - StyleSheet.hairlineWidth is intentionally used for height (ultra-thin divider)
     height: StyleSheet.hairlineWidth,
   },
   scrollView: {

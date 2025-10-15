@@ -109,23 +109,17 @@ export function ExecutableCodeBlockNodeView({ node, updateAttributes, selected: 
 
 
 
-  useEffect(() => {
-    // COMPLETELY DISABLE this effect to prevent any Monaco updates from external sources
-    // This should eliminate all blinking by never touching Monaco after initialization
-    // External sync will be handled differently if needed
-    return;
-
-    // Only update code if it's not coming from Monaco itself
-    // This prevents the circular update loop that causes blinking
-    const nodeText = node.textContent;
-    if (nodeText !== code && !isUpdatingFromMonaco.current) {
-      setCode(nodeText);
-      // Since we're using defaultValue, manually update Monaco's content
-      if (monacoRef.current?.getValue() !== nodeText) {
-        monacoRef.current?.setValue(nodeText);
-      }
-    }
-  }, [node.textContent, code]);
+  // DISABLED: This effect was causing Monaco editor blinking
+  // External sync will be handled differently if needed
+  // useEffect(() => {
+  //   const nodeText = node.textContent;
+  //   if (nodeText !== code && !isUpdatingFromMonaco.current) {
+  //     setCode(nodeText);
+  //     if (monacoRef.current?.getValue() !== nodeText) {
+  //       monacoRef.current?.setValue(nodeText);
+  //     }
+  //   }
+  // }, [node.textContent, code]);
 
 
   useEffect(() => {
@@ -204,13 +198,14 @@ export function ExecutableCodeBlockNodeView({ node, updateAttributes, selected: 
 
   const handleCodeChange = (value: string | undefined) => {
     if (value !== undefined) {
-      // Minimal debounced update - only update TipTap node
+      setCode(value);
+
       if (updateTimeoutRef.current) {
         clearTimeout(updateTimeoutRef.current);
       }
       updateTimeoutRef.current = setTimeout(() => {
         updateNodeContent(value);
-      }, 300); // Increased debounce to reduce updates
+      }, 300);
     }
   };
 

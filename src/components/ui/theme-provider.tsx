@@ -33,19 +33,48 @@ export function ThemeProvider({
   useEffect(() => {
     const root = window.document.documentElement;
 
-    root.classList.remove('light', 'dark');
+    const updateTheme = () => {
+      root.classList.remove('light', 'dark');
 
-    if (theme === 'system') {
-      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)')
-        .matches
-        ? 'dark'
-        : 'light';
+      let resolvedTheme: 'light' | 'dark';
 
-      root.classList.add(systemTheme);
-      return;
-    }
+      if (theme === 'system') {
+        const systemTheme = window.matchMedia('(prefers-color-scheme: dark)')
+          .matches
+          ? 'dark'
+          : 'light';
 
-    root.classList.add(theme);
+        root.classList.add(systemTheme);
+        resolvedTheme = systemTheme;
+      } else {
+        root.classList.add(theme);
+        resolvedTheme = theme;
+      }
+
+      // Update theme-color meta tag for mobile browsers
+      const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+      if (metaThemeColor) {
+        // Use dark background for dark mode, white for light mode
+        metaThemeColor.setAttribute(
+          'content',
+          resolvedTheme === 'dark' ? 'oklch(0.145 0 0)' : 'oklch(1 0 0)'
+        );
+      }
+    };
+
+    updateTheme();
+
+    // Listen for system theme changes
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handleChange = () => {
+      if (theme === 'system') {
+        updateTheme();
+      }
+    };
+
+    mediaQuery.addEventListener('change', handleChange);
+
+    return () => mediaQuery.removeEventListener('change', handleChange);
   }, [theme]);
 
   const value = {

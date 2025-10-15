@@ -56,3 +56,40 @@ export function useBreakpoint() {
     isDesktop: breakpoint === 'desktop',
   };
 }
+
+/**
+ * Detect if user is on an actual mobile device (not just small screen)
+ * Checks user agent to distinguish mobile devices from desktop browsers
+ */
+export function useIsMobileDevice(): boolean {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const userAgent = navigator.userAgent || navigator.vendor;
+    const isMobileUA = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(
+      userAgent.toLowerCase()
+    );
+    setIsMobile(isMobileUA);
+  }, []);
+
+  return isMobile;
+}
+
+/**
+ * Detect specific mobile platform (iOS or Android)
+ */
+export function useMobilePlatform(): 'ios' | 'android' | null {
+  const [platform, setPlatform] = useState<'ios' | 'android' | null>(null);
+
+  useEffect(() => {
+    const userAgent = navigator.userAgent || navigator.vendor;
+
+    if (/iphone|ipad|ipod/i.test(userAgent.toLowerCase())) {
+      setPlatform('ios');
+    } else if (/android/i.test(userAgent.toLowerCase())) {
+      setPlatform('android');
+    }
+  }, []);
+
+  return platform;
+}

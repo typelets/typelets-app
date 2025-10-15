@@ -134,6 +134,21 @@ export default function MainLayout() {
     }, 1500);
   }, [setSelectedNote]);
 
+  const handleRefreshNote = useCallback(async (noteId: string) => {
+    try {
+      const apiNote = await api.getNote(noteId);
+      const note: Note = {
+        ...apiNote,
+        createdAt: new Date(apiNote.createdAt),
+        updatedAt: new Date(apiNote.updatedAt),
+        hiddenAt: apiNote.hiddenAt ? new Date(apiNote.hiddenAt) : null,
+      };
+      setSelectedNote(note);
+    } catch (error) {
+      console.error('Failed to refresh note:', error);
+    }
+  }, [setSelectedNote]);
+
   const handleMasterPasswordUnlock = useCallback(() => {
     handleUnlockSuccess();
     // Force re-initialize and fetch data after successful unlock/setup
@@ -190,6 +205,7 @@ export default function MainLayout() {
     onToggleStar: toggleStar,
     onHideNote: hideNote,
     onUnhideNote: unhideNote,
+    onRefreshNote: handleRefreshNote,
     userId,
     isNotesPanelOpen: filesPanelOpen,
     onToggleNotesPanel: handleToggleNotesPanel,

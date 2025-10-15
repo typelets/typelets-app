@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { UserButton, useUser } from '@clerk/clerk-react';
 import { Menu, X } from 'lucide-react';
 import { ChangeMasterPasswordDialog } from '@/components/password/ChangeMasterPasswordDialog';
+import { MobileAppBanner } from '@/components/common/MobileAppBanner';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { hasMasterPassword } from '@/lib/encryption';
@@ -71,6 +72,7 @@ export function MobileLayout({
 
   return (
     <>
+      <MobileAppBanner />
       <div className="bg-background flex h-screen flex-col">
         {/* Header */}
         <div className="bg-background border-b p-3">
@@ -198,7 +200,6 @@ export function MobileLayout({
                     userButtonPopoverCard: 'w-64',
                   },
                 }}
-                afterSignOutUrl="/"
               >
                 <UserButton.MenuItems>
                   <UserButton.Action
@@ -274,7 +275,7 @@ export function MobileLayout({
                     }
                     onClick={() =>
                       window.open(
-                        'https://github.com/typelets/typelets-app/issues',
+                        'https://typelets.com/support',
                         '_blank'
                       )
                     }

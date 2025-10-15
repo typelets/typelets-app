@@ -56,10 +56,10 @@ export interface EditorProps {
   onToggleStar: (noteId: string) => Promise<void>;
   onHideNote: (noteId: string) => Promise<void>;
   onUnhideNote: (noteId: string) => Promise<void>;
+  onRefreshNote?: (noteId: string) => Promise<void>;
   userId?: string;
   isNotesPanelOpen?: boolean;
   onToggleNotesPanel?: () => void;
-  // WebSocket sync status props (optional)
   wsStatus?: WebSocketStatus;
   wsIsAuthenticated?: boolean;
   wsLastSync?: number | null;
