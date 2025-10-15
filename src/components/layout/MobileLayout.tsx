@@ -230,28 +230,33 @@ export function MobileLayout({
                     }
                   />
                   <UserButton.Action
-                    label={hasNewVersion ? "What's New •" : "What's New"}
+                    label="What's New"
                     labelIcon={
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M8 2v4" />
-                        <path d="M16 2v4" />
-                        <rect width="18" height="18" x="3" y="4" rx="2" />
-                        <path d="M3 10h18" />
-                        <path d="m9 16 2 2 4-4" />
+                      <div className="relative">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M8 2v4" />
+                          <path d="M16 2v4" />
+                          <rect width="18" height="18" x="3" y="4" rx="2" />
+                          <path d="M3 10h18" />
+                          <path d="m9 16 2 2 4-4" />
+                        </svg>
                         {hasNewVersion && (
-                          <circle cx="20" cy="4" r="3" fill="#ef4444" stroke="none" />
+                          <span className="absolute -top-1 -right-1 flex h-2 w-2">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                          </span>
                         )}
-                      </svg>
+                      </div>
                     }
                     onClick={() => {
                       markVersionAsSeen();
