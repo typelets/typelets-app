@@ -1,3 +1,10 @@
+## [1.25.1](https://github.com/typelets/typelets-app/compare/v1.25.0...v1.25.1) (2025-10-15)
+
+
+### Bug Fixes
+
+* improve type safety, theme consistency, and Android UI issues ([f944356](https://github.com/typelets/typelets-app/commit/f944356bceb5d1ea306b9ed4c7d46d1b263c5fe4))
+
 # [1.25.0](https://github.com/typelets/typelets-app/compare/v1.24.7...v1.25.0) (2025-10-14)
 
 
