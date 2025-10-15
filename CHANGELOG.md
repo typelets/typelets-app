@@ -1,3 +1,10 @@
+# [1.28.0](https://github.com/typelets/typelets-app/compare/v1.27.0...v1.28.0) (2025-10-15)
+
+
+### Features
+
+* **mobile/web:** add version notification system for What's New ([bf72044](https://github.com/typelets/typelets-app/commit/bf72044914c93df5d034362f0aca840e220e2ebf))
+
 # [1.27.0](https://github.com/typelets/typelets-app/compare/v1.26.1...v1.27.0) (2025-10-15)
 
 
