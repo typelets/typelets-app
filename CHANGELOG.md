@@ -1,3 +1,10 @@
+## [1.28.2](https://github.com/typelets/typelets-app/compare/v1.28.1...v1.28.2) (2025-10-15)
+
+
+### Bug Fixes
+
+* **web:** add version notification system for What's New ([6f0af0d](https://github.com/typelets/typelets-app/commit/6f0af0d2eb907b6f5515d0b98241d08f3594eb4b))
+
 ## [1.28.1](https://github.com/typelets/typelets-app/compare/v1.28.0...v1.28.1) (2025-10-15)
 
 
