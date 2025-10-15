@@ -1,3 +1,10 @@
+# [1.26.0](https://github.com/typelets/typelets-app/compare/v1.25.1...v1.26.0) (2025-10-15)
+
+
+### Features
+
+* improve mobile app download page UX and web access ([5939b80](https://github.com/typelets/typelets-app/commit/5939b805a9cf9ec0d945eb702e15f6720c44ddff))
+
 ## [1.25.1](https://github.com/typelets/typelets-app/compare/v1.25.0...v1.25.1) (2025-10-15)
 
 
