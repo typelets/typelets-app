@@ -96,6 +96,13 @@ export interface EmptyTrashResponse {
   deletedCount: number;
 }
 
+export interface NoteCounts {
+  all: number;
+  starred: number;
+  archived: number;
+  trash: number;
+}
+
 export interface ApiUserUsage {
   storage: {
     totalBytes: number;

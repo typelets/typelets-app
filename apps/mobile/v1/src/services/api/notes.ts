@@ -4,7 +4,7 @@
  */
 
 import { createHttpClient, AuthTokenGetter } from './client';
-import { Note, NoteQueryParams, NotesResponse, EmptyTrashResponse, FileAttachment } from './types';
+import { Note, NoteQueryParams, NotesResponse, EmptyTrashResponse, FileAttachment, NoteCounts } from './types';
 import { decryptNote, decryptNotes, encryptNoteForApi, clearEncryptionCache } from './encryption';
 import { fetchAllPages, createPaginationParams } from './utils/pagination';
 import { handleApiError } from './utils/errors';
@@ -234,6 +234,17 @@ export function createNotesApi(getToken: AuthTokenGetter, getUserId: () => strin
         });
       } catch (error) {
         return handleApiError(error, 'emptyTrash');
+      }
+    },
+
+    /**
+     * Get note counts for home screen (optimized - no note data fetched)
+     */
+    async getNoteCounts(): Promise<NoteCounts> {
+      try {
+        return await makeRequest<NoteCounts>('/notes/counts');
+      } catch (error) {
+        return handleApiError(error, 'getNoteCounts');
       }
     },
 

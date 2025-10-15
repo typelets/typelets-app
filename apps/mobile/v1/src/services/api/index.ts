@@ -14,6 +14,7 @@ export type {
   Note,
   NoteQueryParams,
   EmptyTrashResponse,
+  NoteCounts,
   ApiUser,
   ApiUserUsage,
   FileAttachment
@@ -46,6 +47,7 @@ export const useApiService = () => {
     hideNote: notesApi.hideNote,
     unhideNote: notesApi.unhideNote,
     emptyTrash: notesApi.emptyTrash,
+    getNoteCounts: notesApi.getNoteCounts,
 
     // File attachment methods
     pickFiles: notesApi.pickFiles,

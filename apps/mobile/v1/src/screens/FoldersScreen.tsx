@@ -131,60 +131,30 @@ export default function FoldersScreen() {
       if (!isRefresh) {
         setLoading(true);
       }
-      const [foldersData, allNotes] = await Promise.all([
+
+      // Fetch folders and counts in parallel (optimized - no note data fetched)
+      const [foldersData, noteCounts] = await Promise.all([
         api.getFolders(),
-        api.getNotes() // Get all notes to calculate accurate counts
+        api.getNoteCounts()
       ]);
 
       if (__DEV__) {
-        console.log(`${isRefresh ? 'Refresh' : 'Initial'} load - Total notes: ${allNotes.length}`);
+        console.log(`${isRefresh ? 'Refresh' : 'Initial'} load - Note counts:`, noteCounts);
       }
 
       // Show only ROOT folders (no parentId) on main screen
-      const rootFolders = foldersData.filter(folder => !folder.parentId);
+      // Note: For now, we don't show per-folder counts on home screen
+      // Could be added later with a separate API endpoint
+      const rootFolders = foldersData
+        .filter(folder => !folder.parentId)
+        .map(folder => ({ ...folder, noteCount: 0 }));
 
-      // Calculate note counts for each root folder including subfolders
-      const getFolderAndSubfolderIds = (folderId: string): string[] => {
-        const ids = [folderId];
-        const subfolders = foldersData.filter(f => f.parentId === folderId);
-        subfolders.forEach(subfolder => {
-          ids.push(...getFolderAndSubfolderIds(subfolder.id));
-        });
-        return ids;
-      };
-
-      // Add note counts to root folders (including subfolder notes)
-      const rootFoldersWithCounts = rootFolders.map(folder => {
-        const allFolderIds = getFolderAndSubfolderIds(folder.id);
-        const folderNotes = allNotes.filter(note =>
-          allFolderIds.includes(note.folderId || '') &&
-          !note.deleted
-        );
-        return {
-          ...folder,
-          noteCount: folderNotes.length
-        };
-      });
-
-      setAllFolders(rootFoldersWithCounts);
-
-      // Calculate accurate counts from all notes - using web app field names
-      const trashedNotes = allNotes.filter(note => note.deleted);
-      const archivedNotes = allNotes.filter(note => note.archived && !note.deleted);
-      const starredNotes = allNotes.filter(note => note.starred && !note.deleted && !note.archived);
-      const activeNotes = allNotes.filter(note => !note.deleted && !note.archived);
-
-      const newCounts = {
-        all: activeNotes.length,
-        starred: starredNotes.length,
-        archived: archivedNotes.length,
-        trash: trashedNotes.length,
-      };
+      setAllFolders(rootFolders);
+      setCounts(noteCounts);
 
       if (__DEV__) {
-        console.log('Updated note counts:', newCounts, 'Total notes loaded:', allNotes.length);
+        console.log('Updated note counts:', noteCounts);
       }
-      setCounts(newCounts);
     } catch (error) {
       if (__DEV__) console.error('Failed to load folders data:', error);
       setAllFolders([]);
