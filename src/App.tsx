@@ -45,7 +45,16 @@ function AppContent() {
   const isSignInPage = window.location.pathname === '/sign-in';
   const isSignUpPage = window.location.pathname === '/sign-up';
 
-  if (isMobileDevice && !isSignedIn) {
+  // Check if user wants to force web version
+  const urlParams = new URLSearchParams(window.location.search);
+  const forceWeb = urlParams.get('web') === 'true' || localStorage.getItem('forceWebVersion') === 'true';
+
+  // Store preference if URL parameter is present
+  if (urlParams.get('web') === 'true') {
+    localStorage.setItem('forceWebVersion', 'true');
+  }
+
+  if (isMobileDevice && !isSignedIn && !forceWeb) {
     return <MobileAppDownload />;
   }
 

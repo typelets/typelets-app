@@ -1,4 +1,4 @@
-import { Lock, Zap, Cloud } from 'lucide-react';
+import { Lock, Zap, Cloud, ExternalLink } from 'lucide-react';
 import { useMobilePlatform } from '@/hooks/useIsMobile';
 import { useState } from 'react';
 
@@ -9,8 +9,8 @@ export function MobileAppDownload() {
   const [imageLoaded, setImageLoaded] = useState(false);
 
   return (
-    <div className="bg-background flex min-h-screen flex-col items-center justify-center p-6">
-      <div className={`w-full max-w-md space-y-8 text-center transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}>
+    <div className="bg-background flex min-h-screen flex-col items-center p-6 pt-8">
+      <div className={`w-full max-w-md space-y-6 text-center transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}>
         {/* App Icon/Logo */}
         <div className="mx-auto flex h-32 w-32 items-center justify-center">
           <img
@@ -22,7 +22,7 @@ export function MobileAppDownload() {
         </div>
 
         {/* Title */}
-        <div className="space-y-2">
+        <div className="-mt-2 space-y-2">
           <h1 className="text-foreground text-3xl font-bold">Typelets</h1>
           <p className="text-muted-foreground text-lg">
             Secure, encrypted note-taking
@@ -84,9 +84,6 @@ export function MobileAppDownload() {
           ) : platform === 'ios' ? (
             <div className="bg-muted rounded-lg p-4">
               <p className="text-foreground font-semibold">iOS App Coming Soon</p>
-              <p className="text-muted-foreground mt-1 text-sm">
-                We're working hard to bring Typelets to the App Store
-              </p>
             </div>
           ) : (
             <a
@@ -100,6 +97,20 @@ export function MobileAppDownload() {
               />
             </a>
           )}
+        </div>
+
+        {/* Web Version Link */}
+        <div className="border-border bg-card mt-8 rounded-lg border p-4">
+          <p className="text-foreground mb-3 text-sm font-semibold">
+            For the best experience, use the Typelets mobile application.
+          </p>
+          <a
+            href="/?web=true"
+            className="text-primary hover:text-primary/80 inline-flex items-center gap-2 text-sm font-medium transition-colors"
+          >
+            <ExternalLink className="h-4 w-4" />
+            Continue to Web Version
+          </a>
         </div>
       </div>
     </div>
