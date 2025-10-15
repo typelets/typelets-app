@@ -1,3 +1,10 @@
+## [1.28.1](https://github.com/typelets/typelets-app/compare/v1.28.0...v1.28.1) (2025-10-15)
+
+
+### Bug Fixes
+
+* **mobile:** optimize home screen loading with counts endpoint ([0a26610](https://github.com/typelets/typelets-app/commit/0a26610191d5496f91eb6862e6e09a6ae161f1d4))
+
 # [1.28.0](https://github.com/typelets/typelets-app/compare/v1.27.0...v1.28.0) (2025-10-15)
 
 
