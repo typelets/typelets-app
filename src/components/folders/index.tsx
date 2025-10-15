@@ -353,7 +353,7 @@ export default function FolderPanel({
                   }
                 />
                 <UserButton.Action
-                  label="What's New"
+                  label={hasNewVersion ? "What's New •" : "What's New"}
                   labelIcon={
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -371,6 +371,9 @@ export default function FolderPanel({
                       <rect width="18" height="18" x="3" y="4" rx="2" />
                       <path d="M3 10h18" />
                       <path d="m9 16 2 2 4-4" />
+                      {hasNewVersion && (
+                        <circle cx="20" cy="4" r="3" fill="#ef4444" stroke="none" />
+                      )}
                     </svg>
                   }
                   onClick={() => {
