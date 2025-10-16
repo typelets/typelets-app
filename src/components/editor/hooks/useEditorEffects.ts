@@ -63,7 +63,7 @@ export function useEditorEffects({
 
   // Initialize word count when editor is ready
   useEffect(() => {
-    if (!editor || !editor.view) return;
+    if (!editor || !editor.view || !editor.view.dom) return;
 
     // Calculate initial word count
     const text = editor.state.doc.textContent;
@@ -72,11 +72,11 @@ export function useEditorEffects({
 
   // Track scroll percentage
   useEffect(() => {
-    if (!editor || !editor.view) return;
+    if (!editor || !editor.view || !editor.view.dom) return;
 
     const updateScrollPercentage = () => {
       const editorView = editor.view;
-      if (!editorView.dom) return;
+      if (!editorView || !editorView.dom) return;
 
       const { scrollTop, scrollHeight, clientHeight } = editorView.dom;
       const maxScroll = scrollHeight - clientHeight;
@@ -102,7 +102,7 @@ export function useEditorEffects({
 
   // Store the original font size when editor is first created
   useEffect(() => {
-    if (!editor || !editor.view || baseFontSize) return;
+    if (!editor || !editor.view || !editor.view.dom || baseFontSize) return;
 
     const editorElement = editor.view.dom as HTMLElement;
     const computedStyle = window.getComputedStyle(editorElement);
@@ -112,7 +112,7 @@ export function useEditorEffects({
 
   // Apply zoom level to editor
   useEffect(() => {
-    if (!editor || !editor.view || !baseFontSize) return;
+    if (!editor || !editor.view || !editor.view.dom || !baseFontSize) return;
 
     const editorElement = editor.view.dom as HTMLElement;
 

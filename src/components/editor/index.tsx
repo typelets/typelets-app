@@ -70,7 +70,9 @@ interface NoteEditorProps {
   onDeleteNote: (noteId: string) => void;
   onArchiveNote: (noteId: string) => void;
   onToggleStar: (noteId: string) => void;
+  starringStar?: boolean;
   onHideNote: (noteId: string) => void;
+  hidingNote?: boolean;
   onUnhideNote: (noteId: string) => void;
   onRefreshNote?: (noteId: string) => void;
   userId?: string;
@@ -92,7 +94,9 @@ export default function Index({
   onDeleteNote,
   onArchiveNote,
   onToggleStar,
+  starringStar = false,
   onHideNote,
+  hidingNote = false,
   onUnhideNote,
   onRefreshNote,
   userId = 'current-user',
@@ -671,10 +675,15 @@ export default function Index({
                   note.starred ? 'text-yellow-500' : 'text-muted-foreground'
                 }
                 title={note.starred ? 'Remove from starred' : 'Add to starred'}
+                disabled={starringStar}
               >
-                <Star
-                  className={`h-4 w-4 ${note.starred ? 'fill-current' : ''}`}
-                />
+                {starringStar ? (
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                ) : (
+                  <Star
+                    className={`h-4 w-4 ${note.starred ? 'fill-current' : ''}`}
+                  />
+                )}
               </Button>
 
               <Button
@@ -687,8 +696,11 @@ export default function Index({
                   note.hidden ? 'text-primary' : 'text-muted-foreground'
                 }
                 title={note.hidden ? 'Unhide note' : 'Hide note'}
+                disabled={hidingNote}
               >
-                {note.hidden ? (
+                {hidingNote ? (
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                ) : note.hidden ? (
                   <EyeOff className="h-4 w-4" />
                 ) : (
                   <Eye className="h-4 w-4" />

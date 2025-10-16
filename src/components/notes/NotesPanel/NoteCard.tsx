@@ -124,6 +124,11 @@ function NoteCard({
             {note.title || 'Untitled'}
           </h3>
           <div className="flex items-center gap-1">
+            {note.isNew && (
+              <span className="mr-1 rounded-full bg-orange-500 px-1 py-0 text-[9px] font-semibold text-white">
+                NEW
+              </span>
+            )}
             {hasExecutableCode && (
               <div className="flex items-center text-xs" title="Contains executable code">
                 <Codesandbox className="h-3.5 w-3.5 text-purple-500" />

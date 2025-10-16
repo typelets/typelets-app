@@ -45,6 +45,7 @@ interface FilesPanelProps {
   onCreateNote: (templateContent?: { title: string; content: string }) => void;
   onToggleFolderPanel: () => void;
   onEmptyTrash?: () => Promise<void>;
+  creatingNote?: boolean;
   isMobile?: boolean;
   onClose?: () => void;
 }
@@ -62,6 +63,7 @@ export default function FilesPanel({
   onCreateNote,
   onToggleFolderPanel,
   onEmptyTrash,
+  creatingNote = false,
   isMobile = false,
   onClose,
 }: FilesPanelProps) {
@@ -110,19 +112,11 @@ export default function FilesPanel({
 
   const filterNotes = (notes: Note[], config: FilterConfig): Note[] => {
     return notes.filter((note) => {
-      if (
-        config.showAttachmentsOnly &&
-        (!note.attachments || note.attachments.length === 0)
-      ) {
-        return false;
-      }
-      if (config.showStarredOnly && !note.starred) {
-        return false;
-      }
-      if (config.showHiddenOnly && !note.hidden) {
-        return false;
-      }
-      return true;
+      return !(
+        (config.showAttachmentsOnly && (!note.attachments || note.attachments.length === 0)) ||
+        (config.showStarredOnly && !note.starred) ||
+        (config.showHiddenOnly && !note.hidden)
+      );
     });
   };
 
@@ -366,9 +360,16 @@ export default function FilesPanel({
                   size="sm"
                   className={`flex items-center justify-center gap-1 ${isMobile ? 'h-9 touch-manipulation px-3' : 'h-6 px-2'}`}
                   title="Create new note from template"
+                  disabled={creatingNote}
                 >
-                  <Plus className={isMobile ? 'h-4 w-4' : 'h-3 w-3'} />
-                  {!isMobile && <ChevronDown className="h-2 w-2" />}
+                  {creatingNote ? (
+                    <div className={`${isMobile ? 'h-4 w-4' : 'h-3 w-3'} animate-spin rounded-full border-2 border-current border-t-transparent`} />
+                  ) : (
+                    <>
+                      <Plus className={isMobile ? 'h-4 w-4' : 'h-3 w-3'} />
+                      {!isMobile && <ChevronDown className="h-2 w-2" />}
+                    </>
+                  )}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-64" sideOffset={8}>

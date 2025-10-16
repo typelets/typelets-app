@@ -29,24 +29,24 @@ const convertApiFolder = (apiFolder: ApiFolder): Folder => ({
 
 // Helper function for safe date conversion
 const safeConvertDates = (item: Note | Folder): void => {
-  if (item.createdAt && typeof item.createdAt === 'string') {
-    item.createdAt = new Date(item.createdAt);
+  if (item.createdAt && !(item.createdAt instanceof Date)) {
+    item.createdAt = new Date(item.createdAt as unknown as string);
   }
 
   // Note-specific properties
   if (
     'updatedAt' in item &&
     item.updatedAt &&
-    typeof item.updatedAt === 'string'
+    !(item.updatedAt instanceof Date)
   ) {
-    item.updatedAt = new Date(item.updatedAt);
+    item.updatedAt = new Date(item.updatedAt as unknown as string);
   }
   if (
     'hiddenAt' in item &&
     item.hiddenAt &&
-    typeof item.hiddenAt === 'string'
+    !(item.hiddenAt instanceof Date)
   ) {
-    item.hiddenAt = new Date(item.hiddenAt);
+    item.hiddenAt = new Date(item.hiddenAt as unknown as string);
   }
 };
 
@@ -113,13 +113,9 @@ export function useNotes() {
       const convertedFolders = foldersResponse.folders.map(convertApiFolder);
       allFolders = [...allFolders, ...convertedFolders];
 
-      // Check if we have more pages - handle different API response structures
-      if (foldersResponse.total !== undefined && foldersResponse.limit !== undefined) {
-        // Use API total if available
-        const totalPages = Math.ceil(
-          foldersResponse.total / foldersResponse.limit
-        );
-        hasMorePages = page < totalPages;
+      // Check if we have more pages using new pagination structure
+      if (foldersResponse.pagination) {
+        hasMorePages = page < foldersResponse.pagination.pages;
       } else {
         // Fallback - assume more pages if we got a full page
         hasMorePages = convertedFolders.length >= 50;
@@ -208,8 +204,14 @@ export function useNotes() {
             error.message.includes('Token provider not set')
           ) {
             // Don't throw error, just continue without API call
+            secureLogger.warn('Token provider not ready, continuing without API call');
           } else {
-            throw error;
+            // Re-throw for outer catch to handle
+            secureLogger.error('Failed to get current user', error);
+            setError('Failed to initialize user account');
+            setEncryptionReady(false);
+            setLoading(false);
+            return;
           }
         }
       }
@@ -234,11 +236,9 @@ export function useNotes() {
       const convertedNotes = notesResponse.notes.map(convertApiNote);
       allNotes = [...allNotes, ...convertedNotes];
 
-      // Check if we have more pages - handle different API response structures
-      if (notesResponse.total !== undefined && notesResponse.limit !== undefined) {
-        // Use API total if available
-        const totalPages = Math.ceil(notesResponse.total / notesResponse.limit);
-        hasMorePages = page < totalPages;
+      // Check if we have more pages using new pagination structure
+      if (notesResponse.pagination) {
+        hasMorePages = page < notesResponse.pagination.pages;
       } else {
         // Fallback - assume more pages if we got a full page
         hasMorePages = convertedNotes.length >= 50;
@@ -366,7 +366,15 @@ export function useNotes() {
   });
 
   // Notes operations
-  const notesOperations = useNotesOperations({
+  const {
+    createNote: notesOpsCreateNote,
+    creatingNote,
+    hideNote: notesOpsHideNote,
+    hidingNote,
+    toggleStar: notesOpsToggleStar,
+    starringStar,
+    ...restNotesOperations
+  } = useNotesOperations({
     folders,
     selectedNote,
     selectedFolder,
@@ -412,7 +420,7 @@ export function useNotes() {
     color?: string,
     parentId?: string
   ) => {
-    const newFolder = await notesOperations.createFolder(name, color, parentId);
+    const newFolder = await restNotesOperations.createFolder(name, color, parentId);
 
     if (parentId) {
       setExpandedFolders((prev) => new Set([...prev, parentId]));
@@ -423,13 +431,13 @@ export function useNotes() {
 
   const updateNote = useCallback(
     async (noteId: string, updates: Partial<Note>) => {
-      await notesOperations.updateNote(noteId, updates);
+      await restNotesOperations.updateNote(noteId, updates);
     },
-    [notesOperations]
+    [restNotesOperations]
   );
 
   const deleteNote = async (noteId: string) => {
-    await notesOperations.deleteNote(noteId);
+    await restNotesOperations.deleteNote(noteId);
 
     if (selectedNote?.id === noteId) {
       const remainingNotes = filteredNotes.filter((note) => note.id !== noteId);
@@ -438,7 +446,7 @@ export function useNotes() {
   };
 
   const archiveNote = async (noteId: string) => {
-    await notesOperations.archiveNote(noteId);
+    await restNotesOperations.archiveNote(noteId);
 
     if (selectedNote?.id === noteId) {
       const remainingNotes = filteredNotes.filter((note) => note.id !== noteId);
@@ -447,7 +455,7 @@ export function useNotes() {
   };
 
   const updateFolder = async (folderId: string, updates: Partial<Folder>) => {
-    const updatedFolder = await notesOperations.updateFolder(folderId, updates);
+    const updatedFolder = await restNotesOperations.updateFolder(folderId, updates);
 
     if (selectedFolder?.id === folderId) {
       setSelectedFolder(updatedFolder);
@@ -513,7 +521,7 @@ export function useNotes() {
   };
 
   const permanentlyDeleteNote = (noteId: string) => {
-    notesOperations.permanentlyDeleteNote(noteId);
+    restNotesOperations.permanentlyDeleteNote(noteId);
 
     if (selectedNote?.id === noteId) {
       const remainingNotes = filteredNotes.filter((note) => note.id !== noteId);
@@ -522,7 +530,7 @@ export function useNotes() {
   };
 
   const moveNoteToFolder = async (noteId: string, folderId: string | null) => {
-    await notesOperations.moveNoteToFolder(noteId, folderId);
+    await restNotesOperations.moveNoteToFolder(noteId, folderId);
   };
 
   return {
@@ -541,18 +549,21 @@ export function useNotes() {
     archivedCount,
     trashedCount,
     hiddenCount,
-    createNote: notesOperations.createNote,
+    createNote: notesOpsCreateNote,
+    creatingNote,
     createFolder,
     updateNote,
     updateFolder,
     deleteNote,
-    deleteFolder: notesOperations.deleteFolder,
+    deleteFolder: restNotesOperations.deleteFolder,
     reorderFolders,
-    toggleStar: notesOperations.toggleStar,
+    toggleStar: notesOpsToggleStar,
+    starringStar,
     archiveNote,
-    restoreNote: notesOperations.restoreNote,
-    hideNote: notesOperations.hideNote,
-    unhideNote: notesOperations.unhideNote,
+    restoreNote: restNotesOperations.restoreNote,
+    hideNote: notesOpsHideNote,
+    hidingNote,
+    unhideNote: restNotesOperations.unhideNote,
     permanentlyDeleteNote,
     moveNoteToFolder,
     toggleFolderExpansion,
@@ -560,6 +571,7 @@ export function useNotes() {
     setSelectedFolder,
     setCurrentView,
     setSearchQuery,
+    setNotes,
     setFolders,
     refetch: loadData,
     reinitialize: async () => {

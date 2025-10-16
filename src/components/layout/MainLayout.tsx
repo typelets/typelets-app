@@ -51,13 +51,16 @@ export default function MainLayout() {
     expandedFolders,
     updateFolder,
     createNote,
+    creatingNote,
     createFolder,
     deleteFolder,
     updateNote,
     deleteNote,
     toggleStar,
+    starringStar,
     archiveNote,
     hideNote,
+    hidingNote,
     unhideNote,
     toggleFolderExpansion,
     reorderFolders,
@@ -65,6 +68,7 @@ export default function MainLayout() {
     setSelectedFolder,
     setCurrentView,
     setSearchQuery,
+    setNotes,
     refetch,
     reinitialize,
     webSocket,
@@ -137,17 +141,43 @@ export default function MainLayout() {
   const handleRefreshNote = useCallback(async (noteId: string) => {
     try {
       const apiNote = await api.getNote(noteId);
-      const note: Note = {
+      const refreshedNote: Note = {
         ...apiNote,
         createdAt: new Date(apiNote.createdAt),
         updatedAt: new Date(apiNote.updatedAt),
         hiddenAt: apiNote.hiddenAt ? new Date(apiNote.hiddenAt) : null,
       };
-      setSelectedNote(note);
+
+      // Update the note in the notes list
+      setNotes((prev) =>
+        prev.map((note) => {
+          if (note.id === noteId) {
+            // Preserve attachments and folder from local state
+            return {
+              ...refreshedNote,
+              attachments: note.attachments,
+              folder: note.folder,
+            };
+          }
+          return note;
+        })
+      );
+
+      // Update selected note
+      setSelectedNote((prev) => {
+        if (prev?.id === noteId) {
+          return {
+            ...refreshedNote,
+            attachments: prev.attachments,
+            folder: prev.folder,
+          };
+        }
+        return prev;
+      });
     } catch (error) {
       console.error('Failed to refresh note:', error);
     }
-  }, [setSelectedNote]);
+  }, [setSelectedNote, setNotes]);
 
   const handleMasterPasswordUnlock = useCallback(() => {
     handleUnlockSuccess();
@@ -194,6 +224,7 @@ export default function MainLayout() {
     onCreateNote: handleCreateNote,
     onToggleFolderPanel: handleToggleFolderPanel,
     onEmptyTrash: handleEmptyTrash,
+    creatingNote,
   };
 
   const editorProps: EditorProps = {
@@ -203,7 +234,9 @@ export default function MainLayout() {
     onDeleteNote: deleteNote,
     onArchiveNote: archiveNote,
     onToggleStar: toggleStar,
+    starringStar,
     onHideNote: hideNote,
+    hidingNote,
     onUnhideNote: unhideNote,
     onRefreshNote: handleRefreshNote,
     userId,
