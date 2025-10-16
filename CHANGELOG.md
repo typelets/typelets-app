@@ -1,3 +1,10 @@
+## [1.28.3](https://github.com/typelets/typelets-app/compare/v1.28.2...v1.28.3) (2025-10-16)
+
+
+### Bug Fixes
+
+* **notes:** improve NEW badge UX and add star button loading state ([2adb5b0](https://github.com/typelets/typelets-app/commit/2adb5b04c93f1a7ff6bb51f8df39e8cc95557e04))
+
 ## [1.28.2](https://github.com/typelets/typelets-app/compare/v1.28.1...v1.28.2) (2025-10-15)
 
 
