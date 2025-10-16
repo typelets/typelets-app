@@ -43,6 +43,7 @@ export interface FilesPanelProps {
   onCreateNote: (templateContent?: { title: string; content: string }) => void;
   onToggleFolderPanel: () => void;
   onEmptyTrash: () => Promise<void>;
+  creatingNote?: boolean;
   isMobile?: boolean;
   onClose?: () => void;
 }
@@ -54,7 +55,9 @@ export interface EditorProps {
   onDeleteNote: (noteId: string) => Promise<void>;
   onArchiveNote: (noteId: string) => Promise<void>;
   onToggleStar: (noteId: string) => Promise<void>;
+  starringStar?: boolean;
   onHideNote: (noteId: string) => Promise<void>;
+  hidingNote?: boolean;
   onUnhideNote: (noteId: string) => Promise<void>;
   onRefreshNote?: (noteId: string) => Promise<void>;
   userId?: string;

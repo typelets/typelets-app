@@ -40,10 +40,14 @@ export function useNotesSync({
 
       // Update folder reference if folderId changed
       if (changes.folderId !== undefined) {
-        const newFolder = updatedNote.folderId
+        updatedNote.folder = updatedNote.folderId
           ? folders.find((f) => f.id === updatedNote.folderId)
           : undefined;
-        updatedNote.folder = newFolder;
+      }
+
+      // Remove isNew badge if title was changed (cross-tab sync)
+      if (changes.title !== undefined) {
+        updatedNote.isNew = false;
       }
 
       return updatedNote;
@@ -129,8 +133,7 @@ export function useNotesSync({
 
       // Find and attach folder data if note has folderId
       if (newNote.folderId) {
-        const folder = folders.find((f) => f.id === newNote.folderId);
-        newNote.folder = folder;
+        newNote.folder = folders.find((f) => f.id === newNote.folderId);
       }
 
       setNotes((prevNotes) => {

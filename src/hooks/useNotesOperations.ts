@@ -1,4 +1,4 @@
-import { useCallback, useRef } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { api } from '@/lib/api/api';
 import type { Note, Folder } from '@/types/note';
 import type { UseWebSocketReturn } from './useWebSocket';
@@ -37,6 +37,9 @@ export function useNotesOperations({
   getDescendantIds,
 }: UseNotesOperationsParams) {
   const saveTimeoutsRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
+  const [creatingNote, setCreatingNote] = useState(false);
+  const [hidingNote, setHidingNote] = useState(false);
+  const [starringStar, setStarringStar] = useState(false);
 
   // Note CRUD Operations
   const createNote = useCallback(
@@ -44,14 +47,24 @@ export function useNotesOperations({
       folderId?: string,
       templateContent?: { title: string; content: string }
     ) => {
+      let showSpinner = false;
+      const spinnerTimeout = setTimeout(() => {
+        showSpinner = true;
+        setCreatingNote(true);
+      }, 500);
+
       try {
         if (!encryptionReady) {
-          throw new SecureError(
+          const secureError = new SecureError(
             'Note creation attempted without encryption ready',
             'Encryption not ready. Please wait a moment and try again.',
             'CRYPTO_001',
             'medium'
           );
+          logSecureError(secureError, 'useNotesOperations.createNote');
+          secureLogger.error('Note creation failed - encryption not ready');
+          setError(secureError.userMessage);
+          throw secureError;
         }
 
         const noteFolderId = folderId ?? selectedFolder?.id ?? null;
@@ -69,6 +82,7 @@ export function useNotesOperations({
 
         const noteWithFolder = convertApiNote(newNote);
         noteWithFolder.folder = folder;
+        noteWithFolder.isNew = true; // Mark as new
 
         setNotes((prev) => [noteWithFolder, ...prev]);
         setSelectedNote(noteWithFolder);
@@ -85,6 +99,11 @@ export function useNotesOperations({
         secureLogger.error('Note creation failed', error);
         setError(secureError.userMessage);
         throw secureError;
+      } finally {
+        clearTimeout(spinnerTimeout);
+        if (showSpinner) {
+          setCreatingNote(false);
+        }
       }
     },
     [
@@ -173,10 +192,13 @@ export function useNotesOperations({
               const newFolder = updatedNote.folderId
                 ? folders.find((f) => f.id === updatedNote.folderId)
                 : undefined;
+
+              // Remove isNew badge if title was changed
               return {
                 ...updatedNote,
                 attachments: note.attachments,
                 folder: newFolder,
+                isNew: updates.title !== undefined ? false : note.isNew,
               };
             })
           );
@@ -185,10 +207,13 @@ export function useNotesOperations({
             const newFolder = updatedNote.folderId
               ? folders.find((f) => f.id === updatedNote.folderId)
               : undefined;
+
+            // Remove isNew badge if title was changed
             setSelectedNote({
               ...updatedNote,
               attachments: selectedNote.attachments,
               folder: newFolder,
+              isNew: updates.title !== undefined ? false : selectedNote.isNew,
             });
           }
 
@@ -215,12 +240,17 @@ export function useNotesOperations({
               !encryptionReady &&
               (updates.title !== undefined || updates.content !== undefined)
             ) {
-              throw new SecureError(
+              const secureError = new SecureError(
                 'Note update attempted without encryption ready',
                 'Encryption not ready. Please wait a moment and try again.',
                 'CRYPTO_001',
                 'medium'
               );
+              logSecureError(secureError, 'useNotesOperations.updateNote.delayed');
+              secureLogger.error('Failed to update note (delayed) - encryption not ready');
+              setError('Failed to encrypt note changes. Please try again.');
+              void loadData();
+              return;
             }
 
             // API call for server persistence (follows WebSocket update)
@@ -239,11 +269,7 @@ export function useNotesOperations({
             const secureError = sanitizeError(error, 'Failed to update note');
             logSecureError(secureError, 'useNotesOperations.updateNote.delayed');
             secureLogger.error('Failed to update note (delayed):', error);
-            if (error instanceof SecureError && error.code === 'CRYPTO_001') {
-              setError('Failed to encrypt note changes. Please try again.');
-            } else {
-              setError(secureError.userMessage);
-            }
+            setError(secureError.userMessage);
             void loadData();
           }
         }, 500); // Reduced from 1500ms to 500ms for faster sync
@@ -255,6 +281,7 @@ export function useNotesOperations({
       encryptionReady,
       selectedNote?.id,
       selectedNote?.attachments,
+      selectedNote?.isNew,
       folders,
       loadData,
       convertApiNote,
@@ -287,6 +314,12 @@ export function useNotesOperations({
   // Note action operations
   const toggleStar = useCallback(
     async (noteId: string) => {
+      let showSpinner = false;
+      const spinnerTimeout = setTimeout(() => {
+        showSpinner = true;
+        setStarringStar(true);
+      }, 500);
+
       try {
         const apiNote = await api.toggleStarNote(noteId);
         const updatedNote = convertApiNote(apiNote);
@@ -320,6 +353,11 @@ export function useNotesOperations({
         logSecureError(secureError, 'useNotesOperations.toggleStar');
         secureLogger.error('Failed to toggle star:', error);
         setError(secureError.userMessage);
+      } finally {
+        clearTimeout(spinnerTimeout);
+        if (showSpinner) {
+          setStarringStar(false);
+        }
       }
     },
     [
@@ -371,6 +409,12 @@ export function useNotesOperations({
 
   const hideNote = useCallback(
     async (noteId: string) => {
+      let showSpinner = false;
+      const spinnerTimeout = setTimeout(() => {
+        showSpinner = true;
+        setHidingNote(true);
+      }, 500);
+
       try {
         const apiNote = await api.hideNote(noteId);
         const hiddenNote = convertApiNote(apiNote);
@@ -407,6 +451,11 @@ export function useNotesOperations({
         logSecureError(secureError, 'useNotesOperations.hideNote');
         secureLogger.error('Failed to hide note:', error);
         setError(secureError.userMessage);
+      } finally {
+        clearTimeout(spinnerTimeout);
+        if (showSpinner) {
+          setHidingNote(false);
+        }
       }
     },
     [
@@ -609,12 +658,15 @@ export function useNotesOperations({
 
   return {
     createNote,
+    creatingNote,
     updateNote,
     deleteNote,
     toggleStar,
+    starringStar,
     archiveNote,
     restoreNote,
     hideNote,
+    hidingNote,
     unhideNote,
     moveNoteToFolder,
     permanentlyDeleteNote,

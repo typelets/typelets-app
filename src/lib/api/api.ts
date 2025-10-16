@@ -73,18 +73,21 @@ export interface ApiUser {
   usage?: ApiUserUsage;
 }
 
-export interface NotesResponse {
-  notes: ApiNote[];
-  total: number;
+export interface Pagination {
   page: number;
   limit: number;
+  total: number;
+  pages: number;
+}
+
+export interface NotesResponse {
+  notes: ApiNote[];
+  pagination: Pagination;
 }
 
 export interface FoldersResponse {
   folders: ApiFolder[];
-  total: number;
-  page: number;
-  limit: number;
+  pagination: Pagination;
 }
 
 class ClerkEncryptedApiService {

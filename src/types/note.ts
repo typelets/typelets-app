@@ -23,6 +23,8 @@ export interface Note {
   hidden: boolean;
   hiddenAt: Date | null;
   attachments?: FileAttachment[];
+  attachmentCount?: number; // Number of file attachments (from API)
+  isNew?: boolean; // Client-side flag to show "NEW" badge
 }
 
 export interface Folder {
