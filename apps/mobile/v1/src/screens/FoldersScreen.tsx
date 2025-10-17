@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, RefreshControl, Alert, Keyboard, Animated } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, RefreshControl, Alert, Keyboard, Animated, AppState } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import { useIsFocused } from '@react-navigation/native';
 import { useTheme } from '../theme';
 import { Ionicons } from '@expo/vector-icons';
-import { useApiService, type Folder } from '../services/api';
+import { useApiService, type Folder, type FolderCounts } from '../services/api';
 import { FOLDER_CARD, ACTION_BUTTON, FOLDER_COLORS } from '../constants/ui';
 import { BottomSheetModal, BottomSheetView, BottomSheetBackdrop, BottomSheetTextInput, BottomSheetBackdropProps } from '@gorhom/bottom-sheet';
 
@@ -99,10 +100,33 @@ export default function FoldersScreen() {
     };
   }, []);
 
+  // Check if screen is focused
+  const isFocused = useIsFocused();
+  const loadTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Reload data when screen comes into focus
   useEffect(() => {
-    loadFoldersData();
+    if (isFocused) {
+      // Clear any pending load
+      if (loadTimerRef.current) {
+        clearTimeout(loadTimerRef.current);
+      }
+
+      // Load immediately
+      loadFoldersData();
+    }
+
+    return () => {
+      if (loadTimerRef.current) {
+        clearTimeout(loadTimerRef.current);
+      }
+    };
+  }, [isFocused, loadFoldersData]);
+
+  // Load view mode only on mount
+  useEffect(() => {
     loadViewMode();
-  }, []); // Only run on mount
+  }, []);
 
   const loadViewMode = async () => {
     try {
@@ -132,29 +156,39 @@ export default function FoldersScreen() {
         setLoading(true);
       }
 
-      // Fetch folders and counts in parallel (optimized - no note data fetched)
+      // Use the counts endpoint instead of fetching all notes
       const [foldersData, noteCounts] = await Promise.all([
         api.getFolders(),
-        api.getNoteCounts()
+        api.getCounts() // Get counts from the API endpoint
       ]);
 
-      if (__DEV__) {
-        console.log(`${isRefresh ? 'Refresh' : 'Initial'} load - Note counts:`, noteCounts);
-      }
-
       // Show only ROOT folders (no parentId) on main screen
-      // Note: For now, we don't show per-folder counts on home screen
-      // Could be added later with a separate API endpoint
-      const rootFolders = foldersData
-        .filter(folder => !folder.parentId)
-        .map(folder => ({ ...folder, noteCount: 0 }));
+      const rootFolders = foldersData.filter(folder => !folder.parentId);
 
-      setAllFolders(rootFolders);
-      setCounts(noteCounts);
+      // When called without folder_id, API returns:
+      // { all: 78, starred: 7, archived: 0, trash: 1, folders: { folderId: { all, starred, ... } } }
+      const foldersObject = noteCounts.folders as Record<string, FolderCounts> | undefined;
 
-      if (__DEV__) {
-        console.log('Updated note counts:', noteCounts);
-      }
+      // Add folder note counts from the API response
+      const rootFoldersWithCounts = rootFolders.map(folder => {
+        const folderCount = foldersObject?.[folder.id];
+        return {
+          ...folder,
+          noteCount: folderCount?.all || 0
+        };
+      });
+
+      setAllFolders(rootFoldersWithCounts);
+
+      // Use the root-level counts from the API
+      const newCounts = {
+        all: noteCounts.all || 0,
+        starred: noteCounts.starred || 0,
+        archived: noteCounts.archived || 0,
+        trash: noteCounts.trash || 0,
+      };
+
+      setCounts(newCounts);
     } catch (error) {
       if (__DEV__) console.error('Failed to load folders data:', error);
       setAllFolders([]);
@@ -189,7 +223,7 @@ export default function FoldersScreen() {
       const createdFolder = await api.createFolder(newFolderName.trim(), selectedColor);
 
       // Add the new folder to the list
-      setAllFolders(prev => [...prev, { ...createdFolder, noteCount: 0 }]);
+      setAllFolders(prev => [...prev, createdFolder]);
 
       // Reset modal state
       setNewFolderName('');

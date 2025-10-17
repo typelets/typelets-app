@@ -15,6 +15,7 @@ export type {
   NoteQueryParams,
   EmptyTrashResponse,
   NoteCounts,
+  FolderCounts,
   ApiUser,
   ApiUserUsage,
   FileAttachment
@@ -39,6 +40,7 @@ export const useApiService = () => {
   // Return combined API surface
   return {
     // Notes methods
+    getCounts: notesApi.getCounts,
     getNotes: notesApi.getNotes,
     getNote: notesApi.getNote,
     createNote: notesApi.createNote,

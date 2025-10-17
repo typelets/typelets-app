@@ -42,6 +42,7 @@ export default function SettingsScreen({ onLogout }: Props) {
   const themeModeSheetRef = useRef<BottomSheetModal>(null);
   const themeColorSheetRef = useRef<BottomSheetModal>(null);
   const securitySheetRef = useRef<BottomSheetModal>(null);
+  const deleteAccountSheetRef = useRef<BottomSheetModal>(null);
   const viewModeSheetRef = useRef<BottomSheetModal>(null);
   const usageSheetRef = useRef<BottomSheetModal>(null);
 
@@ -55,6 +56,7 @@ export default function SettingsScreen({ onLogout }: Props) {
   const themeModeSnapPoints = useMemo(() => ['45%'], []);
   const themeColorSnapPoints = useMemo(() => ['80%'], []);
   const securitySnapPoints = useMemo(() => ['70%'], []);
+  const deleteAccountSnapPoints = useMemo(() => ['60%'], []);
   const viewModeSnapPoints = useMemo(() => ['40%'], []);
   const usageSnapPoints = useMemo(() => ['50%'], []);
 
@@ -154,6 +156,13 @@ export default function SettingsScreen({ onLogout }: Props) {
           subtitle: 'Reset your encryption password',
           icon: 'key-outline',
           onPress: handleResetMasterPassword,
+        },
+        {
+          title: 'Delete Account',
+          subtitle: 'Permanently delete your account',
+          icon: 'trash-outline',
+          isDestructive: true,
+          onPress: () => deleteAccountSheetRef.current?.present(),
         },
         {
           title: 'Logout',
@@ -329,7 +338,7 @@ export default function SettingsScreen({ onLogout }: Props) {
                         <Text style={[
                           styles.settingItemTitle,
                           {
-                            color: theme.colors.foreground
+                            color: item.isDestructive ? '#ef4444' : theme.colors.foreground
                           }
                         ]}>
                           {item.title}
@@ -672,6 +681,100 @@ export default function SettingsScreen({ onLogout }: Props) {
             ))}
           </View>
         </BottomSheetView>
+      </BottomSheetModal>
+
+      {/* Delete Account Bottom Sheet */}
+      <BottomSheetModal
+        ref={deleteAccountSheetRef}
+        snapPoints={deleteAccountSnapPoints}
+        backdropComponent={renderBackdrop}
+        backgroundStyle={{ backgroundColor: theme.colors.card }}
+        handleIndicatorStyle={{ backgroundColor: theme.colors.border }}
+        topInset={45}
+        enableDynamicSizing={false}
+      >
+        <View style={{ paddingBottom: 32 }}>
+          <View style={styles.bottomSheetHeader}>
+            <Text style={[styles.bottomSheetTitle, { color: theme.colors.foreground }]}>
+              Delete Account
+            </Text>
+            <TouchableOpacity
+              style={[styles.iconButton, { backgroundColor: theme.colors.muted }]}
+              onPress={() => deleteAccountSheetRef.current?.dismiss()}
+            >
+              <Ionicons name="close" size={20} color={theme.colors.mutedForeground} />
+            </TouchableOpacity>
+          </View>
+
+          <View style={[styles.divider, { backgroundColor: theme.colors.border }]} />
+
+          <BottomSheetScrollView style={{ paddingHorizontal: 20, paddingTop: 16 }}>
+            <View style={{ gap: 20, paddingBottom: 20 }}>
+              <View>
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
+                  <Ionicons name="warning" size={24} color="#ef4444" style={{ marginRight: 8 }} />
+                  <Text style={[styles.securityFeatureTitle, { color: '#ef4444' }]}>
+                    This action is permanent
+                  </Text>
+                </View>
+                <Text style={[styles.securityFeatureDescription, { color: theme.colors.mutedForeground }]}>
+                  Deleting your account will permanently remove all your notes, folders, and data. This action cannot be undone.
+                </Text>
+              </View>
+
+              <View>
+                <Text style={[styles.securityFeatureTitle, { color: theme.colors.foreground, marginBottom: 12 }]}>
+                  How to delete your account:
+                </Text>
+                <View style={{ gap: 12 }}>
+                  <View style={{ flexDirection: 'row' }}>
+                    <Text style={[styles.securityFeatureDescription, { color: theme.colors.mutedForeground, marginRight: 8 }]}>1.</Text>
+                    <Text style={[styles.securityFeatureDescription, { color: theme.colors.mutedForeground, flex: 1 }]}>
+                      Open the web app by tapping the button below
+                    </Text>
+                  </View>
+                  <View style={{ flexDirection: 'row' }}>
+                    <Text style={[styles.securityFeatureDescription, { color: theme.colors.mutedForeground, marginRight: 8 }]}>2.</Text>
+                    <Text style={[styles.securityFeatureDescription, { color: theme.colors.mutedForeground, flex: 1 }]}>
+                      Sign in with your account credentials
+                    </Text>
+                  </View>
+                  <View style={{ flexDirection: 'row' }}>
+                    <Text style={[styles.securityFeatureDescription, { color: theme.colors.mutedForeground, marginRight: 8 }]}>3.</Text>
+                    <Text style={[styles.securityFeatureDescription, { color: theme.colors.mutedForeground, flex: 1 }]}>
+                      Click on your avatar and select &ldquo;Manage Account&rdquo;
+                    </Text>
+                  </View>
+                  <View style={{ flexDirection: 'row' }}>
+                    <Text style={[styles.securityFeatureDescription, { color: theme.colors.mutedForeground, marginRight: 8 }]}>4.</Text>
+                    <Text style={[styles.securityFeatureDescription, { color: theme.colors.mutedForeground, flex: 1 }]}>
+                      Go to the Security section and select &ldquo;Delete Account&rdquo;
+                    </Text>
+                  </View>
+                </View>
+              </View>
+
+              <TouchableOpacity
+                style={{
+                  backgroundColor: '#ef4444',
+                  paddingVertical: 14,
+                  paddingHorizontal: 20,
+                  borderRadius: 8,
+                  alignItems: 'center',
+                  marginTop: 8,
+                }}
+                onPress={() => {
+                  deleteAccountSheetRef.current?.dismiss();
+                  Linking.openURL('https://app.typelets.com');
+                }}
+              >
+                <Text style={{ color: '#ffffff', fontSize: 16, fontWeight: '600' }}>
+                  Open Web App to Delete Account
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </BottomSheetScrollView>
+        </View>
       </BottomSheetModal>
 
       {/* Usage Bottom Sheet */}

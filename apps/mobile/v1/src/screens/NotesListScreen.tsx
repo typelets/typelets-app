@@ -4,7 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
 import { useFocusEffect } from '@react-navigation/native';
 import { useTheme } from '../theme';
-import { useApiService, type Note, type Folder } from '../services/api';
+import { useApiService, type Note, type Folder, type FolderCounts } from '../services/api';
 import { Ionicons } from '@expo/vector-icons';
 import { NOTE_CARD, FOLDER_CARD, SECTION, FOLDER_COLORS } from '../constants/ui';
 import { BottomSheetModal, BottomSheetView, BottomSheetBackdrop, BottomSheetTextInput, BottomSheetBackdropProps } from '@gorhom/bottom-sheet';
@@ -151,28 +151,28 @@ export default function NotesListScreen({ navigation, route, renderHeader, scrol
       if (!isRefresh) {
         setLoading(true);
       }
-      if (__DEV__) {
-        console.log('🎯 Loading notes for:', { folderId, viewType });
+
+      // Build query params for getNotes to fetch only what we need
+      const queryParams: Record<string, boolean | undefined> = {};
+
+      if (viewType === 'starred') {
+        queryParams.starred = true;
+      } else if (viewType === 'archived') {
+        queryParams.archived = true;
+      } else if (viewType === 'trash') {
+        queryParams.deleted = true;
       }
 
-      const [allNotesData, foldersData] = await Promise.all([
-        api.getNotes(), // Get all notes, filter client-side
-        api.getFolders() // Load all folders to find subfolders
-      ]);
+      // For folder view, we need to get all notes to filter by folderId
+      // (API doesn't support server-side folder filtering yet)
+      const allNotesData = await api.getNotes();
 
-      if (__DEV__) {
-        console.log('📝 All notes received:', allNotesData.length);
-      }
-
-      // Client-side filtering
+      // Client-side filtering for folder
       let filteredNotes = allNotesData;
 
       // First filter by folder if specified
       if (folderId) {
         filteredNotes = filteredNotes.filter(note => note.folderId === folderId);
-        if (__DEV__) {
-          console.log('📁 After folder filter:', filteredNotes.length);
-        }
       }
 
       // Then filter by view type
@@ -202,45 +202,36 @@ export default function NotesListScreen({ navigation, route, renderHeader, scrol
 
       setNotes(filteredNotes);
 
-      // Find subfolders
-      let currentFolderSubfolders: Folder[];
-
+      // Load subfolders and their counts
       if (folderId) {
+        // Get folders and counts in parallel
+        const [foldersData, noteCounts] = await Promise.all([
+          api.getFolders(),
+          api.getCounts(folderId) // Get counts for subfolders of this folder
+        ]);
+
         // If viewing a specific folder, show its subfolders
-        currentFolderSubfolders = foldersData.filter(folder => folder.parentId === folderId);
+        const currentFolderSubfolders = foldersData.filter(folder => folder.parentId === folderId);
+
+        // Add note counts from the API response
+        // API returns folder counts directly as { folderId: { all, starred, ... } }
+        const subfoldersWithCounts = currentFolderSubfolders.map(folder => {
+          const folderCount = noteCounts[folder.id] as FolderCounts | undefined;
+          return {
+            ...folder,
+            noteCount: folderCount?.all || 0
+          };
+        });
+
+        setSubfolders(subfoldersWithCounts);
+        setAllFolders(foldersData);
       } else {
         // Don't show folders in special views (all, starred, archived, trash)
-        currentFolderSubfolders = [];
+        setSubfolders([]);
+        // Still need folders for displaying folder info in note list
+        const foldersData = await api.getFolders();
+        setAllFolders(foldersData);
       }
-
-      // Recursive function to get all nested folder IDs
-      const getAllNestedFolderIds = (parentFolderId: string): string[] => {
-        const ids = [parentFolderId];
-        const childFolders = foldersData.filter(f => f.parentId === parentFolderId);
-        childFolders.forEach(childFolder => {
-          ids.push(...getAllNestedFolderIds(childFolder.id));
-        });
-        return ids;
-      };
-
-      // Add note counts to subfolders (including nested subfolder notes)
-      const subfoldersWithCounts = currentFolderSubfolders.map(folder => {
-        const allNestedFolderIds = getAllNestedFolderIds(folder.id);
-        const folderNotes = allNotesData.filter(note =>
-          allNestedFolderIds.includes(note.folderId || '') &&
-          !note.deleted &&
-          !note.archived
-        );
-
-        return {
-          ...folder,
-          noteCount: folderNotes.length
-        };
-      });
-      setSubfolders(subfoldersWithCounts);
-
-      // Store all folders for looking up note folder info
-      setAllFolders(foldersData);
     } catch (error) {
       if (__DEV__) console.error('Failed to load notes:', error);
       Alert.alert('Error', 'Failed to load notes. Please try again.');
@@ -263,7 +254,7 @@ export default function NotesListScreen({ navigation, route, renderHeader, scrol
       setIsCreatingFolder(true);
       const createdFolder = await api.createFolder(newFolderName.trim(), selectedColor, folderId);
 
-      // Add the new folder to the subfolders list
+      // Add the new folder to the subfolders list (count will be 0 for new folders)
       setSubfolders(prev => [...prev, { ...createdFolder, noteCount: 0 }]);
 
       // Reset modal state

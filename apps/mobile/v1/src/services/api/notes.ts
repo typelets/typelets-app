@@ -19,6 +19,29 @@ export function createNotesApi(getToken: AuthTokenGetter, getUserId: () => strin
 
   return {
     /**
+     * Get note counts by category
+     * Optionally can get counts for a specific folder's children
+     */
+    async getCounts(folderId?: string): Promise<NoteCounts> {
+      try {
+        const params = folderId ? `?folder_id=${folderId}` : '';
+        const counts = await makeRequest<NoteCounts | null>(`/notes/counts${params}`);
+
+        // Handle null response
+        if (!counts) {
+          return { all: 0, starred: 0, archived: 0, trash: 0 };
+        }
+
+        return counts;
+      } catch (error) {
+        logger.error('Failed to get note counts', error as Error, {
+          attributes: { operation: 'getCounts', folderId },
+        });
+        return { all: 0, starred: 0, archived: 0, trash: 0 };
+      }
+    },
+
+    /**
      * Get all notes with optional filters
      */
     async getNotes(params?: NoteQueryParams): Promise<Note[]> {

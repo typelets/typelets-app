@@ -129,3 +129,23 @@ export interface ApiUser {
   updatedAt?: string;
   usage?: ApiUserUsage;
 }
+
+export interface FolderCounts {
+  all: number;
+  starred: number;
+  archived: number;
+  trash: number;
+}
+
+// API returns different formats based on folder_id parameter:
+// - Without folder_id: { all, starred, archived, trash, folders: { folderId: {...} } }
+// - With folder_id: { childFolderId: { all, starred, ... } }
+export interface NoteCounts {
+  all?: number;
+  starred?: number;
+  archived?: number;
+  trash?: number;
+  folders?: Record<string, FolderCounts>;
+  // When folder_id is passed, folder counts are at root level
+  [folderId: string]: number | FolderCounts | Record<string, FolderCounts> | undefined;
+}
