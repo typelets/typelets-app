@@ -1,3 +1,10 @@
+## [1.28.4](https://github.com/typelets/typelets-app/compare/v1.28.3...v1.28.4) (2025-10-17)
+
+
+### Bug Fixes
+
+* folder counts not updating and performance issues ([b63aae9](https://github.com/typelets/typelets-app/commit/b63aae98ebfce2b4a86129dfac2226c6b0b1680e))
+
 ## [1.28.3](https://github.com/typelets/typelets-app/compare/v1.28.2...v1.28.3) (2025-10-16)
 
 
