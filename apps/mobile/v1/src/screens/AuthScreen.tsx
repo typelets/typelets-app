@@ -16,8 +16,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useSignIn, useSignUp } from '@clerk/clerk-expo';
 import { useTheme } from '../theme';
-import { Button } from '../components/ui/Button';
-import { Input } from '../components/ui/Input';
+import { Button , Input } from '@/src/components/ui';
 import { Ionicons } from '@expo/vector-icons';
 import { logger } from '../lib/logger';
 
@@ -42,7 +41,7 @@ interface ClerkUpdateParams {
  * Type for Clerk error objects
  */
 interface ClerkError {
-  errors?: Array<{ message?: string }>;
+  errors?: { message?: string }[];
 }
 
 /**
@@ -161,7 +160,7 @@ export default function AuthScreen() {
         message = 'Email or password is incorrect';
       }
 
-      logger.error('Sign in failed', err, {
+      logger.error('Sign in failed', err as Error, {
         attributes: {
           email,
           errorMessage: originalMessage,
@@ -185,7 +184,7 @@ export default function AuthScreen() {
 
     try {
       // Create sign up with all required fields including legal acceptance
-      const result = await signUp.create({
+      await signUp.create({
         emailAddress: email,
         password,
         firstName,
@@ -215,7 +214,7 @@ export default function AuthScreen() {
         message = 'Unable to create account';
       }
 
-      logger.error('Sign up failed', err, {
+      logger.error('Sign up failed', err as Error, {
         attributes: {
           email,
           firstName,
@@ -246,7 +245,7 @@ export default function AuthScreen() {
         await signUp.update({
           legalAccepted: true,
         } as ClerkUpdateParams);
-      } catch (err1: unknown) {
+      } catch {
         try {
           // Approach 2: Update with legalAcceptedAt timestamp
           await signUp.update({
@@ -254,7 +253,7 @@ export default function AuthScreen() {
           } as ClerkUpdateParams);
         } catch (err2: unknown) {
           if (__DEV__) {
-            const error = err2 as { errors?: Array<{ message?: string }> };
+            const error = err2 as { errors?: { message?: string }[] };
             console.log('Legal update error:', error.errors?.[0]?.message);
           }
         }
@@ -285,7 +284,7 @@ export default function AuthScreen() {
     } catch (err: unknown) {
       const error = err as ClerkError;
       const message = error.errors?.[0]?.message || 'Invalid verification code';
-      logger.error('Email verification failed', err, {
+      logger.error('Email verification failed', err as Error, {
         attributes: {
           email,
           errorMessage: message,
@@ -374,7 +373,7 @@ export default function AuthScreen() {
       const message = error.errors?.[0]?.message || 'Failed to send reset code';
       setErrorMessage(message);
       showToast(message);
-      logger.error('Password reset code send failed', err, {
+      logger.error('Password reset code send failed', err as Error, {
         attributes: { email },
       });
     } finally {
@@ -410,7 +409,7 @@ export default function AuthScreen() {
       const message = error.errors?.[0]?.message || 'Invalid reset code';
       setErrorMessage(message);
       showToast(message);
-      logger.error('Password reset code verification failed', err, {
+      logger.error('Password reset code verification failed', err as Error, {
         attributes: { email },
       });
     } finally {
@@ -423,6 +422,17 @@ export default function AuthScreen() {
    */
   const handleCompletePasswordReset = async () => {
     if (!signInLoaded) return;
+
+    // Security: Verify PIN was validated before allowing password reset
+    if (!resetPasswordVerified) {
+      const message = 'Please verify your reset code first';
+      setErrorMessage(message);
+      showToast(message);
+      logger.warn('Attempted password reset without PIN verification', {
+        attributes: { email },
+      });
+      return;
+    }
 
     if (!newPassword.trim()) {
       const message = 'Please enter a new password';
@@ -460,7 +470,7 @@ export default function AuthScreen() {
       const message = error.errors?.[0]?.message || 'Failed to reset password';
       setErrorMessage(message);
       showToast(message);
-      logger.error('Password reset completion failed', err, {
+      logger.error('Password reset completion failed', err as Error, {
         attributes: { email },
       });
     } finally {
