@@ -88,6 +88,58 @@ function determineHasMorePages<T>(
 }
 
 /**
+ * Fetches all pages in parallel (after fetching page 1 to determine total)
+ * Much faster than sequential pagination - eliminates artificial delays and waits
+ * @param fetchPage - Function that fetches a single page of data
+ * @param extractData - Function that extracts the data array from the response
+ * @returns Array of all items across all pages
+ */
+export async function fetchAllPagesParallel<TResponse, TItem>(
+  fetchPage: (page: number) => Promise<TResponse>,
+  extractData: (response: TResponse) => TItem[]
+): Promise<TItem[]> {
+  // Step 1: Fetch first page to get metadata
+  const firstPageResponse = await fetchPage(1);
+  const firstPageItems = extractData(firstPageResponse);
+
+  // Step 2: Determine how many total pages exist
+  const resp = firstPageResponse as PaginationResponse<unknown>;
+  let totalPages = 1;
+
+  if (resp.pagination) {
+    totalPages = resp.pagination.totalPages ?? resp.pagination.pages ?? 1;
+  } else if (resp.total !== undefined && resp.limit !== undefined) {
+    totalPages = Math.ceil(resp.total / resp.limit);
+  } else if (firstPageItems.length >= DEFAULT_PAGE_LIMIT) {
+    // Got a full page, assume there might be more
+    // But we can't know for sure, so we'll just return what we got
+    return firstPageItems;
+  }
+
+  // Step 3: If only one page, return immediately
+  if (totalPages <= 1) {
+    return firstPageItems;
+  }
+
+  // Step 4: Create promises for ALL remaining pages (in parallel!)
+  const remainingPagePromises: Promise<TItem[]>[] = [];
+  for (let page = 2; page <= Math.min(totalPages, MAX_PAGES); page++) {
+    remainingPagePromises.push(
+      fetchPage(page).then(response => extractData(response))
+    );
+  }
+
+  // Step 5: Execute ALL requests in parallel
+  const remainingPages = await Promise.all(remainingPagePromises);
+
+  // Step 6: Flatten and combine with first page
+  return [
+    ...firstPageItems,
+    ...remainingPages.flat()
+  ];
+}
+
+/**
  * Creates URL search params with pagination
  */
 export function createPaginationParams(
