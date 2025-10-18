@@ -14,13 +14,26 @@ export type ErrorSeverity = 'low' | 'medium' | 'high' | 'critical';
 // VALIDATION_001-002: Validation errors
 // UNKNOWN_ERROR: Fallback
 export type ErrorCode =
-  | 'AUTH_001' | 'AUTH_002' | 'AUTH_003'
-  | 'CRYPTO_001' | 'CRYPTO_002' | 'CRYPTO_003'
-  | 'NETWORK_001' | 'NETWORK_002' | 'NETWORK_003'
-  | 'STORAGE_001' | 'STORAGE_002' | 'STORAGE_003'
-  | 'WS_001' | 'WS_002' | 'WS_003'
-  | 'FILE_001' | 'FILE_002' | 'FILE_003'
-  | 'VALIDATION_001' | 'VALIDATION_002'
+  | 'AUTH_001'
+  | 'AUTH_002'
+  | 'AUTH_003'
+  | 'CRYPTO_001'
+  | 'CRYPTO_002'
+  | 'CRYPTO_003'
+  | 'NETWORK_001'
+  | 'NETWORK_002'
+  | 'NETWORK_003'
+  | 'STORAGE_001'
+  | 'STORAGE_002'
+  | 'STORAGE_003'
+  | 'WS_001'
+  | 'WS_002'
+  | 'WS_003'
+  | 'FILE_001'
+  | 'FILE_002'
+  | 'FILE_003'
+  | 'VALIDATION_001'
+  | 'VALIDATION_002'
   | 'UNKNOWN_ERROR';
 
 export class SecureError extends Error {
@@ -56,8 +69,8 @@ export class SecureError extends Error {
       // Only include stack trace in development
       ...(process.env.NODE_ENV === 'development' && {
         message: this.message,
-        stack: this.stack
-      })
+        stack: this.stack,
+      }),
     };
   }
 
@@ -67,7 +80,7 @@ export class SecureError extends Error {
   getClientDetails(): { message: string; code: ErrorCode } {
     return {
       message: this.userMessage,
-      code: this.code
+      code: this.code,
     };
   }
 }
@@ -75,7 +88,10 @@ export class SecureError extends Error {
 /**
  * Sanitize any error into a SecureError
  */
-export function sanitizeError(error: unknown, fallbackMessage: string = 'An unexpected error occurred'): SecureError {
+export function sanitizeError(
+  error: unknown,
+  fallbackMessage: string = 'An unexpected error occurred'
+): SecureError {
   if (error instanceof SecureError) {
     return error;
   }
@@ -107,7 +123,7 @@ export function sanitizeError(error: unknown, fallbackMessage: string = 'An unex
 export function logSecureError(error: SecureError, context?: string): void {
   const logData = {
     ...error.getLogDetails(),
-    ...(context && { context })
+    ...(context && { context }),
   };
 
   // Use appropriate log level based on severity
@@ -260,5 +276,5 @@ export const SECURE_ERRORS = {
     'Please fill in all required fields.',
     'VALIDATION_002',
     'low'
-  )
+  ),
 } as const;

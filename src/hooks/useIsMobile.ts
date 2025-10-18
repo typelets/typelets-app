@@ -66,9 +66,10 @@ export function useIsMobileDevice(): boolean {
 
   useEffect(() => {
     const userAgent = navigator.userAgent || navigator.vendor;
-    const isMobileUA = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(
-      userAgent.toLowerCase()
-    );
+    const isMobileUA =
+      /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(
+        userAgent.toLowerCase()
+      );
     setIsMobile(isMobileUA);
   }, []);
 

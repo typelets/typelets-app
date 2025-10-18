@@ -160,7 +160,8 @@ const commands: CommandItem[] = [
     title: 'Executable Code Block',
     icon: <Play className="h-4 w-4" />,
     command: ({ editor, range }) => {
-      editor.chain()
+      editor
+        .chain()
         .focus()
         .deleteRange(range)
         .setExecutableCodeBlock({ language: 'javascript' })

@@ -2,7 +2,8 @@ import { Lock, Cloud, ExternalLink } from 'lucide-react';
 import { useMobilePlatform } from '@/hooks/useIsMobile';
 import { useState } from 'react';
 
-const ANDROID_STORE_URL = 'https://play.google.com/store/apps/details?id=com.typelets.notes&pcampaignid=web_share';
+const ANDROID_STORE_URL =
+  'https://play.google.com/store/apps/details?id=com.typelets.notes&pcampaignid=web_share';
 
 export function MobileAppDownload() {
   const platform = useMobilePlatform();
@@ -10,7 +11,9 @@ export function MobileAppDownload() {
 
   return (
     <div className="bg-background flex min-h-screen flex-col items-center p-6 pt-8">
-      <div className={`w-full max-w-md space-y-6 text-center transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}>
+      <div
+        className={`w-full max-w-md space-y-6 text-center transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+      >
         {/* App Icon/Logo */}
         <div className="mx-auto flex h-32 w-32 items-center justify-center">
           <img
@@ -36,7 +39,9 @@ export function MobileAppDownload() {
               <Lock className="text-foreground h-5 w-5" />
             </div>
             <div className="flex-1">
-              <h3 className="text-foreground font-semibold">End-to-End Encrypted</h3>
+              <h3 className="text-foreground font-semibold">
+                End-to-End Encrypted
+              </h3>
               <p className="text-muted-foreground text-sm">
                 Your notes are encrypted on your device
               </p>
@@ -59,10 +64,7 @@ export function MobileAppDownload() {
         {/* Download Button */}
         <div className="space-y-4 pt-4">
           {platform === 'android' ? (
-            <a
-              href={ANDROID_STORE_URL}
-              className="inline-block"
-            >
+            <a href={ANDROID_STORE_URL} className="inline-block">
               <img
                 src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png"
                 alt="Get it on Google Play"
@@ -71,13 +73,12 @@ export function MobileAppDownload() {
             </a>
           ) : platform === 'ios' ? (
             <div className="bg-muted rounded-lg p-4">
-              <p className="text-foreground font-semibold">iOS App Coming Soon</p>
+              <p className="text-foreground font-semibold">
+                iOS App Coming Soon
+              </p>
             </div>
           ) : (
-            <a
-              href={ANDROID_STORE_URL}
-              className="inline-block"
-            >
+            <a href={ANDROID_STORE_URL} className="inline-block">
               <img
                 src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png"
                 alt="Get it on Google Play"

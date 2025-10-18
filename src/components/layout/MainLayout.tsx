@@ -138,46 +138,49 @@ export default function MainLayout() {
     }, 1500);
   }, [setSelectedNote]);
 
-  const handleRefreshNote = useCallback(async (noteId: string) => {
-    try {
-      const apiNote = await api.getNote(noteId);
-      const refreshedNote: Note = {
-        ...apiNote,
-        createdAt: new Date(apiNote.createdAt),
-        updatedAt: new Date(apiNote.updatedAt),
-        hiddenAt: apiNote.hiddenAt ? new Date(apiNote.hiddenAt) : null,
-      };
+  const handleRefreshNote = useCallback(
+    async (noteId: string) => {
+      try {
+        const apiNote = await api.getNote(noteId);
+        const refreshedNote: Note = {
+          ...apiNote,
+          createdAt: new Date(apiNote.createdAt),
+          updatedAt: new Date(apiNote.updatedAt),
+          hiddenAt: apiNote.hiddenAt ? new Date(apiNote.hiddenAt) : null,
+        };
 
-      // Update the note in the notes list
-      setNotes((prev) =>
-        prev.map((note) => {
-          if (note.id === noteId) {
-            // Preserve attachments and folder from local state
+        // Update the note in the notes list
+        setNotes((prev) =>
+          prev.map((note) => {
+            if (note.id === noteId) {
+              // Preserve attachments and folder from local state
+              return {
+                ...refreshedNote,
+                attachments: note.attachments,
+                folder: note.folder,
+              };
+            }
+            return note;
+          })
+        );
+
+        // Update selected note
+        setSelectedNote((prev) => {
+          if (prev?.id === noteId) {
             return {
               ...refreshedNote,
-              attachments: note.attachments,
-              folder: note.folder,
+              attachments: prev.attachments,
+              folder: prev.folder,
             };
           }
-          return note;
-        })
-      );
-
-      // Update selected note
-      setSelectedNote((prev) => {
-        if (prev?.id === noteId) {
-          return {
-            ...refreshedNote,
-            attachments: prev.attachments,
-            folder: prev.folder,
-          };
-        }
-        return prev;
-      });
-    } catch (error) {
-      console.error('Failed to refresh note:', error);
-    }
-  }, [setSelectedNote, setNotes]);
+          return prev;
+        });
+      } catch (error) {
+        console.error('Failed to refresh note:', error);
+      }
+    },
+    [setSelectedNote, setNotes]
+  );
 
   const handleMasterPasswordUnlock = useCallback(() => {
     handleUnlockSuccess();

@@ -3,7 +3,11 @@ import {
   decryptNoteData,
   isNoteEncrypted,
 } from '../encryption';
-import { SecureError, logSecureError, sanitizeError } from '../errors/SecureError';
+import {
+  SecureError,
+  logSecureError,
+  sanitizeError,
+} from '../errors/SecureError';
 
 const VITE_API_URL = import.meta.env.VITE_API_URL as string;
 
@@ -167,7 +171,10 @@ class ClerkEncryptedApiService {
       if (error instanceof SecureError) {
         throw error;
       }
-      const secureError = sanitizeError(error, 'Network request failed. Please check your connection.');
+      const secureError = sanitizeError(
+        error,
+        'Network request failed. Please check your connection.'
+      );
       logSecureError(secureError, 'ApiService.request');
       throw secureError;
     }
@@ -235,7 +242,12 @@ class ClerkEncryptedApiService {
       const result = await encryptNoteData(this.currentUserId, title, content);
 
       // Validate that encryption actually worked
-      if (!result.encryptedTitle || !result.encryptedContent || !result.iv || !result.salt) {
+      if (
+        !result.encryptedTitle ||
+        !result.encryptedContent ||
+        !result.iv ||
+        !result.salt
+      ) {
         throw new SecureError(
           'Encryption returned invalid data',
           'Failed to encrypt note data',
@@ -324,13 +336,18 @@ class ClerkEncryptedApiService {
     const notePayload = {
       ...restNoteData,
       // Set title and content to [ENCRYPTED] to indicate encrypted data
-      title: "[ENCRYPTED]",
-      content: "[ENCRYPTED]",
+      title: '[ENCRYPTED]',
+      content: '[ENCRYPTED]',
       ...encryptedData,
     };
 
     // Final validation: ensure no unencrypted data is sent
-    if (!notePayload.encryptedTitle || !notePayload.encryptedContent || !notePayload.iv || !notePayload.salt) {
+    if (
+      !notePayload.encryptedTitle ||
+      !notePayload.encryptedContent ||
+      !notePayload.iv ||
+      !notePayload.salt
+    ) {
       throw new SecureError(
         'Attempted to send note without proper encryption',
         'Failed to encrypt note. Please try again.',
@@ -340,7 +357,7 @@ class ClerkEncryptedApiService {
     }
 
     // CRITICAL SECURITY CHECK: Ensure no unencrypted title/content is being sent
-    if (notePayload.title && notePayload.title !== "[ENCRYPTED]") {
+    if (notePayload.title && notePayload.title !== '[ENCRYPTED]') {
       throw new SecureError(
         'Attempted to send unencrypted title in note creation',
         'Security violation: unencrypted data detected',
@@ -348,7 +365,7 @@ class ClerkEncryptedApiService {
         'critical'
       );
     }
-    if (notePayload.content && notePayload.content !== "[ENCRYPTED]") {
+    if (notePayload.content && notePayload.content !== '[ENCRYPTED]') {
       throw new SecureError(
         'Attempted to send unencrypted content in note creation',
         'Security violation: unencrypted data detected',
@@ -391,14 +408,19 @@ class ClerkEncryptedApiService {
       encryptedUpdates = {
         ...restUpdates,
         // Set title and content to [ENCRYPTED] to indicate encrypted data
-        title: "[ENCRYPTED]",
-        content: "[ENCRYPTED]",
+        title: '[ENCRYPTED]',
+        content: '[ENCRYPTED]',
         ...encrypted,
       };
 
       // Validate that content/title updates have proper encryption
       if (updates.title !== undefined || updates.content !== undefined) {
-        if (!encrypted.encryptedTitle || !encrypted.encryptedContent || !encrypted.iv || !encrypted.salt) {
+        if (
+          !encrypted.encryptedTitle ||
+          !encrypted.encryptedContent ||
+          !encrypted.iv ||
+          !encrypted.salt
+        ) {
           throw new SecureError(
             'Attempted to update note without proper encryption',
             'Failed to encrypt note update. Please try again.',
@@ -427,7 +449,7 @@ class ClerkEncryptedApiService {
     });
 
     // CRITICAL SECURITY CHECK: Ensure no unencrypted title/content is being sent
-    if (cleanedUpdates.title && cleanedUpdates.title !== "[ENCRYPTED]") {
+    if (cleanedUpdates.title && cleanedUpdates.title !== '[ENCRYPTED]') {
       throw new SecureError(
         'Attempted to send unencrypted title in note update',
         'Security violation: unencrypted data detected',
@@ -435,7 +457,7 @@ class ClerkEncryptedApiService {
         'critical'
       );
     }
-    if (cleanedUpdates.content && cleanedUpdates.content !== "[ENCRYPTED]") {
+    if (cleanedUpdates.content && cleanedUpdates.content !== '[ENCRYPTED]') {
       throw new SecureError(
         'Attempted to send unencrypted content in note update',
         'Security violation: unencrypted data detected',

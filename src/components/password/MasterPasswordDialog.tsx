@@ -119,8 +119,13 @@ export function MasterPasswordDialog({
                 <div className="flex items-start gap-2">
                   <span className="text-base">⚠️</span>
                   <div>
-                    <p className="font-medium mb-1">Important Security Notice</p>
-                    <p>This password cannot be recovered if forgotten. Your notes will be permanently inaccessible without it.</p>
+                    <p className="mb-1 font-medium">
+                      Important Security Notice
+                    </p>
+                    <p>
+                      This password cannot be recovered if forgotten. Your notes
+                      will be permanently inaccessible without it.
+                    </p>
                   </div>
                 </div>
               </div>
@@ -145,7 +150,10 @@ export function MasterPasswordDialog({
 
               {isNewSetup && (
                 <div className="space-y-2">
-                  <label htmlFor="confirmPassword" className="text-sm font-medium">
+                  <label
+                    htmlFor="confirmPassword"
+                    className="text-sm font-medium"
+                  >
                     Confirm Password
                   </label>
                   <Input
@@ -161,17 +169,13 @@ export function MasterPasswordDialog({
               )}
 
               {error && (
-                <div className="bg-destructive/10 text-destructive rounded-lg px-3 py-2 text-sm border border-destructive/20">
+                <div className="bg-destructive/10 text-destructive border-destructive/20 rounded-lg border px-3 py-2 text-sm">
                   {error}
                 </div>
               )}
 
               <div className="flex gap-3 pt-4">
-                <Button
-                  type="submit"
-                  disabled={isLoading}
-                  className="flex-1"
-                >
+                <Button type="submit" disabled={isLoading} className="flex-1">
                   {isLoading ? (
                     <>
                       <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
@@ -200,10 +204,12 @@ export function MasterPasswordDialog({
             {!isNewSetup && (
               <div className="border-border mt-6 border-t pt-4">
                 <p className="text-muted-foreground text-sm">
-                  <span className="font-medium">Forgot your master password?</span>
+                  <span className="font-medium">
+                    Forgot your master password?
+                  </span>
                   <br />
-                  Unfortunately, your notes cannot be recovered without it due to
-                  the end-to-end encryption.
+                  Unfortunately, your notes cannot be recovered without it due
+                  to the end-to-end encryption.
                 </p>
               </div>
             )}

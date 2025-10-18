@@ -18,7 +18,9 @@ declare module '@tiptap/core' {
       /**
        * Toggle an executable code block
        */
-      toggleExecutableCodeBlock: (attributes?: { language: string }) => ReturnType;
+      toggleExecutableCodeBlock: (attributes?: {
+        language: string;
+      }) => ReturnType;
     };
   }
 }
@@ -52,12 +54,12 @@ export const ExecutableCodeBlock = Node.create<ExecutableCodeBlockOptions>({
     return {
       language: {
         default: this.options.defaultLanguage,
-        parseHTML: element => {
+        parseHTML: (element) => {
           const { languageClassPrefix } = this.options;
           const classNames = [...(element.firstElementChild?.classList || [])];
           const languages = classNames
-            .filter(className => className.startsWith(languageClassPrefix))
-            .map(className => className.replace(languageClassPrefix, ''));
+            .filter((className) => className.startsWith(languageClassPrefix))
+            .map((className) => className.replace(languageClassPrefix, ''));
           const language = languages[0];
 
           if (!language) {
@@ -70,10 +72,10 @@ export const ExecutableCodeBlock = Node.create<ExecutableCodeBlockOptions>({
       },
       executable: {
         default: false,
-        parseHTML: element => {
+        parseHTML: (element) => {
           return element.getAttribute('data-executable') === 'true';
         },
-        renderHTML: attributes => {
+        renderHTML: (attributes) => {
           if (!attributes.executable) {
             return {};
           }
@@ -85,11 +87,11 @@ export const ExecutableCodeBlock = Node.create<ExecutableCodeBlockOptions>({
       },
       output: {
         default: null,
-        parseHTML: element => {
+        parseHTML: (element) => {
           const outputData = element.getAttribute('data-output');
           return outputData ? JSON.parse(outputData) : null;
         },
-        renderHTML: attributes => {
+        renderHTML: (attributes) => {
           if (!attributes.output) {
             return {};
           }
@@ -111,8 +113,13 @@ export const ExecutableCodeBlock = Node.create<ExecutableCodeBlockOptions>({
       {
         tag: 'pre',
         getAttrs: (element) => {
-          if (element instanceof HTMLElement && element.hasAttribute('data-executable')) {
-            return { executable: element.getAttribute('data-executable') === 'true' };
+          if (
+            element instanceof HTMLElement &&
+            element.hasAttribute('data-executable')
+          ) {
+            return {
+              executable: element.getAttribute('data-executable') === 'true',
+            };
           }
           return false;
         },
@@ -142,12 +149,12 @@ export const ExecutableCodeBlock = Node.create<ExecutableCodeBlockOptions>({
   addCommands() {
     return {
       setExecutableCodeBlock:
-        attributes =>
+        (attributes) =>
         ({ commands }) => {
           return commands.setNode(this.name, attributes);
         },
       toggleExecutableCodeBlock:
-        attributes =>
+        (attributes) =>
         ({ commands }) => {
           return commands.toggleNode(this.name, 'paragraph', attributes);
         },
@@ -159,7 +166,7 @@ export const ExecutableCodeBlock = Node.create<ExecutableCodeBlockOptions>({
       nodeInputRule({
         find: inputRegex,
         type: this.type,
-        getAttributes: match => ({
+        getAttributes: (match) => ({
           language: match[1],
           executable: true,
         }),

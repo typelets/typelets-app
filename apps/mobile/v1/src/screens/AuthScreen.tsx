@@ -85,6 +85,12 @@ export default function AuthScreen() {
   const [errorMessage, setErrorMessage] = useState('');
   const passwordRef = useRef<TextInput>(null);
 
+  // Password reset states
+  const [pendingPasswordReset, setPendingPasswordReset] = useState(false);
+  const [resetCode, setResetCode] = useState('');
+  const [resetPasswordVerified, setResetPasswordVerified] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+
   // Keyboard handling
   const animatedValue = useRef(new Animated.Value(0)).current;
 
@@ -346,20 +352,117 @@ export default function AuthScreen() {
     if (!signInLoaded) return;
 
     if (!email.trim()) {
-      showToast('Please enter your email address');
+      const message = 'Please enter your email address';
+      setErrorMessage(message);
+      showToast(message);
       return;
     }
 
     setLoading(true);
+    setErrorMessage('');
     try {
       await signIn.create({
         strategy: 'reset_password_email_code',
         identifier: email,
       });
+      setPendingPasswordReset(true);
       setIsForgotPassword(false);
-      showToast('Password reset email sent');
-    } catch {
-      showToast('Failed to send reset email');
+      showToast(`Reset code sent to ${email}`);
+      logger.recordEvent('password_reset_code_sent', { email });
+    } catch (err: unknown) {
+      const error = err as ClerkError;
+      const message = error.errors?.[0]?.message || 'Failed to send reset code';
+      setErrorMessage(message);
+      showToast(message);
+      logger.error('Password reset code send failed', err, {
+        attributes: { email },
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /**
+   * Verify the password reset code (PIN)
+   */
+  const handleVerifyResetCode = async () => {
+    if (!signInLoaded) return;
+    setLoading(true);
+    setErrorMessage('');
+
+    try {
+      const result = await signIn.attemptFirstFactor({
+        strategy: 'reset_password_email_code',
+        code: resetCode,
+      });
+
+      if (result.status === 'complete' || result.status === 'needs_new_password') {
+        setResetPasswordVerified(true);
+        showToast('Code verified! Set your new password');
+        logger.recordEvent('password_reset_code_verified', { email });
+      } else {
+        const message = 'Unable to verify code. Please try again.';
+        setErrorMessage(message);
+        showToast(message);
+      }
+    } catch (err: unknown) {
+      const error = err as ClerkError;
+      const message = error.errors?.[0]?.message || 'Invalid reset code';
+      setErrorMessage(message);
+      showToast(message);
+      logger.error('Password reset code verification failed', err, {
+        attributes: { email },
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /**
+   * Complete the password reset with new password
+   */
+  const handleCompletePasswordReset = async () => {
+    if (!signInLoaded) return;
+
+    if (!newPassword.trim()) {
+      const message = 'Please enter a new password';
+      setErrorMessage(message);
+      showToast(message);
+      return;
+    }
+
+    if (newPassword.length < 8) {
+      const message = 'Password must be at least 8 characters';
+      setErrorMessage(message);
+      showToast(message);
+      return;
+    }
+
+    setLoading(true);
+    setErrorMessage('');
+
+    try {
+      const result = await signIn.resetPassword({
+        password: newPassword,
+      });
+
+      if (result.status === 'complete') {
+        await setActive({ session: result.createdSessionId });
+        showToast('Password reset successful!');
+        logger.recordEvent('password_reset_complete', { email });
+      } else {
+        const message = 'Unable to reset password. Please try again.';
+        setErrorMessage(message);
+        showToast(message);
+      }
+    } catch (err: unknown) {
+      const error = err as ClerkError;
+      const message = error.errors?.[0]?.message || 'Failed to reset password';
+      setErrorMessage(message);
+      showToast(message);
+      logger.error('Password reset completion failed', err, {
+        attributes: { email },
+      });
     } finally {
       setLoading(false);
     }
@@ -384,20 +487,179 @@ export default function AuthScreen() {
           {/* Header */}
           <View style={styles.header}>
             <Text style={[styles.title, { color: theme.colors.foreground }]}>
-              {pendingVerification ? 'Verify Email' : isForgotPassword ? 'Reset Password' : 'Welcome to Typelets'}
+              {pendingVerification
+                ? 'Verify Email'
+                : pendingPasswordReset && !resetPasswordVerified
+                ? 'Verify Reset Code'
+                : resetPasswordVerified
+                ? 'Set New Password'
+                : isForgotPassword
+                ? 'Reset Password'
+                : 'Welcome to Typelets'}
             </Text>
             <Text style={[styles.subtitle, { color: theme.colors.mutedForeground }]}>
               {pendingVerification
-                ? 'Enter the verification code'
-                : isForgotPassword ? 'Enter your email to receive a reset link' : isSignUp ? 'Create your account' : 'Sign in to continue'}
+                ? 'Enter the verification code sent to your email'
+                : pendingPasswordReset && !resetPasswordVerified
+                ? 'Enter the 6-digit code sent to your email'
+                : resetPasswordVerified
+                ? 'Enter your new password'
+                : isForgotPassword
+                ? 'Enter your email to receive a reset code'
+                : isSignUp
+                ? 'Create your account'
+                : 'Sign in to continue'}
             </Text>
           </View>
 
           {/* Form */}
           <View style={styles.formWrapper}>
           <View style={styles.form}>
-            {pendingVerification ? (
-              // Verification Code Form
+            {pendingPasswordReset && !resetPasswordVerified ? (
+              // Password Reset PIN Verification Form
+              <>
+                <TouchableOpacity
+                  activeOpacity={1}
+                  onPress={() => passwordRef.current?.focus()}
+                  style={styles.pinWrapper}
+                >
+                  <View style={styles.pinContainer}>
+                    {[0, 1, 2, 3, 4, 5].map((index) => {
+                      const digit = resetCode[index] || '';
+                      const isFocused = resetCode.length === index;
+
+                      return (
+                        <View
+                          key={index}
+                          style={[
+                            styles.pinBox,
+                            {
+                              borderColor: errorMessage ? '#ef4444' : (isFocused ? theme.colors.primary : theme.colors.border),
+                              backgroundColor: theme.colors.background,
+                            }
+                          ]}
+                        >
+                          <Text style={[styles.pinDigit, { color: theme.colors.foreground }]}>
+                            {digit}
+                          </Text>
+                        </View>
+                      );
+                    })}
+                  </View>
+
+                  {/* Hidden input for keyboard */}
+                  <TextInput
+                    ref={passwordRef}
+                    value={resetCode}
+                    onChangeText={(text) => {
+                      setResetCode(text.replace(/[^0-9]/g, '').slice(0, 6));
+                      if (errorMessage) setErrorMessage('');
+                    }}
+                    keyboardType="number-pad"
+                    maxLength={6}
+                    autoFocus
+                    style={styles.hiddenInput}
+                  />
+                </TouchableOpacity>
+
+                {errorMessage ? (
+                  <Text style={[styles.errorText, { color: '#ef4444', textAlign: 'center', marginTop: -24, marginBottom: 16 }]}>
+                    {errorMessage}
+                  </Text>
+                ) : null}
+
+                <Button
+                  onPress={handleVerifyResetCode}
+                  disabled={loading || resetCode.length !== 6}
+                  style={styles.submitButton}
+                >
+                  {loading ? 'Verifying...' : 'Verify Code'}
+                </Button>
+
+                <Button
+                  variant="ghost"
+                  onPress={() => {
+                    setPendingPasswordReset(false);
+                    setResetCode('');
+                    setErrorMessage('');
+                    setIsForgotPassword(true);
+                  }}
+                  style={styles.switchButton}
+                >
+                  Back to Reset Password
+                </Button>
+              </>
+            ) : resetPasswordVerified ? (
+              // New Password Form
+              <>
+                <View style={styles.inputContainer}>
+                  <Text style={[styles.label, { color: theme.colors.foreground }]}>New Password</Text>
+                  <View style={styles.passwordContainer}>
+                    <TextInput
+                      ref={passwordRef}
+                      style={[
+                        styles.passwordInput,
+                        {
+                          borderColor: errorMessage ? '#ef4444' : theme.colors.input,
+                          color: theme.colors.foreground,
+                          backgroundColor: theme.colors.background,
+                        }
+                      ]}
+                      placeholder="Enter your new password"
+                      placeholderTextColor={theme.colors.mutedForeground}
+                      value={newPassword}
+                      onChangeText={(text) => {
+                        setNewPassword(text);
+                        if (errorMessage) setErrorMessage('');
+                      }}
+                      secureTextEntry={!showPassword}
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      autoFocus
+                      editable={!loading}
+                    />
+                    <TouchableOpacity
+                      style={styles.eyeButton}
+                      onPress={() => setShowPassword(!showPassword)}
+                    >
+                      <Ionicons
+                        name={showPassword ? 'eye-off' : 'eye'}
+                        size={20}
+                        color={theme.colors.mutedForeground}
+                      />
+                    </TouchableOpacity>
+                  </View>
+                  {errorMessage ? (
+                    <Text style={[styles.errorText, { color: '#ef4444' }]}>
+                      {errorMessage}
+                    </Text>
+                  ) : null}
+                </View>
+
+                <Button
+                  onPress={handleCompletePasswordReset}
+                  disabled={loading}
+                  style={styles.submitButton}
+                >
+                  {loading ? 'Resetting...' : 'Reset Password'}
+                </Button>
+
+                <Button
+                  variant="ghost"
+                  onPress={() => {
+                    setResetPasswordVerified(false);
+                    setPendingPasswordReset(false);
+                    setResetCode('');
+                    setNewPassword('');
+                    setErrorMessage('');
+                  }}
+                  style={styles.switchButton}
+                >
+                  Cancel
+                </Button>
+              </>
+            ) : pendingVerification ? (
+              // Email Verification Code Form (Sign Up)
               <>
                 <TouchableOpacity
                   activeOpacity={1}

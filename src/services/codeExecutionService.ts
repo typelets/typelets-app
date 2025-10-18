@@ -65,24 +65,24 @@ class CodeExecutionService {
 
     return {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
+      Authorization: `Bearer ${token}`,
     };
   }
   private readonly JUDGE0_STATUS_CODES: Record<number, string> = {
-    1: "In Queue",
-    2: "Processing",
-    3: "Accepted",
-    4: "Wrong Answer",
-    5: "Time Limit Exceeded",
-    6: "Compilation Error",
-    7: "Runtime Error (SIGSEGV)",
-    8: "Runtime Error (SIGXFSZ)",
-    9: "Runtime Error (SIGFPE)",
-    10: "Runtime Error (SIGABRT)",
-    11: "Runtime Error (NZEC)",
-    12: "Runtime Error (Other)",
-    13: "Internal Error",
-    14: "Exec Format Error"
+    1: 'In Queue',
+    2: 'Processing',
+    3: 'Accepted',
+    4: 'Wrong Answer',
+    5: 'Time Limit Exceeded',
+    6: 'Compilation Error',
+    7: 'Runtime Error (SIGSEGV)',
+    8: 'Runtime Error (SIGXFSZ)',
+    9: 'Runtime Error (SIGFPE)',
+    10: 'Runtime Error (SIGABRT)',
+    11: 'Runtime Error (NZEC)',
+    12: 'Runtime Error (Other)',
+    13: 'Internal Error',
+    14: 'Exec Format Error',
   };
 
   private readonly JUDGE0_LANGUAGE_IDS: Record<SupportedLanguage, number> = {
@@ -103,7 +103,6 @@ class CodeExecutionService {
     sql: 82,
   };
 
-
   async executeCode(
     code: string,
     language: SupportedLanguage,
@@ -112,13 +111,19 @@ class CodeExecutionService {
     const startTime = Date.now();
 
     try {
-      return await this.executeRemote(code, language, startTime, onStatusUpdate);
+      return await this.executeRemote(
+        code,
+        language,
+        startTime,
+        onStatusUpdate
+      );
     } catch (error) {
       return {
         output: '',
-        error: error instanceof Error ? error.message : 'Unknown execution error',
+        error:
+          error instanceof Error ? error.message : 'Unknown execution error',
         executionTime: Date.now() - startTime,
-        language
+        language,
       };
     }
   }
@@ -136,7 +141,7 @@ class CodeExecutionService {
           output: '',
           error: `Language ${language} not supported for remote execution.`,
           executionTime: Date.now() - startTime,
-          language
+          language,
         };
       }
 
@@ -151,7 +156,7 @@ class CodeExecutionService {
           cpu_time_limit: 5,
           memory_limit: 128000,
           wall_time_limit: 10,
-        })
+        }),
       });
 
       if (!response.ok) {
@@ -170,14 +175,18 @@ class CodeExecutionService {
         throw new Error('No submission token returned from Judge0');
       }
 
-      return await this.pollForResult(submissionToken, startTime, language, onStatusUpdate);
-
+      return await this.pollForResult(
+        submissionToken,
+        startTime,
+        language,
+        onStatusUpdate
+      );
     } catch (error) {
       return {
         output: '',
         error: `Remote execution failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
         executionTime: Date.now() - startTime,
-        language
+        language,
       };
     }
   }
@@ -194,9 +203,12 @@ class CodeExecutionService {
     while (pollCount < maxPolls) {
       try {
         const headers = await this.getAuthHeaders();
-        const response = await fetch(`${this.API_BASE_URL}/code/status/${token}`, {
-          headers
-        });
+        const response = await fetch(
+          `${this.API_BASE_URL}/code/status/${token}`,
+          {
+            headers,
+          }
+        );
 
         if (!response.ok) {
           throw new SecureError(
@@ -209,7 +221,11 @@ class CodeExecutionService {
 
         const result = await response.json();
         const statusId = result.status?.id;
-        const statusDescription = statusId ? this.JUDGE0_STATUS_CODES[statusId] || result.status?.description || 'Unknown status' : 'Unknown status';
+        const statusDescription = statusId
+          ? this.JUDGE0_STATUS_CODES[statusId] ||
+            result.status?.description ||
+            'Unknown status'
+          : 'Unknown status';
 
         if (onStatusUpdate && statusId) {
           onStatusUpdate({ id: statusId, description: statusDescription });
@@ -220,12 +236,13 @@ class CodeExecutionService {
             return {
               output: result.stdout || '',
               error: undefined,
-              executionTime: parseFloat(result.time) * 1000 || (Date.now() - startTime),
+              executionTime:
+                parseFloat(result.time) * 1000 || Date.now() - startTime,
               language,
               status: {
                 id: statusId,
-                description: statusDescription
-              }
+                description: statusDescription,
+              },
             };
           } else {
             let errorMessage = statusDescription;
@@ -245,19 +262,19 @@ class CodeExecutionService {
             return {
               output: result.stdout || '',
               error: errorMessage,
-              executionTime: parseFloat(result.time) * 1000 || (Date.now() - startTime),
+              executionTime:
+                parseFloat(result.time) * 1000 || Date.now() - startTime,
               language,
               status: {
                 id: statusId,
-                description: statusDescription
-              }
+                description: statusDescription,
+              },
             };
           }
         }
 
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise((resolve) => setTimeout(resolve, 500));
         pollCount++;
-
       } catch (error) {
         // Re-throw SecureErrors as-is, wrap other errors
         if (error instanceof SecureError) {
@@ -279,8 +296,8 @@ class CodeExecutionService {
       language,
       status: {
         id: 5,
-        description: 'Time Limit Exceeded'
-      }
+        description: 'Time Limit Exceeded',
+      },
     };
   }
 

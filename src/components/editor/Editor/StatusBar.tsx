@@ -36,7 +36,6 @@ export function StatusBar({
   wsLastSync,
   onWsReconnect,
 }: StatusBarProps) {
-
   return (
     <div className="bg-primary/5 dark:bg-primary/10 flex items-center justify-between border-t px-3 py-0.5 font-sans text-[11px]">
       {/* Left side - Word, character count, and reading time */}

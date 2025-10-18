@@ -274,45 +274,45 @@ class EncryptionService {
       const encoder = new TextEncoder();
       const userSecret = await this.getUserSecret(userId);
 
-    if (
-      this.masterPasswordMode &&
-      localStorage.getItem(`enc_master_key_${userId}`)
-    ) {
-      const keyData = this.base64ToUint8Array(userSecret);
-      return crypto.subtle.importKey(
+      if (
+        this.masterPasswordMode &&
+        localStorage.getItem(`enc_master_key_${userId}`)
+      ) {
+        const keyData = this.base64ToUint8Array(userSecret);
+        return crypto.subtle.importKey(
+          'raw',
+          keyData.buffer as ArrayBuffer,
+          { name: ENCRYPTION_CONFIG.ALGORITHM },
+          false,
+          ['encrypt', 'decrypt']
+        );
+      }
+
+      const keyMaterialString = `${userId}-${userSecret}-typelets-secure-v2`;
+
+      const keyMaterial = await crypto.subtle.importKey(
         'raw',
-        keyData.buffer as ArrayBuffer,
-        { name: ENCRYPTION_CONFIG.ALGORITHM },
+        encoder.encode(keyMaterialString),
+        { name: 'PBKDF2' },
+        false,
+        ['deriveKey']
+      );
+
+      return crypto.subtle.deriveKey(
+        {
+          name: 'PBKDF2',
+          salt: salt.buffer as ArrayBuffer,
+          iterations: ENCRYPTION_CONFIG.ITERATIONS,
+          hash: 'SHA-256',
+        },
+        keyMaterial,
+        {
+          name: ENCRYPTION_CONFIG.ALGORITHM,
+          length: ENCRYPTION_CONFIG.KEY_LENGTH,
+        },
         false,
         ['encrypt', 'decrypt']
       );
-    }
-
-    const keyMaterialString = `${userId}-${userSecret}-typelets-secure-v2`;
-
-    const keyMaterial = await crypto.subtle.importKey(
-      'raw',
-      encoder.encode(keyMaterialString),
-      { name: 'PBKDF2' },
-      false,
-      ['deriveKey']
-    );
-
-    return crypto.subtle.deriveKey(
-      {
-        name: 'PBKDF2',
-        salt: salt.buffer as ArrayBuffer,
-        iterations: ENCRYPTION_CONFIG.ITERATIONS,
-        hash: 'SHA-256',
-      },
-      keyMaterial,
-      {
-        name: ENCRYPTION_CONFIG.ALGORITHM,
-        length: ENCRYPTION_CONFIG.KEY_LENGTH,
-      },
-      false,
-      ['encrypt', 'decrypt']
-    );
     } catch (error) {
       throw new SecureError(
         `Key derivation failed: ${error}`,

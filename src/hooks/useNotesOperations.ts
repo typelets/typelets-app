@@ -3,7 +3,11 @@ import { api } from '@/lib/api/api';
 import type { Note, Folder } from '@/types/note';
 import type { UseWebSocketReturn } from './useWebSocket';
 import { secureLogger } from '@/lib/utils/secureLogger';
-import { SecureError, logSecureError, sanitizeError } from '@/lib/errors/SecureError';
+import {
+  SecureError,
+  logSecureError,
+  sanitizeError,
+} from '@/lib/errors/SecureError';
 
 interface UseNotesOperationsParams {
   folders: Folder[];
@@ -167,7 +171,13 @@ export function useNotesOperations({
         clearTimeout(existingTimeout);
       }
 
-      const immediateUpdates = ['starred', 'archived', 'deleted', 'folderId', 'title'];
+      const immediateUpdates = [
+        'starred',
+        'archived',
+        'deleted',
+        'folderId',
+        'title',
+      ];
       const needsImmediateSave = Object.keys(updates).some((key) =>
         immediateUpdates.includes(key)
       );
@@ -223,7 +233,10 @@ export function useNotesOperations({
           }
         } catch (error) {
           const secureError = sanitizeError(error, 'Failed to update note');
-          logSecureError(secureError, 'useNotesOperations.updateNote.immediate');
+          logSecureError(
+            secureError,
+            'useNotesOperations.updateNote.immediate'
+          );
           secureLogger.error('Failed to update note:', error);
           setError(secureError.userMessage);
           void loadData();
@@ -246,8 +259,13 @@ export function useNotesOperations({
                 'CRYPTO_001',
                 'medium'
               );
-              logSecureError(secureError, 'useNotesOperations.updateNote.delayed');
-              secureLogger.error('Failed to update note (delayed) - encryption not ready');
+              logSecureError(
+                secureError,
+                'useNotesOperations.updateNote.delayed'
+              );
+              secureLogger.error(
+                'Failed to update note (delayed) - encryption not ready'
+              );
               setError('Failed to encrypt note changes. Please try again.');
               void loadData();
               return;
@@ -267,7 +285,10 @@ export function useNotesOperations({
             saveTimeoutsRef.current.delete(noteId);
           } catch (error) {
             const secureError = sanitizeError(error, 'Failed to update note');
-            logSecureError(secureError, 'useNotesOperations.updateNote.delayed');
+            logSecureError(
+              secureError,
+              'useNotesOperations.updateNote.delayed'
+            );
             secureLogger.error('Failed to update note (delayed):', error);
             setError(secureError.userMessage);
             void loadData();

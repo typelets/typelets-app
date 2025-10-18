@@ -26,7 +26,7 @@ export function DesktopLayout({
     <div className="bg-background flex h-screen overflow-hidden">
       <FolderPanel isOpen={folderSidebarOpen} {...folderPanelProps} />
       <NotesPanel isOpen={filesPanelOpen} {...filesPanelProps} />
-      <div className="flex flex-1 flex-col min-w-0">
+      <div className="flex min-w-0 flex-1 flex-col">
         <main className="flex-1 overflow-hidden">
           <Index {...editorProps} />
         </main>

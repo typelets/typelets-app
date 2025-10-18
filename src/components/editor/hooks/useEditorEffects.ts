@@ -23,7 +23,6 @@ export function useEditorEffects({
   setBaseFontSize,
   lastContentRef,
 }: UseEditorEffectsProps) {
-
   // Sync editor content with note changes
   useEffect(() => {
     if (!editor || !note || !editor.view) return;
@@ -38,8 +37,8 @@ export function useEditorEffects({
         editor.commands.setContent(note.content || '', {
           emitUpdate: false,
           parseOptions: {
-            preserveWhitespace: 'full'
-          }
+            preserveWhitespace: 'full',
+          },
         });
         lastContentRef.current = note.content || '';
 
@@ -58,7 +57,6 @@ export function useEditorEffects({
         lastContentRef.current = currentContent;
       }
     }
-
   }, [note, editor, updateCounts, lastContentRef]);
 
   // Initialize word count when editor is ready

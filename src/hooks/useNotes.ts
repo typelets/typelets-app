@@ -41,11 +41,7 @@ const safeConvertDates = (item: Note | Folder): void => {
   ) {
     item.updatedAt = new Date(item.updatedAt as unknown as string);
   }
-  if (
-    'hiddenAt' in item &&
-    item.hiddenAt &&
-    !(item.hiddenAt instanceof Date)
-  ) {
+  if ('hiddenAt' in item && item.hiddenAt && !(item.hiddenAt instanceof Date)) {
     item.hiddenAt = new Date(item.hiddenAt as unknown as string);
   }
 };
@@ -204,7 +200,9 @@ export function useNotes() {
             error.message.includes('Token provider not set')
           ) {
             // Don't throw error, just continue without API call
-            secureLogger.warn('Token provider not ready, continuing without API call');
+            secureLogger.warn(
+              'Token provider not ready, continuing without API call'
+            );
           } else {
             // Re-throw for outer catch to handle
             secureLogger.error('Failed to get current user', error);
@@ -420,7 +418,11 @@ export function useNotes() {
     color?: string,
     parentId?: string
   ) => {
-    const newFolder = await restNotesOperations.createFolder(name, color, parentId);
+    const newFolder = await restNotesOperations.createFolder(
+      name,
+      color,
+      parentId
+    );
 
     if (parentId) {
       setExpandedFolders((prev) => new Set([...prev, parentId]));
@@ -455,7 +457,10 @@ export function useNotes() {
   };
 
   const updateFolder = async (folderId: string, updates: Partial<Folder>) => {
-    const updatedFolder = await restNotesOperations.updateFolder(folderId, updates);
+    const updatedFolder = await restNotesOperations.updateFolder(
+      folderId,
+      updates
+    );
 
     if (selectedFolder?.id === folderId) {
       setSelectedFolder(updatedFolder);

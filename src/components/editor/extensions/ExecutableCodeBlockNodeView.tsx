@@ -1,7 +1,19 @@
 import { NodeViewWrapper } from '@tiptap/react';
 import { useState, useRef, useEffect } from 'react';
-import { Play, Square, RotateCcw, ChevronDown, ChevronRight, Sun, Moon } from 'lucide-react';
-import { codeExecutionService, type ExecutionResult, type SupportedLanguage } from '@/services/codeExecutionService';
+import {
+  Play,
+  Square,
+  RotateCcw,
+  ChevronDown,
+  ChevronRight,
+  Sun,
+  Moon,
+} from 'lucide-react';
+import {
+  codeExecutionService,
+  type ExecutionResult,
+  type SupportedLanguage,
+} from '@/services/codeExecutionService';
 import Editor from '@monaco-editor/react';
 import * as monaco from 'monaco-editor';
 import type { Editor as TiptapEditor } from '@tiptap/react';
@@ -71,7 +83,13 @@ interface ExecutableCodeBlockNodeViewProps {
   editor: TiptapEditor;
 }
 
-export function ExecutableCodeBlockNodeView({ node, updateAttributes, selected: _selected, getPos, editor }: ExecutableCodeBlockNodeViewProps) {
+export function ExecutableCodeBlockNodeView({
+  node,
+  updateAttributes,
+  selected: _selected,
+  getPos,
+  editor,
+}: ExecutableCodeBlockNodeViewProps) {
   // Inject custom CSS styles for theme overrides
   useEffect(() => {
     const styleId = 'monaco-theme-override-styles';
@@ -89,14 +107,21 @@ export function ExecutableCodeBlockNodeView({ node, updateAttributes, selected: 
       // Note: This is a simple approach. In production, you might want to reference count
     };
   }, []);
-  const [output, setOutput] = useState<ExecutionResult | null>(node.attrs.output || null);
+  const [output, setOutput] = useState<ExecutionResult | null>(
+    node.attrs.output || null
+  );
   const [isExecuting, setIsExecuting] = useState(false);
-  const [currentStatus, setCurrentStatus] = useState<{ id: number; description: string } | null>(null);
+  const [currentStatus, setCurrentStatus] = useState<{
+    id: number;
+    description: string;
+  } | null>(null);
   const [isOutputCollapsed, setIsOutputCollapsed] = useState(false);
   const [code, setCode] = useState(node.textContent);
   const [editorHeight, setEditorHeight] = useState(300);
   const [isResizing, setIsResizing] = useState(false);
-  const [monacoThemeOverride, setMonacoThemeOverride] = useState<'light' | 'dark'>('dark');
+  const [monacoThemeOverride, setMonacoThemeOverride] = useState<
+    'light' | 'dark'
+  >('dark');
   const nodeRef = useRef<HTMLDivElement>(null);
   const updateTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const monacoRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
@@ -105,9 +130,9 @@ export function ExecutableCodeBlockNodeView({ node, updateAttributes, selected: 
   const isUpdatingFromMonaco = useRef(false);
 
   const language = node.attrs.language || 'javascript';
-  const isExecutable = codeExecutionService.isLanguageSupported(language as SupportedLanguage);
-
-
+  const isExecutable = codeExecutionService.isLanguageSupported(
+    language as SupportedLanguage
+  );
 
   // DISABLED: This effect was causing Monaco editor blinking
   // External sync will be handled differently if needed
@@ -121,13 +146,15 @@ export function ExecutableCodeBlockNodeView({ node, updateAttributes, selected: 
   //   }
   // }, [node.textContent, code]);
 
-
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       if (!isResizing) return;
       e.preventDefault();
       const deltaY = e.clientY - resizeStartY.current;
-      const newHeight = Math.max(150, Math.min(800, resizeStartHeight.current + deltaY));
+      const newHeight = Math.max(
+        150,
+        Math.min(800, resizeStartHeight.current + deltaY)
+      );
       setEditorHeight(newHeight);
 
       // Trigger Monaco layout when height changes (throttled)
@@ -229,7 +256,7 @@ export function ExecutableCodeBlockNodeView({ node, updateAttributes, selected: 
     if (isExecuting || !code.trim()) return;
 
     setIsExecuting(true);
-    setCurrentStatus({ id: 1, description: "In Queue" });
+    setCurrentStatus({ id: 1, description: 'In Queue' });
     setOutput(null); // Clear previous output
     setIsOutputCollapsed(false);
 
@@ -251,7 +278,7 @@ export function ExecutableCodeBlockNodeView({ node, updateAttributes, selected: 
         output: '',
         error: error instanceof Error ? error.message : 'Unknown error',
         executionTime: 0,
-        language: language as SupportedLanguage
+        language: language as SupportedLanguage,
       };
       setOutput(errorResult);
       setCurrentStatus(null);
@@ -268,25 +295,26 @@ export function ExecutableCodeBlockNodeView({ node, updateAttributes, selected: 
     updateAttributes({ output: null });
   };
 
-
-
   return (
     <NodeViewWrapper
       ref={nodeRef}
-      className="executable-code-block-wrapper relative group"
+      className="executable-code-block-wrapper group relative"
       spellCheck={false}
       data-testid="executable-code-block"
       style={{ userSelect: 'none' }}
     >
-      <div className="executable-code-block border border-gray-200 dark:border-gray-600 rounded-lg overflow-hidden bg-white dark:bg-gray-800 shadow-sm mb-4">
+      <div className="executable-code-block mb-4 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-600 dark:bg-gray-800">
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-2 bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600" spellCheck={false}>
+        <div
+          className="flex items-center justify-between border-b border-gray-200 bg-gray-50 px-4 py-2 dark:border-gray-600 dark:bg-gray-700"
+          spellCheck={false}
+        >
           <div className="flex items-center gap-2">
             <div className="relative">
               <select
                 value={language}
                 onChange={(e) => updateAttributes({ language: e.target.value })}
-                className="text-xs font-medium text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-600 border border-gray-200 dark:border-gray-500 rounded px-2 py-1 pr-7 appearance-none cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                className="cursor-pointer appearance-none rounded border border-gray-200 bg-gray-100 px-2 py-1 pr-7 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-200 focus:border-transparent focus:ring-2 focus:ring-blue-500 focus:outline-none dark:border-gray-500 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500"
                 spellCheck={false}
               >
                 <option value="javascript">JavaScript</option>
@@ -305,69 +333,74 @@ export function ExecutableCodeBlockNodeView({ node, updateAttributes, selected: 
                 <option value="bash">Bash</option>
                 <option value="sql">SQL</option>
               </select>
-              <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 w-3 h-3 text-gray-500 dark:text-gray-400 pointer-events-none" />
+              <ChevronDown className="pointer-events-none absolute top-1/2 right-2 h-3 w-3 -translate-y-1/2 transform text-gray-500 dark:text-gray-400" />
             </div>
           </div>
 
           <div className="flex items-center gap-1">
-<button
+            <button
               onClick={() => {
-                setMonacoThemeOverride(monacoThemeOverride === 'light' ? 'dark' : 'light');
+                setMonacoThemeOverride(
+                  monacoThemeOverride === 'light' ? 'dark' : 'light'
+                );
               }}
-              className="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 rounded"
+              className="rounded p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
               title={`Monaco theme: ${monacoThemeOverride} (click to toggle)`}
             >
               {monacoThemeOverride === 'light' ? (
-                <Sun className="w-4 h-4" />
+                <Sun className="h-4 w-4" />
               ) : (
-                <Moon className="w-4 h-4" />
+                <Moon className="h-4 w-4" />
               )}
             </button>
 
             {output && (
               <button
                 onClick={clearOutput}
-                className="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 rounded"
+                className="rounded p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
                 title="Clear output"
               >
-                <RotateCcw className="w-4 h-4" />
+                <RotateCcw className="h-4 w-4" />
               </button>
             )}
 
             {isExecutable && (
               <div className="flex items-center gap-2">
                 {isExecuting && currentStatus && (
-                  <span className={`text-xs px-2 py-1 rounded-full font-medium animate-pulse ${
-                    currentStatus.id === 1
-                      ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300'
-                      : currentStatus.id === 2
-                      ? 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300'
-                      : 'bg-gray-100 text-gray-700 dark:bg-gray-900 dark:text-gray-300'
-                  }`}>
+                  <span
+                    className={`animate-pulse rounded-full px-2 py-1 text-xs font-medium ${
+                      currentStatus.id === 1
+                        ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300'
+                        : currentStatus.id === 2
+                          ? 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300'
+                          : 'bg-gray-100 text-gray-700 dark:bg-gray-900 dark:text-gray-300'
+                    }`}
+                  >
                     {currentStatus.description}
                   </span>
                 )}
                 <button
                   onClick={executeCode}
                   disabled={isExecuting || !code.trim()}
-                  className="flex items-center gap-1 px-2 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                  className="flex items-center gap-1 rounded bg-green-600 px-2 py-1 text-xs text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:bg-gray-400"
                   title="Execute code"
                 >
                   {isExecuting ? (
-                    <Square className="w-3 h-3" />
+                    <Square className="h-3 w-3" />
                   ) : (
-                    <Play className="w-3 h-3" />
+                    <Play className="h-3 w-3" />
                   )}
                   {isExecuting ? 'Running...' : 'Run'}
                 </button>
               </div>
             )}
-
           </div>
         </div>
 
         {/* Code Content */}
-        <div className={`relative w-full ${monacoThemeOverride === 'light' ? 'monaco-light-override' : 'monaco-dark-override'}`}>
+        <div
+          className={`relative w-full ${monacoThemeOverride === 'light' ? 'monaco-light-override' : 'monaco-dark-override'}`}
+        >
           <Editor
             key={`monaco-${node.attrs.language}-${getPos()}`}
             height={`${editorHeight}px`}
@@ -412,9 +445,12 @@ export function ExecutableCodeBlockNodeView({ node, updateAttributes, selected: 
               }, 0);
 
               // Add Ctrl+Enter shortcut to execute code
-              monacoEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => {
-                executeCode();
-              });
+              monacoEditor.addCommand(
+                monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter,
+                () => {
+                  executeCode();
+                }
+              );
 
               // Fix for collapse/expand with IntersectionObserver
               const observer = new IntersectionObserver((entries) => {
@@ -436,12 +472,12 @@ export function ExecutableCodeBlockNodeView({ node, updateAttributes, selected: 
           />
           {/* Resize Handle */}
           <div
-            className={`w-full h-3 cursor-row-resize bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors ${isResizing ? 'bg-blue-200 dark:bg-blue-700' : ''}`}
+            className={`h-3 w-full cursor-row-resize bg-gray-100 transition-colors hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 ${isResizing ? 'bg-blue-200 dark:bg-blue-700' : ''}`}
             onMouseDown={handleResizeStart}
             title="Drag to resize editor"
           >
-            <div className="w-full h-full flex items-center justify-center">
-              <div className="w-6 h-0.5 bg-gray-400 dark:bg-gray-400 rounded-full"></div>
+            <div className="flex h-full w-full items-center justify-center">
+              <div className="h-0.5 w-6 rounded-full bg-gray-400 dark:bg-gray-400"></div>
             </div>
           </div>
         </div>
@@ -450,14 +486,14 @@ export function ExecutableCodeBlockNodeView({ node, updateAttributes, selected: 
         {output && (
           <div className="border-t border-gray-200 dark:border-gray-600">
             <div
-              className="flex items-center justify-between px-4 py-2 bg-gray-50 dark:bg-gray-700 cursor-pointer"
+              className="flex cursor-pointer items-center justify-between bg-gray-50 px-4 py-2 dark:bg-gray-700"
               onClick={() => setIsOutputCollapsed(!isOutputCollapsed)}
             >
               <div className="flex items-center gap-2">
                 {isOutputCollapsed ? (
-                  <ChevronRight className="w-4 h-4 text-gray-500" />
+                  <ChevronRight className="h-4 w-4 text-gray-500" />
                 ) : (
-                  <ChevronDown className="w-4 h-4 text-gray-500" />
+                  <ChevronDown className="h-4 w-4 text-gray-500" />
                 )}
                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                   Output
@@ -466,15 +502,17 @@ export function ExecutableCodeBlockNodeView({ node, updateAttributes, selected: 
                   ({output.executionTime}ms)
                 </span>
                 {output.status && (
-                  <span className={`text-xs px-2 py-1 rounded-full font-medium ${
-                    output.status.id === 3
-                      ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'
-                      : output.status.id === 6
-                      ? 'bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300'
-                      : output.status.id === 5
-                      ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300'
-                      : 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300'
-                  }`}>
+                  <span
+                    className={`rounded-full px-2 py-1 text-xs font-medium ${
+                      output.status.id === 3
+                        ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'
+                        : output.status.id === 6
+                          ? 'bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300'
+                          : output.status.id === 5
+                            ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300'
+                            : 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300'
+                    }`}
+                  >
                     {output.status.description}
                   </span>
                 )}
@@ -483,28 +521,38 @@ export function ExecutableCodeBlockNodeView({ node, updateAttributes, selected: 
 
             {!isOutputCollapsed && (
               <div
-                className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 font-mono p-4 select-text border-t border-gray-200 dark:border-gray-600"
+                className="border-t border-gray-200 bg-white p-4 font-mono text-gray-900 select-text dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
                 style={{
                   fontSize: '14px',
-                  fontFamily: 'Menlo, Monaco, "Courier New", monospace'
+                  fontFamily: 'Menlo, Monaco, "Courier New", monospace',
                 }}
               >
                 {output.error ? (
-                  <div className="text-red-600 dark:text-red-400 whitespace-pre-wrap select-text">
-                    <span className="text-red-700 dark:text-red-500 font-semibold">ERROR:</span> {output.error}
+                  <div className="whitespace-pre-wrap text-red-600 select-text dark:text-red-400">
+                    <span className="font-semibold text-red-700 dark:text-red-500">
+                      ERROR:
+                    </span>{' '}
+                    {output.error}
                   </div>
                 ) : (
                   <div className="whitespace-pre-wrap select-text">
                     {output.output ? (
                       <>
-                        <span className="text-blue-600 dark:text-blue-400 font-semibold">›</span> <span className="text-gray-600 dark:text-gray-400">output:</span>
+                        <span className="font-semibold text-blue-600 dark:text-blue-400">
+                          ›
+                        </span>{' '}
+                        <span className="text-gray-600 dark:text-gray-400">
+                          output:
+                        </span>
                         {'\n'}
                         <span className="text-green-600 dark:text-green-400">
                           {output.output}
                         </span>
                       </>
                     ) : (
-                      <span className="text-gray-500 dark:text-gray-400 italic">(no output)</span>
+                      <span className="text-gray-500 italic dark:text-gray-400">
+                        (no output)
+                      </span>
                     )}
                   </div>
                 )}

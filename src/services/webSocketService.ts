@@ -31,11 +31,7 @@ const sanitizeLogData = (data: unknown): unknown => {
   if (!data) return data;
 
   // Handle auth messages - redact token
-  if (
-    typeof data === 'object' &&
-    'type' in data &&
-    'token' in data
-  ) {
+  if (typeof data === 'object' && 'type' in data && 'token' in data) {
     const authData = data as Record<string, unknown>;
     if (authData.type === 'auth' && authData.token) {
       return {
@@ -685,10 +681,7 @@ class WebSocketService implements WebSocketServiceInterface {
           messageToSend = JSON.stringify(message);
         } else if (message.type === 'ping') {
           // Allow unsigned ping messages for heartbeat - these don't contain sensitive data
-          debugLog(
-            'Send',
-            'Sending ping message unsigned (system heartbeat)'
-          );
+          debugLog('Send', 'Sending ping message unsigned (system heartbeat)');
           messageToSend = JSON.stringify(message);
         } else if (DISABLE_MESSAGE_AUTH) {
           debugLog(

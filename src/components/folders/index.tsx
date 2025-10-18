@@ -212,7 +212,7 @@ export default function FolderPanel({
 
   return (
     <>
-      <div className="border-border bg-background flex h-full w-full flex-col overflow-hidden border-r transition-all duration-300 md:w-64 md:min-w-64 md:max-w-80">
+      <div className="border-border bg-background flex h-full w-full flex-col overflow-hidden border-r transition-all duration-300 md:w-64 md:max-w-80 md:min-w-64">
         <div className="border-border h-17 shrink-0 border-b p-3">
           <div className="flex items-center justify-between">
             <h3 className="text-foreground text-lg font-semibold">Folders</h3>
@@ -307,117 +307,9 @@ export default function FolderPanel({
                 }}
                 afterSignOutUrl="/"
               >
-              <UserButton.MenuItems>
-                <UserButton.Action
-                  label="Usage"
-                  labelIcon={
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M3 3v18h18" />
-                      <path d="m19 9-5 5-4-4-3 3" />
-                    </svg>
-                  }
-                  onClick={() => setShowUsage(true)}
-                />
-                <UserButton.Action
-                  label="Typelets Open Source"
-                  labelIcon={
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
-                    </svg>
-                  }
-                  onClick={() =>
-                    window.open(
-                      'https://github.com/typelets/typelets-app',
-                      '_blank'
-                    )
-                  }
-                />
-                <UserButton.Action
-                  label="What's New"
-                  labelIcon={
-                    <div className="relative">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M8 2v4" />
-                        <path d="M16 2v4" />
-                        <rect width="18" height="18" x="3" y="4" rx="2" />
-                        <path d="M3 10h18" />
-                        <path d="m9 16 2 2 4-4" />
-                      </svg>
-                      {hasNewVersion && (
-                        <span className="absolute -top-1 -right-1 flex h-2 w-2">
-                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                          <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
-                        </span>
-                      )}
-                    </div>
-                  }
-                  onClick={() => {
-                    markVersionAsSeen();
-                    window.open(
-                      'https://github.com/typelets/typelets-app/blob/main/CHANGELOG.md',
-                      '_blank'
-                    );
-                  }}
-                />
-                <UserButton.Action
-                  label="Support"
-                  labelIcon={
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
-                      <path d="M12 17h.01"></path>
-                      <circle cx="12" cy="12" r="10"></circle>
-                    </svg>
-                  }
-                  onClick={() =>
-                    window.open(
-                      'https://github.com/typelets/typelets-app/issues',
-                      '_blank'
-                    )
-                  }
-                />
-                {hasPassword ? (
+                <UserButton.MenuItems>
                   <UserButton.Action
-                    label="Change Master Password"
+                    label="Usage"
                     labelIcon={
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -430,22 +322,14 @@ export default function FolderPanel({
                         strokeLinecap="round"
                         strokeLinejoin="round"
                       >
-                        <rect
-                          x="3"
-                          y="11"
-                          width="18"
-                          height="11"
-                          rx="2"
-                          ry="2"
-                        ></rect>
-                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                        <path d="M3 3v18h18" />
+                        <path d="m19 9-5 5-4-4-3 3" />
                       </svg>
                     }
-                    onClick={() => setShowChangePassword(true)}
+                    onClick={() => setShowUsage(true)}
                   />
-                ) : (
                   <UserButton.Action
-                    label="Setup Master Password"
+                    label="Typelets Open Source"
                     labelIcon={
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -458,25 +342,141 @@ export default function FolderPanel({
                         strokeLinecap="round"
                         strokeLinejoin="round"
                       >
-                        <rect
-                          x="3"
-                          y="11"
-                          width="18"
-                          height="11"
-                          rx="2"
-                          ry="2"
-                        ></rect>
-                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                        <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
                       </svg>
                     }
-                    onClick={() => setShowChangePassword(true)}
+                    onClick={() =>
+                      window.open(
+                        'https://github.com/typelets/typelets-app',
+                        '_blank'
+                      )
+                    }
                   />
-                )}
-              </UserButton.MenuItems>
-            </UserButton>
-            {hasNewVersion && (
-              <div className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-background" />
-            )}
+                  <UserButton.Action
+                    label="What's New"
+                    labelIcon={
+                      <div className="relative">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M8 2v4" />
+                          <path d="M16 2v4" />
+                          <rect width="18" height="18" x="3" y="4" rx="2" />
+                          <path d="M3 10h18" />
+                          <path d="m9 16 2 2 4-4" />
+                        </svg>
+                        {hasNewVersion && (
+                          <span className="absolute -top-1 -right-1 flex h-2 w-2">
+                            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75"></span>
+                            <span className="relative inline-flex h-2 w-2 rounded-full bg-red-500"></span>
+                          </span>
+                        )}
+                      </div>
+                    }
+                    onClick={() => {
+                      markVersionAsSeen();
+                      window.open(
+                        'https://github.com/typelets/typelets-app/blob/main/CHANGELOG.md',
+                        '_blank'
+                      );
+                    }}
+                  />
+                  <UserButton.Action
+                    label="Support"
+                    labelIcon={
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                        <path d="M12 17h.01"></path>
+                        <circle cx="12" cy="12" r="10"></circle>
+                      </svg>
+                    }
+                    onClick={() =>
+                      window.open(
+                        'https://github.com/typelets/typelets-app/issues',
+                        '_blank'
+                      )
+                    }
+                  />
+                  {hasPassword ? (
+                    <UserButton.Action
+                      label="Change Master Password"
+                      labelIcon={
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <rect
+                            x="3"
+                            y="11"
+                            width="18"
+                            height="11"
+                            rx="2"
+                            ry="2"
+                          ></rect>
+                          <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                        </svg>
+                      }
+                      onClick={() => setShowChangePassword(true)}
+                    />
+                  ) : (
+                    <UserButton.Action
+                      label="Setup Master Password"
+                      labelIcon={
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <rect
+                            x="3"
+                            y="11"
+                            width="18"
+                            height="11"
+                            rx="2"
+                            ry="2"
+                          ></rect>
+                          <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                        </svg>
+                      }
+                      onClick={() => setShowChangePassword(true)}
+                    />
+                  )}
+                </UserButton.MenuItems>
+              </UserButton>
+              {hasNewVersion && (
+                <div className="ring-background absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-red-500 ring-2" />
+              )}
             </div>
             <div className="min-w-0 flex-1">
               <div className="text-foreground truncate text-sm font-medium">

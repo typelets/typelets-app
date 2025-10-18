@@ -47,7 +47,9 @@ function AppContent() {
 
   // Check if user wants to force web version
   const urlParams = new URLSearchParams(window.location.search);
-  const forceWeb = urlParams.get('web') === 'true' || localStorage.getItem('forceWebVersion') === 'true';
+  const forceWeb =
+    urlParams.get('web') === 'true' ||
+    localStorage.getItem('forceWebVersion') === 'true';
 
   // Store preference if URL parameter is present
   if (urlParams.get('web') === 'true') {

@@ -286,9 +286,7 @@ export default function Index({
 
                   if (coordinates) {
                     const node = schema.nodes.image.create({ src: result });
-                    view.dispatch(
-                      view.state.tr.insert(coordinates.pos, node)
-                    );
+                    view.dispatch(view.state.tr.insert(coordinates.pos, node));
                   }
                 }
               };
@@ -351,7 +349,6 @@ export default function Index({
     if (editor && note) {
       const currentContent = editor.getHTML();
 
-
       // Only update if content actually changed
       if (note.hidden && currentContent !== '[HIDDEN]') {
         editor.commands.setContent('[HIDDEN]');
@@ -386,22 +383,25 @@ export default function Index({
     }
   }, [note?.id, note?.title]);
 
-  const saveTitleToServer = useCallback((title: string) => {
-    if (!note || title === note.title) return;
+  const saveTitleToServer = useCallback(
+    (title: string) => {
+      if (!note || title === note.title) return;
 
-    setSaveStatus('saving');
-    try {
-      onUpdateNote(note.id, { title });
-      setTimeout(() => {
-        setSaveStatus('saved');
-        isEditingTitleRef.current = false; // Mark editing as complete
-      }, 500);
-    } catch (error) {
-      setSaveStatus('error');
-      console.error('Failed to save title:', error);
-      isEditingTitleRef.current = false; // Mark editing as complete even on error
-    }
-  }, [note, onUpdateNote, setSaveStatus]);
+      setSaveStatus('saving');
+      try {
+        onUpdateNote(note.id, { title });
+        setTimeout(() => {
+          setSaveStatus('saved');
+          isEditingTitleRef.current = false; // Mark editing as complete
+        }, 500);
+      } catch (error) {
+        setSaveStatus('error');
+        console.error('Failed to save title:', error);
+        isEditingTitleRef.current = false; // Mark editing as complete even on error
+      }
+    },
+    [note, onUpdateNote, setSaveStatus]
+  );
 
   const handleTitleChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -723,7 +723,9 @@ export default function Index({
                   title="Refresh note from server"
                   disabled={isRefreshing}
                 >
-                  <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                  <RefreshCw
+                    className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`}
+                  />
                 </Button>
               )}
 

@@ -94,9 +94,11 @@ function NoteCard({
     if (!note?.content) return false;
 
     // Check for executable code block markers
-    return note.content.includes('data-executable="true"') ||
-           note.content.includes('class="executable-code-block"') ||
-           note.content.includes('executableCodeBlock');
+    return (
+      note.content.includes('data-executable="true"') ||
+      note.content.includes('class="executable-code-block"') ||
+      note.content.includes('executableCodeBlock')
+    );
   }, [note?.content]);
 
   if (!note) {
@@ -130,7 +132,10 @@ function NoteCard({
               </span>
             )}
             {hasExecutableCode && (
-              <div className="flex items-center text-xs" title="Contains executable code">
+              <div
+                className="flex items-center text-xs"
+                title="Contains executable code"
+              >
                 <Codesandbox className="h-3.5 w-3.5 text-purple-500" />
               </div>
             )}

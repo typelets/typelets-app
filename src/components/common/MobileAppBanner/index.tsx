@@ -3,7 +3,8 @@ import { X, Smartphone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useMobilePlatform } from '@/hooks/useIsMobile';
 
-const ANDROID_STORE_URL = 'https://play.google.com/store/apps/details?id=com.typelets.notes&pcampaignid=web_share';
+const ANDROID_STORE_URL =
+  'https://play.google.com/store/apps/details?id=com.typelets.notes&pcampaignid=web_share';
 const BANNER_DISMISSED_KEY = 'typelets_mobile_banner_dismissed';
 
 export function MobileAppBanner() {
@@ -35,7 +36,7 @@ export function MobileAppBanner() {
   }
 
   return (
-    <div className="bg-primary text-primary-foreground fixed top-0 left-0 right-0 z-50 border-b shadow-lg">
+    <div className="bg-primary text-primary-foreground fixed top-0 right-0 left-0 z-50 border-b shadow-lg">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 p-4">
         <div className="flex flex-1 items-center gap-3">
           <Smartphone className="h-6 w-6 flex-shrink-0" />
@@ -55,7 +56,7 @@ export function MobileAppBanner() {
               size="sm"
               variant="secondary"
               onClick={handleDownload}
-              className="h-8 whitespace-nowrap text-xs"
+              className="h-8 text-xs whitespace-nowrap"
             >
               Download
             </Button>

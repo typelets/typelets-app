@@ -55,7 +55,8 @@ class MessageAuthenticator {
     };
 
     const encoder = new TextEncoder();
-    const dataToSign = encoder.encode(JSON.stringify(messageData)).buffer as ArrayBuffer;
+    const dataToSign = encoder.encode(JSON.stringify(messageData))
+      .buffer as ArrayBuffer;
 
     // Generate HMAC signature
     const signatureBuffer = await crypto.subtle.sign(
@@ -105,7 +106,8 @@ class MessageAuthenticator {
       };
 
       const encoder = new TextEncoder();
-      const dataToVerify = encoder.encode(JSON.stringify(messageData)).buffer as ArrayBuffer;
+      const dataToVerify = encoder.encode(JSON.stringify(messageData))
+        .buffer as ArrayBuffer;
       const signatureBuffer = this.base64ToArrayBuffer(message.signature);
 
       // Verify HMAC signature
