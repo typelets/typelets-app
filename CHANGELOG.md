@@ -1,3 +1,10 @@
+## [1.28.6](https://github.com/typelets/typelets-app/compare/v1.28.5...v1.28.6) (2025-10-18)
+
+
+### Bug Fixes
+
+* **mobile:** add PIN verification flow to password reset ([cd21052](https://github.com/typelets/typelets-app/commit/cd210526a31e0e62aba26b95959710e5fc977c26))
+
 ## [1.28.5](https://github.com/typelets/typelets-app/compare/v1.28.4...v1.28.5) (2025-10-18)
 
 
