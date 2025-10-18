@@ -3,9 +3,9 @@
  * Handles all folder-related API operations
  */
 
-import { createHttpClient, AuthTokenGetter } from './client';
+import { AuthTokenGetter, createHttpClient } from './client';
 import { Folder, FoldersResponse } from './types';
-import { fetchAllPages, createPaginationParams } from './utils/pagination';
+import { createPaginationParams, fetchAllPagesParallel } from './utils/pagination';
 import { handleApiError } from './utils/errors';
 
 export function createFoldersApi(getToken: AuthTokenGetter) {
@@ -13,19 +13,20 @@ export function createFoldersApi(getToken: AuthTokenGetter) {
 
   return {
     /**
-     * Get all folders with pagination
+     * Get all folders with parallel pagination (optimized for performance)
+     * Fetches pages in parallel instead of sequentially, eliminating delays
      */
     async getFolders(): Promise<Folder[]> {
       try {
-        const allFolders = await fetchAllPages<FoldersResponse, Folder>(
+        return await fetchAllPagesParallel<FoldersResponse, Folder>(
           async (page) => {
             const params = createPaginationParams(page);
-            return await makeRequest<FoldersResponse>(`/folders?${params.toString()}`);
+            return await makeRequest<FoldersResponse>(
+              `/folders?${params.toString()}`
+            );
           },
           (response) => response.folders || []
         );
-
-        return allFolders;
       } catch (error) {
         return handleApiError(error, 'getFolders');
       }
