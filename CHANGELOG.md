@@ -1,3 +1,11 @@
+## [1.28.5](https://github.com/typelets/typelets-app/compare/v1.28.4...v1.28.5) (2025-10-18)
+
+
+### Bug Fixes
+
+* **mobile:** optimize folder loading with parallel pagination ([339a4ff](https://github.com/typelets/typelets-app/commit/339a4ffd1cb6a2a2cab9551a2debc6343c8331a1))
+* **mobile:** update Android build for performance improved API ([ef1d046](https://github.com/typelets/typelets-app/commit/ef1d0467df941219426c1139aa918f910e842d7c))
+
 ## [1.28.4](https://github.com/typelets/typelets-app/compare/v1.28.3...v1.28.4) (2025-10-17)
 
 
