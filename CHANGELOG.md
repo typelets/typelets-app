@@ -1,3 +1,10 @@
+## [1.28.10](https://github.com/typelets/typelets-app/compare/v1.28.9...v1.28.10) (2025-10-19)
+
+
+### Bug Fixes
+
+* infinite loop loading attachments causing rate limit errors ([c7c74aa](https://github.com/typelets/typelets-app/commit/c7c74aab253e3a164fa6fabb8e30e869d46f89b2))
+
 ## [1.28.9](https://github.com/typelets/typelets-app/compare/v1.28.8...v1.28.9) (2025-10-19)
 
 
