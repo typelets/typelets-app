@@ -1,3 +1,10 @@
+## [1.28.11](https://github.com/typelets/typelets-app/compare/v1.28.10...v1.28.11) (2025-10-19)
+
+
+### Bug Fixes
+
+* SSL handshake to backend ([7858c87](https://github.com/typelets/typelets-app/commit/7858c87aae2052a70032f4f1e8747b29c8ca21cf))
+
 ## [1.28.10](https://github.com/typelets/typelets-app/compare/v1.28.9...v1.28.10) (2025-10-19)
 
 
