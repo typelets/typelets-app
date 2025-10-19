@@ -1,3 +1,11 @@
+## [1.28.8](https://github.com/typelets/typelets-app/compare/v1.28.7...v1.28.8) (2025-10-19)
+
+
+### Bug Fixes
+
+* improve Monaco editor theming and empty trash UX ([602d58b](https://github.com/typelets/typelets-app/commit/602d58ba45a909acdbf539dad03915879a62f359))
+* improve Monaco editor theming, empty trash UX, app performance, and editor stability ([b5714a2](https://github.com/typelets/typelets-app/commit/b5714a2650fabd75e3080350ef57825af38ced9a))
+
 ## [1.28.7](https://github.com/typelets/typelets-app/compare/v1.28.6...v1.28.7) (2025-10-18)
 
 
