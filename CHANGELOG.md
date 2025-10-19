@@ -1,3 +1,10 @@
+## [1.28.9](https://github.com/typelets/typelets-app/compare/v1.28.8...v1.28.9) (2025-10-19)
+
+
+### Bug Fixes
+
+* remove Tiptap from code splitting to resolve dependency order error ([ccf7220](https://github.com/typelets/typelets-app/commit/ccf7220746cfdf659b90ff16c5cf9b8ce519273f))
+
 ## [1.28.8](https://github.com/typelets/typelets-app/compare/v1.28.7...v1.28.8) (2025-10-19)
 
 
