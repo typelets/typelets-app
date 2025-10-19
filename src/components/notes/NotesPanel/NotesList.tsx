@@ -1,17 +1,7 @@
 import { useState } from 'react';
 
-import { Trash2, AlertTriangle } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog.tsx';
 import { Button } from '@/components/ui/button.tsx';
 import type { Note, Folder } from '@/types/note.ts';
 
@@ -38,16 +28,15 @@ export default function NotesList({
   emptyMessage,
   folders,
 }: NotesListProps) {
-  const [showEmptyTrashDialog, setShowEmptyTrashDialog] = useState(false);
   const [isEmptyingTrash, setIsEmptyingTrash] = useState(false);
 
   const handleEmptyTrash = async () => {
-    if (!onEmptyTrash) return;
+    if (!onEmptyTrash || isEmptyingTrash) return;
 
     setIsEmptyingTrash(true);
+
     try {
       await onEmptyTrash();
-      setShowEmptyTrashDialog(false);
     } catch (error) {
       console.error('Failed to empty trash:', error);
     } finally {
@@ -70,11 +59,18 @@ export default function NotesList({
               <Button
                 variant="destructive"
                 size="sm"
-                onClick={() => setShowEmptyTrashDialog(true)}
+                onClick={handleEmptyTrash}
+                disabled={isEmptyingTrash}
                 className="h-8"
               >
-                <Trash2 className="mr-2 h-4 w-4" />
-                Empty Trash
+                {isEmptyingTrash ? (
+                  <>
+                    <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    Emptying...
+                  </>
+                ) : (
+                  'Empty Trash'
+                )}
               </Button>
             </div>
           </div>
@@ -98,47 +94,6 @@ export default function NotesList({
           </div>
         )}
       </div>
-
-      <AlertDialog
-        open={showEmptyTrashDialog}
-        onOpenChange={setShowEmptyTrashDialog}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2">
-              <AlertTriangle className="text-destructive h-5 w-5" />
-              Empty Trash
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to permanently delete all {notes.length}{' '}
-              item{notes.length !== 1 ? 's' : ''} in the trash? This action
-              cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isEmptyingTrash}>
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => void handleEmptyTrash()}
-              disabled={isEmptyingTrash}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {isEmptyingTrash ? (
-                <>
-                  <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                  Emptying...
-                </>
-              ) : (
-                <>
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  Empty Trash
-                </>
-              )}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   );
 }
