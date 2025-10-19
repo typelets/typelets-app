@@ -21,24 +21,6 @@ export default defineConfig(({ mode }) => {
             // Monaco Editor - large code editor bundle
             'monaco-editor': ['monaco-editor', '@monaco-editor/react'],
 
-            // Tiptap core - rich text editor core
-            'tiptap-core': ['@tiptap/react', '@tiptap/core', '@tiptap/starter-kit'],
-
-            // Tiptap extensions - split from core for better caching
-            'tiptap-extensions': [
-              '@tiptap/extension-code-block-lowlight',
-              '@tiptap/extension-color',
-              '@tiptap/extension-dropcursor',
-              '@tiptap/extension-highlight',
-              '@tiptap/extension-horizontal-rule',
-              '@tiptap/extension-image',
-              '@tiptap/extension-link',
-              '@tiptap/extension-task-item',
-              '@tiptap/extension-task-list',
-              '@tiptap/extension-text-style',
-              '@tiptap/extension-underline',
-            ],
-
             // Clerk authentication
             'clerk': ['@clerk/clerk-react'],
 
