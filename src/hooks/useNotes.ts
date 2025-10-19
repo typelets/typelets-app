@@ -112,16 +112,21 @@ export function useNotes() {
       return firstPageFolders;
     }
 
-    // Fetch remaining pages in parallel
-    const remainingPagePromises = [];
-    for (let page = 2; page <= Math.min(totalPages, 50); page++) {
-      remainingPagePromises.push(
-        retryWithBackoff(() => api.getFolders({ page, limit: 50 }))
-          .then(response => response.folders.map(convertApiFolder))
-      );
-    }
+    // Fetch remaining pages in parallel batches to respect rate limits
+    const remainingPages = [];
+    const batchSize = 3; // Process 3 pages at a time to avoid rate limiting
 
-    const remainingPages = await Promise.all(remainingPagePromises);
+    for (let i = 2; i <= Math.min(totalPages, 50); i += batchSize) {
+      const batchPromises = [];
+      for (let page = i; page < i + batchSize && page <= Math.min(totalPages, 50); page++) {
+        batchPromises.push(
+          retryWithBackoff(() => api.getFolders({ page, limit: 50 }))
+            .then(response => response.folders.map(convertApiFolder))
+        );
+      }
+      const batchResults = await Promise.all(batchPromises);
+      remainingPages.push(...batchResults);
+    }
 
     // Combine all pages
     return [
@@ -230,16 +235,21 @@ export function useNotes() {
       return firstPageNotes;
     }
 
-    // Fetch remaining pages in parallel
-    const remainingPagePromises = [];
-    for (let page = 2; page <= Math.min(totalPages, 50); page++) {
-      remainingPagePromises.push(
-        retryWithBackoff(() => api.getNotes({ page, limit: 50 }))
-          .then(response => response.notes.map(convertApiNote))
-      );
-    }
+    // Fetch remaining pages in parallel batches to respect rate limits
+    const remainingPages = [];
+    const batchSize = 3; // Process 3 pages at a time to avoid rate limiting
 
-    const remainingPages = await Promise.all(remainingPagePromises);
+    for (let i = 2; i <= Math.min(totalPages, 50); i += batchSize) {
+      const batchPromises = [];
+      for (let page = i; page < i + batchSize && page <= Math.min(totalPages, 50); page++) {
+        batchPromises.push(
+          retryWithBackoff(() => api.getNotes({ page, limit: 50 }))
+            .then(response => response.notes.map(convertApiNote))
+        );
+      }
+      const batchResults = await Promise.all(batchPromises);
+      remainingPages.push(...batchResults);
+    }
 
     // Combine all pages
     return [
@@ -438,7 +448,8 @@ export function useNotes() {
     };
 
     void loadAttachments();
-  }, [selectedNote?.id, selectedNote?.attachments, setNotes, setSelectedNote]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedNote?.id, setNotes, setSelectedNote]);
 
   const createFolder = async (
     name: string,
