@@ -16,6 +16,7 @@ import { api } from '@/lib/api/api.ts';
 import { fileService } from '@/services/fileService';
 import { codeExecutionService } from '@/services/codeExecutionService';
 import { clearUserEncryptionData } from '@/lib/encryption';
+import { MonacoThemeProvider } from '@/contexts/MonacoThemeContext';
 import MainApp from '@/pages/MainApp';
 
 function AppContent() {
@@ -91,5 +92,9 @@ function AppContent() {
 }
 
 export default function App() {
-  return <AppContent />;
+  return (
+    <MonacoThemeProvider>
+      <AppContent />
+    </MonacoThemeProvider>
+  );
 }

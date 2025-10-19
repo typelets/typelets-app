@@ -84,15 +84,22 @@ export default function MainLayout() {
 
   const handleEmptyTrash = useCallback(async () => {
     try {
-      await api.emptyTrash();
-      if (selectedNote && currentView === 'trash') {
+      // Clear selected note if it's in trash, regardless of current view
+      if (selectedNote?.deleted) {
         setSelectedNote(null);
       }
+
+      // Optimistically remove all trashed notes from UI immediately
+      setNotes(prevNotes => prevNotes.filter(note => !note.deleted));
+
+      await api.emptyTrash();
       await refetch();
     } catch (error) {
       console.error('Failed to empty trash:', error);
+      // Refetch to restore correct state on error
+      await refetch();
     }
-  }, [selectedNote, currentView, setSelectedNote, refetch]);
+  }, [selectedNote, setSelectedNote, setNotes, refetch]);
 
   const handleToggleFolderPanel = useCallback(() => {
     if (!isMobile) {

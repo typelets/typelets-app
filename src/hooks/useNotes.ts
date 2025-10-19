@@ -29,20 +29,20 @@ const convertApiFolder = (apiFolder: ApiFolder): Folder => ({
 
 // Helper function for safe date conversion
 const safeConvertDates = (item: Note | Folder): void => {
-  if (item.createdAt && !(item.createdAt instanceof Date)) {
-    item.createdAt = new Date(item.createdAt as unknown as string);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const itemAny = item as any;
+
+  if (itemAny.createdAt && typeof itemAny.createdAt === 'string') {
+    item.createdAt = new Date(itemAny.createdAt);
   }
 
   // Note-specific properties
-  if (
-    'updatedAt' in item &&
-    item.updatedAt &&
-    !(item.updatedAt instanceof Date)
-  ) {
-    item.updatedAt = new Date(item.updatedAt as unknown as string);
+  if ('updatedAt' in item && itemAny.updatedAt && typeof itemAny.updatedAt === 'string') {
+    (item as Note).updatedAt = new Date(itemAny.updatedAt);
   }
-  if ('hiddenAt' in item && item.hiddenAt && !(item.hiddenAt instanceof Date)) {
-    item.hiddenAt = new Date(item.hiddenAt as unknown as string);
+
+  if ('hiddenAt' in item && itemAny.hiddenAt && typeof itemAny.hiddenAt === 'string') {
+    (item as Note).hiddenAt = new Date(itemAny.hiddenAt);
   }
 };
 
@@ -98,44 +98,36 @@ export function useNotes() {
 
   // Define helper functions early for the sync handlers
   const fetchAllFolders = useCallback(async (): Promise<Folder[]> => {
-    let allFolders: Folder[] = [];
-    let page = 1;
-    let hasMorePages = true;
+    // Fetch first page to determine total pages
+    const firstPageResponse = await retryWithBackoff(() =>
+      api.getFolders({ page: 1, limit: 50 })
+    );
+    const firstPageFolders = firstPageResponse.folders.map(convertApiFolder);
 
-    while (hasMorePages) {
-      const foldersResponse = await retryWithBackoff(() =>
-        api.getFolders({ page, limit: 50 })
-      );
-      const convertedFolders = foldersResponse.folders.map(convertApiFolder);
-      allFolders = [...allFolders, ...convertedFolders];
+    // Determine total pages
+    const totalPages = firstPageResponse.pagination?.pages ?? 1;
 
-      // Check if we have more pages using new pagination structure
-      if (foldersResponse.pagination) {
-        hasMorePages = page < foldersResponse.pagination.pages;
-      } else {
-        // Fallback - assume more pages if we got a full page
-        hasMorePages = convertedFolders.length >= 50;
-      }
-
-      // Also check if we received fewer folders than the limit, which means we're on the last page
-      if (convertedFolders.length < 50) {
-        hasMorePages = false;
-      }
-
-      page++;
-
-      // Safety break to prevent infinite loops
-      if (page > 50) {
-        hasMorePages = false;
-      }
-
-      // Add small delay between requests to avoid rate limiting
-      if (hasMorePages) {
-        await new Promise((resolve) => setTimeout(resolve, 100));
-      }
+    // If only one page, return immediately
+    if (totalPages <= 1) {
+      return firstPageFolders;
     }
 
-    return allFolders;
+    // Fetch remaining pages in parallel
+    const remainingPagePromises = [];
+    for (let page = 2; page <= Math.min(totalPages, 50); page++) {
+      remainingPagePromises.push(
+        retryWithBackoff(() => api.getFolders({ page, limit: 50 }))
+          .then(response => response.folders.map(convertApiFolder))
+      );
+    }
+
+    const remainingPages = await Promise.all(remainingPagePromises);
+
+    // Combine all pages
+    return [
+      ...firstPageFolders,
+      ...remainingPages.flat()
+    ];
   }, []);
 
   const refetchFolders = useCallback(async () => {
@@ -159,8 +151,9 @@ export function useNotes() {
   });
 
   // WebSocket integration for real-time sync
+  // Defer connection until after initial data load for better performance
   const webSocket = useWebSocket({
-    autoConnect: true,
+    autoConnect: false,
     ...syncHandlers,
     onError: useCallback((error: Error | { message?: string }) => {
       // Only show connection errors to users if they persist
@@ -223,44 +216,36 @@ export function useNotes() {
   }, [clerkUser]);
 
   const fetchAllNotes = useCallback(async (): Promise<Note[]> => {
-    let allNotes: Note[] = [];
-    let page = 1;
-    let hasMorePages = true;
+    // Fetch first page to determine total pages
+    const firstPageResponse = await retryWithBackoff(() =>
+      api.getNotes({ page: 1, limit: 50 })
+    );
+    const firstPageNotes = firstPageResponse.notes.map(convertApiNote);
 
-    while (hasMorePages) {
-      const notesResponse = await retryWithBackoff(() =>
-        api.getNotes({ page, limit: 50 })
-      );
-      const convertedNotes = notesResponse.notes.map(convertApiNote);
-      allNotes = [...allNotes, ...convertedNotes];
+    // Determine total pages
+    const totalPages = firstPageResponse.pagination?.pages ?? 1;
 
-      // Check if we have more pages using new pagination structure
-      if (notesResponse.pagination) {
-        hasMorePages = page < notesResponse.pagination.pages;
-      } else {
-        // Fallback - assume more pages if we got a full page
-        hasMorePages = convertedNotes.length >= 50;
-      }
-
-      // Also check if we received fewer notes than the limit, which means we're on the last page
-      if (convertedNotes.length < 50) {
-        hasMorePages = false;
-      }
-
-      page++;
-
-      // Safety break to prevent infinite loops
-      if (page > 50) {
-        hasMorePages = false;
-      }
-
-      // Add small delay between requests to avoid rate limiting
-      if (hasMorePages) {
-        await new Promise((resolve) => setTimeout(resolve, 100));
-      }
+    // If only one page, return immediately
+    if (totalPages <= 1) {
+      return firstPageNotes;
     }
 
-    return allNotes;
+    // Fetch remaining pages in parallel
+    const remainingPagePromises = [];
+    for (let page = 2; page <= Math.min(totalPages, 50); page++) {
+      remainingPagePromises.push(
+        retryWithBackoff(() => api.getNotes({ page, limit: 50 }))
+          .then(response => response.notes.map(convertApiNote))
+      );
+    }
+
+    const remainingPages = await Promise.all(remainingPagePromises);
+
+    // Combine all pages
+    return [
+      ...firstPageNotes,
+      ...remainingPages.flat()
+    ];
   }, []);
 
   const loadData = useCallback(async () => {
@@ -278,33 +263,20 @@ export function useNotes() {
       // Create a folder map for quick lookup
       const folderMap = new Map(allFolders.map((f) => [f.id, f]));
 
-      const notesWithAttachmentsAndFolders = await Promise.all(
-        allNotes.map(async (note) => {
-          try {
-            const attachments = await fileService.getAttachments(note.id);
-            // Embed folder data if note has a folderId
-            const folder = note.folderId
-              ? folderMap.get(note.folderId)
-              : undefined;
-            return { ...note, attachments, folder };
-          } catch (error) {
-            secureLogger.warn('Failed to load attachments for note', {
-              noteId: '[REDACTED]',
-              error,
-            });
-            const folder = note.folderId
-              ? folderMap.get(note.folderId)
-              : undefined;
-            return { ...note, attachments: [], folder };
-          }
-        })
-      );
+      // Defer attachment loading - only add folder data initially
+      // Attachments will be loaded on-demand when a note is selected
+      const notesWithFolders = allNotes.map((note) => {
+        const folder = note.folderId
+          ? folderMap.get(note.folderId)
+          : undefined;
+        return { ...note, attachments: [], folder };
+      });
 
-      setNotes(notesWithAttachmentsAndFolders);
+      setNotes(notesWithFolders);
 
       setSelectedNote((prev) => {
-        if (prev === null && notesWithAttachmentsAndFolders.length > 0) {
-          return notesWithAttachmentsAndFolders[0];
+        if (prev === null && notesWithFolders.length > 0) {
+          return notesWithFolders[0];
         }
         return prev;
       });
@@ -346,6 +318,17 @@ export function useNotes() {
       }
     }
   }, [encryptionReady, clerkUser, loadData]);
+
+  // Connect WebSocket after initial data load for better performance
+  useEffect(() => {
+    if (!loading && encryptionReady && notes.length > 0 && !webSocket.isConnected) {
+      // Delay connection slightly to ensure UI has rendered
+      const timer = setTimeout(() => {
+        webSocket.connect();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [loading, encryptionReady, notes.length, webSocket]);
 
   // Notes filtering
   const {
@@ -409,9 +392,53 @@ export function useNotes() {
   // Auto-select a note when selectedNote becomes null and there are available notes
   useEffect(() => {
     if (!selectedNote && filteredNotes.length > 0) {
-      setSelectedNote(filteredNotes[0]);
+      // Don't auto-select notes that are in trash unless explicitly viewing trash
+      const firstNonTrashedNote = filteredNotes.find(note => !note.deleted);
+      if (firstNonTrashedNote) {
+        setSelectedNote(firstNonTrashedNote);
+      } else if (currentView === 'trash') {
+        // Only select trash notes if we're explicitly viewing trash
+        setSelectedNote(filteredNotes[0]);
+      }
     }
-  }, [selectedNote, filteredNotes]);
+  }, [selectedNote, filteredNotes, currentView]);
+
+  // Load attachments on-demand when a note is selected
+  useEffect(() => {
+    if (!selectedNote?.id) return;
+
+    // Skip if attachments already loaded
+    if (selectedNote.attachments && selectedNote.attachments.length > 0) return;
+
+    const loadAttachments = async () => {
+      try {
+        const attachments = await fileService.getAttachments(selectedNote.id);
+
+        // Update the note in the notes list
+        setNotes((prev) =>
+          prev.map((note) =>
+            note.id === selectedNote.id
+              ? { ...note, attachments }
+              : note
+          )
+        );
+
+        // Update selected note
+        setSelectedNote((prev) =>
+          prev?.id === selectedNote.id
+            ? { ...prev, attachments }
+            : prev
+        );
+      } catch (error) {
+        secureLogger.warn('Failed to load attachments for selected note', {
+          noteId: '[REDACTED]',
+          error,
+        });
+      }
+    };
+
+    void loadAttachments();
+  }, [selectedNote?.id, selectedNote?.attachments, setNotes, setSelectedNote]);
 
   const createFolder = async (
     name: string,

@@ -17,55 +17,10 @@ import {
 import Editor from '@monaco-editor/react';
 import * as monaco from 'monaco-editor';
 import type { Editor as TiptapEditor } from '@tiptap/react';
+import { useMonacoTheme } from '@/contexts/MonacoThemeContext';
 
-// CSS styles for theme overrides
-const monacoThemeStyles = `
-  .monaco-light-override .monaco-editor,
-  .monaco-light-override .monaco-editor .margin,
-  .monaco-light-override .monaco-editor .monaco-editor-background {
-    background-color: #ffffff !important;
-    color: #000000 !important;
-  }
-
-  .monaco-light-override .monaco-editor .view-lines .view-line {
-    color: #000000 !important;
-  }
-
-  .monaco-light-override .monaco-editor .line-numbers {
-    color: #237893 !important;
-  }
-
-  .monaco-light-override .monaco-editor .current-line {
-    background-color: #f0f0f0 !important;
-  }
-
-  .monaco-light-override .monaco-editor .selected-text {
-    background-color: #316ac5 !important;
-  }
-
-  .monaco-dark-override .monaco-editor,
-  .monaco-dark-override .monaco-editor .margin,
-  .monaco-dark-override .monaco-editor .monaco-editor-background {
-    background-color: #1e1e1e !important;
-    color: #d4d4d4 !important;
-  }
-
-  .monaco-dark-override .monaco-editor .view-lines .view-line {
-    color: #d4d4d4 !important;
-  }
-
-  .monaco-dark-override .monaco-editor .line-numbers {
-    color: #858585 !important;
-  }
-
-  .monaco-dark-override .monaco-editor .current-line {
-    background-color: #2a2a2a !important;
-  }
-
-  .monaco-dark-override .monaco-editor .selected-text {
-    background-color: #316ac5 !important;
-  }
-`;
+// Monaco Editor has built-in themes: "vs" (light) and "vs-dark" (dark)
+// We'll use the theme prop to set each editor's theme individually
 
 interface ExecutableCodeBlockNodeViewProps {
   node: {
@@ -90,23 +45,6 @@ export function ExecutableCodeBlockNodeView({
   getPos,
   editor,
 }: ExecutableCodeBlockNodeViewProps) {
-  // Inject custom CSS styles for theme overrides
-  useEffect(() => {
-    const styleId = 'monaco-theme-override-styles';
-    let styleElement = document.getElementById(styleId) as HTMLStyleElement;
-
-    if (!styleElement) {
-      styleElement = document.createElement('style');
-      styleElement.id = styleId;
-      styleElement.textContent = monacoThemeStyles;
-      document.head.appendChild(styleElement);
-    }
-
-    return () => {
-      // Clean up when the last component unmounts
-      // Note: This is a simple approach. In production, you might want to reference count
-    };
-  }, []);
   const [output, setOutput] = useState<ExecutionResult | null>(
     node.attrs.output || null
   );
@@ -119,9 +57,7 @@ export function ExecutableCodeBlockNodeView({
   const [code, setCode] = useState(node.textContent);
   const [editorHeight, setEditorHeight] = useState(300);
   const [isResizing, setIsResizing] = useState(false);
-  const [monacoThemeOverride, setMonacoThemeOverride] = useState<
-    'light' | 'dark'
-  >('dark');
+  const { theme: monacoTheme, toggleTheme } = useMonacoTheme();
   const nodeRef = useRef<HTMLDivElement>(null);
   const updateTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const monacoRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
@@ -339,15 +275,11 @@ export function ExecutableCodeBlockNodeView({
 
           <div className="flex items-center gap-1">
             <button
-              onClick={() => {
-                setMonacoThemeOverride(
-                  monacoThemeOverride === 'light' ? 'dark' : 'light'
-                );
-              }}
+              onClick={toggleTheme}
               className="rounded p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-              title={`Monaco theme: ${monacoThemeOverride} (click to toggle)`}
+              title={`Monaco theme: ${monacoTheme} (click to toggle all code blocks)`}
             >
-              {monacoThemeOverride === 'light' ? (
+              {monacoTheme === 'light' ? (
                 <Sun className="h-4 w-4" />
               ) : (
                 <Moon className="h-4 w-4" />
@@ -398,9 +330,7 @@ export function ExecutableCodeBlockNodeView({
         </div>
 
         {/* Code Content */}
-        <div
-          className={`relative w-full ${monacoThemeOverride === 'light' ? 'monaco-light-override' : 'monaco-dark-override'}`}
-        >
+        <div className="relative w-full">
           <Editor
             key={`monaco-${node.attrs.language}-${getPos()}`}
             height={`${editorHeight}px`}
@@ -408,7 +338,7 @@ export function ExecutableCodeBlockNodeView({
             language={language}
             defaultValue={code}
             onChange={handleCodeChange}
-            theme="vs-dark"
+            theme={monacoTheme === 'light' ? 'vs' : 'vs-dark'}
             options={{
               minimap: { enabled: false },
               lineNumbers: 'on',
@@ -424,6 +354,7 @@ export function ExecutableCodeBlockNodeView({
               scrollbar: {
                 verticalScrollbarSize: 10,
                 horizontalScrollbarSize: 10,
+                alwaysConsumeMouseWheel: false, // Allow scroll to pass through to parent
               },
               contextmenu: true,
               renderLineHighlight: 'gutter',
