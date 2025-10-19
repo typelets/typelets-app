@@ -22,7 +22,7 @@ export default defineConfig(({ mode }) => {
             'monaco-editor': ['monaco-editor', '@monaco-editor/react'],
 
             // Tiptap core - rich text editor core
-            'tiptap-core': ['@tiptap/react', '@tiptap/core', '@tiptap/starter-kit', '@tiptap/pm'],
+            'tiptap-core': ['@tiptap/react', '@tiptap/core', '@tiptap/starter-kit'],
 
             // Tiptap extensions - split from core for better caching
             'tiptap-extensions': [
