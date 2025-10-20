@@ -1,3 +1,10 @@
+## [1.28.12](https://github.com/typelets/typelets-app/compare/v1.28.11...v1.28.12) (2025-10-20)
+
+
+### Bug Fixes
+
+* **mobile,web:** improve UX for text selection, folder navigation, and touch responsiveness ([6157256](https://github.com/typelets/typelets-app/commit/61572562e02035386f614b50651913ca6c576282))
+
 ## [1.28.11](https://github.com/typelets/typelets-app/compare/v1.28.10...v1.28.11) (2025-10-19)
 
 
