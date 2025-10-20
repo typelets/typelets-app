@@ -65,6 +65,7 @@ function FolderItem({
   return (
     <div
       draggable
+      onClick={() => !isDragged && onSelect(folder)}
       onDragStart={(e) => dragHandlers.onDragStart(e, index)}
       onDragOver={(e) => dragHandlers.onDragOver(e, index)}
       onDragEnter={dragHandlers.onDragEnter}
@@ -84,19 +85,15 @@ function FolderItem({
         marginLeft: `${(folder.depth ?? 0) * 16}px`,
       }}
     >
-      <button
-        onClick={() => onSelect(folder)}
-        className="flex min-w-0 flex-1 cursor-pointer items-center gap-2"
-        disabled={isDragged}
-      >
+      <div className="flex min-w-0 flex-1 items-center gap-2 pointer-events-none">
         <div
           className="h-3 w-3 shrink-0 rounded-sm"
           style={{ backgroundColor: folder.color ?? '#6b7280' }}
         />
         <span className="truncate">{folder.name}</span>
-      </button>
+      </div>
 
-      <div className="flex shrink-0 items-center gap-1">
+      <div className="flex shrink-0 items-center gap-1 pointer-events-auto">
         {(folder.noteCount ?? 0) > 0 && (
           <span className="bg-muted text-muted-foreground rounded-full px-2 py-1 text-xs">
             {folder.noteCount}

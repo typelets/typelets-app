@@ -126,6 +126,9 @@ export function EditorToolbar({ editor, keyboardHeight, bottomInset, theme }: Ed
         <TouchableOpacity
           onPress={() => editor.toggleTaskList()}
           style={styles.toolbarButton}
+          activeOpacity={0.6}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          delayPressIn={0}
         >
           <Ionicons name="checkbox-outline" size={18} color={theme.colors.foreground} />
         </TouchableOpacity>

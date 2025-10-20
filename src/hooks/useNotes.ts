@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth, useUser } from '@clerk/clerk-react';
 import { api, type ApiNote, type ApiFolder } from '@/lib/api/api.ts';
 import { fileService } from '@/services/fileService';
@@ -95,6 +95,9 @@ export function useNotes() {
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(
     new Set()
   );
+
+  // Track if this is the initial mount to avoid refetching on first render
+  const isInitialFolderChange = useRef(true);
 
   // Define helper functions early for the sync handlers
   const fetchAllFolders = useCallback(async (): Promise<Folder[]> => {
@@ -412,6 +415,20 @@ export function useNotes() {
       }
     }
   }, [selectedNote, filteredNotes, currentView]);
+
+  // Refetch notes when switching folders to check for new notes from other devices/users
+  useEffect(() => {
+    // Skip the initial mount to avoid duplicate fetches
+    if (isInitialFolderChange.current) {
+      isInitialFolderChange.current = false;
+      return;
+    }
+
+    // Only refetch if a folder is selected and encryption is ready
+    if (selectedFolder?.id && encryptionReady) {
+      void loadData();
+    }
+  }, [selectedFolder?.id, encryptionReady, loadData]);
 
   // Load attachments on-demand when a note is selected
   useEffect(() => {
