@@ -1,3 +1,10 @@
+## [1.28.13](https://github.com/typelets/typelets-app/compare/v1.28.12...v1.28.13) (2025-10-22)
+
+
+### Bug Fixes
+
+* **mobile:** improve code block visibility and divider consistency ([b82a0f5](https://github.com/typelets/typelets-app/commit/b82a0f5ed9a21d251b5c1a72499428b612b49107))
+
 ## [1.28.12](https://github.com/typelets/typelets-app/compare/v1.28.11...v1.28.12) (2025-10-20)
 
 
