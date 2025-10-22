@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, TouchableOpacity, ActivityIndicator, Text } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, ActivityIndicator, Text, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Check } from 'lucide-react-native';
 
@@ -9,10 +9,12 @@ interface EditorHeaderProps {
   isSaving: boolean;
   attachmentsCount?: number;
   showAttachments?: boolean;
+  showHeader?: boolean;
   onBack: () => void;
   onDelete: () => void;
   onSave: () => void;
   onToggleAttachments?: () => void;
+  onToggleHeader?: () => void;
   theme: {
     colors: {
       primary: string;
@@ -31,10 +33,12 @@ export function EditorHeader({
   isSaving,
   attachmentsCount = 0,
   showAttachments = false,
+  showHeader = true,
   onBack,
   onDelete,
   onSave,
   onToggleAttachments,
+  onToggleHeader,
   theme,
 }: EditorHeaderProps) {
   return (
@@ -42,20 +46,38 @@ export function EditorHeader({
       <TouchableOpacity
         style={[styles.headerButton, { backgroundColor: theme.colors.muted }]}
         onPress={onBack}
+        hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
       >
         <Ionicons name="chevron-back" size={20} color={theme.colors.mutedForeground} style={{ marginLeft: -2 }} />
       </TouchableOpacity>
 
-      <View style={styles.titleSpacer} />
+      <View style={{ flex: 1 }} />
 
       <View style={styles.headerActions}>
+        {onToggleHeader && (
+          <TouchableOpacity
+            style={[styles.actionButton, { backgroundColor: showHeader ? 'rgba(59, 130, 246, 0.15)' : theme.colors.muted }]}
+            onPress={onToggleHeader}
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+          >
+            <View pointerEvents="none">
+              <Ionicons
+                name={showHeader ? "contract" : "expand"}
+                size={20}
+                color={showHeader ? "#3b82f6" : theme.colors.mutedForeground}
+              />
+            </View>
+          </TouchableOpacity>
+        )}
+
         {onToggleAttachments && (
           <TouchableOpacity
             style={[styles.actionButton, { backgroundColor: showAttachments ? 'rgba(59, 130, 246, 0.15)' : theme.colors.muted }]}
             onPress={onToggleAttachments}
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
           >
-            <View style={styles.attachmentButtonContent}>
-              <View style={{ transform: [{ rotate: '45deg' }] }}>
+            <View style={styles.attachmentButtonContent} pointerEvents="none">
+              <View style={{ transform: [{ rotate: '45deg' }] }} pointerEvents="none">
                 <Ionicons
                   name="attach-outline"
                   size={20}
@@ -63,7 +85,7 @@ export function EditorHeader({
                 />
               </View>
               {attachmentsCount > 0 && (
-                <View style={[styles.attachmentBadge, { backgroundColor: showAttachments ? "#3b82f6" : theme.colors.mutedForeground }]}>
+                <View style={[styles.attachmentBadge, { backgroundColor: showAttachments ? "#3b82f6" : theme.colors.mutedForeground }]} pointerEvents="none">
                   <Text style={[styles.attachmentBadgeText, { color: showAttachments ? '#ffffff' : theme.colors.muted }]}>
                     {attachmentsCount > 9 ? '9+' : attachmentsCount}
                   </Text>
@@ -77,21 +99,29 @@ export function EditorHeader({
           <TouchableOpacity
             style={[styles.actionButton, { backgroundColor: theme.colors.muted }]}
             onPress={onDelete}
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
           >
             <Ionicons name="trash" size={20} color={theme.colors.mutedForeground} />
           </TouchableOpacity>
         )}
 
         <TouchableOpacity
-          style={[styles.actionButton, { backgroundColor: theme.colors.muted }]}
-          onPress={onSave}
-          disabled={isSaving}
+          style={[styles.actionButton, { backgroundColor: theme.colors.muted, opacity: isSaving ? 0.5 : 1 }]}
+          onPress={() => {
+            if (!isSaving) {
+              onSave();
+            }
+          }}
+          activeOpacity={isSaving ? 1 : 0.2}
+          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
         >
-          {isSaving ? (
-            <ActivityIndicator size="small" color={theme.colors.mutedForeground} />
-          ) : (
-            <Check size={20} color={theme.colors.mutedForeground} strokeWidth={2.5} />
-          )}
+          <View pointerEvents="none">
+            {isSaving ? (
+              <ActivityIndicator size="small" color={theme.colors.mutedForeground} />
+            ) : (
+              <Check size={20} color={theme.colors.mutedForeground} strokeWidth={2.5} />
+            )}
+          </View>
         </TouchableOpacity>
       </View>
     </View>
@@ -117,9 +147,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 17,
-  },
-  titleSpacer: {
-    flex: 1,
   },
   headerActions: {
     flexDirection: 'row',

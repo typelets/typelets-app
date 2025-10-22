@@ -20,6 +20,8 @@ export function generateEditorStyles(themeColors: {
     }
     *:not(input[type="checkbox"]):not(input[type="checkbox"]::after) {
       color: ${themeColors.foreground} !important;
+      -webkit-user-select: text;
+      user-select: text;
     }
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif !important;
@@ -53,6 +55,8 @@ export function generateEditorStyles(themeColors: {
       padding: 0 !important;
       padding-right: 16px !important; /* Extra padding to keep text away from scrollbar */
       margin: 0 !important;
+      -webkit-user-select: text !important;
+      user-select: text !important;
     }
     /* Hide placeholder text */
     .ProseMirror p.is-editor-empty:first-child::before,
@@ -217,6 +221,22 @@ export function generateEditorStyles(themeColors: {
     em {
       font-style: italic;
       color: ${themeColors.foreground} !important;
+    }
+    /* Enable native iOS text selection */
+    * {
+      -webkit-tap-highlight-color: transparent !important;
+    }
+    /* CRITICAL: iOS text selection visibility fix */
+    *::selection, *::-moz-selection {
+      background-color: rgba(0, 122, 255, 0.3) !important;
+      color: inherit !important;
+    }
+    /* Highlight mark styling */
+    mark {
+      background-color: #FFFF00 !important;
+      color: ${themeColors.foreground} !important;
+      padding: 2px 0 !important;
+      border-radius: 2px !important;
     }
   `;
 }

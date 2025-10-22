@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useRef } from 'react';
 import { Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
@@ -14,6 +14,7 @@ interface UseViewNoteReturn {
   handleEdit: () => void;
   handleToggleStar: () => Promise<void>;
   handleToggleHidden: () => Promise<void>;
+  refresh: () => Promise<void>;
 }
 
 /**
@@ -26,12 +27,16 @@ export function useViewNote(noteId: string): UseViewNoteReturn {
   const router = useRouter();
   const [note, setNote] = useState<Note | null>(null);
   const [loading, setLoading] = useState(true);
+  const hasLoadedRef = useRef(false);
+  const currentNoteIdRef = useRef<string | null>(null);
 
   const loadNote = async () => {
     try {
       setLoading(true);
       const noteData = await api.getNote(noteId);
       setNote(noteData);
+      hasLoadedRef.current = true;
+      currentNoteIdRef.current = noteId;
     } catch (error) {
       if (__DEV__) console.error('Failed to load note:', error);
       Alert.alert('Error', 'Failed to load note.');
@@ -41,10 +46,11 @@ export function useViewNote(noteId: string): UseViewNoteReturn {
     }
   };
 
-  // Reload note when screen comes into focus (e.g., after editing)
   useFocusEffect(
     useCallback(() => {
-      if (noteId) {
+      const shouldReload = !hasLoadedRef.current || currentNoteIdRef.current !== noteId;
+
+      if (noteId && shouldReload) {
         loadNote();
       }
       // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -52,7 +58,12 @@ export function useViewNote(noteId: string): UseViewNoteReturn {
   );
 
   const handleEdit = () => {
+    hasLoadedRef.current = false;
     router.push(`/edit-note?noteId=${noteId}`);
+  };
+
+  const refresh = async () => {
+    await loadNote();
   };
 
   const handleToggleStar = async () => {
@@ -96,5 +107,6 @@ export function useViewNote(noteId: string): UseViewNoteReturn {
     handleEdit,
     handleToggleStar,
     handleToggleHidden,
+    refresh,
   };
 }
