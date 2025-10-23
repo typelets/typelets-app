@@ -1,3 +1,10 @@
+## [1.28.15](https://github.com/typelets/typelets-app/compare/v1.28.14...v1.28.15) (2025-10-23)
+
+
+### Performance Improvements
+
+* **mobile:** implement API caching and server-side filtering for 50-70% faster load times ([99db10a](https://github.com/typelets/typelets-app/commit/99db10a3737bbf70e2dbf28fa302395deb61a6ab))
+
 ## [1.28.14](https://github.com/typelets/typelets-app/compare/v1.28.13...v1.28.14) (2025-10-23)
 
 
