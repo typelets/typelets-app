@@ -4,6 +4,7 @@ import { useState } from 'react';
 
 const ANDROID_STORE_URL =
   'https://play.google.com/store/apps/details?id=com.typelets.notes&pcampaignid=web_share';
+const IOS_STORE_URL = 'https://apps.apple.com/us/app/typelets/id6753926295';
 
 export function MobileAppDownload() {
   const platform = useMobilePlatform();
@@ -72,11 +73,13 @@ export function MobileAppDownload() {
               />
             </a>
           ) : platform === 'ios' ? (
-            <div className="bg-muted rounded-lg p-4">
-              <p className="text-foreground font-semibold">
-                iOS App Coming Soon
-              </p>
-            </div>
+            <a href={IOS_STORE_URL} className="inline-block">
+              <img
+                src="https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/en-us?size=250x83&releaseDate=1280635200"
+                alt="Download on the App Store"
+                className="h-20 w-auto"
+              />
+            </a>
           ) : (
             <a href={ANDROID_STORE_URL} className="inline-block">
               <img

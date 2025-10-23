@@ -5,6 +5,7 @@ import { useMobilePlatform } from '@/hooks/useIsMobile';
 
 const ANDROID_STORE_URL =
   'https://play.google.com/store/apps/details?id=com.typelets.notes&pcampaignid=web_share';
+const IOS_STORE_URL = 'https://apps.apple.com/us/app/typelets/id6753926295';
 const BANNER_DISMISSED_KEY = 'typelets_mobile_banner_dismissed';
 
 export function MobileAppBanner() {
@@ -27,8 +28,9 @@ export function MobileAppBanner() {
   const handleDownload = () => {
     if (platform === 'android') {
       window.open(ANDROID_STORE_URL, '_blank');
+    } else if (platform === 'ios') {
+      window.open(IOS_STORE_URL, '_blank');
     }
-    // iOS will show "coming soon" message
   };
 
   if (isDismissed || !platform) {
@@ -45,24 +47,20 @@ export function MobileAppBanner() {
             <p className="text-xs opacity-90">
               {platform === 'android'
                 ? 'Better experience on Android'
-                : 'iOS app coming soon'}
+                : 'Better experience on iOS'}
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
-          {platform === 'android' ? (
-            <Button
-              size="sm"
-              variant="secondary"
-              onClick={handleDownload}
-              className="h-8 text-xs whitespace-nowrap"
-            >
-              Download
-            </Button>
-          ) : (
-            <span className="text-xs font-medium opacity-90">Coming Soon</span>
-          )}
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={handleDownload}
+            className="h-8 text-xs whitespace-nowrap"
+          >
+            Download
+          </Button>
           <Button
             size="sm"
             variant="ghost"
