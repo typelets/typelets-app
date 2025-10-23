@@ -68,7 +68,7 @@ export function generateNoteHtml(
         li {
           margin: 4px 0;
         }
-        /* Task list styling */
+        /* Task list styling - unified and simple */
         ul[data-type="taskList"] {
           list-style: none !important;
           padding-left: 0 !important;
@@ -76,29 +76,34 @@ export function generateNoteHtml(
         }
         li[data-type="taskItem"] {
           display: flex !important;
-          align-items: flex-start !important;
-          margin: 8px 0 !important;
+          align-items: center !important;
+          margin: 4px 0 !important;
         }
         li[data-type="taskItem"] label {
-          display: flex !important;
-          margin-right: 8px !important;
-          flex-shrink: 0 !important;
-          line-height: 1.5 !important;
-          height: 24px !important;
-          align-items: center !important;
+          display: contents !important;
+        }
+        /* Hide the empty span that Tiptap adds */
+        li[data-type="taskItem"] label > span {
+          display: none !important;
         }
         li[data-type="taskItem"] input[type="checkbox"] {
           width: 16px !important;
           height: 16px !important;
-          margin: 0 !important;
+          min-width: 16px !important;
+          min-height: 16px !important;
+          margin: 0 8px 0 0 !important;
           flex-shrink: 0 !important;
         }
         li[data-type="taskItem"] > div,
         li[data-type="taskItem"] > p {
           flex: 1 !important;
-          color: ${themeColors.foreground} !important;
-          line-height: 1.5 !important;
+          line-height: 1.6 !important;
           margin: 0 !important;
+        }
+        /* Remove p tag margins inside task items */
+        li[data-type="taskItem"] p {
+          margin: 0 !important;
+          line-height: 1.6 !important;
         }
         strong {
           font-weight: 600;

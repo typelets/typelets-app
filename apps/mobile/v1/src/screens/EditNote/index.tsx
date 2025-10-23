@@ -81,6 +81,62 @@ export default function EditNoteScreen() {
         const formats = items.map(item => typeof item === 'string' ? item : item.type);
         setActiveFormats(formats);
       });
+
+      // Inject custom JavaScript to handle Enter key in checkbox lists using command method
+      setTimeout(() => {
+        richTextRef.current?.command(`
+          (function() {
+            if (window.checkboxEnterHandlerAdded) return;
+            window.checkboxEnterHandlerAdded = true;
+
+            document.addEventListener('keydown', function(e) {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                const selection = window.getSelection();
+                if (!selection.rangeCount) return;
+
+                const range = selection.getRangeAt(0);
+                let node = range.startContainer;
+
+                // Find parent list item
+                let listItem = node;
+                while (listItem && listItem.nodeName !== 'LI') {
+                  listItem = listItem.parentElement;
+                  if (!listItem || listItem === document.body) break;
+                }
+
+                if (listItem && listItem.nodeName === 'LI') {
+                  // Check if this list item contains a checkbox
+                  const checkbox = listItem.querySelector('input[type="checkbox"]');
+                  if (checkbox) {
+                    e.preventDefault();
+
+                    // Create new list item with checkbox
+                    const newLi = document.createElement('li');
+                    const newCheckbox = document.createElement('input');
+                    newCheckbox.type = 'checkbox';
+                    newCheckbox.style.cssText = 'width: 16px !important; height: 16px !important; margin: 0 8px 0 0 !important; flex-shrink: 0 !important;';
+
+                    const textNode = document.createTextNode('\\u200B'); // Zero-width space
+
+                    newLi.appendChild(newCheckbox);
+                    newLi.appendChild(textNode);
+
+                    // Insert new list item after current one
+                    listItem.parentNode.insertBefore(newLi, listItem.nextSibling);
+
+                    // Move cursor to new list item
+                    const newRange = document.createRange();
+                    newRange.setStart(textNode, 1);
+                    newRange.collapse(true);
+                    selection.removeAllRanges();
+                    selection.addRange(newRange);
+                  }
+                }
+              }
+            }, true);
+          })();
+        `);
+      }, 500);
     }
   }, [editorReady]);
 
@@ -96,13 +152,80 @@ export default function EditNoteScreen() {
     }
   };
 
+  const transformCheckboxHtml = (html: string): string => {
+    // Transform plain checkbox lists to Tiptap-compatible format using regex
+    let transformed = html;
+
+    // First, identify and transform UL elements containing checkboxes
+    // Match UL tags that contain checkbox inputs
+    transformed = transformed.replace(
+      /<ul([^>]*)>([\s\S]*?)<\/ul>/gi,
+      (match, ulAttrs, ulContent) => {
+        // Check if this UL contains checkboxes
+        if (ulContent.includes('type="checkbox"') || ulContent.includes("type='checkbox'")) {
+          // Add data-type="taskList" if not already present
+          const hasDataType = /data-type/i.test(ulAttrs);
+          const newUlAttrs = hasDataType ? ulAttrs : `${ulAttrs} data-type="taskList"`;
+
+          // Transform each LI that contains a checkbox
+          const transformedContent = ulContent.replace(
+            /<li([^>]*)>([\s\S]*?)<\/li>/gi,
+            (liMatch, liAttrs, liContent) => {
+              // Check if this LI contains a checkbox
+              const checkboxMatch = liContent.match(/<input([^>]*type=["']checkbox["'][^>]*)>/i);
+              if (checkboxMatch) {
+                // Add data-type="taskItem" to LI
+                const hasLiDataType = /data-type/i.test(liAttrs);
+                const newLiAttrs = hasLiDataType ? liAttrs : `${liAttrs} data-type="taskItem"`;
+
+                // Extract checkbox and remaining content
+                const checkbox = checkboxMatch[0];
+                let remainingContent = liContent.replace(checkbox, '').trim();
+
+                // Remove non-breaking spaces that might be at the start
+                remainingContent = remainingContent.replace(/^(&nbsp;|\u00A0)+/, '');
+
+                // Wrap checkbox in label if not already
+                const wrappedCheckbox = checkbox.includes('<label>')
+                  ? checkbox
+                  : `<label>${checkbox}</label>`;
+
+                // Wrap remaining content in div if it's not empty and not already wrapped
+                let wrappedContent = '';
+                if (remainingContent) {
+                  // Check if content is already wrapped in a div or p
+                  if (!/^<(div|p)[\s>]/i.test(remainingContent)) {
+                    wrappedContent = `<div>${remainingContent}</div>`;
+                  } else {
+                    wrappedContent = remainingContent;
+                  }
+                }
+
+                return `<li${newLiAttrs}>${wrappedCheckbox}${wrappedContent}</li>`;
+              }
+              return liMatch;
+            }
+          );
+
+          return `<ul${newUlAttrs}>${transformedContent}</ul>`;
+        }
+        return match;
+      }
+    );
+
+    return transformed;
+  };
+
   const handleSave = async (options?: { skipNavigation?: boolean }) => {
     const titleToUse = title.trim() || 'Untitled';
 
     setIsSaving(true);
 
     try {
-      const htmlContent = await richTextRef.current?.getContentHtml() || '';
+      let htmlContent = await richTextRef.current?.getContentHtml() || '';
+
+      // Transform checkbox lists to Tiptap format
+      htmlContent = transformCheckboxHtml(htmlContent);
 
       let savedNote: Note;
 
@@ -331,6 +454,56 @@ export default function EditNoteScreen() {
 
             li {
               margin: 4px 0;
+            }
+
+            /* Task list checkbox styling - unified for both mobile and web */
+            ul[data-type="taskList"],
+            ul:has(> li > input[type="checkbox"]) {
+              list-style: none !important;
+              padding-left: 0 !important;
+              margin: 8px 0 !important;
+            }
+
+            li[data-type="taskItem"],
+            li:has(> input[type="checkbox"]),
+            li:has(> label > input[type="checkbox"]) {
+              display: flex !important;
+              align-items: center !important;
+              margin: 4px 0 !important;
+              list-style: none !important;
+            }
+
+            input[type="checkbox"] {
+              width: 16px !important;
+              height: 16px !important;
+              min-width: 16px !important;
+              min-height: 16px !important;
+              margin: 0 8px 0 0 !important;
+              flex-shrink: 0 !important;
+              cursor: pointer !important;
+            }
+
+            li[data-type="taskItem"] label,
+            li label:has(> input[type="checkbox"]) {
+              display: contents !important;
+            }
+
+            /* Hide the empty span that Tiptap adds */
+            li[data-type="taskItem"] label > span {
+              display: none !important;
+            }
+
+            li[data-type="taskItem"] > div,
+            li[data-type="taskItem"] > p {
+              flex: 1 !important;
+              line-height: 1.6 !important;
+              margin: 0 !important;
+            }
+
+            /* Remove p tag margins inside task items */
+            li[data-type="taskItem"] p {
+              margin: 0 !important;
+              line-height: 1.6 !important;
             }
 
             pre {
