@@ -1,3 +1,10 @@
+## [1.28.16](https://github.com/typelets/typelets-app/compare/v1.28.15...v1.28.16) (2025-10-23)
+
+
+### Bug Fixes
+
+* **mobile:** exclude deleted and archived notes from folder and all views ([381ff8b](https://github.com/typelets/typelets-app/commit/381ff8beb705e68e43a2980b8e39f2fd99830038))
+
 ## [1.28.15](https://github.com/typelets/typelets-app/compare/v1.28.14...v1.28.15) (2025-10-23)
 
 
