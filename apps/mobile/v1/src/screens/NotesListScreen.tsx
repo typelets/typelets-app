@@ -122,7 +122,7 @@ export default function NotesListScreen({ navigation, route, renderHeader, scrol
     return () => clearTimeout(timer);
   }, [loading]);
 
-  // Load notes when screen focuses
+  // Load notes when screen focuses or params change
   useFocusEffect(
     React.useCallback(() => {
       loadNotes();
@@ -132,7 +132,7 @@ export default function NotesListScreen({ navigation, route, renderHeader, scrol
         scrollViewRef.current.scrollTo({ y: 0, animated: false });
       }
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [])
+    }, [folderId, viewType, searchQuery])
   );
 
   const loadViewMode = async () => {
@@ -167,6 +167,14 @@ export default function NotesListScreen({ navigation, route, renderHeader, scrol
         queryParams.archived = true;
       } else if (viewType === 'trash') {
         queryParams.deleted = true;
+      } else if (viewType === 'all') {
+        // For 'all' view, exclude deleted and archived
+        queryParams.deleted = false;
+        queryParams.archived = false;
+      } else if (folderId) {
+        // For regular folder view (no viewType), exclude deleted and archived
+        queryParams.deleted = false;
+        queryParams.archived = false;
       }
 
       // Fetch notes with server-side filtering (much faster!)
