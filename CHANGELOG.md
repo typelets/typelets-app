@@ -1,3 +1,10 @@
+## [1.28.14](https://github.com/typelets/typelets-app/compare/v1.28.13...v1.28.14) (2025-10-23)
+
+
+### Bug Fixes
+
+* **mobile:** improve checkbox alignment and remove notification badges ([a41f216](https://github.com/typelets/typelets-app/commit/a41f216a0d40057e5960dbcae84f68b7affb7776))
+
 ## [1.28.13](https://github.com/typelets/typelets-app/compare/v1.28.12...v1.28.13) (2025-10-22)
 
 
