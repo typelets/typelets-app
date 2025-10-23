@@ -10,6 +10,7 @@ import { fetchAllPages, createPaginationParams } from './utils/pagination';
 import { handleApiError } from './utils/errors';
 import { logger } from '../../lib/logger';
 import { fileService, type PickedFile } from '../fileService';
+import { apiCache, CACHE_KEYS, CACHE_TTL } from './cache';
 
 export function createNotesApi(getToken: AuthTokenGetter, getUserId: () => string | undefined) {
   const { makeRequest } = createHttpClient(getToken);
@@ -17,22 +18,41 @@ export function createNotesApi(getToken: AuthTokenGetter, getUserId: () => strin
   // Initialize fileService with token provider
   fileService.setTokenProvider(getToken);
 
+  /**
+   * Helper to invalidate all counts caches
+   * Called whenever notes are created, updated, or deleted
+   */
+  const invalidateCountsCache = () => {
+    // Clear all counts caches (general and folder-specific)
+    apiCache.clearAll(); // This clears all caches including counts
+  };
+
   return {
     /**
      * Get note counts by category
      * Optionally can get counts for a specific folder's children
+     * Results are cached for 2 minutes to reduce redundant API calls
      */
     async getCounts(folderId?: string): Promise<NoteCounts> {
       try {
+        // Check cache first
+        const cacheKey = CACHE_KEYS.COUNTS(folderId);
+        const cached = apiCache.get<NoteCounts>(cacheKey);
+        if (cached) {
+          return cached;
+        }
+
+        // Fetch from API if not cached
         const params = folderId ? `?folder_id=${folderId}` : '';
         const counts = await makeRequest<NoteCounts | null>(`/notes/counts${params}`);
 
         // Handle null response
-        if (!counts) {
-          return { all: 0, starred: 0, archived: 0, trash: 0 };
-        }
+        const result = counts || { all: 0, starred: 0, archived: 0, trash: 0 };
 
-        return counts;
+        // Cache the result
+        apiCache.set(cacheKey, result, CACHE_TTL.COUNTS);
+
+        return result;
       } catch (error) {
         logger.error('Failed to get note counts', error as Error, {
           attributes: { operation: 'getCounts', folderId },
@@ -119,6 +139,9 @@ export function createNotesApi(getToken: AuthTokenGetter, getUserId: () => strin
         // Decrypt and return the created note
         const decryptedNote = await decryptNote(createdNote, userId);
 
+        // Invalidate counts cache
+        invalidateCountsCache();
+
         // Log successful note creation
         logger.recordEvent('note_created', {
           noteId: createdNote.id,
@@ -175,6 +198,9 @@ export function createNotesApi(getToken: AuthTokenGetter, getUserId: () => strin
         // Decrypt and return the updated note
         const decryptedNote = await decryptNote(updatedNote, userId);
 
+        // Invalidate counts cache (in case starred/archived status changed)
+        invalidateCountsCache();
+
         // Log successful note update
         logger.recordEvent('note_updated', {
           noteId,
@@ -202,6 +228,9 @@ export function createNotesApi(getToken: AuthTokenGetter, getUserId: () => strin
         await makeRequest<void>(`/notes/${noteId}`, {
           method: 'DELETE',
         });
+
+        // Invalidate counts cache
+        invalidateCountsCache();
       } catch (error) {
         return handleApiError(error, 'deleteNote');
       }
@@ -220,6 +249,9 @@ export function createNotesApi(getToken: AuthTokenGetter, getUserId: () => strin
         const note = await makeRequest<Note>(`/notes/${noteId}/hide`, {
           method: 'POST',
         });
+
+        // Invalidate counts cache
+        invalidateCountsCache();
 
         return await decryptNote(note, userId);
       } catch (error) {
@@ -241,6 +273,9 @@ export function createNotesApi(getToken: AuthTokenGetter, getUserId: () => strin
           method: 'POST',
         });
 
+        // Invalidate counts cache
+        invalidateCountsCache();
+
         return await decryptNote(note, userId);
       } catch (error) {
         return handleApiError(error, 'unhideNote');
@@ -252,9 +287,14 @@ export function createNotesApi(getToken: AuthTokenGetter, getUserId: () => strin
      */
     async emptyTrash(): Promise<EmptyTrashResponse> {
       try {
-        return await makeRequest<EmptyTrashResponse>('/notes/empty-trash', {
+        const result = await makeRequest<EmptyTrashResponse>('/notes/empty-trash', {
           method: 'DELETE',
         });
+
+        // Invalidate counts cache
+        invalidateCountsCache();
+
+        return result;
       } catch (error) {
         return handleApiError(error, 'emptyTrash');
       }
@@ -262,10 +302,24 @@ export function createNotesApi(getToken: AuthTokenGetter, getUserId: () => strin
 
     /**
      * Get note counts for home screen (optimized - no note data fetched)
+     * Results are cached for 2 minutes to reduce redundant API calls
      */
     async getNoteCounts(): Promise<NoteCounts> {
       try {
-        return await makeRequest<NoteCounts>('/notes/counts');
+        // Check cache first
+        const cacheKey = CACHE_KEYS.COUNTS();
+        const cached = apiCache.get<NoteCounts>(cacheKey);
+        if (cached) {
+          return cached;
+        }
+
+        // Fetch from API if not cached
+        const counts = await makeRequest<NoteCounts>('/notes/counts');
+
+        // Cache the result
+        apiCache.set(cacheKey, counts, CACHE_TTL.COUNTS);
+
+        return counts;
       } catch (error) {
         return handleApiError(error, 'getNoteCounts');
       }

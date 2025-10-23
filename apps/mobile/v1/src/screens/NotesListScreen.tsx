@@ -152,9 +152,15 @@ export default function NotesListScreen({ navigation, route, renderHeader, scrol
         setLoading(true);
       }
 
-      // Build query params for getNotes to fetch only what we need
-      const queryParams: Record<string, boolean | undefined> = {};
+      // Build query params for server-side filtering
+      const queryParams: Record<string, string | boolean | undefined> = {};
 
+      // Add folder filter if specified
+      if (folderId) {
+        queryParams.folderId = folderId;
+      }
+
+      // Add view type filters
       if (viewType === 'starred') {
         queryParams.starred = true;
       } else if (viewType === 'archived') {
@@ -163,41 +169,11 @@ export default function NotesListScreen({ navigation, route, renderHeader, scrol
         queryParams.deleted = true;
       }
 
-      // For folder view, we need to get all notes to filter by folderId
-      // (API doesn't support server-side folder filtering yet)
-      const allNotesData = await api.getNotes();
-
-      // Client-side filtering for folder
-      let filteredNotes = allNotesData;
-
-      // First filter by folder if specified
-      if (folderId) {
-        filteredNotes = filteredNotes.filter(note => note.folderId === folderId);
-      }
-
-      // Then filter by view type
-      if (viewType) {
-        switch (viewType) {
-          case 'all':
-            filteredNotes = filteredNotes.filter(note => !note.deleted && !note.archived);
-            break;
-          case 'starred':
-            filteredNotes = filteredNotes.filter(note => note.starred && !note.deleted && !note.archived);
-            break;
-          case 'archived':
-            filteredNotes = filteredNotes.filter(note => note.archived && !note.deleted);
-            break;
-          case 'trash':
-            filteredNotes = filteredNotes.filter(note => note.deleted);
-            break;
-        }
-      } else if (folderId) {
-        // Regular folder view: exclude deleted and archived
-        filteredNotes = filteredNotes.filter(note => !note.deleted && !note.archived);
-      }
+      // Fetch notes with server-side filtering (much faster!)
+      const filteredNotes = await api.getNotes(queryParams);
 
       if (__DEV__) {
-        console.log('✅ Final filtered notes:', filteredNotes.length);
+        console.log('✅ Fetched notes with server-side filtering:', filteredNotes.length);
       }
 
       setNotes(filteredNotes);
