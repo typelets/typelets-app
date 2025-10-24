@@ -150,6 +150,28 @@ export function NoteContent({ note, htmlContent, scrollY, scrollViewRef, showTit
           background: ${theme.colors.border};
           margin: 0 -16px 0 -16px;
         }
+
+        /* Images */
+        img {
+          max-width: 100%;
+          height: auto;
+          display: block;
+          margin: 8px 0;
+          border-radius: 6px;
+        }
+
+        /* Tiptap image wrapper */
+        .image,
+        [data-type="image"] {
+          max-width: 100%;
+        }
+
+        .image img,
+        [data-type="image"] img {
+          max-width: 100%;
+          height: auto;
+          display: block;
+        }
       </style>
     </head>
     <body>

@@ -15,6 +15,7 @@ interface EditorHeaderProps {
   onSave: () => void;
   onToggleAttachments?: () => void;
   onToggleHeader?: () => void;
+  onTestEditor?: () => void;
   theme: {
     colors: {
       primary: string;
@@ -39,6 +40,7 @@ export function EditorHeader({
   onSave,
   onToggleAttachments,
   onToggleHeader,
+  onTestEditor,
   theme,
 }: EditorHeaderProps) {
   return (
@@ -92,6 +94,16 @@ export function EditorHeader({
                 </View>
               )}
             </View>
+          </TouchableOpacity>
+        )}
+
+        {onTestEditor && isEditing && (
+          <TouchableOpacity
+            style={[styles.actionButton, { backgroundColor: '#10b981' }]}
+            onPress={onTestEditor}
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+          >
+            <Ionicons name="flask-outline" size={20} color="#ffffff" />
           </TouchableOpacity>
         )}
 
