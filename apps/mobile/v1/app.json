@@ -8,20 +8,6 @@
     "scheme": "typelets",
     "userInterfaceStyle": "automatic",
     "description": "Secure, encrypted note-taking app with seamless sync across all your devices. Organize your thoughts with folders, encrypt sensitive content, and access your notes anywhere. Your data, your privacy.",
-    "keywords": [
-      "notes",
-      "notepad",
-      "encrypted",
-      "secure",
-      "sync",
-      "productivity",
-      "writing",
-      "journal",
-      "documents",
-      "typelets"
-    ],
-    "privacy": "public",
-    "privacyPolicyUrl": "https://app.typelets.com/privacy",
     "platforms": [
       "ios",
       "android"
@@ -48,7 +34,6 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false,
       "permissions": [
         "INTERNET",
         "ACCESS_NETWORK_STATE"
@@ -60,7 +45,7 @@
     },
     "plugins": [
       "expo-router",
-      "newrelic-react-native-agent",
+      "@sentry/react-native/expo",
       [
         "expo-splash-screen",
         {
@@ -86,7 +71,6 @@
     "runtimeVersion": {
       "policy": "appVersion"
     },
-    "owner": "typelets",
-    "category": "productivity"
+    "owner": "typelets"
   }
 }

@@ -1,80 +1,40 @@
+import 'expo-router/entry';
+
 import { Platform } from 'react-native';
+import * as Sentry from '@sentry/react-native';
+import Constants from 'expo-constants';
 import { APP_VERSION } from './src/constants/version';
 
-// Initialize New Relic with error handling
-try {
-  const NewRelicModule = require('newrelic-react-native-agent');
-  const NewRelic = NewRelicModule.default || NewRelicModule;
+// Initialize Sentry for error tracking and performance monitoring
+const SENTRY_DSN = Constants.expoConfig?.extra?.sentryDsn || process.env.EXPO_PUBLIC_SENTRY_DSN;
 
-  if (NewRelic && NewRelic.startAgent) {
-    let appToken;
+if (SENTRY_DSN) {
+  Sentry.init({
+    dsn: SENTRY_DSN,
+    // Performance Monitoring
+    tracesSampleRate: __DEV__ ? 1.0 : 0.1, // 100% in dev, 10% in prod
+    // Environment
+    environment: __DEV__ ? 'development' : 'production',
+    // Release tracking
+    release: `typelets-mobile@${APP_VERSION}`,
+    dist: APP_VERSION,
+    // Enable native crash handling
+    enableNative: true,
+    // Enable automatic session tracking
+    enableAutoSessionTracking: true,
+    // Session timeout (30 minutes = 1,800,000ms)
+    sessionTrackingIntervalMillis: 1800000,
+    // Enable native profiling (iOS)
+    enableNativeProfiling: Platform.OS === 'ios',
+    // Enable automatic performance tracing
+    enableAutoPerformanceTracing: true,
+  });
 
-    if (Platform.OS === 'ios') {
-      appToken = 'AAc3e01a8a8dfd3e2fef5e493052472740f6b4efab-NRMA';
-    } else {
-      appToken = 'AA29e5cbf5c69abe369e2ceed761a18688dbc00d91-NRMA';
-    }
-
-    const agentConfiguration = {
-      // Android Specific
-      // Optional: Enable or disable collection of event data.
-      analyticsEventEnabled: true,
-
-      // Optional: Enable or disable crash reporting.
-      crashReportingEnabled: true,
-
-      // Optional: Enable or disable interaction tracing. Trace instrumentation still occurs, but no traces are harvested.
-      // This will disable default and custom interactions.
-      interactionTracingEnabled: true,
-
-      // Optional: Enable or disable reporting successful HTTP requests to the MobileRequest event type.
-      networkRequestEnabled: true,
-
-      // Optional: Enable or disable reporting network and HTTP request errors to the MobileRequestError event type.
-      networkErrorRequestEnabled: true,
-
-      // Optional: Enable or disable capture of HTTP response bodies for HTTP error traces, and MobileRequestError events.
-      httpResponseBodyCaptureEnabled: true,
-
-      // Optional: Enable or disable agent logging.
-      loggingEnabled: true,
-
-      // Optional: Specifies the log level. Omit this field for the default log level.
-      // Options include: ERROR (least verbose), WARNING, INFO, VERBOSE, AUDIT (most verbose).
-      logLevel: NewRelic.LogLevel.INFO,
-
-      // iOS Specific
-      // Optional: Enable/Disable automatic instrumentation of WebViews
-      webViewInstrumentation: true,
-
-      // Optional: Set a specific collector address for sending data. Omit this field for default address.
-      // collectorAddress: "",
-
-      // Optional: Set a specific crash collector address for sending crashes. Omit this field for default address.
-      // crashCollectorAddress: ""
-    };
-
-    NewRelic.startAgent(appToken, agentConfiguration);
-    NewRelic.setJSAppVersion(APP_VERSION);
-
-    if (__DEV__) {
-      console.log('[New Relic] Agent started successfully with version:', APP_VERSION);
-      console.log('[New Relic] Platform:', Platform.OS);
-    }
-
-    // Send initialization log to NewRelic
-    if (NewRelic.logInfo) {
-      NewRelic.logInfo('NewRelic agent initialized', {
-        platform: Platform.OS,
-        version: APP_VERSION,
-        timestamp: new Date().toISOString(),
-      });
-    }
-  } else {
-    console.warn('[New Relic] Agent module loaded but startAgent not available');
+  if (__DEV__) {
+    console.log('[Sentry] Agent started successfully');
+    console.log('[Sentry] Platform:', Platform.OS);
+    console.log('[Sentry] Version:', APP_VERSION);
   }
-} catch (error) {
-  console.warn('[New Relic] Failed to initialize:', error.message);
+} else {
+  console.warn('[Sentry] DSN not found - Sentry will not be initialized');
 }
-
-import 'expo-router/entry';

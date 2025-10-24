@@ -10,6 +10,7 @@ import {
 } from '@clerk/clerk-react';
 import Index from '@/components/common/SEO';
 import { MobileAppDownload } from '@/components/common/MobileAppDownload';
+import { SentryUser } from '@/components/common/SentryUser';
 import { useIsMobileDevice } from '@/hooks/useIsMobile';
 import { SEO_CONFIG } from '@/constants';
 import { api } from '@/lib/api/api.ts';
@@ -79,6 +80,7 @@ function AppContent() {
 
   return (
     <>
+      <SentryUser />
       <SignedOut>
         <Index {...SEO_CONFIG.signedOut} />
         <RedirectToSignIn />

@@ -69,6 +69,7 @@
     "@radix-ui/react-scroll-area": "^1.2.10",
     "@radix-ui/react-slot": "^1.2.3",
     "@radix-ui/react-tabs": "^1.1.13",
+    "@sentry/react": "^10.21.0",
     "@tailwindcss/vite": "^4.1.13",
     "@tanstack/react-query": "^5.90.5",
     "@tiptap/core": "^3.4.4",
@@ -106,6 +107,7 @@
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/exec": "^7.1.0",
     "@semantic-release/git": "^10.0.1",
+    "@sentry/vite-plugin": "^4.5.0",
     "@types/node": "^24.5.2",
     "@types/react": "^19.1.13",
     "@types/react-dom": "^19.1.9",
@@ -131,7 +133,7 @@
     "tw-animate-css": "^1.3.8",
     "typescript": "~5.9.2",
     "typescript-eslint": "^8.44.0",
-    "vite": "^7.1.6"
+    "vite": "^7.1.12"
   },
   "lint-staged": {
     "*.{ts,tsx}": [

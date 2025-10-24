@@ -13,6 +13,11 @@ export const WEBSOCKET_URL = import.meta.env.VITE_WEBSOCKET_URL as
   | string
   | undefined;
 
+// Sentry Configuration
+export const SENTRY_DSN = import.meta.env.VITE_SENTRY_DSN as
+  | string
+  | undefined;
+
 // Storage Keys
 export const STORAGE_KEYS = {
   THEME: `${APP_NAME.toLowerCase()}-ui-theme`,

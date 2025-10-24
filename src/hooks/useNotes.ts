@@ -204,10 +204,26 @@ export function useNotes() {
             secureLogger.warn(
               'Token provider not ready, continuing without API call'
             );
+          } else if (
+            error instanceof Error &&
+            (error.message.includes('session has expired') ||
+              error.message.includes('401') ||
+              error.message.includes('Unauthorized'))
+          ) {
+            // Session expired - user needs to refresh
+            secureLogger.error('Session expired', error);
+            setError(
+              'Your session has expired. Please refresh the page to continue.'
+            );
+            setEncryptionReady(false);
+            setLoading(false);
+            return;
           } else {
             // Re-throw for outer catch to handle
             secureLogger.error('Failed to get current user', error);
-            setError('Failed to initialize user account');
+            setError(
+              'Failed to connect to the server. Please refresh the page and try again.'
+            );
             setEncryptionReady(false);
             setLoading(false);
             return;

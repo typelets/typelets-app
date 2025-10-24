@@ -108,7 +108,8 @@ class ClerkEncryptedApiService {
 
   private async request<T = unknown>(
     endpoint: string,
-    options: RequestInit = {}
+    options: RequestInit = {},
+    retryCount = 0
   ): Promise<T> {
     if (!this.getToken) {
       throw new SecureError(
@@ -140,37 +141,13 @@ class ClerkEncryptedApiService {
       ...options,
     };
 
+    let response: Response;
+    let jsonData: T;
+
+    // Fetch request (can throw network errors)
     try {
-      const response = await fetch(url, config);
-
-      if (response.status === 401) {
-        throw new SecureError(
-          'API request returned 401 unauthorized',
-          'Your session has expired. Please log in again.',
-          'AUTH_002',
-          'high'
-        );
-      }
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        const secureError = new SecureError(
-          `API Error: ${response.status} - ${errorText}`,
-          response.status >= 500
-            ? 'Server error occurred. Please try again later.'
-            : 'Request failed. Please try again.',
-          response.status >= 500 ? 'NETWORK_003' : 'NETWORK_002',
-          response.status >= 500 ? 'medium' : 'low'
-        );
-        logSecureError(secureError, 'ApiService.request');
-        throw secureError;
-      }
-
-      return response.json() as Promise<T>;
+      response = await fetch(url, config);
     } catch (error) {
-      if (error instanceof SecureError) {
-        throw error;
-      }
       const secureError = sanitizeError(
         error,
         'Network request failed. Please check your connection.'
@@ -178,6 +155,61 @@ class ClerkEncryptedApiService {
       logSecureError(secureError, 'ApiService.request');
       throw secureError;
     }
+
+    // Handle HTTP error responses
+    if (response.status === 401) {
+      throw new SecureError(
+        'API request returned 401 unauthorized',
+        'Your session has expired. Please refresh the page and log in again.',
+        'AUTH_002',
+        'high'
+      );
+    }
+
+    if (!response.ok) {
+      const errorText = await response.text();
+
+      // Check if 500 error is actually an auth error (token expired/invalid)
+      // If so, try refreshing token once and retry
+      if (response.status === 500 && retryCount === 0) {
+        const isAuthError =
+          errorText.includes('Unauthorized') ||
+          errorText.includes('Invalid token') ||
+          errorText.includes('Token expired') ||
+          errorText.includes('jwt');
+
+        if (isAuthError) {
+          // Token might be stale, refresh and retry once
+          await new Promise(resolve => setTimeout(resolve, 500));
+          return this.request<T>(endpoint, options, retryCount + 1);
+        }
+      }
+
+      const secureError = new SecureError(
+        `API Error: ${response.status} - ${errorText}`,
+        response.status >= 500
+          ? 'Server error occurred. Please try refreshing the page.'
+          : 'Request failed. Please try again.',
+        response.status >= 500 ? 'NETWORK_003' : 'NETWORK_002',
+        response.status >= 500 ? 'medium' : 'low'
+      );
+      logSecureError(secureError, 'ApiService.request');
+      throw secureError;
+    }
+
+    // Parse JSON response (can throw parse errors)
+    try {
+      jsonData = await response.json() as T;
+    } catch (error) {
+      const secureError = sanitizeError(
+        error,
+        'Failed to parse server response.'
+      );
+      logSecureError(secureError, 'ApiService.request');
+      throw secureError;
+    }
+
+    return jsonData;
   }
 
   private async decryptApiNote(apiNote: ApiNote): Promise<ApiNote> {
@@ -238,30 +270,13 @@ class ClerkEncryptedApiService {
       );
     }
 
+    let result;
+
+    // Attempt encryption
     try {
-      const result = await encryptNoteData(this.currentUserId, title, content);
-
-      // Validate that encryption actually worked
-      if (
-        !result.encryptedTitle ||
-        !result.encryptedContent ||
-        !result.iv ||
-        !result.salt
-      ) {
-        throw new SecureError(
-          'Encryption returned invalid data',
-          'Failed to encrypt note data',
-          'CRYPTO_001',
-          'high'
-        );
-      }
-
-      return result;
+      result = await encryptNoteData(this.currentUserId, title, content);
     } catch (error) {
       // Never allow unencrypted fallback - always throw errors
-      if (error instanceof SecureError) {
-        throw error;
-      }
       throw new SecureError(
         `Note encryption failed: ${error}`,
         'Failed to encrypt note. Please try again.',
@@ -270,6 +285,23 @@ class ClerkEncryptedApiService {
         error
       );
     }
+
+    // Validate that encryption actually worked
+    if (
+      !result.encryptedTitle ||
+      !result.encryptedContent ||
+      !result.iv ||
+      !result.salt
+    ) {
+      throw new SecureError(
+        'Encryption returned invalid data',
+        'Failed to encrypt note data',
+        'CRYPTO_001',
+        'high'
+      );
+    }
+
+    return result;
   }
 
   async getCurrentUser(includeUsage = false): Promise<ApiUser> {
