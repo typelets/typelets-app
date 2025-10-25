@@ -59,7 +59,7 @@ export function ExecutableCodeBlockNodeView({
   const [isResizing, setIsResizing] = useState(false);
   const { theme: monacoTheme, toggleTheme } = useMonacoTheme();
   const nodeRef = useRef<HTMLDivElement>(null);
-  const updateTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
+  const updateTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const monacoRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const resizeStartY = useRef<number>(0);
   const resizeStartHeight = useRef<number>(300);
@@ -121,7 +121,7 @@ export function ExecutableCodeBlockNodeView({
 
   // Handle container and window resize with ResizeObserver
   useEffect(() => {
-    let resizeTimeout: NodeJS.Timeout;
+    let resizeTimeout: ReturnType<typeof setTimeout>;
     let resizeObserver: ResizeObserver | null = null;
 
     const triggerLayout = () => {

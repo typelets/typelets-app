@@ -81,8 +81,8 @@ class WebSocketService implements WebSocketServiceInterface {
   private config: Required<WebSocketConfig>;
   private state: WebSocketState;
   private eventHandlers: WebSocketEventHandlers = {};
-  private reconnectTimer: NodeJS.Timeout | null = null;
-  private heartbeatTimer: NodeJS.Timeout | null = null;
+  private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+  private heartbeatTimer: ReturnType<typeof setInterval> | null = null;
   private currentToken: string | null = null;
   private messageQueue: OutgoingMessage[] = [];
   private messageAuthEnabled = false;

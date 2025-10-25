@@ -11,7 +11,7 @@ export function useEditorState() {
   const [zoomLevel, setZoomLevel] = useState(100);
   const [baseFontSize, setBaseFontSize] = useState<string>('');
 
-  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastContentRef = useRef<string>('');
 
   // Unified function to calculate and update word/character counts

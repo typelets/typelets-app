@@ -456,85 +456,89 @@ export default function SettingsScreen({ onLogout }: Props) {
             style={styles.bottomSheetScrollContent}
             showsVerticalScrollIndicator={true}
           >
-            {/* Light Themes Section */}
-            <View style={styles.themeSection}>
-              <Text style={[styles.themeSectionTitle, { color: theme.colors.mutedForeground }]}>
-                LIGHT THEMES
-              </Text>
-              {Object.values(LIGHT_THEME_PRESETS).map((preset) => (
-                <TouchableOpacity
-                  key={preset.id}
-                  style={[
-                    styles.themeCard,
-                    { backgroundColor: theme.colors.card, borderColor: theme.colors.border }
-                  ]}
-                  onPress={() => {
-                    theme.setLightTheme(preset.id as any);
-                  }}
-                >
-                  <View style={[styles.colorPreview, {
-                    backgroundColor: preset.colors.card,
-                    borderColor: theme.isDark ? '#999999' : theme.colors.border,
-                    borderWidth: 2.5,
-                  }]}>
-                    <View style={[styles.colorPreviewInner, {
-                      backgroundColor: preset.colors.background
-                    }]} />
-                  </View>
-                  <View style={styles.themeOptionText}>
-                    <Text style={[styles.themeOptionTitle, { color: theme.colors.foreground }]}>
-                      {preset.name}
-                    </Text>
-                    <Text style={[styles.themeOptionSubtitle, { color: theme.colors.mutedForeground }]}>
-                      {preset.description}
-                    </Text>
-                  </View>
-                  {theme.lightTheme === preset.id && (
-                    <Ionicons name="checkmark-circle" size={24} color={theme.colors.primary} />
-                  )}
-                </TouchableOpacity>
-              ))}
-            </View>
+            {/* Show Light Themes only when theme mode is 'light' or when system is light */}
+            {(theme.themeMode === 'light' || (theme.themeMode === 'system' && !theme.isDark)) && (
+              <View style={styles.themeSection}>
+                <Text style={[styles.themeSectionTitle, { color: theme.colors.mutedForeground }]}>
+                  LIGHT THEMES
+                </Text>
+                {Object.values(LIGHT_THEME_PRESETS).map((preset) => (
+                  <TouchableOpacity
+                    key={preset.id}
+                    style={[
+                      styles.themeCard,
+                      { backgroundColor: theme.colors.card, borderColor: theme.colors.border }
+                    ]}
+                    onPress={() => {
+                      theme.setLightTheme(preset.id);
+                    }}
+                  >
+                    <View style={[styles.colorPreview, {
+                      backgroundColor: preset.colors.card,
+                      borderColor: theme.isDark ? '#999999' : theme.colors.border,
+                      borderWidth: 2.5,
+                    }]}>
+                      <View style={[styles.colorPreviewInner, {
+                        backgroundColor: preset.colors.background
+                      }]} />
+                    </View>
+                    <View style={styles.themeOptionText}>
+                      <Text style={[styles.themeOptionTitle, { color: theme.colors.foreground }]}>
+                        {preset.name}
+                      </Text>
+                      <Text style={[styles.themeOptionSubtitle, { color: theme.colors.mutedForeground }]}>
+                        {preset.description}
+                      </Text>
+                    </View>
+                    {theme.lightTheme === preset.id && (
+                      <Ionicons name="checkmark-circle" size={24} color={theme.colors.primary} />
+                    )}
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
 
-            {/* Dark Themes Section */}
-            <View style={[styles.themeSection, styles.themeSectionLast]}>
-              <Text style={[styles.themeSectionTitle, { color: theme.colors.mutedForeground }]}>
-                DARK THEMES
-              </Text>
-              {Object.values(DARK_THEME_PRESETS).map((preset) => (
-                <TouchableOpacity
-                  key={preset.id}
-                  style={[
-                    styles.themeCard,
-                    { backgroundColor: theme.colors.card, borderColor: theme.colors.border }
-                  ]}
-                  onPress={() => {
-                    theme.setDarkTheme(preset.id as any);
-                  }}
-                >
-                  <View style={[styles.colorPreview, {
-                    backgroundColor: preset.colors.card,
-                    borderColor: theme.colors.border,
-                    borderWidth: 1,
-                  }]}>
-                    <View style={[styles.colorPreviewInner, {
-                      backgroundColor: preset.colors.background
-                    }]} />
-                  </View>
-                  <View style={styles.themeOptionText}>
-                    <Text style={[styles.themeOptionTitle, { color: theme.colors.foreground }]}>
-                      {preset.name}
-                    </Text>
-                    <Text style={[styles.themeOptionSubtitle, { color: theme.colors.mutedForeground }]}>
-                      {preset.description}
-                    </Text>
-                  </View>
-                  {theme.darkTheme === preset.id && (
-                    <Ionicons name="checkmark-circle" size={24} color={theme.colors.primary} />
-                  )}
-                </TouchableOpacity>
-              ))}
-            </View>
+            {/* Show Dark Themes only when theme mode is 'dark' or when system is dark */}
+            {(theme.themeMode === 'dark' || (theme.themeMode === 'system' && theme.isDark)) && (
+              <View style={[styles.themeSection, styles.themeSectionLast]}>
+                <Text style={[styles.themeSectionTitle, { color: theme.colors.mutedForeground }]}>
+                  DARK THEMES
+                </Text>
+                {Object.values(DARK_THEME_PRESETS).map((preset) => (
+                  <TouchableOpacity
+                    key={preset.id}
+                    style={[
+                      styles.themeCard,
+                      { backgroundColor: theme.colors.card, borderColor: theme.colors.border }
+                    ]}
+                    onPress={() => {
+                      theme.setDarkTheme(preset.id);
+                    }}
+                  >
+                    <View style={[styles.colorPreview, {
+                      backgroundColor: preset.colors.card,
+                      borderColor: theme.colors.border,
+                      borderWidth: 1,
+                    }]}>
+                      <View style={[styles.colorPreviewInner, {
+                        backgroundColor: preset.colors.background
+                      }]} />
+                    </View>
+                    <View style={styles.themeOptionText}>
+                      <Text style={[styles.themeOptionTitle, { color: theme.colors.foreground }]}>
+                        {preset.name}
+                      </Text>
+                      <Text style={[styles.themeOptionSubtitle, { color: theme.colors.mutedForeground }]}>
+                        {preset.description}
+                      </Text>
+                    </View>
+                    {theme.darkTheme === preset.id && (
+                      <Ionicons name="checkmark-circle" size={24} color={theme.colors.primary} />
+                    )}
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
           </BottomSheetScrollView>
         </View>
       </BottomSheetModal>

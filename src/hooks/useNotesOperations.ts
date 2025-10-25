@@ -40,7 +40,7 @@ export function useNotesOperations({
   safeConvertDates,
   getDescendantIds,
 }: UseNotesOperationsParams) {
-  const saveTimeoutsRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
+  const saveTimeoutsRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
   const [creatingNote, setCreatingNote] = useState(false);
   const [hidingNote, setHidingNote] = useState(false);
   const [starringStar, setStarringStar] = useState(false);
