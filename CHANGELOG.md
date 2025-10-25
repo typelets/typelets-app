@@ -1,3 +1,17 @@
+# [1.30.0](https://github.com/typelets/typelets-app/compare/v1.29.0...v1.30.0) (2025-10-25)
+
+
+### Bug Fixes
+
+* replace NodeJS.Timeout types with ReturnType<typeof setTimeout/setInterval> to ensure compatibility with browser environments where setTimeout returns number instead of NodeJS.Timeout ([e7b62ae](https://github.com/typelets/typelets-app/commit/e7b62ae958a1b7e1b7f2f8251e4cacb0ab137cb2))
+* resolve TypeScript timeout type errors across editor components ([f01af31](https://github.com/typelets/typelets-app/commit/f01af310ebd6387b7d199f9a0dd410b3ab3a4d21))
+
+
+### Features
+
+* **mobile:** add native WebView-based WYSIWYG editor with Tiptap compatibility ([0cdfc25](https://github.com/typelets/typelets-app/commit/0cdfc2553ad51bf55f56e7fdf213db19674d434f))
+* **mobile:** add native WebView-based WYSIWYG editor with Tiptap compatibility ([d7cd580](https://github.com/typelets/typelets-app/commit/d7cd580ab3ae2a399386b8c109d67171a5ec048b))
+
 # [1.29.0](https://github.com/typelets/typelets-app/compare/v1.28.16...v1.29.0) (2025-10-24)
 
 
