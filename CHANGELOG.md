@@ -1,3 +1,10 @@
+# [1.29.0](https://github.com/typelets/typelets-app/compare/v1.28.16...v1.29.0) (2025-10-24)
+
+
+### Features
+
+* integrate Sentry monitoring and improve error handling ([a29c98b](https://github.com/typelets/typelets-app/commit/a29c98bfc118da0917235ff54c5a01a14065f96a))
+
 ## [1.28.16](https://github.com/typelets/typelets-app/compare/v1.28.15...v1.28.16) (2025-10-23)
 
 
