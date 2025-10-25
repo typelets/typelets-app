@@ -116,7 +116,7 @@ export default function Index({
   const [deletingIds, setDeletingIds] = useState<string[]>([]);
   const [localTitle, setLocalTitle] = useState(note?.title || '');
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const titleTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const titleTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isEditingTitleRef = useRef(false);
 
   // Use custom hook for editor state management
