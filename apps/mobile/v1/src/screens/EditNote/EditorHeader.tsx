@@ -10,11 +10,14 @@ interface EditorHeaderProps {
   attachmentsCount?: number;
   showAttachments?: boolean;
   showHeader?: boolean;
+  showToolbar?: boolean;
   onBack: () => void;
   onDelete: () => void;
   onSave: () => void;
   onToggleAttachments?: () => void;
   onToggleHeader?: () => void;
+  onToggleToolbar?: () => void;
+  onDismissKeyboard?: () => void;
   onTestEditor?: () => void;
   theme: {
     colors: {
@@ -35,11 +38,14 @@ export function EditorHeader({
   attachmentsCount = 0,
   showAttachments = false,
   showHeader = true,
+  showToolbar = false,
   onBack,
   onDelete,
   onSave,
   onToggleAttachments,
   onToggleHeader,
+  onToggleToolbar,
+  onDismissKeyboard,
   onTestEditor,
   theme,
 }: EditorHeaderProps) {
@@ -53,7 +59,17 @@ export function EditorHeader({
         <Ionicons name="chevron-back" size={20} color={theme.colors.mutedForeground} style={{ marginLeft: -2 }} />
       </TouchableOpacity>
 
-      <View style={{ flex: 1 }} />
+      <TouchableOpacity
+        style={{ flex: 1 }}
+        onPress={() => {
+          if (onDismissKeyboard) {
+            onDismissKeyboard();
+          }
+        }}
+        activeOpacity={1}
+      >
+        <View style={{ flex: 1 }} />
+      </TouchableOpacity>
 
       <View style={styles.headerActions}>
         {onToggleHeader && (
@@ -67,6 +83,22 @@ export function EditorHeader({
                 name={showHeader ? "contract" : "expand"}
                 size={20}
                 color={showHeader ? "#3b82f6" : theme.colors.mutedForeground}
+              />
+            </View>
+          </TouchableOpacity>
+        )}
+
+        {onToggleToolbar && (
+          <TouchableOpacity
+            style={[styles.actionButton, { backgroundColor: showToolbar ? 'rgba(59, 130, 246, 0.15)' : theme.colors.muted }]}
+            onPress={onToggleToolbar}
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+          >
+            <View pointerEvents="none">
+              <Ionicons
+                name="text-outline"
+                size={20}
+                color={showToolbar ? "#3b82f6" : theme.colors.mutedForeground}
               />
             </View>
           </TouchableOpacity>

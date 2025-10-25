@@ -2,7 +2,7 @@
   "expo": {
     "name": "Typelets",
     "slug": "typelets",
-    "version": "1.28.16",
+    "version": "1.28.17",
     "orientation": "default",
     "icon": "./assets/images/icon.png",
     "scheme": "typelets",

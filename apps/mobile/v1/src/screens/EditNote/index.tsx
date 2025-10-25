@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Alert, Platform, TextInput, TouchableOpacity, ScrollView, Keyboard } from 'react-native';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { View, Text, StyleSheet, Alert, Platform, TextInput, TouchableOpacity, ScrollView, Keyboard, TouchableWithoutFeedback } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import * as Haptics from 'expo-haptics';
@@ -10,7 +10,7 @@ import { useApiService, type Note, type FileAttachment } from '../../services/ap
 import { useKeyboardHeight } from '../../hooks/useKeyboardHeight';
 import { EditorHeader } from './EditorHeader';
 import { FileUpload } from '../../components/FileUpload';
-import { Editor, type EditorRef } from '../../../editor/src';
+import { Editor, type EditorRef, type EditorColors } from '../../../editor/src';
 
 const NAVIGATION_DELAY = 100;
 
@@ -31,7 +31,8 @@ export default function EditNoteScreen() {
   const [attachments, setAttachments] = useState<FileAttachment[]>([]);
   const [showAttachments, setShowAttachments] = useState(false);
   const [createdNoteId, setCreatedNoteId] = useState<string | null>(null);
-  const [showHeader, setShowHeader] = useState(true);
+  const [showHeader, setShowHeader] = useState(false);
+  const [showToolbar, setShowToolbar] = useState(true);
   const [activeFormats, setActiveFormats] = useState({
     bold: false,
     italic: false,
@@ -47,6 +48,22 @@ export default function EditNoteScreen() {
 
   const editorRef = useRef<EditorRef>(null);
   const keyboardHeight = useKeyboardHeight();
+
+  // Map theme colors to editor colors
+  const editorColors: EditorColors = useMemo(() => ({
+    background: theme.colors.background,
+    foreground: theme.colors.foreground,
+    placeholder: theme.colors.mutedForeground,
+    border: theme.colors.border,
+    muted: theme.colors.muted,
+    mutedForeground: theme.colors.mutedForeground,
+    codeBackground: theme.colors.muted,
+    codeBlockBackground: theme.colors.card,
+    codeBlockBorder: theme.colors.border,
+    blockquoteBorder: theme.colors.border,
+    blockquoteText: theme.colors.mutedForeground,
+    highlightBackground: theme.isDark ? 'rgba(234, 179, 8, 0.3)' : 'rgba(254, 240, 138, 0.8)',
+  }), [theme.colors, theme.isDark]);
 
   useEffect(() => {
     if (isEditing && noteId) {
@@ -223,11 +240,17 @@ export default function EditNoteScreen() {
         attachmentsCount={attachments.length}
         showAttachments={showAttachments}
         showHeader={showHeader}
+        showToolbar={showToolbar}
         onBack={() => router.back()}
         onDelete={handleDelete}
         onSave={() => handleSave({ skipNavigation: showAttachments && !noteId && !createdNoteId })}
         onToggleAttachments={handleToggleAttachments}
         onToggleHeader={() => setShowHeader(prev => !prev)}
+        onToggleToolbar={() => setShowToolbar(prev => !prev)}
+        onDismissKeyboard={() => {
+          editorRef.current?.blur();
+          Keyboard.dismiss();
+        }}
         theme={theme}
       />
 
@@ -242,13 +265,20 @@ export default function EditNoteScreen() {
           />
 
           {isEditing && noteData && (
-            <View style={styles.metadata}>
+            <TouchableOpacity
+              onPress={() => {
+                editorRef.current?.blur();
+                Keyboard.dismiss();
+              }}
+              activeOpacity={1}
+              style={styles.metadata}
+            >
               <Text style={[styles.date, { color: theme.colors.mutedForeground }]}>
                 Created {new Date(noteData.createdAt).toLocaleDateString()}
                 {noteData.updatedAt !== noteData.createdAt &&
                   ` • Updated ${new Date(noteData.updatedAt).toLocaleDateString()}`}
               </Text>
-            </View>
+            </TouchableOpacity>
           )}
         </View>
       )}
@@ -265,13 +295,236 @@ export default function EditNoteScreen() {
         </View>
       )}
 
+      {showToolbar && (
+        <>
+          <View style={[styles.divider, { backgroundColor: theme.colors.border }]} />
+          <View
+            style={[
+              styles.toolbarContainerTop,
+              {
+                backgroundColor: theme.colors.background,
+                borderBottomWidth: StyleSheet.hairlineWidth,
+                borderBottomColor: theme.colors.border,
+              }
+            ]}
+          >
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.toolbarScroll}
+          >
+            <TouchableOpacity
+              onPress={() => {
+                editorRef.current?.blur();
+                Keyboard.dismiss();
+              }}
+              style={styles.toolbarButton}
+              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            >
+              <Ionicons name="chevron-down" size={20} color={theme.colors.foreground} />
+            </TouchableOpacity>
+
+            <View style={[styles.toolbarDivider, { backgroundColor: theme.colors.border }]} />
+
+            <TouchableOpacity
+              onPress={() => editorRef.current?.undo()}
+              style={styles.toolbarButton}
+              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            >
+              <View pointerEvents="none">
+                <Undo size={20} color={theme.colors.foreground} strokeWidth={2} />
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => editorRef.current?.redo()}
+              style={styles.toolbarButton}
+              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            >
+              <View pointerEvents="none">
+                <Redo size={20} color={theme.colors.foreground} strokeWidth={2} />
+              </View>
+            </TouchableOpacity>
+
+            <View style={[styles.toolbarDivider, { backgroundColor: theme.colors.border }]} />
+
+            <TouchableOpacity
+              onPress={() => editorRef.current?.bold()}
+              style={[
+                styles.toolbarButton,
+                activeFormats.bold && { backgroundColor: theme.colors.muted }
+              ]}
+            >
+              <Text style={[styles.toolbarButtonText, { color: theme.colors.foreground, fontWeight: 'bold' }]}>B</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => editorRef.current?.italic()}
+              style={[
+                styles.toolbarButton,
+                activeFormats.italic && { backgroundColor: theme.colors.muted }
+              ]}
+            >
+              <Text style={[styles.toolbarButtonText, { color: theme.colors.foreground, fontStyle: 'italic' }]}>I</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => editorRef.current?.underline()}
+              style={[
+                styles.toolbarButton,
+                activeFormats.underline && { backgroundColor: theme.colors.muted }
+              ]}
+            >
+              <Text style={[styles.toolbarButtonText, { color: theme.colors.foreground, textDecorationLine: 'underline' }]}>U</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => editorRef.current?.strikethrough()}
+              style={[
+                styles.toolbarButton,
+                activeFormats.strikethrough && { backgroundColor: theme.colors.muted }
+              ]}
+            >
+              <Text style={[styles.toolbarButtonText, { color: theme.colors.foreground, textDecorationLine: 'line-through' }]}>S</Text>
+            </TouchableOpacity>
+
+            <View style={[styles.toolbarDivider, { backgroundColor: theme.colors.border }]} />
+
+            <TouchableOpacity
+              onPress={() => editorRef.current?.heading(1)}
+              style={[
+                styles.toolbarButton,
+                activeFormats.heading === 1 && { backgroundColor: theme.colors.muted }
+              ]}
+            >
+              <Text style={[styles.toolbarButtonText, { color: theme.colors.foreground }]}>H1</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => editorRef.current?.heading(2)}
+              style={[
+                styles.toolbarButton,
+                activeFormats.heading === 2 && { backgroundColor: theme.colors.muted }
+              ]}
+            >
+              <Text style={[styles.toolbarButtonText, { color: theme.colors.foreground }]}>H2</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => editorRef.current?.heading(3)}
+              style={[
+                styles.toolbarButton,
+                activeFormats.heading === 3 && { backgroundColor: theme.colors.muted }
+              ]}
+            >
+              <Text style={[styles.toolbarButtonText, { color: theme.colors.foreground }]}>H3</Text>
+            </TouchableOpacity>
+
+            <View style={[styles.toolbarDivider, { backgroundColor: theme.colors.border }]} />
+
+            <TouchableOpacity
+              onPress={() => editorRef.current?.removeFormat()}
+              style={styles.toolbarButton}
+              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            >
+              <View pointerEvents="none">
+                <Ionicons name="text-outline" size={22} color={theme.colors.foreground} />
+              </View>
+            </TouchableOpacity>
+
+            <View style={[styles.toolbarDivider, { backgroundColor: theme.colors.border }]} />
+
+            <TouchableOpacity
+              onPress={() => editorRef.current?.bulletList()}
+              style={[
+                styles.toolbarButton,
+                activeFormats.bulletList && { backgroundColor: theme.colors.muted }
+              ]}
+            >
+              <Ionicons name="list" size={20} color={theme.colors.foreground} />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => editorRef.current?.orderedList()}
+              style={[
+                styles.toolbarButton,
+                activeFormats.orderedList && { backgroundColor: theme.colors.muted }
+              ]}
+            >
+              <Ionicons name="list-outline" size={20} color={theme.colors.foreground} />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => editorRef.current?.checkboxList()}
+              style={[
+                styles.toolbarButton,
+                activeFormats.taskList && { backgroundColor: theme.colors.muted }
+              ]}
+            >
+              <Ionicons name="checkbox-outline" size={20} color={theme.colors.foreground} />
+            </TouchableOpacity>
+
+            <View style={[styles.toolbarDivider, { backgroundColor: theme.colors.border }]} />
+
+            <TouchableOpacity
+              onPress={() => editorRef.current?.indent()}
+              style={styles.toolbarButton}
+            >
+              <Ionicons name="arrow-forward" size={20} color={theme.colors.foreground} />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => editorRef.current?.outdent()}
+              style={styles.toolbarButton}
+            >
+              <Ionicons name="arrow-back" size={20} color={theme.colors.foreground} />
+            </TouchableOpacity>
+
+            <View style={[styles.toolbarDivider, { backgroundColor: theme.colors.border }]} />
+
+            <TouchableOpacity
+              onPress={() => editorRef.current?.horizontalRule()}
+              style={styles.toolbarButton}
+            >
+              <Ionicons name="remove-outline" size={20} color={theme.colors.foreground} />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => editorRef.current?.blockquote()}
+              style={[
+                styles.toolbarButton,
+                activeFormats.blockquote && { backgroundColor: theme.colors.muted }
+              ]}
+              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            >
+              <View pointerEvents="none">
+                <Quote size={18} color={theme.colors.foreground} strokeWidth={2} />
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => editorRef.current?.codeBlock()}
+              style={[
+                styles.toolbarButton,
+                activeFormats.codeBlock && { backgroundColor: theme.colors.muted }
+              ]}
+              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            >
+              <View pointerEvents="none">
+                <Code size={18} color={theme.colors.foreground} strokeWidth={2} />
+              </View>
+            </TouchableOpacity>
+          </ScrollView>
+        </View>
+        </>
+      )}
+
       <View style={[styles.divider, { backgroundColor: theme.colors.border }]} />
 
       <View style={[
         styles.richEditor,
         {
           backgroundColor: theme.colors.background,
-          marginBottom: keyboardHeight > 0 ? keyboardHeight + 32 : 32,
         }
       ]}>
         <Editor
@@ -280,237 +533,9 @@ export default function EditNoteScreen() {
           onChange={setContent}
           onFormatChange={setActiveFormats}
           placeholder="Write your note..."
-          theme={theme.dark ? 'dark' : 'light'}
+          theme={theme.isDark ? 'dark' : 'light'}
+          colors={editorColors}
         />
-      </View>
-
-      <View
-        style={[
-          styles.toolbarContainer,
-          {
-            backgroundColor: theme.colors.background,
-            bottom: keyboardHeight > 0 ? keyboardHeight : 0,
-            paddingBottom: keyboardHeight > 0 ? 0 : Math.max(insets.bottom, 8),
-            borderTopWidth: StyleSheet.hairlineWidth,
-            borderTopColor: theme.colors.border,
-          }
-        ]}
-      >
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.toolbarScroll}
-        >
-          {keyboardHeight > 0 ? (
-            <TouchableOpacity
-              onPress={() => {
-                editorRef.current?.blur();
-                Keyboard.dismiss();
-              }}
-              style={styles.toolbarButton}
-            >
-              <Ionicons name="chevron-down" size={20} color={theme.colors.foreground} />
-            </TouchableOpacity>
-          ) : (
-            <TouchableOpacity
-              onPress={() => editorRef.current?.focus()}
-              style={styles.toolbarButton}
-            >
-              <Ionicons name="chevron-up" size={20} color={theme.colors.foreground} />
-            </TouchableOpacity>
-          )}
-
-          <View style={[styles.toolbarDivider, { backgroundColor: theme.colors.border }]} />
-
-          <TouchableOpacity
-            onPress={() => editorRef.current?.undo()}
-            style={styles.toolbarButton}
-            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-          >
-            <View pointerEvents="none">
-              <Undo size={20} color={theme.colors.foreground} strokeWidth={2} />
-            </View>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={() => editorRef.current?.redo()}
-            style={styles.toolbarButton}
-            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-          >
-            <View pointerEvents="none">
-              <Redo size={20} color={theme.colors.foreground} strokeWidth={2} />
-            </View>
-          </TouchableOpacity>
-
-          <View style={[styles.toolbarDivider, { backgroundColor: theme.colors.border }]} />
-
-          <TouchableOpacity
-            onPress={() => editorRef.current?.bold()}
-            style={[
-              styles.toolbarButton,
-              activeFormats.bold && { backgroundColor: theme.colors.muted }
-            ]}
-          >
-            <Text style={[styles.toolbarButtonText, { color: theme.colors.foreground, fontWeight: 'bold' }]}>B</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={() => editorRef.current?.italic()}
-            style={[
-              styles.toolbarButton,
-              activeFormats.italic && { backgroundColor: theme.colors.muted }
-            ]}
-          >
-            <Text style={[styles.toolbarButtonText, { color: theme.colors.foreground, fontStyle: 'italic' }]}>I</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={() => editorRef.current?.underline()}
-            style={[
-              styles.toolbarButton,
-              activeFormats.underline && { backgroundColor: theme.colors.muted }
-            ]}
-          >
-            <Text style={[styles.toolbarButtonText, { color: theme.colors.foreground, textDecorationLine: 'underline' }]}>U</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={() => editorRef.current?.strikethrough()}
-            style={[
-              styles.toolbarButton,
-              activeFormats.strikethrough && { backgroundColor: theme.colors.muted }
-            ]}
-          >
-            <Text style={[styles.toolbarButtonText, { color: theme.colors.foreground, textDecorationLine: 'line-through' }]}>S</Text>
-          </TouchableOpacity>
-
-          <View style={[styles.toolbarDivider, { backgroundColor: theme.colors.border }]} />
-
-          <TouchableOpacity
-            onPress={() => editorRef.current?.heading(1)}
-            style={[
-              styles.toolbarButton,
-              activeFormats.heading === 1 && { backgroundColor: theme.colors.muted }
-            ]}
-          >
-            <Text style={[styles.toolbarButtonText, { color: theme.colors.foreground }]}>H1</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={() => editorRef.current?.heading(2)}
-            style={[
-              styles.toolbarButton,
-              activeFormats.heading === 2 && { backgroundColor: theme.colors.muted }
-            ]}
-          >
-            <Text style={[styles.toolbarButtonText, { color: theme.colors.foreground }]}>H2</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={() => editorRef.current?.heading(3)}
-            style={[
-              styles.toolbarButton,
-              activeFormats.heading === 3 && { backgroundColor: theme.colors.muted }
-            ]}
-          >
-            <Text style={[styles.toolbarButtonText, { color: theme.colors.foreground }]}>H3</Text>
-          </TouchableOpacity>
-
-          <View style={[styles.toolbarDivider, { backgroundColor: theme.colors.border }]} />
-
-          <TouchableOpacity
-            onPress={() => editorRef.current?.removeFormat()}
-            style={styles.toolbarButton}
-            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-          >
-            <View pointerEvents="none">
-              <Ionicons name="text-outline" size={22} color={theme.colors.foreground} />
-            </View>
-          </TouchableOpacity>
-
-          <View style={[styles.toolbarDivider, { backgroundColor: theme.colors.border }]} />
-
-          <TouchableOpacity
-            onPress={() => editorRef.current?.bulletList()}
-            style={[
-              styles.toolbarButton,
-              activeFormats.bulletList && { backgroundColor: theme.colors.muted }
-            ]}
-          >
-            <Ionicons name="list" size={20} color={theme.colors.foreground} />
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={() => editorRef.current?.orderedList()}
-            style={[
-              styles.toolbarButton,
-              activeFormats.orderedList && { backgroundColor: theme.colors.muted }
-            ]}
-          >
-            <Ionicons name="list-outline" size={20} color={theme.colors.foreground} />
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={() => editorRef.current?.checkboxList()}
-            style={[
-              styles.toolbarButton,
-              activeFormats.taskList && { backgroundColor: theme.colors.muted }
-            ]}
-          >
-            <Ionicons name="checkbox-outline" size={20} color={theme.colors.foreground} />
-          </TouchableOpacity>
-
-          <View style={[styles.toolbarDivider, { backgroundColor: theme.colors.border }]} />
-
-          <TouchableOpacity
-            onPress={() => editorRef.current?.indent()}
-            style={styles.toolbarButton}
-          >
-            <Ionicons name="arrow-forward" size={20} color={theme.colors.foreground} />
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={() => editorRef.current?.outdent()}
-            style={styles.toolbarButton}
-          >
-            <Ionicons name="arrow-back" size={20} color={theme.colors.foreground} />
-          </TouchableOpacity>
-
-          <View style={[styles.toolbarDivider, { backgroundColor: theme.colors.border }]} />
-
-          <TouchableOpacity
-            onPress={() => editorRef.current?.horizontalRule()}
-            style={styles.toolbarButton}
-          >
-            <Ionicons name="remove-outline" size={20} color={theme.colors.foreground} />
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={() => editorRef.current?.blockquote()}
-            style={[
-              styles.toolbarButton,
-              activeFormats.blockquote && { backgroundColor: theme.colors.muted }
-            ]}
-            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-          >
-            <View pointerEvents="none">
-              <Quote size={18} color={theme.colors.foreground} strokeWidth={2} />
-            </View>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={() => editorRef.current?.codeBlock()}
-            style={[
-              styles.toolbarButton,
-              activeFormats.codeBlock && { backgroundColor: theme.colors.muted }
-            ]}
-            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-          >
-            <View pointerEvents="none">
-              <Code size={18} color={theme.colors.foreground} strokeWidth={2} />
-            </View>
-          </TouchableOpacity>
-        </ScrollView>
       </View>
     </SafeAreaView>
   );
@@ -548,12 +573,14 @@ const styles = StyleSheet.create({
   },
   richEditor: {
     flex: 1,
-    minHeight: 200,
   },
   toolbarContainer: {
     position: 'absolute',
     left: 0,
     right: 0,
+  },
+  toolbarContainerTop: {
+    paddingVertical: 8,
   },
   toolbarScroll: {
     paddingHorizontal: 8,

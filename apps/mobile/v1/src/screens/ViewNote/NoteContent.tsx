@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { View, Text, StyleSheet, Animated, PixelRatio } from 'react-native';
+import { View, Text, StyleSheet, Animated, PixelRatio, ScrollView } from 'react-native';
 import { WebView } from 'react-native-webview';
 import type { Note } from '../../services/api';
 
@@ -7,7 +7,7 @@ interface NoteContentProps {
   note: Note;
   htmlContent: string;
   scrollY: Animated.Value;
-  scrollViewRef: React.RefObject<any>;
+  scrollViewRef: React.RefObject<ScrollView>;
   showTitle?: boolean;
   theme: {
     colors: {
@@ -27,7 +27,7 @@ interface NoteContentProps {
  * and communicates scroll position to React Native
  */
 export function NoteContent({ note, htmlContent, scrollY, scrollViewRef, showTitle = true, theme }: NoteContentProps) {
-  const webViewRef = useRef<any>(null);
+  const webViewRef = useRef<WebView>(null);
   const [webViewHeight, setWebViewHeight] = useState(300);
 
   // Calculate hairline width for CSS (equivalent to StyleSheet.hairlineWidth)
@@ -54,8 +54,10 @@ export function NoteContent({ note, htmlContent, scrollY, scrollViewRef, showTit
 
         .note-content {
           padding-top: 12px;
+          padding-bottom: 20px;
         }
 
+        /* Lists */
         ul, ol {
           padding-left: 20px;
           margin: 8px 0;
@@ -65,30 +67,84 @@ export function NoteContent({ note, htmlContent, scrollY, scrollViewRef, showTit
           margin: 4px 0;
         }
 
-        pre {
-          background-color: ${theme.isDark ? 'rgba(255, 255, 255, 0.08)' : theme.colors.muted} !important;
-          color: ${theme.isDark ? '#ffffff' : theme.colors.foreground} !important;
-          border: 1px solid ${theme.isDark ? 'rgba(255, 255, 255, 0.2)' : 'transparent'} !important;
-          border-radius: 6px !important;
-          padding: 8px !important;
-          margin: 8px 0 !important;
-          overflow-x: auto !important;
-          font-family: 'Courier New', Courier, monospace !important;
-          font-size: 14px !important;
-          line-height: 1.4 !important;
-          white-space: pre !important;
-          word-wrap: normal !important;
-          overflow-wrap: normal !important;
+        /* Remove p margins inside list items (Tiptap wraps li content in p tags) */
+        li > p {
+          margin: 0 !important;
         }
 
+        /* Task list checkbox styling */
+        ul[data-type="taskList"],
+        ul:has(> li > input[type="checkbox"]) {
+          list-style: none !important;
+          padding-left: 0 !important;
+          margin: 8px 0 !important;
+        }
+
+        li[data-type="taskItem"],
+        li:has(> input[type="checkbox"]),
+        li:has(> label > input[type="checkbox"]) {
+          display: flex !important;
+          align-items: center !important;
+          margin: 4px 0 !important;
+          list-style: none !important;
+        }
+
+        input[type="checkbox"] {
+          width: 16px !important;
+          height: 16px !important;
+          min-width: 16px !important;
+          min-height: 16px !important;
+          margin: 0 8px 0 0 !important;
+          flex-shrink: 0 !important;
+          cursor: pointer !important;
+        }
+
+        li[data-type="taskItem"] label,
+        li label:has(> input[type="checkbox"]) {
+          display: contents !important;
+        }
+
+        /* Hide the empty span that Tiptap adds */
+        li[data-type="taskItem"] label > span {
+          display: none !important;
+        }
+
+        li[data-type="taskItem"] > div,
+        li[data-type="taskItem"] > p {
+          flex: 1 !important;
+          line-height: 1.6 !important;
+          margin: 0 !important;
+        }
+
+        /* Remove p tag margins inside task items */
+        li[data-type="taskItem"] p {
+          margin: 0 !important;
+          line-height: 1.6 !important;
+        }
+
+        /* Code */
         code {
-          background-color: ${theme.isDark ? 'rgba(255, 255, 255, 0.08)' : theme.colors.muted} !important;
-          color: ${theme.colors.foreground} !important;
-          padding: 2px 6px !important;
-          border-radius: 3px !important;
-          font-family: 'Courier New', Courier, monospace !important;
-          font-size: 14px !important;
-          white-space: pre !important;
+          background-color: ${theme.isDark ? 'rgba(255, 255, 255, 0.08)' : theme.colors.muted};
+          color: ${theme.colors.foreground};
+          padding: 2px 6px;
+          border-radius: 3px;
+          font-family: 'Courier New', Courier, monospace;
+          font-size: 14px;
+          white-space: pre;
+        }
+
+        pre {
+          background-color: ${theme.isDark ? 'rgba(255, 255, 255, 0.05)' : theme.colors.muted};
+          border: 1px solid ${theme.colors.border};
+          border-radius: 6px;
+          padding: 12px 16px;
+          margin: 8px 0;
+          overflow-x: auto;
+          font-family: 'Courier New', Courier, monospace;
+          font-size: 14px;
+          white-space: pre;
+          word-wrap: normal;
+          overflow-wrap: normal;
         }
 
         pre code {
@@ -97,7 +153,7 @@ export function NoteContent({ note, htmlContent, scrollY, scrollViewRef, showTit
           white-space: pre !important;
         }
 
-        /* Override highlight.js colors for better visibility in dark mode */
+        /* Override highlight.js colors for better visibility */
         pre code, pre code * {
           color: ${theme.isDark ? '#ffffff' : 'inherit'} !important;
         }
@@ -113,10 +169,17 @@ export function NoteContent({ note, htmlContent, scrollY, scrollViewRef, showTit
           margin-top: 0 !important;
         }
 
+        /* Paragraphs */
         p {
           margin: 0 0 8px 0;
         }
 
+        /* Empty paragraphs should show as spacing (Tiptap uses <p></p> for blank lines) */
+        p:empty {
+          min-height: 1.6em;
+        }
+
+        /* Headings */
         h1, h2, h3, h4, h5, h6 {
           font-weight: 600;
           margin: 8px 0 8px 0;
@@ -129,6 +192,38 @@ export function NoteContent({ note, htmlContent, scrollY, scrollViewRef, showTit
         h1 { font-size: 32px; line-height: 1.2; }
         h2 { font-size: 24px; line-height: 1.3; }
         h3 { font-size: 20px; line-height: 1.4; }
+
+        /* Text formatting */
+        strong, b { font-weight: bold; }
+        em, i { font-style: italic; }
+        u { text-decoration: underline; }
+
+        /* Horizontal rule */
+        hr {
+          margin: 16px 0;
+          border: none;
+          border-top: 1px solid ${theme.colors.border};
+        }
+
+        /* Blockquotes */
+        blockquote {
+          border-left: 4px solid ${theme.colors.border};
+          padding-left: 16px;
+          margin: 12px 0;
+          color: ${theme.colors.mutedForeground};
+          font-style: italic;
+        }
+
+        blockquote > p {
+          margin: 0 !important;
+        }
+
+        /* Highlight/Mark */
+        mark {
+          background-color: ${theme.isDark ? 'rgba(234, 179, 8, 0.3)' : 'rgba(254, 240, 138, 0.8)'};
+          padding: 2px 4px;
+          border-radius: 3px;
+        }
 
         .note-header {
           padding: 8px 16px 0 16px;

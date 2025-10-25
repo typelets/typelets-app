@@ -1,6 +1,21 @@
 import React, { forwardRef, useImperativeHandle, useRef, useState, useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { WebView } from 'react-native-webview';
+import { WebView, WebViewMessageEvent } from 'react-native-webview';
+
+export interface EditorColors {
+  background: string;
+  foreground: string;
+  placeholder: string;
+  border: string;
+  muted: string;
+  mutedForeground: string;
+  codeBackground: string;
+  codeBlockBackground: string;
+  codeBlockBorder: string;
+  blockquoteBorder: string;
+  blockquoteText: string;
+  highlightBackground: string;
+}
 
 export interface EditorProps {
   value: string; // HTML content
@@ -9,6 +24,7 @@ export interface EditorProps {
   placeholder?: string;
   editable?: boolean;
   theme?: 'light' | 'dark';
+  colors?: EditorColors;
 }
 
 export interface EditorRef {
@@ -34,32 +50,57 @@ export interface EditorRef {
   codeBlock: () => void;
 }
 
-const createEditorHTML = (content: string, placeholder: string, isDark: boolean) => `
+const createEditorHTML = (content: string, placeholder: string, isDark: boolean, colors?: EditorColors) => {
+  // Use provided colors or fall back to hardcoded theme colors
+  const editorColors: EditorColors = colors || {
+    background: isDark ? '#1a1a1a' : '#fff',
+    foreground: isDark ? '#fff' : '#000',
+    placeholder: isDark ? '#666' : '#999',
+    border: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+    muted: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
+    mutedForeground: isDark ? 'rgba(255, 255, 255, 0.8)' : 'rgba(0, 0, 0, 0.7)',
+    codeBackground: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.06)',
+    codeBlockBackground: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
+    codeBlockBorder: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+    blockquoteBorder: isDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)',
+    blockquoteText: isDark ? 'rgba(255, 255, 255, 0.8)' : 'rgba(0, 0, 0, 0.7)',
+    highlightBackground: isDark ? 'rgba(234, 179, 8, 0.3)' : 'rgba(254, 240, 138, 0.8)',
+  };
+
+  return `
 <!DOCTYPE html>
 <html>
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="color-scheme" content="${isDark ? 'dark' : 'light'}">
   <style>
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
     }
+
+    html {
+      background: ${editorColors.background};
+    }
+
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       padding: 12px 16px 16px 16px;
-      background: ${isDark ? '#1a1a1a' : '#fff'};
-      color: ${isDark ? '#fff' : '#000'};
+      background: ${editorColors.background};
+      color: ${editorColors.foreground};
       font-size: 16px;
       line-height: 1.6;
+      min-height: 100vh;
     }
     #editor {
       min-height: 100vh;
+      padding-bottom: 40px;
       outline: none;
     }
     #editor:empty:before {
       content: attr(data-placeholder);
-      color: ${isDark ? '#666' : '#999'};
+      color: ${editorColors.placeholder};
     }
 
     /* First child margin fix */
@@ -101,7 +142,7 @@ const createEditorHTML = (content: string, placeholder: string, isDark: boolean)
     hr {
       margin: 16px 0;
       border: none;
-      border-top: 1px solid ${isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'};
+      border-top: 1px solid ${editorColors.border};
     }
 
     /* Lists */
@@ -120,10 +161,10 @@ const createEditorHTML = (content: string, placeholder: string, isDark: boolean)
 
     /* Blockquotes */
     blockquote {
-      border-left: 4px solid ${isDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)'};
+      border-left: 4px solid ${editorColors.blockquoteBorder};
       padding-left: 16px;
       margin: 12px 0;
-      color: ${isDark ? 'rgba(255, 255, 255, 0.8)' : 'rgba(0, 0, 0, 0.7)'};
+      color: ${editorColors.blockquoteText};
       font-style: italic;
     }
 
@@ -183,15 +224,15 @@ const createEditorHTML = (content: string, placeholder: string, isDark: boolean)
 
     /* Highlight/Mark */
     mark {
-      background-color: ${isDark ? 'rgba(234, 179, 8, 0.3)' : 'rgba(254, 240, 138, 0.8)'};
+      background-color: ${editorColors.highlightBackground};
       padding: 2px 4px;
       border-radius: 3px;
     }
 
     /* Code */
     code {
-      background-color: ${isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.06)'};
-      color: ${isDark ? '#fff' : '#000'};
+      background-color: ${editorColors.codeBackground};
+      color: ${editorColors.foreground};
       padding: 2px 6px;
       border-radius: 3px;
       font-family: 'Courier New', Courier, monospace;
@@ -200,8 +241,8 @@ const createEditorHTML = (content: string, placeholder: string, isDark: boolean)
     }
 
     pre {
-      background-color: ${isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)'};
-      border: 1px solid ${isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'};
+      background-color: ${editorColors.codeBlockBackground};
+      border: 1px solid ${editorColors.codeBlockBorder};
       border-radius: 6px;
       padding: 12px 16px;
       margin: 8px 0;
@@ -249,7 +290,7 @@ const createEditorHTML = (content: string, placeholder: string, isDark: boolean)
     let isInitialized = false;
 
     // Set initial content ONCE
-    editor.innerHTML = ${JSON.stringify(content || '<p><br></p>')};
+    editor.innerHTML = ${JSON.stringify(content || '<p></p>')};
     isInitialized = true;
 
     // Send content changes to React Native (debounced)
@@ -334,7 +375,7 @@ const createEditorHTML = (content: string, placeholder: string, isDark: boolean)
     editor.addEventListener('selectionchange', checkActiveFormats);
     document.addEventListener('selectionchange', checkActiveFormats);
 
-    // Handle Enter and Backspace keys in code blocks and task lists
+    // Handle Enter and Backspace keys
     editor.addEventListener('keydown', function(e) {
       if (e.key === 'Enter' || e.keyCode === 13) {
         const selection = window.getSelection();
@@ -343,11 +384,14 @@ const createEditorHTML = (content: string, placeholder: string, isDark: boolean)
           const container = range.commonAncestorContainer;
           const element = container.nodeType === 3 ? container.parentElement : container;
 
-          // Check if we're inside a PRE tag (code block)
+          // Check context
           let node = element;
           let preNode = null;
           let taskListNode = null;
           let currentTaskItem = null;
+          let bulletListNode = null;
+          let orderedListNode = null;
+          let currentLi = null;
 
           while (node && node !== editor) {
             if (node.tagName === 'PRE') {
@@ -357,8 +401,17 @@ const createEditorHTML = (content: string, placeholder: string, isDark: boolean)
             if (node.tagName === 'UL' && (node.getAttribute('data-type') === 'taskList' || node.classList.contains('task-list'))) {
               taskListNode = node;
             }
+            if (node.tagName === 'UL' && !node.getAttribute('data-type')) {
+              bulletListNode = node;
+            }
+            if (node.tagName === 'OL') {
+              orderedListNode = node;
+            }
             if (node.tagName === 'LI' && node.getAttribute('data-type') === 'taskItem') {
               currentTaskItem = node;
+            }
+            if (node.tagName === 'LI' && !currentLi) {
+              currentLi = node;
             }
             node = node.parentElement;
           }
@@ -402,7 +455,6 @@ const createEditorHTML = (content: string, placeholder: string, isDark: boolean)
 
             const div = document.createElement('div');
             const p = document.createElement('p');
-            p.innerHTML = '<br>';
             div.appendChild(p);
 
             newLi.appendChild(label);
@@ -424,6 +476,130 @@ const createEditorHTML = (content: string, placeholder: string, isDark: boolean)
 
             notifyChange();
             return false;
+          } else if (bulletListNode && currentLi) {
+            // We're in a bullet list - create new list item with <p>
+            e.preventDefault();
+            e.stopPropagation();
+
+            const newLi = document.createElement('li');
+            const p = document.createElement('p');
+            newLi.appendChild(p);
+
+            // Insert after current list item
+            if (currentLi.nextSibling) {
+              bulletListNode.insertBefore(newLi, currentLi.nextSibling);
+            } else {
+              bulletListNode.appendChild(newLi);
+            }
+
+            // Move cursor to the new list item
+            const newRange = document.createRange();
+            newRange.setStart(p, 0);
+            newRange.collapse(true);
+            selection.removeAllRanges();
+            selection.addRange(newRange);
+
+            notifyChange();
+            return false;
+          } else if (orderedListNode && currentLi) {
+            // We're in an ordered list - create new list item with <p>
+            e.preventDefault();
+            e.stopPropagation();
+
+            const newLi = document.createElement('li');
+            const p = document.createElement('p');
+            newLi.appendChild(p);
+
+            // Insert after current list item
+            if (currentLi.nextSibling) {
+              orderedListNode.insertBefore(newLi, currentLi.nextSibling);
+            } else {
+              orderedListNode.appendChild(newLi);
+            }
+
+            // Move cursor to the new list item
+            const newRange = document.createRange();
+            newRange.setStart(p, 0);
+            newRange.collapse(true);
+            selection.removeAllRanges();
+            selection.addRange(newRange);
+
+            notifyChange();
+            return false;
+          } else {
+            // Regular paragraph or heading - create new paragraph
+            e.preventDefault();
+            e.stopPropagation();
+
+            // Find the current block element (p, h1, h2, h3, etc.)
+            let currentBlock = element;
+            while (currentBlock && currentBlock !== editor) {
+              const tag = currentBlock.tagName;
+              if (tag === 'P' || tag === 'H1' || tag === 'H2' || tag === 'H3' ||
+                  tag === 'H4' || tag === 'H5' || tag === 'H6' || tag === 'BLOCKQUOTE') {
+                break;
+              }
+              currentBlock = currentBlock.parentElement;
+            }
+
+            if (currentBlock && currentBlock !== editor) {
+              // Check if cursor is at the very beginning of the block
+              const rangeAtStart = document.createRange();
+              rangeAtStart.setStart(currentBlock, 0);
+              rangeAtStart.setEnd(range.startContainer, range.startOffset);
+              const isAtStart = rangeAtStart.toString().length === 0;
+
+              const newP = document.createElement('p');
+
+              if (isAtStart) {
+                // Cursor at beginning - insert empty paragraph BEFORE current block
+                editor.insertBefore(newP, currentBlock);
+
+                // Move cursor to current block (which is now after the new empty one)
+                const newRange = document.createRange();
+                newRange.setStart(currentBlock, 0);
+                newRange.collapse(true);
+                selection.removeAllRanges();
+                selection.addRange(newRange);
+              } else {
+                // Cursor in middle or end - split the block
+                const afterContent = range.extractContents();
+
+                // Insert new paragraph after current block
+                if (currentBlock.nextSibling) {
+                  editor.insertBefore(newP, currentBlock.nextSibling);
+                } else {
+                  editor.appendChild(newP);
+                }
+
+                // If there was content after cursor, put it in the new paragraph
+                if (afterContent.textContent.trim() || afterContent.querySelector('*')) {
+                  newP.appendChild(afterContent);
+                }
+
+                // Move cursor to the new paragraph
+                const newRange = document.createRange();
+                newRange.setStart(newP, 0);
+                newRange.collapse(true);
+                selection.removeAllRanges();
+                selection.addRange(newRange);
+              }
+            } else {
+              // Not in a block, create a new paragraph
+              const newP = document.createElement('p');
+              range.deleteContents();
+              range.insertNode(newP);
+
+              // Move cursor to the new paragraph
+              const newRange = document.createRange();
+              newRange.setStart(newP, 0);
+              newRange.collapse(true);
+              selection.removeAllRanges();
+              selection.addRange(newRange);
+            }
+
+            notifyChange();
+            return false;
           }
         }
       } else if (e.key === 'Backspace' || e.keyCode === 8) {
@@ -433,17 +609,29 @@ const createEditorHTML = (content: string, placeholder: string, isDark: boolean)
           const container = range.commonAncestorContainer;
           const element = container.nodeType === 3 ? container.parentElement : container;
 
-          // Check if we're in a task list
+          // Check if we're in a list
           let node = element;
           let taskListNode = null;
           let currentTaskItem = null;
+          let bulletListNode = null;
+          let orderedListNode = null;
+          let currentLi = null;
 
           while (node && node !== editor) {
             if (node.tagName === 'UL' && (node.getAttribute('data-type') === 'taskList' || node.classList.contains('task-list'))) {
               taskListNode = node;
             }
+            if (node.tagName === 'UL' && !node.getAttribute('data-type')) {
+              bulletListNode = node;
+            }
+            if (node.tagName === 'OL') {
+              orderedListNode = node;
+            }
             if (node.tagName === 'LI' && node.getAttribute('data-type') === 'taskItem') {
               currentTaskItem = node;
+            }
+            if (node.tagName === 'LI' && !currentLi) {
+              currentLi = node;
             }
             node = node.parentElement;
           }
@@ -452,7 +640,7 @@ const createEditorHTML = (content: string, placeholder: string, isDark: boolean)
             // Check if the task item is empty and cursor is at the start
             const contentDiv = currentTaskItem.querySelector('div');
             const contentP = contentDiv?.querySelector('p');
-            const isEmpty = !contentP || contentP.innerHTML === '<br>' || contentP.textContent.trim() === '';
+            const isEmpty = !contentP || contentP.innerHTML === '' || contentP.textContent.trim() === '';
             const isAtStart = range.startOffset === 0 && range.collapsed;
 
             if (isEmpty && isAtStart) {
@@ -461,7 +649,6 @@ const createEditorHTML = (content: string, placeholder: string, isDark: boolean)
 
               // Convert this task item to a paragraph (remove checkbox, stay on same line)
               const p = document.createElement('p');
-              p.innerHTML = '<br>';
 
               const parent = taskListNode.parentNode;
 
@@ -512,6 +699,122 @@ const createEditorHTML = (content: string, placeholder: string, isDark: boolean)
               notifyChange();
               return false;
             }
+          } else if (bulletListNode && currentLi) {
+            // Handle backspace in bullet list
+            const contentP = currentLi.querySelector('p');
+            const isEmpty = !contentP || contentP.innerHTML === '' || contentP.textContent.trim() === '';
+            const isAtStart = range.startOffset === 0 && range.collapsed;
+
+            if (isEmpty && isAtStart) {
+              e.preventDefault();
+              e.stopPropagation();
+
+              // Convert to paragraph and exit list
+              const p = document.createElement('p');
+              const parent = bulletListNode.parentNode;
+
+              // Get items after current one
+              const allItems = Array.from(bulletListNode.children);
+              const currentIndex = allItems.indexOf(currentLi);
+              const itemsAfter = allItems.slice(currentIndex + 1);
+
+              // Remove current item
+              bulletListNode.removeChild(currentLi);
+
+              // Insert paragraph after list
+              if (bulletListNode.nextSibling) {
+                parent.insertBefore(p, bulletListNode.nextSibling);
+              } else {
+                parent.appendChild(p);
+              }
+
+              // If there are items after, create new list
+              if (itemsAfter.length > 0) {
+                const newList = document.createElement('ul');
+                itemsAfter.forEach(item => {
+                  bulletListNode.removeChild(item);
+                  newList.appendChild(item);
+                });
+                if (p.nextSibling) {
+                  parent.insertBefore(newList, p.nextSibling);
+                } else {
+                  parent.appendChild(newList);
+                }
+              }
+
+              // Remove list if empty
+              if (bulletListNode.children.length === 0) {
+                parent.removeChild(bulletListNode);
+              }
+
+              // Move cursor to new paragraph
+              const newRange = document.createRange();
+              newRange.setStart(p, 0);
+              newRange.collapse(true);
+              selection.removeAllRanges();
+              selection.addRange(newRange);
+
+              notifyChange();
+              return false;
+            }
+          } else if (orderedListNode && currentLi) {
+            // Handle backspace in ordered list
+            const contentP = currentLi.querySelector('p');
+            const isEmpty = !contentP || contentP.innerHTML === '' || contentP.textContent.trim() === '';
+            const isAtStart = range.startOffset === 0 && range.collapsed;
+
+            if (isEmpty && isAtStart) {
+              e.preventDefault();
+              e.stopPropagation();
+
+              // Convert to paragraph and exit list
+              const p = document.createElement('p');
+              const parent = orderedListNode.parentNode;
+
+              // Get items after current one
+              const allItems = Array.from(orderedListNode.children);
+              const currentIndex = allItems.indexOf(currentLi);
+              const itemsAfter = allItems.slice(currentIndex + 1);
+
+              // Remove current item
+              orderedListNode.removeChild(currentLi);
+
+              // Insert paragraph after list
+              if (orderedListNode.nextSibling) {
+                parent.insertBefore(p, orderedListNode.nextSibling);
+              } else {
+                parent.appendChild(p);
+              }
+
+              // If there are items after, create new list
+              if (itemsAfter.length > 0) {
+                const newList = document.createElement('ol');
+                itemsAfter.forEach(item => {
+                  orderedListNode.removeChild(item);
+                  newList.appendChild(item);
+                });
+                if (p.nextSibling) {
+                  parent.insertBefore(newList, p.nextSibling);
+                } else {
+                  parent.appendChild(newList);
+                }
+              }
+
+              // Remove list if empty
+              if (orderedListNode.children.length === 0) {
+                parent.removeChild(orderedListNode);
+              }
+
+              // Move cursor to new paragraph
+              const newRange = document.createRange();
+              newRange.setStart(p, 0);
+              newRange.collapse(true);
+              selection.removeAllRanges();
+              selection.addRange(newRange);
+
+              notifyChange();
+              return false;
+            }
           }
         }
       }
@@ -537,7 +840,44 @@ const createEditorHTML = (content: string, placeholder: string, isDark: boolean)
     window.execCommand = function(command, value) {
       editor.focus();
       if (command === 'bold') {
-        document.execCommand('bold', false, null);
+        // Create <strong> tag directly (Tiptap compatible)
+        const selection = window.getSelection();
+        if (selection && selection.rangeCount > 0) {
+          const range = selection.getRangeAt(0);
+
+          // Check if we're already in a strong or b tag
+          let node = range.commonAncestorContainer;
+          if (node.nodeType === 3) node = node.parentElement;
+          let strongNode = null;
+
+          while (node && node !== editor) {
+            if (node.tagName === 'STRONG' || node.tagName === 'B') {
+              strongNode = node;
+              break;
+            }
+            node = node.parentElement;
+          }
+
+          if (strongNode) {
+            // Remove bold by unwrapping the strong tag
+            const parent = strongNode.parentElement;
+            while (strongNode.firstChild) {
+              parent.insertBefore(strongNode.firstChild, strongNode);
+            }
+            parent.removeChild(strongNode);
+          } else {
+            // Add bold with strong tag
+            const strong = document.createElement('strong');
+            try {
+              range.surroundContents(strong);
+            } catch (e) {
+              // If surroundContents fails (partial selection), extract and wrap
+              const contents = range.extractContents();
+              strong.appendChild(contents);
+              range.insertNode(strong);
+            }
+          }
+        }
       } else if (command === 'italic') {
         document.execCommand('italic', false, null);
       } else if (command === 'underline') {
@@ -664,18 +1004,20 @@ const createEditorHTML = (content: string, placeholder: string, isDark: boolean)
             const ul = document.createElement('ul');
             allItems.forEach(item => {
               const li = document.createElement('li');
-              // Check if content is wrapped in p tag
+              // Keep the p tag wrapper (Tiptap compatible)
               if (item.children.length === 1 && item.children[0].tagName === 'P') {
-                // Move p tag's content directly
-                const p = item.children[0];
-                while (p.firstChild) {
-                  li.appendChild(p.firstChild);
-                }
+                // Clone the p tag with its content
+                const p = document.createElement('p');
+                const originalP = item.children[0];
+                p.innerHTML = originalP.innerHTML;
+                li.appendChild(p);
               } else {
-                // Move all content
+                // Wrap content in p tag
+                const p = document.createElement('p');
                 while (item.firstChild) {
-                  li.appendChild(item.firstChild);
+                  p.appendChild(item.firstChild);
                 }
+                li.appendChild(p);
               }
               ul.appendChild(li);
             });
@@ -700,7 +1042,58 @@ const createEditorHTML = (content: string, placeholder: string, isDark: boolean)
               }
             }
           } else {
-            document.execCommand('insertUnorderedList', false, null);
+            // Create new bullet list manually with proper Tiptap structure
+            // Find current paragraph
+            let currentP = element;
+            while (currentP && currentP !== editor && currentP.tagName !== 'P') {
+              currentP = currentP.parentElement;
+            }
+
+            if (currentP && currentP.tagName === 'P') {
+              // Create ul and li with p wrapper
+              const ul = document.createElement('ul');
+              const li = document.createElement('li');
+              const p = document.createElement('p');
+
+              // Move current paragraph content into the list item's p tag
+              p.innerHTML = currentP.innerHTML || '';
+
+              li.appendChild(p);
+              ul.appendChild(li);
+
+              // Replace the paragraph with the list
+              currentP.parentNode.replaceChild(ul, currentP);
+
+              // Move cursor into the list item's p tag
+              const newRange = document.createRange();
+              if (p.firstChild) {
+                newRange.setStart(p.firstChild, 0);
+              } else {
+                newRange.setStart(p, 0);
+              }
+              newRange.collapse(true);
+              selection.removeAllRanges();
+              selection.addRange(newRange);
+            } else {
+              // Not in a paragraph, create empty list
+              const ul = document.createElement('ul');
+              const li = document.createElement('li');
+              const p = document.createElement('p');
+
+              li.appendChild(p);
+              ul.appendChild(li);
+
+              range.deleteContents();
+              range.insertNode(ul);
+
+              // Move cursor into the list
+              const newRange = document.createRange();
+              newRange.setStart(p, 0);
+              newRange.collapse(true);
+              selection.removeAllRanges();
+              selection.addRange(newRange);
+            }
+            notifyChange();
           }
         }
       } else if (command === 'orderedList') {
@@ -793,18 +1186,20 @@ const createEditorHTML = (content: string, placeholder: string, isDark: boolean)
             const ol = document.createElement('ol');
             allItems.forEach(item => {
               const li = document.createElement('li');
-              // Check if content is wrapped in p tag
+              // Keep the p tag wrapper (Tiptap compatible)
               if (item.children.length === 1 && item.children[0].tagName === 'P') {
-                // Move p tag's content directly
-                const p = item.children[0];
-                while (p.firstChild) {
-                  li.appendChild(p.firstChild);
-                }
+                // Clone the p tag with its content
+                const p = document.createElement('p');
+                const originalP = item.children[0];
+                p.innerHTML = originalP.innerHTML;
+                li.appendChild(p);
               } else {
-                // Move all content
+                // Wrap content in p tag
+                const p = document.createElement('p');
                 while (item.firstChild) {
-                  li.appendChild(item.firstChild);
+                  p.appendChild(item.firstChild);
                 }
+                li.appendChild(p);
               }
               ol.appendChild(li);
             });
@@ -829,7 +1224,58 @@ const createEditorHTML = (content: string, placeholder: string, isDark: boolean)
               }
             }
           } else {
-            document.execCommand('insertOrderedList', false, null);
+            // Create new ordered list manually with proper Tiptap structure
+            // Find current paragraph
+            let currentP = element;
+            while (currentP && currentP !== editor && currentP.tagName !== 'P') {
+              currentP = currentP.parentElement;
+            }
+
+            if (currentP && currentP.tagName === 'P') {
+              // Create ol and li with p wrapper
+              const ol = document.createElement('ol');
+              const li = document.createElement('li');
+              const p = document.createElement('p');
+
+              // Move current paragraph content into the list item's p tag
+              p.innerHTML = currentP.innerHTML || '';
+
+              li.appendChild(p);
+              ol.appendChild(li);
+
+              // Replace the paragraph with the list
+              currentP.parentNode.replaceChild(ol, currentP);
+
+              // Move cursor into the list item's p tag
+              const newRange = document.createRange();
+              if (p.firstChild) {
+                newRange.setStart(p.firstChild, 0);
+              } else {
+                newRange.setStart(p, 0);
+              }
+              newRange.collapse(true);
+              selection.removeAllRanges();
+              selection.addRange(newRange);
+            } else {
+              // Not in a paragraph, create empty list
+              const ol = document.createElement('ol');
+              const li = document.createElement('li');
+              const p = document.createElement('p');
+
+              li.appendChild(p);
+              ol.appendChild(li);
+
+              range.deleteContents();
+              range.insertNode(ol);
+
+              // Move cursor into the list
+              const newRange = document.createRange();
+              newRange.setStart(p, 0);
+              newRange.collapse(true);
+              selection.removeAllRanges();
+              selection.addRange(newRange);
+            }
+            notifyChange();
           }
         }
       } else if (command === 'checkboxList') {
@@ -1227,7 +1673,63 @@ const createEditorHTML = (content: string, placeholder: string, isDark: boolean)
         document.execCommand('removeFormat', false, null);
         document.execCommand('formatBlock', false, 'p');
       } else if (command === 'horizontalRule') {
-        document.execCommand('insertHorizontalRule', false, null);
+        const selection = window.getSelection();
+        if (selection && selection.rangeCount > 0) {
+          const range = selection.getRangeAt(0);
+          const container = range.commonAncestorContainer;
+          const element = container.nodeType === 3 ? container.parentElement : container;
+
+          // Create HR element
+          const hr = document.createElement('hr');
+          hr.className = 'border-gray-300 dark:border-gray-600';
+
+          // Create a new paragraph after the HR for the cursor
+          const newP = document.createElement('p');
+
+          // Find the current block element (p, h1, etc.)
+          let currentBlock = element;
+          while (currentBlock && currentBlock !== editor) {
+            const tag = currentBlock.tagName;
+            if (tag === 'P' || tag === 'H1' || tag === 'H2' || tag === 'H3' ||
+                tag === 'H4' || tag === 'H5' || tag === 'H6' || tag === 'BLOCKQUOTE') {
+              break;
+            }
+            currentBlock = currentBlock.parentElement;
+          }
+
+          if (currentBlock && currentBlock !== editor) {
+            // Insert HR and newP after the current block
+            if (currentBlock.nextSibling) {
+              editor.insertBefore(hr, currentBlock.nextSibling);
+              editor.insertBefore(newP, hr.nextSibling);
+            } else {
+              editor.appendChild(hr);
+              editor.appendChild(newP);
+            }
+
+            // Clear the current block if it's empty
+            if (!currentBlock.textContent.trim()) {
+              currentBlock.remove();
+            }
+          } else {
+            // Not in a block, insert at cursor position
+            range.deleteContents();
+            range.insertNode(hr);
+            if (hr.nextSibling) {
+              hr.parentNode.insertBefore(newP, hr.nextSibling);
+            } else {
+              hr.parentNode.appendChild(newP);
+            }
+          }
+
+          // Move cursor to the new paragraph
+          const newRange = document.createRange();
+          newRange.setStart(newP, 0);
+          newRange.collapse(true);
+          selection.removeAllRanges();
+          selection.addRange(newRange);
+        }
+        notifyChange();
       } else if (command === 'blockquote') {
         // Check if we're already in a blockquote
         const selection = window.getSelection();
@@ -1324,13 +1826,16 @@ const createEditorHTML = (content: string, placeholder: string, isDark: boolean)
 </body>
 </html>
 `;
+};
 
 export const Editor = forwardRef<EditorRef, EditorProps>(
-  ({ value, onChange, onFormatChange, placeholder = 'Start typing...', editable = true, theme = 'light' }, ref) => {
+  ({ value, onChange, onFormatChange, placeholder = 'Start typing...', editable = true, theme = 'light', colors }, ref) => {
     const webViewRef = useRef<WebView>(null);
     const isDark = theme === 'dark';
     const [initialContent] = useState(value); // Capture initial content only once
     const lastValueRef = useRef(value); // Track last value to detect external changes
+    const lastThemeRef = useRef(isDark); // Track theme changes
+    const [themeKey, setThemeKey] = useState(isDark ? 'dark' : 'light');
 
     const execCommand = (command: string, value?: string | number) => {
       webViewRef.current?.injectJavaScript(
@@ -1371,9 +1876,10 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
       codeBlock: () => execCommand('codeBlock'),
     }));
 
-    const handleMessage = (event: any) => {
+    const handleMessage = (event: WebViewMessageEvent) => {
       try {
         const data = JSON.parse(event.nativeEvent.data);
+
         if (data.type === 'content') {
           lastValueRef.current = data.html;
           onChange(data.html);
@@ -1384,6 +1890,14 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
         console.error('Error parsing WebView message:', error);
       }
     };
+
+    // Detect theme changes and force WebView recreation
+    useEffect(() => {
+      if (isDark !== lastThemeRef.current) {
+        lastThemeRef.current = isDark;
+        setThemeKey(isDark ? 'dark' : 'light');
+      }
+    }, [isDark]);
 
     // Detect external content changes (not from user typing)
     useEffect(() => {
@@ -1396,13 +1910,15 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
     }, [value]);
 
     return (
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: colors?.background || (isDark ? '#1a1a1a' : '#fff') }]}>
         <WebView
-          key="editor-v4.2"
+          key={`editor-v4.2-${themeKey}`}
           ref={webViewRef}
           originWhitelist={['*']}
-          source={{ html: createEditorHTML(initialContent, placeholder, isDark) }}
+          source={{ html: createEditorHTML(initialContent, placeholder, isDark, colors) }}
           onMessage={handleMessage}
+          incognito={true}
+          cacheEnabled={false}
           onError={(syntheticEvent) => {
             const { nativeEvent } = syntheticEvent;
             console.error('WebView error:', nativeEvent);
@@ -1416,7 +1932,7 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
           allowFileAccessFromFileURLs={true}
           allowUniversalAccessFromFileURLs={true}
           mixedContentMode="always"
-          style={styles.webview}
+          style={[styles.webview, { backgroundColor: colors?.background || (isDark ? '#1a1a1a' : '#fff') }]}
           scrollEnabled={true}
           showsVerticalScrollIndicator={false}
           keyboardDisplayRequiresUserAction={false}
@@ -1436,6 +1952,5 @@ const styles = StyleSheet.create({
   },
   webview: {
     flex: 1,
-    backgroundColor: 'transparent',
   },
 });

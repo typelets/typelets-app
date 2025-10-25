@@ -17,7 +17,7 @@ export default function ViewNoteScreen() {
   const api = useApiService();
 
   const scrollY = useRef(new Animated.Value(0)).current;
-  const scrollViewRef = useRef<any>(null);
+  const scrollViewRef = useRef<ScrollView>(null);
   const [showAttachments, setShowAttachments] = useState(false);
   const [attachments, setAttachments] = useState<FileAttachment[]>([]);
   const [loadingAttachments, setLoadingAttachments] = useState(false);

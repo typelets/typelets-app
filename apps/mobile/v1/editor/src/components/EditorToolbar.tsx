@@ -2,16 +2,33 @@ import React from 'react';
 import { View, TouchableOpacity, Text, StyleSheet, ScrollView } from 'react-native';
 import type { EditorRef } from './Editor';
 
+export interface EditorToolbarColors {
+  background: string;
+  buttonBackground: string;
+  buttonText: string;
+  border: string;
+}
+
 export interface EditorToolbarProps {
-  editorRef: React.RefObject<EditorRef>;
+  editorRef: React.RefObject<EditorRef | null>;
   theme?: 'light' | 'dark';
+  colors?: EditorToolbarColors;
 }
 
 export const EditorToolbar: React.FC<EditorToolbarProps> = ({
   editorRef,
   theme = 'light',
+  colors,
 }) => {
   const isDark = theme === 'dark';
+
+  // Use provided colors or fall back to hardcoded theme colors
+  const toolbarColors: EditorToolbarColors = colors || {
+    background: isDark ? '#2a2a2a' : '#f5f5f5',
+    buttonBackground: isDark ? '#333' : '#fff',
+    buttonText: isDark ? '#fff' : '#000',
+    border: isDark ? '#444' : '#ddd',
+  };
 
   const Button = ({
     label,
@@ -23,13 +40,13 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
     <TouchableOpacity
       style={[
         styles.button,
-        isDark ? styles.darkButton : styles.lightButton,
+        { backgroundColor: toolbarColors.buttonBackground },
       ]}
       onPress={onPress}
     >
       <Text style={[
         styles.buttonText,
-        isDark ? styles.darkText : styles.lightText,
+        { color: toolbarColors.buttonText },
       ]}>
         {label}
       </Text>
@@ -37,7 +54,13 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
   );
 
   return (
-    <View style={[styles.toolbar, isDark ? styles.darkToolbar : styles.lightToolbar]}>
+    <View style={[
+      styles.toolbar,
+      {
+        backgroundColor: toolbarColors.background,
+        borderTopColor: toolbarColors.border,
+      },
+    ]}>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         <Button label="B" onPress={() => editorRef.current?.bold()} />
         <Button label="I" onPress={() => editorRef.current?.italic()} />
@@ -56,14 +79,6 @@ const styles = StyleSheet.create({
   toolbar: {
     borderTopWidth: 1,
   },
-  lightToolbar: {
-    backgroundColor: '#f5f5f5',
-    borderTopColor: '#ddd',
-  },
-  darkToolbar: {
-    backgroundColor: '#2a2a2a',
-    borderTopColor: '#444',
-  },
   scrollContent: {
     paddingHorizontal: 8,
     paddingVertical: 8,
@@ -76,20 +91,8 @@ const styles = StyleSheet.create({
     minWidth: 40,
     alignItems: 'center',
   },
-  lightButton: {
-    backgroundColor: '#fff',
-  },
-  darkButton: {
-    backgroundColor: '#333',
-  },
   buttonText: {
     fontSize: 16,
     fontWeight: '600',
-  },
-  lightText: {
-    color: '#000',
-  },
-  darkText: {
-    color: '#fff',
   },
 });
