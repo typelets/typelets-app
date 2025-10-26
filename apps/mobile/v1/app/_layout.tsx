@@ -19,53 +19,26 @@ Sentry.init({
   // Environment and release tracking
   environment: __DEV__ ? 'development' : 'production',
 
-  // Performance Monitoring
+  // Performance Monitoring - https://docs.sentry.io/platforms/react-native/tracing/
   tracesSampleRate: __DEV__ ? 1.0 : 0.2, // 100% in dev, 20% in production
 
-  // Enable automatic profiling
-  profilesSampleRate: __DEV__ ? 1.0 : 0.2,
-
-  // Session Replay - disabled for Android compatibility
-  // replaysSessionSampleRate: 0.1,
-  // replaysOnErrorSampleRate: 1.0,
-
-  // Enable user interaction and native frame tracking
-  enableUserInteractionTracing: true,
-  enableNativeFramesTracking: true,
+  // Profiling - https://docs.sentry.io/product/explore/profiling/
+  profilesSampleRate: __DEV__ ? 1.0 : 0.2, // 100% in dev, 20% in production
 
   integrations: [
-    // Mobile replay disabled temporarily for Android compatibility
-    // Sentry.mobileReplayIntegration(),
     Sentry.reactNativeTracingIntegration(),
   ],
 
-  // Enable Logs forwarding to Sentry
+  // Enable Logs forwarding to Sentry - https://docs.sentry.io/platforms/react-native/logs/
   enableLogs: true,
 
   // Adds more context data to events (IP address, device info, etc.)
   sendDefaultPii: true,
 
-  // Maximum breadcrumbs to keep (default: 100)
-  maxBreadcrumbs: 100,
-
-  // Filter and enrich events before sending
-  beforeSend(event, hint) {
-    // Filter out development errors in production
-    if (!__DEV__ && event.exception) {
-      const error = hint.originalException;
-      // Example: Filter specific errors
-      if (error instanceof Error && error.message?.includes('Network request failed')) {
-        // Add custom tags for network errors
-        event.tags = { ...event.tags, error_type: 'network' };
-      }
-    }
-    return event;
-  },
-
   // Enable debug mode in development
   debug: __DEV__,
 
-  // Enable Spotlight for local debugging (https://spotlightjs.com)
+  // uncomment the line below to enable Spotlight (https://spotlightjs.com)
   // spotlight: __DEV__,
 });
 
