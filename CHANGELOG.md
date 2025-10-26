@@ -1,3 +1,11 @@
+## [1.30.2](https://github.com/typelets/typelets-app/compare/v1.30.1...v1.30.2) (2025-10-26)
+
+
+### Bug Fixes
+
+* **mobile:** enhance Sentry monitoring with comprehensive error tracking and performance monitoring ([bb93acf](https://github.com/typelets/typelets-app/commit/bb93acf8504248addc9df3e8dc8d6aacdadc5e81))
+* **mobile:** enhance Sentry monitoring with comprehensive error tracking and performance monitoring ([721f79e](https://github.com/typelets/typelets-app/commit/721f79ef793141ff2e5a415980bfe9378b62fcf0))
+
 ## [1.30.1](https://github.com/typelets/typelets-app/compare/v1.30.0...v1.30.1) (2025-10-25)
 
 
