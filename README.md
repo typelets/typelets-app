@@ -24,6 +24,31 @@
 
 ![Typelets Demo](https://github.com/typelets/typelets-app/blob/main/assets/demo.gif)
 
+## 📱 Mobile App
+
+Available on iOS and Android with the same powerful features and encryption.
+
+<p align="center">
+  <img src="https://typelets.com/assets/images/mobile/screenshot-1.png" width="250" alt="Mobile Screenshot 1"/>
+  <img src="https://typelets.com/assets/images/mobile/screenshot-2.png" width="250" alt="Mobile Screenshot 2"/>
+  <img src="https://typelets.com/assets/images/mobile/screenshot-3.png" width="250" alt="Mobile Screenshot 3"/>
+</p>
+
+<p align="center">
+  <a href="https://apps.apple.com/us/app/typelets/id6753926295">
+    <img src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" alt="Download on App Store" height="45" style="vertical-align: middle;"/>
+  </a>
+  <a href="https://play.google.com/store/apps/details?id=com.typelets.notes&pcampaignid=web_share">
+    <img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" alt="Get it on Google Play" height="65" style="vertical-align: middle;"/>
+  </a>
+</p>
+
+- 📱 Native iOS and Android apps
+- 🔐 Same client-side encryption
+- 🔄 Real-time sync across all devices
+- ✍️ Full-featured WYSIWYG editor
+- 🎨 Native mobile experience
+
 ## ✨ Features
 
 ### 🔒 Security & Privacy
