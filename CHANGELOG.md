@@ -1,3 +1,10 @@
+## [1.30.1](https://github.com/typelets/typelets-app/compare/v1.30.0...v1.30.1) (2025-10-25)
+
+
+### Bug Fixes
+
+* configure Sentry SDK for mobile app error monitoring ([727cfa3](https://github.com/typelets/typelets-app/commit/727cfa324cfad49b24bd85182e45bc8344a1d750))
+
 # [1.30.0](https://github.com/typelets/typelets-app/compare/v1.29.0...v1.30.0) (2025-10-25)
 
 
