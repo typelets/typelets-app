@@ -25,16 +25,17 @@ Sentry.init({
   // Enable automatic profiling
   profilesSampleRate: __DEV__ ? 1.0 : 0.2,
 
-  // Session Replay - captures user sessions for debugging
-  replaysSessionSampleRate: 0.1, // 10% of normal sessions
-  replaysOnErrorSampleRate: 1.0, // 100% of error sessions
+  // Session Replay - disabled for Android compatibility
+  // replaysSessionSampleRate: 0.1,
+  // replaysOnErrorSampleRate: 1.0,
 
   // Enable user interaction and native frame tracking
   enableUserInteractionTracing: true,
   enableNativeFramesTracking: true,
 
   integrations: [
-    Sentry.mobileReplayIntegration(),
+    // Mobile replay disabled temporarily for Android compatibility
+    // Sentry.mobileReplayIntegration(),
     Sentry.reactNativeTracingIntegration(),
   ],
 
