@@ -28,21 +28,15 @@
 
 Available on iOS and Android with the same powerful features and encryption.
 
+- [Download on the App Store](https://apps.apple.com/us/app/typelets/id6753926295)
+- [Get it on Google Play](https://play.google.com/store/apps/details?id=com.typelets.notes&pcampaignid=web_share)
+
 <p align="center">
   <img src="https://typelets.com/assets/images/mobile/screenshot-1.png" width="250" alt="Mobile Screenshot 1"/>
   &nbsp;&nbsp;
   <img src="https://typelets.com/assets/images/mobile/screenshot-2.png" width="250" alt="Mobile Screenshot 2"/>
   &nbsp;&nbsp;
   <img src="https://typelets.com/assets/images/mobile/screenshot-3.png" width="250" alt="Mobile Screenshot 3"/>
-</p>
-
-<p align="center">
-  <a href="https://apps.apple.com/us/app/typelets/id6753926295">
-    <img src="https://img.shields.io/badge/App%20Store-Typelets-black?logo=apple&style=for-the-badge" alt="App Store"/>
-  </a>
-  <a href="https://play.google.com/store/apps/details?id=com.typelets.notes&pcampaignid=web_share">
-    <img src="https://img.shields.io/badge/Google%20Play-Typelets-green?logo=google-play&style=for-the-badge" alt="Google Play"/>
-  </a>
 </p>
 
 
