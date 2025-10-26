@@ -8,10 +8,7 @@ export default tseslint.config(
   {
     ignores: [
       'dist',
-      'apps/desktop/dist',
-      'apps/desktop_deprecated/**',
-      'apps/mobile/v1/**',
-      'apps/mobile_old/**',
+      'apps/mobile/v1/**',  // Mobile app has its own ESLint config with React Native-specific rules
       'node_modules',
       '.vite',
       'coverage',
