@@ -1,3 +1,10 @@
+## [1.30.4](https://github.com/typelets/typelets-app/compare/v1.30.3...v1.30.4) (2025-10-26)
+
+
+### Bug Fixes
+
+* **mobile:** resolve Android crash caused by NewRelic instrumentation ([e735203](https://github.com/typelets/typelets-app/commit/e7352035b5a4a53031405f279b1b3231f7c97218))
+
 ## [1.30.3](https://github.com/typelets/typelets-app/compare/v1.30.2...v1.30.3) (2025-10-26)
 
 
