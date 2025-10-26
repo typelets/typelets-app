@@ -36,15 +36,9 @@ Available on iOS and Android with the same powerful features and encryption.
   <img src="https://typelets.com/assets/images/mobile/screenshot-3.png" width="250" alt="Mobile Screenshot 3"/>
 </p>
 
-<p align="center">
-  <a href="https://apps.apple.com/us/app/typelets/id6753926295">
-    <img src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" alt="Download on App Store" height="50"/>
-  </a>
-  &nbsp;&nbsp;
-  <a href="https://play.google.com/store/apps/details?id=com.typelets.notes&pcampaignid=web_share">
-    <img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" alt="Get it on Google Play" height="70"/>
-  </a>
-</p>
+<div align="center">
+<a href="https://apps.apple.com/us/app/typelets/id6753926295"><img src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" alt="Download on App Store" height="50" style="display: inline-block; vertical-align: middle;"/></a>&nbsp;&nbsp;&nbsp;&nbsp;<a href="https://play.google.com/store/apps/details?id=com.typelets.notes&pcampaignid=web_share"><img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" alt="Get it on Google Play" height="75" style="display: inline-block; vertical-align: middle;"/></a>
+</div>
 
 
 - 📱 Native iOS and Android apps

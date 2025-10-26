@@ -25,7 +25,7 @@
       }
     },
     "android": {
-      "package": "com.typelets.mobile.android",
+      "package": "com.typelets.notes",
       "versionCode": 49,
       "softwareKeyboardLayoutMode": "resize",
       "adaptiveIcon": {
