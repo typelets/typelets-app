@@ -25,7 +25,7 @@
       }
     },
     "android": {
-      "package": "com.typelets.notes",
+      "package": "com.typelets.mobile.android",
       "versionCode": 47,
       "softwareKeyboardLayoutMode": "resize",
       "adaptiveIcon": {
@@ -45,7 +45,13 @@
     },
     "plugins": [
       "expo-router",
-      "@sentry/react-native/expo",
+      [
+        "@sentry/react-native/expo",
+        {
+          "organization": "bata-labs",
+          "project": "typelets-app-mobile"
+        }
+      ],
       [
         "expo-splash-screen",
         {

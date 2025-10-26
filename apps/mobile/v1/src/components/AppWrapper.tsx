@@ -6,6 +6,7 @@ import AuthScreen from '../screens/AuthScreen';
 import { MasterPasswordScreen } from './MasterPasswordDialog';
 import { useMasterPassword } from '../hooks/useMasterPassword';
 import { logger } from '../lib/logger';
+import { setSentryUser, clearSentryUser } from '../lib/sentry';
 
 interface AppWrapperProps {
   children: React.ReactNode;
@@ -48,7 +49,7 @@ export const AppWrapper: React.FC<AppWrapperProps> = ({ children }) => {
 
   // Handle loading delay
   useEffect(() => {
-    let timer: NodeJS.Timeout;
+    let timer: number;
     if (isLoading) {
       timer = setTimeout(() => setShowLoading(true), 300);
     } else {
@@ -57,7 +58,7 @@ export const AppWrapper: React.FC<AppWrapperProps> = ({ children }) => {
     return () => clearTimeout(timer);
   }, [isLoading]);
 
-  // Track user authentication state in logger and New Relic
+  // Track user authentication state in logger, Sentry, and New Relic
   useEffect(() => {
     if (isSignedIn && user?.id) {
       // User is signed in - set user ID and session attributes
@@ -66,6 +67,13 @@ export const AppWrapper: React.FC<AppWrapperProps> = ({ children }) => {
         email: user.primaryEmailAddress?.emailAddress,
         username: user.username,
         isSignedIn: true,
+      });
+
+      // Set user in Sentry for error tracking
+      setSentryUser({
+        id: user.id,
+        email: user.primaryEmailAddress?.emailAddress,
+        username: user.username || undefined,
       });
 
       logger.info('User signed in', {
@@ -78,6 +86,7 @@ export const AppWrapper: React.FC<AppWrapperProps> = ({ children }) => {
       // User signed out - clear session
       logger.info('User signed out');
       logger.clearSessionAttributes();
+      clearSentryUser();
     }
   }, [isSignedIn, user?.id, user?.primaryEmailAddress?.emailAddress, user?.username]);
 

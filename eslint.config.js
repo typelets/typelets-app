@@ -9,6 +9,7 @@ export default tseslint.config(
     ignores: [
       'dist',
       'apps/desktop/dist',
+      'apps/desktop_deprecated/**',
       'apps/mobile/v1/**',
       'apps/mobile_old/**',
       'node_modules',
