@@ -1,3 +1,10 @@
+## [1.30.3](https://github.com/typelets/typelets-app/compare/v1.30.2...v1.30.3) (2025-10-26)
+
+
+### Bug Fixes
+
+* **mobile:** disable Sentry mobile replay to prevent crashes ([8a001db](https://github.com/typelets/typelets-app/commit/8a001db42858dbff3fac12a3c484273daa88523d))
+
 ## [1.30.2](https://github.com/typelets/typelets-app/compare/v1.30.1...v1.30.2) (2025-10-26)
 
 
