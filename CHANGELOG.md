@@ -1,3 +1,10 @@
+## [1.30.8](https://github.com/typelets/typelets-app/compare/v1.30.7...v1.30.8) (2025-10-28)
+
+
+### Bug Fixes
+
+* add .dockerignore to exclude mobile apps from the Docker build ([f8df448](https://github.com/typelets/typelets-app/commit/f8df448917532cbfb59685bcaf7b2be9e512b4ea))
+
 ## [1.30.7](https://github.com/typelets/typelets-app/compare/v1.30.6...v1.30.7) (2025-10-28)
 
 
