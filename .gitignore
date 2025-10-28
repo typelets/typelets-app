@@ -263,3 +263,6 @@ drizzle/
 # Claude Code
 .claude
 /.env
+
+# Windows reserved device names
+nul
