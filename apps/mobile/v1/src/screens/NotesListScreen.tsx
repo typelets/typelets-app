@@ -2,12 +2,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { BottomSheetBackdrop, BottomSheetBackdropProps,BottomSheetModal, BottomSheetTextInput, BottomSheetView } from '@gorhom/bottom-sheet';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
+import { useUser } from '@clerk/clerk-expo';
 import * as Haptics from 'expo-haptics';
 import React, { useCallback,useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Animated, FlatList, Keyboard, Pressable, RefreshControl, StyleSheet, Text, TouchableOpacity, useWindowDimensions,View } from 'react-native';
 
 import { FOLDER_CARD, FOLDER_COLORS,NOTE_CARD, SECTION } from '../constants/ui';
 import { type Folder, type FolderCounts,type Note, useApiService } from '../services/api';
+import { decryptNote, isNoteEncrypted } from '../services/api/encryption';
 import { useTheme } from '../theme';
 
 interface RouteParams {
@@ -58,6 +60,7 @@ function stripHtmlTags(html: string): string {
 export default function NotesListScreen({ navigation, route, renderHeader, scrollY: parentScrollY }: Props) {
   const theme = useTheme();
   const api = useApiService();
+  const { user } = useUser();
   const { folderId, viewType, searchQuery } = route?.params || {};
   const { height: windowHeight } = useWindowDimensions();
 
@@ -67,6 +70,30 @@ export default function NotesListScreen({ navigation, route, renderHeader, scrol
   const [loading, setLoading] = useState(true);
   const [showLoading, setShowLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+
+  // Performance tracking
+  const screenFocusTime = useRef<number>(0);
+  const notesLoadedTime = useRef<number>(0);
+
+  // Track when screen first focuses
+  useEffect(() => {
+    screenFocusTime.current = performance.now();
+    console.log(`[PERF OPTIMIZED] Screen focused - starting timer`);
+  }, []);
+
+  // Measure UI render time after notes are loaded
+  useEffect(() => {
+    if (notes.length > 0 && notesLoadedTime.current > 0 && !loading) {
+      requestAnimationFrame(() => {
+        const renderComplete = performance.now();
+        const timeToRender = renderComplete - notesLoadedTime.current;
+        const totalTime = renderComplete - screenFocusTime.current;
+        console.log(`[PERF OPTIMIZED] UI render time: ${timeToRender.toFixed(2)}ms`);
+        console.log(`[PERF OPTIMIZED] TOTAL TIME (focus to ready): ${totalTime.toFixed(2)}ms for ${notes.length} notes`);
+        notesLoadedTime.current = 0;
+      });
+    }
+  }, [notes, loading]);
 
   // Create folder modal state
   const [newFolderName, setNewFolderName] = useState('');
@@ -165,6 +192,9 @@ export default function NotesListScreen({ navigation, route, renderHeader, scrol
 
   const loadNotes = async (isRefresh = false) => {
     try {
+      const loadStartTime = performance.now();
+      console.log(`[PERF OPTIMIZED] 🚀 loadNotes started at ${(loadStartTime - screenFocusTime.current).toFixed(2)}ms from screen focus`);
+
       if (!isRefresh) {
         setLoading(true);
       }
@@ -195,50 +225,161 @@ export default function NotesListScreen({ navigation, route, renderHeader, scrol
       }
 
       // Fetch notes with server-side filtering (much faster!)
+      const apiCallStart = performance.now();
+      console.log(`[PERF OPTIMIZED] 📡 Starting API call at ${(apiCallStart - screenFocusTime.current).toFixed(2)}ms`);
       const filteredNotes = await api.getNotes(queryParams);
 
       if (__DEV__) {
         console.log('✅ Fetched notes with server-side filtering:', filteredNotes.length);
       }
 
-      setNotes(filteredNotes);
+      notesLoadedTime.current = performance.now();
+      const apiDuration = notesLoadedTime.current - apiCallStart;
+      console.log(`[PERF OPTIMIZED] 📦 API call completed in ${apiDuration.toFixed(2)}ms - ${filteredNotes.length} notes loaded`);
 
-      // Load subfolders and their counts
-      if (folderId) {
-        // Get folders and counts in parallel
-        const [foldersData, noteCounts] = await Promise.all([
-          api.getFolders(),
-          api.getCounts(folderId) // Get counts for subfolders of this folder
-        ]);
+      // Sort notes first (we can sort encrypted notes by date metadata)
+      const sortedNotes = [...filteredNotes].sort((a, b) => {
+        let aValue: string | number | Date;
+        let bValue: string | number | Date;
 
-        // If viewing a specific folder, show its subfolders
-        const currentFolderSubfolders = foldersData.filter(folder => folder.parentId === folderId);
+        switch (sortConfig.option) {
+          case 'updated':
+            aValue = new Date(a.updatedAt);
+            bValue = new Date(b.updatedAt);
+            break;
+          case 'created':
+            aValue = new Date(a.createdAt);
+            bValue = new Date(b.createdAt);
+            break;
+          case 'title':
+            // For encrypted notes, title will be '[ENCRYPTED]', so we use createdAt as fallback
+            aValue = a.title === '[ENCRYPTED]' ? new Date(a.createdAt) : (a.title || 'Untitled').toLowerCase();
+            bValue = b.title === '[ENCRYPTED]' ? new Date(b.createdAt) : (b.title || 'Untitled').toLowerCase();
+            break;
+          default:
+            return 0;
+        }
 
-        // Add note counts from the API response
-        // API returns folder counts directly as { folderId: { all, starred, ... } }
-        const subfoldersWithCounts = currentFolderSubfolders.map(folder => {
-          const folderCount = noteCounts[folder.id] as FolderCounts | undefined;
-          return {
-            ...folder,
-            noteCount: folderCount?.all || 0
-          };
-        });
+        if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
+        if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
+        return 0;
+      });
 
-        setSubfolders(subfoldersWithCounts);
-        setAllFolders(foldersData);
+      // Now decrypt the first 10 notes from the SORTED list
+      const userId = user?.id;
+      if (userId && sortedNotes.length > 0) {
+        const batchSize = Math.min(10, sortedNotes.length);
+        const firstBatch = sortedNotes.slice(0, batchSize);
+
+        const decryptStart = performance.now();
+        console.log(`[PERF OPTIMIZED] 🔐 Starting decryption of first ${batchSize} sorted notes`);
+
+        // Decrypt first batch
+        const decryptedBatch = await Promise.all(
+          firstBatch.map(note => {
+            if (note.title === '[ENCRYPTED]' || note.content === '[ENCRYPTED]') {
+              return decryptNote(note, userId);
+            }
+            return Promise.resolve(note);
+          })
+        );
+
+        const decryptEnd = performance.now();
+        console.log(`[PERF OPTIMIZED] 🔓 Decrypted first ${batchSize} notes in ${(decryptEnd - decryptStart).toFixed(2)}ms`);
+
+        // Set notes with first batch decrypted, rest still encrypted
+        const remaining = sortedNotes.slice(batchSize);
+        setNotes([...decryptedBatch, ...remaining]);
+
+        // Clear loading state NOW - UI will show immediately with 10 real notes + 83 skeletons
+        if (!isRefresh) {
+          const showUITime = performance.now();
+          console.log(`[PERF OPTIMIZED] ✅ SHOWING UI NOW - Total time: ${(showUITime - screenFocusTime.current).toFixed(2)}ms`);
+          setLoading(false);
+        }
+
+        // Decrypt remaining notes in background
+        if (remaining.length > 0) {
+          const encryptedRemaining = remaining.filter(note =>
+            note.title === '[ENCRYPTED]' || note.content === '[ENCRYPTED]'
+          );
+
+          if (encryptedRemaining.length > 0) {
+            setTimeout(() => {
+              console.log(`[PERF OPTIMIZED] 🔐 Starting background decryption of ${encryptedRemaining.length} notes`);
+              Promise.all(
+                encryptedRemaining.map(note => decryptNote(note, userId))
+              ).then(decryptedRemaining => {
+                // Update notes: replace encrypted notes with decrypted versions
+                setNotes(currentNotes => {
+                  const updated = [...currentNotes];
+                  decryptedRemaining.forEach(decryptedNote => {
+                    const index = updated.findIndex(n => n.id === decryptedNote.id);
+                    if (index !== -1) {
+                      updated[index] = decryptedNote;
+                    }
+                  });
+                  return updated;
+                });
+                console.log(`[PERF OPTIMIZED] ✅ Finished decrypting all ${encryptedRemaining.length} remaining notes`);
+              });
+            }, 500);
+          }
+        }
       } else {
-        // Don't show folders in special views (all, starred, archived, trash)
-        setSubfolders([]);
-        // Still need folders for displaying folder info in note list
-        const foldersData = await api.getFolders();
-        setAllFolders(foldersData);
+        setNotes(sortedNotes);
+        if (!isRefresh) {
+          setLoading(false);
+        }
       }
+
+      // Load subfolders and their counts in background (non-blocking)
+      console.log(`[PERF OPTIMIZED] 📂 Loading folders in background (non-blocking) at ${(performance.now() - screenFocusTime.current).toFixed(2)}ms`);
+      (async () => {
+        try {
+          if (folderId) {
+            // Get folders and counts in parallel
+            const [foldersData, noteCounts] = await Promise.all([
+              api.getFolders(),
+              api.getCounts(folderId) // Get counts for subfolders of this folder
+            ]);
+
+            // If viewing a specific folder, show its subfolders
+            const currentFolderSubfolders = foldersData.filter(folder => folder.parentId === folderId);
+
+            // Add note counts from the API response
+            // API returns folder counts directly as { folderId: { all, starred, ... } }
+            const subfoldersWithCounts = currentFolderSubfolders.map(folder => {
+              const folderCount = noteCounts[folder.id] as FolderCounts | undefined;
+              return {
+                ...folder,
+                noteCount: folderCount?.all || 0
+              };
+            });
+
+            setSubfolders(subfoldersWithCounts);
+            setAllFolders(foldersData);
+          } else {
+            // Don't show folders in special views (all, starred, archived, trash)
+            setSubfolders([]);
+            // Still need folders for displaying folder info in note list
+            const foldersData = await api.getFolders();
+            setAllFolders(foldersData);
+          }
+        } catch (error) {
+          console.error('[PERF OPTIMIZED] Failed to load folders in background:', error);
+          setSubfolders([]);
+        }
+      })();
+
+      // Log that loadNotes function has completed and returned
+      console.log(`[PERF OPTIMIZED] 🎉 loadNotes function completed and returned at ${(performance.now() - screenFocusTime.current).toFixed(2)}ms`);
     } catch (error) {
       if (__DEV__) console.error('Failed to load notes:', error);
       Alert.alert('Error', 'Failed to load notes. Please try again.');
       setNotes([]);
       setSubfolders([]);
-    } finally {
+      // Clear loading state on error
       if (!isRefresh) {
         setLoading(false);
       }
@@ -420,9 +561,82 @@ export default function NotesListScreen({ navigation, route, renderHeader, scrol
   // Check if any filters are active
   const hasActiveFilters = filterConfig.showAttachmentsOnly || filterConfig.showStarredOnly || filterConfig.showHiddenOnly;
 
+  // Skeleton shimmer animation
+  const skeletonOpacity = useRef(new Animated.Value(0.3)).current;
+
+  useEffect(() => {
+    // Create pulsing animation
+    const pulse = Animated.sequence([
+      Animated.timing(skeletonOpacity, {
+        toValue: 0.7,
+        duration: 800,
+        useNativeDriver: true,
+      }),
+      Animated.timing(skeletonOpacity, {
+        toValue: 0.3,
+        duration: 800,
+        useNativeDriver: true,
+      }),
+    ]);
+
+    // Loop the animation
+    Animated.loop(pulse).start();
+
+    // Cleanup
+    return () => skeletonOpacity.stopAnimation();
+  }, [skeletonOpacity]);
+
   // Render individual note item
   const renderNoteItem = useCallback(({ item: note, index }: { item: Note; index: number }) => {
-    // Lazy calculation - only compute when item is rendered
+    const isLastNote = index === filteredNotes.length - 1;
+
+    // Check if note is still encrypted (loading skeleton)
+    // We check the title/content instead of using isNoteEncrypted because
+    // decrypted notes still have encryptedTitle/encryptedContent fields
+    const noteIsEncrypted = note.title === '[ENCRYPTED]' || note.content === '[ENCRYPTED]';
+
+    // Render skeleton for encrypted notes
+    if (noteIsEncrypted) {
+      return (
+        <View style={styles.noteListItemWrapper}>
+          <View style={styles.noteListItem}>
+            <View style={styles.noteListContent}>
+              <View style={styles.noteListHeader}>
+                <Animated.View
+                  style={[
+                    styles.skeletonTitle,
+                    { backgroundColor: theme.colors.muted, opacity: skeletonOpacity }
+                  ]}
+                />
+                <View style={styles.noteListMeta}>
+                  <Animated.View
+                    style={[
+                      styles.skeletonDate,
+                      { backgroundColor: theme.colors.muted, opacity: skeletonOpacity }
+                    ]}
+                  />
+                </View>
+              </View>
+              <Animated.View
+                style={[
+                  styles.skeletonPreview,
+                  { backgroundColor: theme.colors.muted, opacity: skeletonOpacity }
+                ]}
+              />
+              <Animated.View
+                style={[
+                  styles.skeletonPreview,
+                  { backgroundColor: theme.colors.muted, width: '60%', opacity: skeletonOpacity }
+                ]}
+              />
+            </View>
+          </View>
+          {!isLastNote && <View style={[styles.noteListDivider, { backgroundColor: theme.colors.border }]} />}
+        </View>
+      );
+    }
+
+    // Lazy calculation - strip HTML and format date only when rendered
     let enhancedData = notesEnhancedDataCache.current.get(note.id);
     if (!enhancedData) {
       enhancedData = {
@@ -437,7 +651,6 @@ export default function NotesListScreen({ navigation, route, renderHeader, scrol
 
     const folderPath = note.folderId ? folderPathsMap.get(note.folderId) || '' : '';
     const noteFolder = note.folderId ? foldersMap.get(note.folderId) : undefined;
-    const isLastNote = index === filteredNotes.length - 1;
 
     return (
       <View style={styles.noteListItemWrapper}>
@@ -493,7 +706,7 @@ export default function NotesListScreen({ navigation, route, renderHeader, scrol
         {!isLastNote && <View style={[styles.noteListDivider, { backgroundColor: theme.colors.border }]} />}
       </View>
     );
-  }, [folderPathsMap, foldersMap, filteredNotes.length, folderId, navigation, theme.colors]);
+  }, [folderPathsMap, foldersMap, filteredNotes.length, folderId, navigation, theme.colors, skeletonOpacity]);
 
   // Render list header (subfolders and create note button)
   const renderListHeader = useCallback(() => {
@@ -722,10 +935,10 @@ export default function NotesListScreen({ navigation, route, renderHeader, scrol
             />
           }
           removeClippedSubviews={true}
-          maxToRenderPerBatch={5}
+          maxToRenderPerBatch={10}
           updateCellsBatchingPeriod={100}
-          initialNumToRender={5}
-          windowSize={5}
+          initialNumToRender={10}
+          windowSize={10}
         />
       )}
 
@@ -942,11 +1155,7 @@ const styles = StyleSheet.create({
     zIndex: 1000,
   },
   loadingContainer: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -1290,5 +1499,22 @@ const styles = StyleSheet.create({
   filterOptionText: {
     fontSize: 16,
     flex: 1,
+  },
+  // Skeleton loading styles (opacity is animated, not static)
+  skeletonTitle: {
+    height: 20,
+    width: '60%',
+    borderRadius: 4,
+  },
+  skeletonDate: {
+    height: 14,
+    width: 60,
+    borderRadius: 4,
+  },
+  skeletonPreview: {
+    height: 16,
+    width: '100%',
+    borderRadius: 4,
+    marginTop: 6,
   },
 });

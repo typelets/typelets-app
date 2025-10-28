@@ -76,11 +76,7 @@ export function createNotesApi(getToken: AuthTokenGetter, getUserId: () => strin
           (response) => response.notes || []
         );
 
-        // Decrypt notes if we have a user ID
-        if (userId && allNotes.length > 0) {
-          return await decryptNotes(allNotes, userId);
-        }
-
+        // Return notes without decrypting - lazy decryption happens in UI layer
         return allNotes;
       } catch (error) {
         return handleApiError(error, 'getNotes');
