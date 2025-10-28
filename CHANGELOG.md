@@ -1,3 +1,10 @@
+## [1.30.7](https://github.com/typelets/typelets-app/compare/v1.30.6...v1.30.7) (2025-10-28)
+
+
+### Bug Fixes
+
+* **web:** display attachment badges in notes list and disable WebSocket features ([2c2f7ab](https://github.com/typelets/typelets-app/commit/2c2f7ab3672cbcdeb056dd3c023449eb595f7ba2))
+
 ## [1.30.6](https://github.com/typelets/typelets-app/compare/v1.30.5...v1.30.6) (2025-10-28)
 
 
