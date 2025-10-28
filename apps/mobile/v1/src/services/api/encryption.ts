@@ -3,15 +3,20 @@
  * Handles note encryption/decryption logic
  */
 
-import { clearNoteCacheForUser, decryptNoteData, encryptNoteData, isNoteEncrypted } from '../../lib/encryption';
+import { clearNoteCacheForUser, decryptNoteData, encryptNoteData, isNoteEncrypted as checkNoteEncrypted } from '../../lib/encryption';
 import { Note } from './types';
 import { ENCRYPTED_MARKER } from './utils/constants';
+
+/**
+ * Re-export isNoteEncrypted for convenience
+ */
+export { checkNoteEncrypted as isNoteEncrypted };
 
 /**
  * Decrypts a note if it's encrypted
  */
 export async function decryptNote(note: Note, userId: string): Promise<Note> {
-  if (!isNoteEncrypted(note)) {
+  if (!checkNoteEncrypted(note)) {
     return note; // Return as-is if not encrypted
   }
 
@@ -53,9 +58,12 @@ export async function decryptNotes(
     return notes;
   }
 
+  const decryptStart = performance.now();
+  console.log(`[PERF] Starting decryption of ${notes.length} notes...`);
+
   try {
     // Decrypt notes individually to handle failures gracefully
-    return await Promise.all(
+    const result = await Promise.all(
       notes.map(async (note) => {
         try {
           return await decryptNote(note, userId);
@@ -69,6 +77,11 @@ export async function decryptNotes(
         }
       })
     );
+
+    const decryptEnd = performance.now();
+    console.log(`[PERF] Decryption completed in ${(decryptEnd - decryptStart).toFixed(2)}ms for ${notes.length} notes`);
+
+    return result;
   } catch (error) {
     if (__DEV__) {
       console.error('Error during note decryption batch:', error);
