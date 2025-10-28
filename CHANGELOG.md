@@ -1,3 +1,15 @@
+## [1.30.9](https://github.com/typelets/typelets-app/compare/v1.30.8...v1.30.9) (2025-10-28)
+
+
+### Bug Fixes
+
+* **mobile:** optimize note list loading with progressive decryption and skeleton UI ([19019bb](https://github.com/typelets/typelets-app/commit/19019bb8d851004630c868a789c2db56f4c5051b))
+
+
+### Performance Improvements
+
+* **mobile:** add performance logging to identify notes list bottlenecks ([60785be](https://github.com/typelets/typelets-app/commit/60785bee0d6121199b4263706133f9f389d1dd08))
+
 ## [1.30.8](https://github.com/typelets/typelets-app/compare/v1.30.7...v1.30.8) (2025-10-28)
 
 
