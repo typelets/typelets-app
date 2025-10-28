@@ -14,7 +14,7 @@ interface UseNotesOperationsParams {
   selectedNote: Note | null;
   selectedFolder: Folder | null;
   encryptionReady: boolean;
-  webSocket: UseWebSocketReturn;
+  webSocket: UseWebSocketReturn | null; // BACKLOG: WebSocket moved to upcoming release
   setNotes: React.Dispatch<React.SetStateAction<Note[]>>;
   setFolders: React.Dispatch<React.SetStateAction<Folder[]>>;
   setSelectedNote: React.Dispatch<React.SetStateAction<Note | null>>;
@@ -30,7 +30,7 @@ export function useNotesOperations({
   selectedNote,
   selectedFolder,
   encryptionReady,
-  webSocket,
+  webSocket: _webSocket, // BACKLOG: Prefixed with _ as unused until WebSocket re-enabled
   setNotes,
   setFolders,
   setSelectedNote,
@@ -68,7 +68,7 @@ export function useNotesOperations({
           logSecureError(secureError, 'useNotesOperations.createNote');
           secureLogger.error('Note creation failed - encryption not ready');
           setError(secureError.userMessage);
-          throw secureError;
+          return; // Exit early without throwing since error is already set
         }
 
         const noteFolderId = folderId ?? selectedFolder?.id ?? null;
@@ -91,10 +91,11 @@ export function useNotesOperations({
         setNotes((prev) => [noteWithFolder, ...prev]);
         setSelectedNote(noteWithFolder);
 
+        // BACKLOG: WebSocket notification moved to upcoming release
         // Send WebSocket notification about note creation
-        if (webSocket.isAuthenticated) {
-          webSocket.sendNoteCreated(noteWithFolder);
-        }
+        // if (webSocket?.isAuthenticated) {
+        //   webSocket.sendNoteCreated(noteWithFolder);
+        // }
 
         return noteWithFolder;
       } catch (error) {
@@ -117,7 +118,6 @@ export function useNotesOperations({
       convertApiNote,
       setNotes,
       setSelectedNote,
-      webSocket,
       setError,
     ]
   );
@@ -227,10 +227,11 @@ export function useNotesOperations({
             });
           }
 
+          // BACKLOG: WebSocket notification moved to upcoming release
           // Send WebSocket notification about note update (immediate updates only)
-          if (webSocket.isAuthenticated) {
-            webSocket.sendNoteUpdate(noteId, updates);
-          }
+          // if (webSocket?.isAuthenticated) {
+          //   webSocket.sendNoteUpdate(noteId, updates);
+          // }
         } catch (error) {
           const secureError = sanitizeError(error, 'Failed to update note');
           logSecureError(
@@ -242,10 +243,11 @@ export function useNotesOperations({
           void loadData();
         }
       } else {
+        // BACKLOG: WebSocket update moved to upcoming release
         // Send WebSocket update immediately for instant cross-tab sync
-        if (webSocket.isAuthenticated) {
-          webSocket.sendNoteUpdate(noteId, updates);
-        }
+        // if (webSocket?.isAuthenticated) {
+        //   webSocket.sendNoteUpdate(noteId, updates);
+        // }
 
         const timeout = setTimeout(async () => {
           try {
@@ -308,7 +310,6 @@ export function useNotesOperations({
       convertApiNote,
       setNotes,
       setSelectedNote,
-      webSocket,
       setError,
     ]
   );
@@ -318,10 +319,11 @@ export function useNotesOperations({
       try {
         await updateNote(noteId, { deleted: true });
 
+        // BACKLOG: WebSocket notification moved to upcoming release
         // Send WebSocket notification about note deletion
-        if (webSocket.isAuthenticated) {
-          webSocket.sendNoteDeleted(noteId);
-        }
+        // if (webSocket?.isAuthenticated) {
+        //   webSocket.sendNoteDeleted(noteId);
+        // }
       } catch (error) {
         const secureError = sanitizeError(error, 'Failed to delete note');
         logSecureError(secureError, 'useNotesOperations.deleteNote');
@@ -329,7 +331,7 @@ export function useNotesOperations({
         setError(secureError.userMessage);
       }
     },
-    [updateNote, webSocket, setError]
+    [updateNote, setError]
   );
 
   // Note action operations
@@ -365,10 +367,11 @@ export function useNotesOperations({
           });
         }
 
+        // BACKLOG: WebSocket update moved to upcoming release
         // Send WebSocket update for real-time sync
-        if (webSocket.isAuthenticated) {
-          webSocket.sendNoteUpdate(noteId, { starred: updatedNote.starred });
-        }
+        // if (webSocket?.isAuthenticated) {
+        //   webSocket.sendNoteUpdate(noteId, { starred: updatedNote.starred });
+        // }
       } catch (error) {
         const secureError = sanitizeError(error, 'Failed to toggle star');
         logSecureError(secureError, 'useNotesOperations.toggleStar');
@@ -386,7 +389,6 @@ export function useNotesOperations({
       selectedNote,
       setNotes,
       setSelectedNote,
-      webSocket,
       setError,
     ]
   );
@@ -414,10 +416,11 @@ export function useNotesOperations({
           prev.map((note) => (note.id === noteId ? restoredNote : note))
         );
 
+        // BACKLOG: WebSocket update moved to upcoming release
         // Send WebSocket update for real-time sync
-        if (webSocket.isAuthenticated) {
-          webSocket.sendNoteUpdate(noteId, { deleted: restoredNote.deleted });
-        }
+        // if (webSocket?.isAuthenticated) {
+        //   webSocket.sendNoteUpdate(noteId, { deleted: restoredNote.deleted });
+        // }
       } catch (error) {
         const secureError = sanitizeError(error, 'Failed to restore note');
         logSecureError(secureError, 'useNotesOperations.restoreNote');
@@ -425,7 +428,7 @@ export function useNotesOperations({
         setError(secureError.userMessage);
       }
     },
-    [convertApiNote, setNotes, webSocket, setError]
+    [convertApiNote, setNotes, setError]
   );
 
   const hideNote = useCallback(
@@ -460,13 +463,14 @@ export function useNotesOperations({
           });
         }
 
+        // BACKLOG: WebSocket update moved to upcoming release
         // Send WebSocket update for real-time sync
-        if (webSocket.isAuthenticated) {
-          webSocket.sendNoteUpdate(noteId, {
-            hidden: hiddenNote.hidden,
-            hiddenAt: hiddenNote.hiddenAt,
-          });
-        }
+        // if (webSocket?.isAuthenticated) {
+        //   webSocket.sendNoteUpdate(noteId, {
+        //     hidden: hiddenNote.hidden,
+        //     hiddenAt: hiddenNote.hiddenAt,
+        //   });
+        // }
       } catch (error) {
         const secureError = sanitizeError(error, 'Failed to hide note');
         logSecureError(secureError, 'useNotesOperations.hideNote');
@@ -484,7 +488,6 @@ export function useNotesOperations({
       selectedNote,
       setNotes,
       setSelectedNote,
-      webSocket,
       setError,
     ]
   );
@@ -515,13 +518,14 @@ export function useNotesOperations({
           });
         }
 
+        // BACKLOG: WebSocket update moved to upcoming release
         // Send WebSocket update for real-time sync
-        if (webSocket.isAuthenticated) {
-          webSocket.sendNoteUpdate(noteId, {
-            hidden: unhiddenNote.hidden,
-            hiddenAt: unhiddenNote.hiddenAt,
-          });
-        }
+        // if (webSocket?.isAuthenticated) {
+        //   webSocket.sendNoteUpdate(noteId, {
+        //     hidden: unhiddenNote.hidden,
+        //     hiddenAt: unhiddenNote.hiddenAt,
+        //   });
+        // }
       } catch (error) {
         const secureError = sanitizeError(error, 'Failed to unhide note');
         logSecureError(secureError, 'useNotesOperations.unhideNote');
@@ -534,7 +538,6 @@ export function useNotesOperations({
       selectedNote,
       setNotes,
       setSelectedNote,
-      webSocket,
       setError,
     ]
   );
@@ -587,10 +590,11 @@ export function useNotesOperations({
 
         setFolders((prev) => [...prev, newFolder]);
 
+        // BACKLOG: WebSocket notification moved to upcoming release
         // Send WebSocket notification about folder creation
-        if (webSocket.isAuthenticated) {
-          webSocket.sendFolderCreated(newFolder);
-        }
+        // if (webSocket?.isAuthenticated) {
+        //   webSocket.sendFolderCreated(newFolder);
+        // }
 
         return newFolder;
       } catch (error) {
@@ -601,7 +605,7 @@ export function useNotesOperations({
         throw secureError;
       }
     },
-    [setFolders, webSocket, setError]
+    [setFolders, setError]
   );
 
   const updateFolder = useCallback(
@@ -620,10 +624,11 @@ export function useNotesOperations({
           )
         );
 
+        // BACKLOG: WebSocket notification moved to upcoming release
         // Send WebSocket notification about folder update
-        if (webSocket.isAuthenticated) {
-          webSocket.sendFolderUpdated(folderId, updates, updatedFolder);
-        }
+        // if (webSocket?.isAuthenticated) {
+        //   webSocket.sendFolderUpdated(folderId, updates, updatedFolder);
+        // }
 
         return updatedFolder;
       } catch (error) {
@@ -634,7 +639,7 @@ export function useNotesOperations({
         throw secureError;
       }
     },
-    [safeConvertDates, setFolders, webSocket, setError]
+    [safeConvertDates, setFolders, setError]
   );
 
   const deleteFolder = useCallback(
@@ -655,10 +660,11 @@ export function useNotesOperations({
           setSelectedNote(null);
         }
 
+        // BACKLOG: WebSocket notification moved to upcoming release
         // Send WebSocket notification about folder deletion
-        if (webSocket.isAuthenticated) {
-          webSocket.sendFolderDeleted(folderId);
-        }
+        // if (webSocket?.isAuthenticated) {
+        //   webSocket.sendFolderDeleted(folderId);
+        // }
       } catch (error) {
         const secureError = sanitizeError(error, 'Failed to delete folder');
         logSecureError(secureError, 'useNotesOperations.deleteFolder');
@@ -672,7 +678,6 @@ export function useNotesOperations({
       getDescendantIds,
       setFolders,
       setSelectedNote,
-      webSocket,
       setError,
     ]
   );

@@ -112,12 +112,16 @@ export default function FilesPanel({
 
   const filterNotes = (notes: Note[], config: FilterConfig): Note[] => {
     return notes.filter((note) => {
-      return !(
-        (config.showAttachmentsOnly &&
-          (!note.attachments || note.attachments.length === 0)) ||
-        (config.showStarredOnly && !note.starred) ||
-        (config.showHiddenOnly && !note.hidden)
-      );
+      const hasAttachments = (note.attachmentCount && note.attachmentCount > 0) ||
+        (note.attachments && note.attachments.length > 0);
+
+      // A note is included if it passes ALL active filters (AND logic)
+      // Exclude if any active filter condition fails
+      const excludeByAttachments = config.showAttachmentsOnly && !hasAttachments;
+      const excludeByStarred = config.showStarredOnly && !note.starred;
+      const excludeByHidden = config.showHiddenOnly && !note.hidden;
+
+      return !(excludeByAttachments || excludeByStarred || excludeByHidden);
     });
   };
 

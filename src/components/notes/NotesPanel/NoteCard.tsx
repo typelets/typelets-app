@@ -139,10 +139,13 @@ function NoteCard({
                 <Codesandbox className="h-3.5 w-3.5 text-purple-500" />
               </div>
             )}
-            {note.attachments && note.attachments.length > 0 && (
+            {((note.attachmentCount && note.attachmentCount > 0) ||
+              (note.attachments && note.attachments.length > 0)) && (
               <div className="flex items-center gap-1 text-xs text-blue-500">
                 <Paperclip className="h-3.5 w-3.5" />
-                <span>{note.attachments.length}</span>
+                <span>
+                  {note.attachmentCount ?? note.attachments?.length ?? 0}
+                </span>
               </div>
             )}
             <button

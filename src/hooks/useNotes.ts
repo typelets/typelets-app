@@ -7,8 +7,9 @@ import {
   hasMasterPassword,
   isMasterPasswordUnlocked,
 } from '@/lib/encryption';
-import { useWebSocket } from './useWebSocket';
-import { useNotesSync } from './useNotesSync';
+// BACKLOG: WebSocket functionality moved to upcoming release
+// import { useWebSocket } from './useWebSocket';
+// import { useNotesSync } from './useNotesSync';
 import { useNotesFiltering } from './useNotesFiltering';
 import { useNotesOperations } from './useNotesOperations';
 import type { Note, Folder, ViewMode } from '@/types/note';
@@ -138,49 +139,50 @@ export function useNotes() {
     ];
   }, []);
 
-  const refetchFolders = useCallback(async () => {
-    try {
-      const allFolders = await fetchAllFolders();
-      setFolders(allFolders);
-    } catch (error) {
-      secureLogger.error('Failed to refetch folders:', error);
-    }
-  }, [fetchAllFolders, setFolders]);
+  // BACKLOG: refetchFolders moved to upcoming release (was used by WebSocket sync)
+  // const refetchFolders = useCallback(async () => {
+  //   try {
+  //     const allFolders = await fetchAllFolders();
+  //     setFolders(allFolders);
+  //   } catch (error) {
+  //     secureLogger.error('Failed to refetch folders:', error);
+  //   }
+  // }, [fetchAllFolders, setFolders]);
 
-  // WebSocket sync handlers
-  const syncHandlers = useNotesSync({
-    folders,
-    selectedFolder,
-    setNotes,
-    setFolders,
-    setSelectedNote,
-    safeConvertDates,
-    refetchFolders,
-  });
+  // BACKLOG: WebSocket sync handlers moved to upcoming release
+  // const syncHandlers = useNotesSync({
+  //   folders,
+  //   selectedFolder,
+  //   setNotes,
+  //   setFolders,
+  //   setSelectedNote,
+  //   safeConvertDates,
+  //   refetchFolders,
+  // });
 
-  // WebSocket integration for real-time sync
+  // BACKLOG: WebSocket integration for real-time sync - moved to upcoming release
   // Defer connection until after initial data load for better performance
-  const webSocket = useWebSocket({
-    autoConnect: false,
-    ...syncHandlers,
-    onError: useCallback((error: Error | { message?: string }) => {
-      // Only show connection errors to users if they persist
-      secureLogger.error('WebSocket connection error', error);
+  // const webSocket = useWebSocket({
+  //   autoConnect: false,
+  //   ...syncHandlers,
+  //   onError: useCallback((error: Error | { message?: string }) => {
+  //     // Only show connection errors to users if they persist
+  //     secureLogger.error('WebSocket connection error', error);
 
-      // Don't show transient connection errors during startup
-      const isStartupError = Date.now() - window.performance.timeOrigin < 10000;
-      const isConnectionClosed =
-        error?.message?.includes?.('Connection closed');
+  //     // Don't show transient connection errors during startup
+  //     const isStartupError = Date.now() - window.performance.timeOrigin < 10000;
+  //     const isConnectionClosed =
+  //       error?.message?.includes?.('Connection closed');
 
-      if (!isStartupError && !isConnectionClosed) {
-        setError(`Connection error: ${error.message || 'Unknown error'}`);
-      }
-    }, []),
-    onAuthenticated: useCallback((userId: string) => {
-      secureLogger.authEvent('login', userId);
-      setError(null); // Clear any previous connection errors
-    }, []),
-  });
+  //     if (!isStartupError && !isConnectionClosed) {
+  //       setError(`Connection error: ${error.message || 'Unknown error'}`);
+  //     }
+  //   }, []),
+  //   onAuthenticated: useCallback((userId: string) => {
+  //     secureLogger.authEvent('login', userId);
+  //     setError(null); // Clear any previous connection errors
+  //   }, []),
+  // });
 
   const initializeUser = useCallback(async () => {
     try {
@@ -294,11 +296,17 @@ export function useNotes() {
 
       // Defer attachment loading - only add folder data initially
       // Attachments will be loaded on-demand when a note is selected
+      // Preserve attachmentCount from API for displaying badges
       const notesWithFolders = allNotes.map((note) => {
         const folder = note.folderId
           ? folderMap.get(note.folderId)
           : undefined;
-        return { ...note, attachments: [], folder };
+        return {
+          ...note,
+          attachments: [],
+          attachmentCount: note.attachmentCount ?? 0,
+          folder
+        };
       });
 
       setNotes(notesWithFolders);
@@ -348,16 +356,17 @@ export function useNotes() {
     }
   }, [encryptionReady, clerkUser, loadData]);
 
+  // BACKLOG: WebSocket connection moved to upcoming release
   // Connect WebSocket after initial data load for better performance
-  useEffect(() => {
-    if (!loading && encryptionReady && notes.length > 0 && !webSocket.isConnected) {
-      // Delay connection slightly to ensure UI has rendered
-      const timer = setTimeout(() => {
-        webSocket.connect();
-      }, 100);
-      return () => clearTimeout(timer);
-    }
-  }, [loading, encryptionReady, notes.length, webSocket]);
+  // useEffect(() => {
+  //   if (!loading && encryptionReady && notes.length > 0 && !webSocket.isConnected) {
+  //     // Delay connection slightly to ensure UI has rendered
+  //     const timer = setTimeout(() => {
+  //       webSocket.connect();
+  //     }, 100);
+  //     return () => clearTimeout(timer);
+  //   }
+  // }, [loading, encryptionReady, notes.length, webSocket]);
 
   // Notes filtering
   const {
@@ -389,7 +398,7 @@ export function useNotes() {
     selectedNote,
     selectedFolder,
     encryptionReady,
-    webSocket,
+    webSocket: null, // BACKLOG: WebSocket removed for upcoming release
     setNotes,
     setFolders,
     setSelectedNote,
@@ -400,23 +409,23 @@ export function useNotes() {
     getDescendantIds,
   });
 
-  // Auto-join selected note for real-time sync
-  useEffect(() => {
-    if (selectedNote?.id && webSocket.isAuthenticated) {
-      // Leave previous note if any
-      const joinedNotes = webSocket.joinedNotes;
-      joinedNotes.forEach((noteId) => {
-        if (noteId !== selectedNote.id) {
-          webSocket.leaveNote(noteId);
-        }
-      });
+  // BACKLOG: Auto-join selected note for real-time sync - moved to upcoming release
+  // useEffect(() => {
+  //   if (selectedNote?.id && webSocket.isAuthenticated) {
+  //     // Leave previous note if any
+  //     const joinedNotes = webSocket.joinedNotes;
+  //     joinedNotes.forEach((noteId) => {
+  //       if (noteId !== selectedNote.id) {
+  //         webSocket.leaveNote(noteId);
+  //       }
+  //     });
 
-      // Join current note for real-time sync
-      if (!joinedNotes.includes(selectedNote.id)) {
-        webSocket.joinNote(selectedNote.id);
-      }
-    }
-  }, [selectedNote?.id, webSocket.isAuthenticated, webSocket]);
+  //     // Join current note for real-time sync
+  //     if (!joinedNotes.includes(selectedNote.id)) {
+  //       webSocket.joinNote(selectedNote.id);
+  //     }
+  //   }
+  // }, [selectedNote?.id, webSocket.isAuthenticated, webSocket]);
 
   // Auto-select a note when selectedNote becomes null and there are available notes
   useEffect(() => {
@@ -567,17 +576,18 @@ export function useNotes() {
       const newFolders = await fetchAllFolders();
       setFolders(newFolders);
 
+      // BACKLOG: WebSocket notification moved to upcoming release
       // Send WebSocket notification about folder reordering
-      if (webSocket.isAuthenticated) {
-        const reorderedFolder = newFolders.find((f) => f.id === folderId);
-        if (reorderedFolder) {
-          webSocket.sendFolderUpdated(
-            folderId,
-            { order: newIndex },
-            reorderedFolder
-          );
-        }
-      }
+      // if (webSocket.isAuthenticated) {
+      //   const reorderedFolder = newFolders.find((f) => f.id === folderId);
+      //   if (reorderedFolder) {
+      //     webSocket.sendFolderUpdated(
+      //       folderId,
+      //       { order: newIndex },
+      //       reorderedFolder
+      //     );
+      //   }
+      // }
     } catch (error) {
       secureLogger.error('Folder reordering failed', error);
       setError('Failed to reorder folders');
@@ -656,20 +666,20 @@ export function useNotes() {
         await loadData();
       }
     },
-    // WebSocket sync status
-    webSocket: {
-      status: webSocket.status,
-      isConnected: webSocket.isConnected,
-      isAuthenticated: webSocket.isAuthenticated,
-      userId: webSocket.userId,
-      error: webSocket.error,
-      reconnectAttempts: webSocket.reconnectAttempts,
-      lastSync: webSocket.lastSync,
-      joinedNotes: webSocket.joinedNotes,
-      connect: webSocket.connect,
-      disconnect: webSocket.disconnect,
-      reconnect: webSocket.reconnect,
-      clearError: webSocket.clearError,
-    },
+    // BACKLOG: WebSocket sync status moved to upcoming release
+    // webSocket: {
+    //   status: webSocket.status,
+    //   isConnected: webSocket.isConnected,
+    //   isAuthenticated: webSocket.isAuthenticated,
+    //   userId: webSocket.userId,
+    //   error: webSocket.error,
+    //   reconnectAttempts: webSocket.reconnectAttempts,
+    //   lastSync: webSocket.lastSync,
+    //   joinedNotes: webSocket.joinedNotes,
+    //   connect: webSocket.connect,
+    //   disconnect: webSocket.disconnect,
+    //   reconnect: webSocket.reconnect,
+    //   clearError: webSocket.clearError,
+    // },
   };
 }

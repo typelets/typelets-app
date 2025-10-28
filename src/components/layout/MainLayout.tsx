@@ -71,7 +71,8 @@ export default function MainLayout() {
     setNotes,
     refetch,
     reinitialize,
-    webSocket,
+    // BACKLOG: WebSocket moved to upcoming release
+    // webSocket,
   } = useNotes();
 
   const handleCreateNote = useCallback(
@@ -252,10 +253,11 @@ export default function MainLayout() {
     userId,
     isNotesPanelOpen: filesPanelOpen,
     onToggleNotesPanel: handleToggleNotesPanel,
-    wsStatus: webSocket.status,
-    wsIsAuthenticated: webSocket.isAuthenticated,
-    wsLastSync: webSocket.lastSync,
-    onWsReconnect: webSocket.reconnect,
+    // BACKLOG: WebSocket moved to upcoming release
+    // wsStatus: webSocket.status,
+    // wsIsAuthenticated: webSocket.isAuthenticated,
+    // wsLastSync: webSocket.lastSync,
+    // onWsReconnect: webSocket.reconnect,
   };
 
   if (isChecking) {

@@ -37,6 +37,7 @@ export interface ApiNote {
   folderId: string | null;
   createdAt: string;
   updatedAt: string;
+  attachmentCount?: number;
 }
 
 export interface ApiFolder {
