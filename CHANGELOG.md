@@ -1,3 +1,10 @@
+## [1.30.6](https://github.com/typelets/typelets-app/compare/v1.30.5...v1.30.6) (2025-10-28)
+
+
+### Bug Fixes
+
+* **mobile:** implement native scrolling for note editor ([feb8564](https://github.com/typelets/typelets-app/commit/feb85644df6deaa4e492620f727a0a8391fc956e))
+
 ## [1.30.5](https://github.com/typelets/typelets-app/compare/v1.30.4...v1.30.5) (2025-10-28)
 
 
