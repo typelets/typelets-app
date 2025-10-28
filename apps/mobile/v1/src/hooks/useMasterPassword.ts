@@ -1,12 +1,13 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useAuth,useUser } from '@clerk/clerk-expo';
+import { useCallback,useEffect, useState } from 'react';
 import { DeviceEventEmitter } from 'react-native';
-import { useUser, useAuth } from '@clerk/clerk-expo';
+
 import {
+  clearUserEncryptionData,
   hasMasterPassword,
   isMasterPasswordUnlocked,
   setupMasterPassword,
   unlockWithMasterPassword,
-  clearUserEncryptionData,
 } from '../lib/encryption';
 import { logger } from '../lib/logger';
 
@@ -70,7 +71,7 @@ export function useMasterPassword() {
 
       setLastCheckTime(Date.now());
     } catch (error) {
-      logger.error('Error checking master password status', error as Error, {
+      logger.error('[ENCRYPTION] Error checking master password status', error as Error, {
         attributes: {
           userId,
         },
@@ -120,7 +121,7 @@ export function useMasterPassword() {
         // Unlocking with existing password
         const success = await unlockWithMasterPassword(password, userId);
         if (!success) {
-          logger.warn('Invalid master password attempt', {
+          logger.warn('[ENCRYPTION] Invalid master password attempt', {
             attributes: {
               userId,
             },
@@ -147,7 +148,7 @@ export function useMasterPassword() {
       try {
         await clearUserEncryptionData(userId);
       } catch (error) {
-        logger.error('Error clearing encryption data on sign out', error as Error, {
+        logger.error('[ENCRYPTION] Error clearing encryption data on sign out', error as Error, {
           attributes: {
             userId,
           },

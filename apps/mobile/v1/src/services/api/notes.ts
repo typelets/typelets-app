@@ -3,14 +3,14 @@
  * Handles all note-related API operations
  */
 
-import { createHttpClient, AuthTokenGetter } from './client';
-import { Note, NoteQueryParams, NotesResponse, EmptyTrashResponse, FileAttachment, NoteCounts } from './types';
-import { decryptNote, decryptNotes, encryptNoteForApi, clearEncryptionCache } from './encryption';
-import { fetchAllPages, createPaginationParams } from './utils/pagination';
-import { handleApiError } from './utils/errors';
 import { logger } from '../../lib/logger';
 import { fileService, type PickedFile } from '../fileService';
 import { apiCache, CACHE_KEYS, CACHE_TTL } from './cache';
+import { AuthTokenGetter,createHttpClient } from './client';
+import { clearEncryptionCache,decryptNote, decryptNotes, encryptNoteForApi } from './encryption';
+import { EmptyTrashResponse, FileAttachment, Note, NoteCounts,NoteQueryParams, NotesResponse } from './types';
+import { handleApiError } from './utils/errors';
+import { createPaginationParams,fetchAllPages } from './utils/pagination';
 
 export function createNotesApi(getToken: AuthTokenGetter, getUserId: () => string | undefined) {
   const { makeRequest } = createHttpClient(getToken);
@@ -54,7 +54,7 @@ export function createNotesApi(getToken: AuthTokenGetter, getUserId: () => strin
 
         return result;
       } catch (error) {
-        logger.error('Failed to get note counts', error as Error, {
+        logger.error('[API] Failed to get note counts', error as Error, {
           attributes: { operation: 'getCounts', folderId },
         });
         return { all: 0, starred: 0, archived: 0, trash: 0 };
@@ -152,7 +152,7 @@ export function createNotesApi(getToken: AuthTokenGetter, getUserId: () => strin
 
         return decryptedNote;
       } catch (error) {
-        logger.error('Failed to create note', error as Error, {
+        logger.error('[API] Failed to create note', error as Error, {
           attributes: {
             operation: 'createNote',
             hasTitle: !!note.title,
@@ -209,7 +209,7 @@ export function createNotesApi(getToken: AuthTokenGetter, getUserId: () => strin
 
         return decryptedNote;
       } catch (error) {
-        logger.error('Failed to update note', error as Error, {
+        logger.error('[API] Failed to update note', error as Error, {
           attributes: {
             operation: 'updateNote',
             noteId,
@@ -332,7 +332,7 @@ export function createNotesApi(getToken: AuthTokenGetter, getUserId: () => strin
       try {
         return await fileService.pickFiles();
       } catch (error) {
-        logger.error('Failed to pick files', error as Error, {
+        logger.error('[API] Failed to pick files', error as Error, {
           attributes: { operation: 'pickFiles' },
         });
         throw error;
@@ -363,7 +363,7 @@ export function createNotesApi(getToken: AuthTokenGetter, getUserId: () => strin
 
         return uploadedFiles;
       } catch (error) {
-        logger.error('Failed to upload files', error as Error, {
+        logger.error('[API] Failed to upload files', error as Error, {
           attributes: {
             operation: 'uploadFiles',
             noteId,
@@ -381,7 +381,7 @@ export function createNotesApi(getToken: AuthTokenGetter, getUserId: () => strin
       try {
         return await fileService.getAttachments(noteId);
       } catch (error) {
-        logger.error('Failed to get attachments', error as Error, {
+        logger.error('[API] Failed to get attachments', error as Error, {
           attributes: { operation: 'getAttachments', noteId },
         });
         throw error;
@@ -408,7 +408,7 @@ export function createNotesApi(getToken: AuthTokenGetter, getUserId: () => strin
 
         return fileUri;
       } catch (error) {
-        logger.error('Failed to download file', error as Error, {
+        logger.error('[API] Failed to download file', error as Error, {
           attributes: {
             operation: 'downloadFile',
             fileId: attachment.id,
@@ -426,7 +426,7 @@ export function createNotesApi(getToken: AuthTokenGetter, getUserId: () => strin
         await fileService.shareFile(fileUri);
         logger.recordEvent('file_shared', { fileUri });
       } catch (error) {
-        logger.error('Failed to share file', error as Error, {
+        logger.error('[API] Failed to share file', error as Error, {
           attributes: { operation: 'shareFile' },
         });
         throw error;
@@ -444,7 +444,7 @@ export function createNotesApi(getToken: AuthTokenGetter, getUserId: () => strin
           fileId: attachmentId,
         });
       } catch (error) {
-        logger.error('Failed to delete attachment', error as Error, {
+        logger.error('[API] Failed to delete attachment', error as Error, {
           attributes: {
             operation: 'deleteAttachment',
             fileId: attachmentId,

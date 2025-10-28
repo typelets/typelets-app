@@ -1,15 +1,16 @@
-import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, RefreshControl, Alert, Keyboard, Animated, AppState } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as Haptics from 'expo-haptics';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
-import { useIsFocused } from '@react-navigation/native';
-import { useTheme } from '../theme';
 import { Ionicons } from '@expo/vector-icons';
-import { useApiService, type Folder, type FolderCounts } from '../services/api';
-import { FOLDER_CARD, ACTION_BUTTON, FOLDER_COLORS } from '../constants/ui';
-import { BottomSheetModal, BottomSheetView, BottomSheetBackdrop, BottomSheetTextInput, BottomSheetBackdropProps } from '@gorhom/bottom-sheet';
+import { BottomSheetBackdrop, BottomSheetBackdropProps,BottomSheetModal, BottomSheetTextInput, BottomSheetView } from '@gorhom/bottom-sheet';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useIsFocused } from '@react-navigation/native';
+import * as Haptics from 'expo-haptics';
+import { useRouter } from 'expo-router';
+import React, { useCallback,useEffect, useMemo, useRef, useState } from 'react';
+import { ActivityIndicator, Alert, Animated, Keyboard, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
+import { ACTION_BUTTON, FOLDER_CARD, FOLDER_COLORS } from '../constants/ui';
+import { type Folder, type FolderCounts,useApiService } from '../services/api';
+import { useTheme } from '../theme';
 
 // Special views configuration matching web app
 const SPECIAL_VIEWS = [
@@ -58,6 +59,12 @@ export default function FoldersScreen() {
     trash: 0,
   });
 
+  // Store API methods in ref to prevent re-renders
+  const apiRef = useRef(api);
+  useEffect(() => {
+    apiRef.current = api;
+  }, [api]);
+
   // Create folder modal state
   const [newFolderName, setNewFolderName] = useState('');
   const [selectedColor, setSelectedColor] = useState('#3b82f6');
@@ -104,52 +111,7 @@ export default function FoldersScreen() {
   const isFocused = useIsFocused();
   const loadTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Reload data when screen comes into focus
-  useEffect(() => {
-    if (isFocused) {
-      // Clear any pending load
-      if (loadTimerRef.current) {
-        clearTimeout(loadTimerRef.current);
-      }
-
-      // Load immediately
-      loadFoldersData();
-    }
-
-    return () => {
-      if (loadTimerRef.current) {
-        clearTimeout(loadTimerRef.current);
-      }
-    };
-  }, [isFocused, loadFoldersData]);
-
-  // Load view mode only on mount
-  useEffect(() => {
-    loadViewMode();
-  }, []);
-
-  const loadViewMode = async () => {
-    try {
-      const savedMode = await AsyncStorage.getItem('viewMode');
-      if (savedMode === 'grid' || savedMode === 'list') {
-        setViewMode(savedMode);
-      }
-    } catch (error) {
-      if (__DEV__) console.error('Failed to load view mode:', error);
-    }
-  };
-
-  // Handle loading delay
-  useEffect(() => {
-    let timer: NodeJS.Timeout;
-    if (loading) {
-      timer = setTimeout(() => setShowLoading(true), 300);
-    } else {
-      setShowLoading(false);
-    }
-    return () => clearTimeout(timer);
-  }, [loading]);
-
+  // Load folders data
   const loadFoldersData = useCallback(async (isRefresh = false) => {
     try {
       if (!isRefresh) {
@@ -158,8 +120,8 @@ export default function FoldersScreen() {
 
       // Use the counts endpoint instead of fetching all notes
       const [foldersData, noteCounts] = await Promise.all([
-        api.getFolders(),
-        api.getCounts() // Get counts from the API endpoint
+        apiRef.current.getFolders(),
+        apiRef.current.getCounts() // Get counts from the API endpoint
       ]);
 
       // Show only ROOT folders (no parentId) on main screen
@@ -198,7 +160,54 @@ export default function FoldersScreen() {
         setLoading(false);
       }
     }
-  }, [api]);
+  }, []);
+
+  // Load view mode
+  const loadViewMode = useCallback(async () => {
+    try {
+      const savedMode = await AsyncStorage.getItem('viewMode');
+      if (savedMode === 'grid' || savedMode === 'list') {
+        setViewMode(savedMode);
+      }
+    } catch (error) {
+      if (__DEV__) console.error('Failed to load view mode:', error);
+    }
+  }, []);
+
+  // Load view mode only on mount
+  useEffect(() => {
+    loadViewMode();
+  }, [loadViewMode]);
+
+  // Reload data when screen comes into focus
+  useEffect(() => {
+    if (isFocused) {
+      // Clear any pending load
+      if (loadTimerRef.current) {
+        clearTimeout(loadTimerRef.current);
+      }
+
+      // Load immediately
+      loadFoldersData();
+    }
+
+    return () => {
+      if (loadTimerRef.current) {
+        clearTimeout(loadTimerRef.current);
+      }
+    };
+  }, [isFocused, loadFoldersData]);
+
+  // Handle loading delay
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout>;
+    if (loading) {
+      timer = setTimeout(() => setShowLoading(true), 300);
+    } else {
+      setShowLoading(false);
+    }
+    return () => clearTimeout(timer);
+  }, [loading]);
 
   const onRefresh = async () => {
     try {

@@ -1,4 +1,4 @@
-import React, { forwardRef, useImperativeHandle, useRef, useState, useEffect } from 'react';
+import React, { forwardRef, useEffect,useImperativeHandle, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { WebView, WebViewMessageEvent } from 'react-native-webview';
 
@@ -69,7 +69,7 @@ const createEditorHTML = (content: string, placeholder: string, isDark: boolean,
 
   return `
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="color-scheme" content="${isDark ? 'dark' : 'light'}">
@@ -481,51 +481,85 @@ const createEditorHTML = (content: string, placeholder: string, isDark: boolean,
             e.preventDefault();
             e.stopPropagation();
 
-            const newLi = document.createElement('li');
-            const p = document.createElement('p');
-            newLi.appendChild(p);
+            // Find the paragraph inside the current list item
+            const currentP = currentLi.querySelector('p');
 
-            // Insert after current list item
-            if (currentLi.nextSibling) {
-              bulletListNode.insertBefore(newLi, currentLi.nextSibling);
-            } else {
-              bulletListNode.appendChild(newLi);
+            if (currentP) {
+              // Expand range to include everything from cursor to end of paragraph
+              range.setEndAfter(currentP.lastChild || currentP);
+
+              // Extract content after cursor
+              const afterContent = range.extractContents();
+
+              const newLi = document.createElement('li');
+              const p = document.createElement('p');
+
+              // Put content after cursor into new list item
+              if (afterContent.textContent.trim() || afterContent.querySelector('*')) {
+                p.appendChild(afterContent);
+              }
+
+              newLi.appendChild(p);
+
+              // Insert after current list item
+              if (currentLi.nextSibling) {
+                bulletListNode.insertBefore(newLi, currentLi.nextSibling);
+              } else {
+                bulletListNode.appendChild(newLi);
+              }
+
+              // Move cursor to the new list item
+              const newRange = document.createRange();
+              newRange.setStart(p, 0);
+              newRange.collapse(true);
+              selection.removeAllRanges();
+              selection.addRange(newRange);
+
+              notifyChange();
+              return false;
             }
-
-            // Move cursor to the new list item
-            const newRange = document.createRange();
-            newRange.setStart(p, 0);
-            newRange.collapse(true);
-            selection.removeAllRanges();
-            selection.addRange(newRange);
-
-            notifyChange();
-            return false;
           } else if (orderedListNode && currentLi) {
             // We're in an ordered list - create new list item with <p>
             e.preventDefault();
             e.stopPropagation();
 
-            const newLi = document.createElement('li');
-            const p = document.createElement('p');
-            newLi.appendChild(p);
+            // Find the paragraph inside the current list item
+            const currentP = currentLi.querySelector('p');
 
-            // Insert after current list item
-            if (currentLi.nextSibling) {
-              orderedListNode.insertBefore(newLi, currentLi.nextSibling);
-            } else {
-              orderedListNode.appendChild(newLi);
+            if (currentP) {
+              // Expand range to include everything from cursor to end of paragraph
+              range.setEndAfter(currentP.lastChild || currentP);
+
+              // Extract content after cursor
+              const afterContent = range.extractContents();
+
+              const newLi = document.createElement('li');
+              const p = document.createElement('p');
+
+              // Put content after cursor into new list item
+              if (afterContent.textContent.trim() || afterContent.querySelector('*')) {
+                p.appendChild(afterContent);
+              }
+
+              newLi.appendChild(p);
+
+              // Insert after current list item
+              if (currentLi.nextSibling) {
+                orderedListNode.insertBefore(newLi, currentLi.nextSibling);
+              } else {
+                orderedListNode.appendChild(newLi);
+              }
+
+              // Move cursor to the new list item
+              const newRange = document.createRange();
+              newRange.setStart(p, 0);
+              newRange.collapse(true);
+              selection.removeAllRanges();
+              selection.addRange(newRange);
+
+              notifyChange();
+              return false;
             }
-
-            // Move cursor to the new list item
-            const newRange = document.createRange();
-            newRange.setStart(p, 0);
-            newRange.collapse(true);
-            selection.removeAllRanges();
-            selection.addRange(newRange);
-
-            notifyChange();
-            return false;
           } else {
             // Regular paragraph or heading - create new paragraph
             e.preventDefault();
@@ -563,6 +597,9 @@ const createEditorHTML = (content: string, placeholder: string, isDark: boolean,
                 selection.addRange(newRange);
               } else {
                 // Cursor in middle or end - split the block
+                // Expand range to include everything from cursor to end of current block
+                range.setEndAfter(currentBlock.lastChild || currentBlock);
+
                 const afterContent = range.extractContents();
 
                 // Insert new paragraph after current block
@@ -607,10 +644,9 @@ const createEditorHTML = (content: string, placeholder: string, isDark: boolean,
         if (selection && selection.rangeCount > 0) {
           const range = selection.getRangeAt(0);
           const container = range.commonAncestorContainer;
-          const element = container.nodeType === 3 ? container.parentElement : container;
 
           // Check if we're in a list
-          let node = element;
+          let node = container.nodeType === 3 ? container.parentElement : container;
           let taskListNode = null;
           let currentTaskItem = null;
           let bulletListNode = null;

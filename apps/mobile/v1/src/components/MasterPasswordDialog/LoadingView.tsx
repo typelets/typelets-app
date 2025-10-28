@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, ActivityIndicator } from 'react-native';
+import React, { useEffect,useState } from 'react';
+import { ActivityIndicator,Text, View } from 'react-native';
+
 import { useTheme } from '../../theme';
 import { styles } from './styles';
 

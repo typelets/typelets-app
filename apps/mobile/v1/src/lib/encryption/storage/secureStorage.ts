@@ -3,10 +3,11 @@
  * Abstraction layer over expo-secure-store
  */
 
-import * as SecureStore from 'expo-secure-store';
 import * as Crypto from 'expo-crypto';
-import { STORAGE_KEYS } from './storageKeys';
+import * as SecureStore from 'expo-secure-store';
 import forge from 'node-forge';
+
+import { STORAGE_KEYS } from './storageKeys';
 
 /**
  * User secret management - in-memory cache

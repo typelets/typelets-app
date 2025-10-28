@@ -3,9 +3,9 @@
  * Handles authentication and HTTP requests
  */
 
+import { logger } from '../../lib/logger';
 import { API_BASE_URL } from './utils/constants';
 import { ApiError, getUserFriendlyErrorMessage } from './utils/errors';
-import { logger } from '../../lib/logger';
 
 export type AuthTokenGetter = () => Promise<string | null>;
 
@@ -37,8 +37,8 @@ export function createHttpClient(getToken: AuthTokenGetter) {
       if (!response.ok) {
         const errorText = await response.text();
 
-        // Log API error to NewRelic with context
-        logger.error('API request failed', new Error(`HTTP ${response.status}: ${response.statusText}`), {
+        // Log API error to Sentry with context
+        logger.error('[API] Request failed', new Error(`HTTP ${response.status}: ${response.statusText}`), {
           attributes: {
             endpoint,
             status: response.status,
@@ -60,8 +60,8 @@ export function createHttpClient(getToken: AuthTokenGetter) {
         throw error;
       }
 
-      // Log network/parsing errors to NewRelic
-      logger.error('Network request failed', error as Error, {
+      // Log network/parsing errors to Sentry
+      logger.error('[API] Network request failed', error as Error, {
         attributes: {
           endpoint,
           errorType: error instanceof Error ? error.name : 'Unknown',

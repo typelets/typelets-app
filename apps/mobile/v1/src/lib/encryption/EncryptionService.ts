@@ -5,13 +5,14 @@
 
 import * as Crypto from 'expo-crypto';
 import forge from 'node-forge';
-import { EncryptedNote, DecryptedData, PotentiallyEncrypted } from './types';
-import { ENCRYPTION_CONFIG } from './config';
-import { encryptWithAESGCM, decryptWithAESGCM } from './core/aes';
-import { deriveEncryptionKey } from './core/keyDerivation';
-import { getUserSecret, getMasterKey, clearUserStorageData } from './storage/secureStorage';
-import { DecryptionCache } from './storage/cache';
+
 import { logger } from '../logger';
+import { ENCRYPTION_CONFIG } from './config';
+import { decryptWithAESGCM,encryptWithAESGCM } from './core/aes';
+import { deriveEncryptionKey } from './core/keyDerivation';
+import { DecryptionCache } from './storage/cache';
+import { clearUserStorageData,getMasterKey, getUserSecret } from './storage/secureStorage';
+import { DecryptedData, EncryptedNote, PotentiallyEncrypted } from './types';
 
 export class MobileEncryptionService {
   private cache: DecryptionCache;
@@ -162,7 +163,7 @@ export class MobileEncryptionService {
    * Clear all data for a user
    */
   async clearUserData(userId: string): Promise<void> {
-    logger.info('Clearing user encryption data', {
+    logger.info('[ENCRYPTION] Clearing user encryption data', {
       attributes: {
         userId,
       },
@@ -177,7 +178,7 @@ export class MobileEncryptionService {
     // Reset master password mode
     this.masterPasswordMode = false;
 
-    logger.info('User encryption data cleared successfully', {
+    logger.info('[ENCRYPTION] User encryption data cleared successfully', {
       attributes: {
         userId,
       },

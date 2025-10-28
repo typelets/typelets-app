@@ -1,3 +1,1 @@
-import ViewNoteScreen from '@/src/screens/ViewNoteScreen';
-
-export default ViewNoteScreen;
+export { default } from '@/src/screens/ViewNote';

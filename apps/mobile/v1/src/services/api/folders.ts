@@ -3,11 +3,11 @@
  * Handles all folder-related API operations
  */
 
+import { apiCache, CACHE_KEYS, CACHE_TTL } from './cache';
 import { AuthTokenGetter, createHttpClient } from './client';
 import { Folder, FoldersResponse } from './types';
-import { createPaginationParams, fetchAllPagesParallel } from './utils/pagination';
 import { handleApiError } from './utils/errors';
-import { apiCache, CACHE_KEYS, CACHE_TTL } from './cache';
+import { createPaginationParams, fetchAllPagesParallel } from './utils/pagination';
 
 export function createFoldersApi(getToken: AuthTokenGetter) {
   const { makeRequest } = createHttpClient(getToken);

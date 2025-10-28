@@ -1,14 +1,15 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native';
-import {
-  BottomSheetModal,
-  BottomSheetView,
-  BottomSheetBackdrop,
-  BottomSheetScrollView,
-  BottomSheetBackdropProps,
-} from '@gorhom/bottom-sheet';
 import { Ionicons } from '@expo/vector-icons';
-import { useApiService, type ApiUserUsage } from '@/src/services/api';
+import {
+  BottomSheetBackdrop,
+  BottomSheetBackdropProps,
+  BottomSheetModal,
+  BottomSheetScrollView,
+} from '@gorhom/bottom-sheet';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, StyleSheet, Text, TouchableOpacity,View } from 'react-native';
+
+import { type ApiUserUsage,useApiService } from '@/src/services/api';
+
 import { useTheme } from '../../theme';
 
 interface UsageBottomSheetProps {

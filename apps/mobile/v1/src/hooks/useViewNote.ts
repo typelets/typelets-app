@@ -6,6 +6,7 @@ import * as Haptics from 'expo-haptics';
 import { useApiService, type Note } from '../services/api';
 import { useTheme } from '../theme';
 import { generateNoteHtml } from '../screens/ViewNote/htmlGenerator';
+import { logger } from '../lib/logger';
 
 interface UseViewNoteReturn {
   note: Note | null;
@@ -33,12 +34,18 @@ export function useViewNote(noteId: string): UseViewNoteReturn {
   const loadNote = async () => {
     try {
       setLoading(true);
+      logger.debug('[NOTE] Loading note', { attributes: { noteId } });
       const noteData = await api.getNote(noteId);
       setNote(noteData);
       hasLoadedRef.current = true;
       currentNoteIdRef.current = noteId;
+      logger.info('[NOTE] Note loaded successfully', {
+        attributes: { noteId, title: noteData.title, starred: noteData.starred }
+      });
     } catch (error) {
-      if (__DEV__) console.error('Failed to load note:', error);
+      logger.error('[NOTE] Failed to load note', error instanceof Error ? error : undefined, {
+        attributes: { noteId }
+      });
       Alert.alert('Error', 'Failed to load note.');
       router.back();
     } finally {
@@ -70,10 +77,18 @@ export function useViewNote(noteId: string): UseViewNoteReturn {
     if (!note) return;
 
     try {
+      logger.info('[NOTE] Toggling star', {
+        attributes: { noteId: note.id, currentStarred: note.starred, newStarred: !note.starred }
+      });
       const updatedNote = await api.updateNote(note.id, { starred: !note.starred });
       setNote(updatedNote);
+      logger.info('[NOTE] Star toggled successfully', {
+        attributes: { noteId: note.id, starred: updatedNote.starred }
+      });
     } catch (error) {
-      if (__DEV__) console.error('Failed to toggle star:', error);
+      logger.error('[NOTE] Failed to toggle star', error instanceof Error ? error : undefined, {
+        attributes: { noteId: note.id }
+      });
       Alert.alert('Error', 'Failed to update note.');
     }
   };
@@ -83,13 +98,21 @@ export function useViewNote(noteId: string): UseViewNoteReturn {
 
     try {
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      logger.info('[NOTE] Toggling hidden', {
+        attributes: { noteId: note.id, currentHidden: note.hidden, newHidden: !note.hidden }
+      });
       const updatedNote = note.hidden
         ? await api.unhideNote(note.id)
         : await api.hideNote(note.id);
       setNote(updatedNote);
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      logger.info('[NOTE] Hidden toggled successfully', {
+        attributes: { noteId: note.id, hidden: updatedNote.hidden }
+      });
     } catch (error) {
-      if (__DEV__) console.error('Failed to toggle hidden:', error);
+      logger.error('[NOTE] Failed to toggle hidden', error instanceof Error ? error : undefined, {
+        attributes: { noteId: note.id }
+      });
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       Alert.alert('Error', 'Failed to update note.');
     }

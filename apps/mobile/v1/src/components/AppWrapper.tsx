@@ -1,12 +1,12 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { View, ActivityIndicator } from 'react-native';
 import { useAuth, useUser } from '@clerk/clerk-expo';
-import { useTheme } from '../theme';
-import AuthScreen from '../screens/AuthScreen';
-import { MasterPasswordScreen } from './MasterPasswordDialog';
+import React, { useEffect, useRef,useState } from 'react';
+import { ActivityIndicator,View } from 'react-native';
+
 import { useMasterPassword } from '../hooks/useMasterPassword';
 import { logger } from '../lib/logger';
-import { setSentryUser, clearSentryUser } from '../lib/sentry';
+import AuthScreen from '../screens/AuthScreen';
+import { useTheme } from '../theme';
+import { MasterPasswordScreen } from './MasterPasswordDialog';
 
 interface AppWrapperProps {
   children: React.ReactNode;
@@ -58,7 +58,7 @@ export const AppWrapper: React.FC<AppWrapperProps> = ({ children }) => {
     return () => clearTimeout(timer);
   }, [isLoading]);
 
-  // Track user authentication state in logger, Sentry, and New Relic
+  // Track user authentication state in logger and Sentry
   useEffect(() => {
     if (isSignedIn && user?.id) {
       // User is signed in - set user ID and session attributes
@@ -69,14 +69,7 @@ export const AppWrapper: React.FC<AppWrapperProps> = ({ children }) => {
         isSignedIn: true,
       });
 
-      // Set user in Sentry for error tracking
-      setSentryUser({
-        id: user.id,
-        email: user.primaryEmailAddress?.emailAddress,
-        username: user.username || undefined,
-      });
-
-      logger.info('User signed in', {
+      logger.info('[AUTH] User signed in', {
         attributes: {
           userId: user.id,
           email: user.primaryEmailAddress?.emailAddress,
@@ -84,9 +77,8 @@ export const AppWrapper: React.FC<AppWrapperProps> = ({ children }) => {
       });
     } else if (!isSignedIn) {
       // User signed out - clear session
-      logger.info('User signed out');
+      logger.info('[AUTH] User signed out');
       logger.clearSessionAttributes();
-      clearSentryUser();
     }
   }, [isSignedIn, user?.id, user?.primaryEmailAddress?.emailAddress, user?.username]);
 

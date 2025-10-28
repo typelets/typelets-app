@@ -1,13 +1,14 @@
-import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { View, Text, ScrollView, StyleSheet, Pressable, Alert, ActivityIndicator, TouchableOpacity, RefreshControl, Animated, Keyboard, useWindowDimensions } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as Haptics from 'expo-haptics';
-import { useFocusEffect } from '@react-navigation/native';
-import { useTheme } from '../theme';
-import { useApiService, type Note, type Folder, type FolderCounts } from '../services/api';
 import { Ionicons } from '@expo/vector-icons';
-import { NOTE_CARD, FOLDER_CARD, SECTION, FOLDER_COLORS } from '../constants/ui';
-import { BottomSheetModal, BottomSheetView, BottomSheetBackdrop, BottomSheetTextInput, BottomSheetBackdropProps } from '@gorhom/bottom-sheet';
+import { BottomSheetBackdrop, BottomSheetBackdropProps,BottomSheetModal, BottomSheetTextInput, BottomSheetView } from '@gorhom/bottom-sheet';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFocusEffect } from '@react-navigation/native';
+import * as Haptics from 'expo-haptics';
+import React, { useCallback,useEffect, useMemo, useRef, useState } from 'react';
+import { ActivityIndicator, Alert, Animated, Keyboard, Pressable, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, useWindowDimensions,View } from 'react-native';
+
+import { FOLDER_CARD, FOLDER_COLORS,NOTE_CARD, SECTION } from '../constants/ui';
+import { type Folder, type FolderCounts,type Note, useApiService } from '../services/api';
+import { useTheme } from '../theme';
 
 interface RouteParams {
   folderId?: string;

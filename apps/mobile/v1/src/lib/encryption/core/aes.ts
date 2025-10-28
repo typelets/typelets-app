@@ -4,6 +4,7 @@
  */
 
 import forge from 'node-forge';
+
 import { ENCRYPTION_CONFIG } from '../config';
 
 /**

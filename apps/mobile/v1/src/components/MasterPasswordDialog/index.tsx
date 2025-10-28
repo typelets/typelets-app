@@ -1,12 +1,13 @@
+import * as Haptics from 'expo-haptics';
 import React, { useEffect, useState } from 'react';
 import { Animated, ScrollView } from 'react-native';
-import * as Haptics from 'expo-haptics';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
 import { useTheme } from '../../theme';
-import { useKeyboardHandler } from './useKeyboardHandler';
-import { MasterPasswordForm } from './MasterPasswordForm';
 import { LoadingView } from './LoadingView';
+import { MasterPasswordForm } from './MasterPasswordForm';
 import { styles } from './styles';
+import { useKeyboardHandler } from './useKeyboardHandler';
 
 interface MasterPasswordScreenProps {
   userId: string;

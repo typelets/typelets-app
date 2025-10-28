@@ -1,16 +1,18 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { View, Text, StyleSheet, Alert, Platform, TextInput, TouchableOpacity, ScrollView, Keyboard, TouchableWithoutFeedback } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useRouter, useLocalSearchParams } from 'expo-router';
-import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
-import { Undo, Redo, Quote, Code } from 'lucide-react-native';
-import { useTheme } from '../../theme';
-import { useApiService, type Note, type FileAttachment } from '../../services/api';
-import { useKeyboardHeight } from '../../hooks/useKeyboardHeight';
-import { EditorHeader } from './EditorHeader';
+import * as Haptics from 'expo-haptics';
+import { useLocalSearchParams,useRouter } from 'expo-router';
+import { Code,Quote, Redo, Undo } from 'lucide-react-native';
+import React, { useEffect, useMemo,useRef, useState } from 'react';
+import { Alert, Keyboard,ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
+import { Editor, type EditorColors,type EditorRef } from '@/editor/src';
+
 import { FileUpload } from '../../components/FileUpload';
-import { Editor, type EditorRef, type EditorColors } from '../../../editor/src';
+import { logger } from '../../lib/logger';
+import { type FileAttachment,type Note, useApiService } from '../../services/api';
+import { useTheme } from '../../theme';
+import { EditorHeader } from './EditorHeader';
 
 const NAVIGATION_DELAY = 100;
 
@@ -21,7 +23,6 @@ export default function EditNoteScreen() {
   const params = useLocalSearchParams();
   const { noteId, folderId } = params;
   const isEditing = !!noteId;
-  const insets = useSafeAreaInsets();
 
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
@@ -47,7 +48,6 @@ export default function EditNoteScreen() {
   });
 
   const editorRef = useRef<EditorRef>(null);
-  const keyboardHeight = useKeyboardHeight();
 
   // Map theme colors to editor colors
   const editorColors: EditorColors = useMemo(() => ({
@@ -66,10 +66,15 @@ export default function EditNoteScreen() {
   }), [theme.colors, theme.isDark]);
 
   useEffect(() => {
+    logger.info('[NOTE] EditNote screen mounted', {
+      attributes: { noteId: noteId as string | undefined, isEditing, folderId: folderId as string | undefined }
+    });
+
     if (isEditing && noteId) {
       const load = async () => {
         setLoading(true);
         try {
+          logger.debug('[NOTE] Loading note for editing', { attributes: { noteId: noteId as string } });
           // Fetch note and attachments in parallel for better performance
           const [note, noteAttachments] = await Promise.all([
             api.getNote(noteId as string),
@@ -80,6 +85,17 @@ export default function EditNoteScreen() {
           setTitle(note?.title || '');
           setContent(note?.content || '');
           setAttachments(noteAttachments);
+          logger.info('[NOTE] Note loaded for editing', {
+            attributes: {
+              noteId: noteId as string,
+              title: note?.title,
+              attachmentsCount: noteAttachments.length
+            }
+          });
+        } catch (error) {
+          logger.error('[NOTE] Failed to load note for editing', error instanceof Error ? error : undefined, {
+            attributes: { noteId: noteId as string }
+          });
         } finally {
           setLoading(false);
         }
@@ -93,10 +109,16 @@ export default function EditNoteScreen() {
     const currentNoteId = (noteId as string) || createdNoteId;
     if (currentNoteId) {
       try {
+        logger.debug('[NOTE] Refreshing attachments', { attributes: { noteId: currentNoteId } });
         const noteAttachments = await api.getAttachments(currentNoteId);
         setAttachments(noteAttachments);
+        logger.info('[NOTE] Attachments refreshed', {
+          attributes: { noteId: currentNoteId, count: noteAttachments.length }
+        });
       } catch (error) {
-        console.error('Failed to refresh attachments:', error);
+        logger.error('[NOTE] Failed to refresh attachments', error instanceof Error ? error : undefined, {
+          attributes: { noteId: currentNoteId }
+        });
       }
     }
   };
@@ -112,11 +134,21 @@ export default function EditNoteScreen() {
       let savedNote: Note;
 
       if ((isEditing && noteId) || createdNoteId) {
-        savedNote = await api.updateNote((noteId as string) || createdNoteId!, {
+        const currentNoteId = (noteId as string) || createdNoteId!;
+        logger.info('[NOTE] Updating note', {
+          attributes: { noteId: currentNoteId, title: titleToUse, contentLength: htmlContent.length }
+        });
+        savedNote = await api.updateNote(currentNoteId, {
           title: titleToUse,
           content: htmlContent,
         });
+        logger.info('[NOTE] Note updated successfully', {
+          attributes: { noteId: currentNoteId, title: titleToUse }
+        });
       } else {
+        logger.info('[NOTE] Creating new note', {
+          attributes: { title: titleToUse, contentLength: htmlContent.length, folderId: folderId as string | undefined }
+        });
         savedNote = await api.createNote({
           title: titleToUse,
           content: htmlContent,
@@ -128,6 +160,9 @@ export default function EditNoteScreen() {
         });
         setCreatedNoteId(savedNote.id);
         setTitle(titleToUse);
+        logger.info('[NOTE] Note created successfully', {
+          attributes: { noteId: savedNote.id, title: titleToUse }
+        });
       }
 
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -141,18 +176,30 @@ export default function EditNoteScreen() {
         // Refresh attachments if we just created the note and staying on the page
         if (!noteId && savedNote.id) {
           try {
+            logger.debug('[NOTE] Loading attachments for newly created note', {
+              attributes: { noteId: savedNote.id }
+            });
             const noteAttachments = await api.getAttachments(savedNote.id);
             setAttachments(noteAttachments);
           } catch (error) {
-            console.error('Failed to refresh attachments:', error);
+            logger.error('[NOTE] Failed to load attachments for newly created note', error instanceof Error ? error : undefined, {
+              attributes: { noteId: savedNote.id }
+            });
           }
         }
       }
 
       return savedNote;
     } catch (error) {
-      if (__DEV__) console.error('Failed to save note:', error);
-      Alert.alert('Error', `Failed to ${isEditing || createdNoteId ? 'update' : 'create'} note`);
+      const operation = isEditing || createdNoteId ? 'update' : 'create';
+      logger.error(`[NOTE] Failed to ${operation} note`, error instanceof Error ? error : undefined, {
+        attributes: {
+          noteId: (noteId as string) || createdNoteId || undefined,
+          operation,
+          title: titleToUse
+        }
+      });
+      Alert.alert('Error', `Failed to ${operation} note`);
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       setIsSaving(false);
       return null;
@@ -193,8 +240,14 @@ export default function EditNoteScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
+              logger.info('[NOTE] Deleting note', {
+                attributes: { noteId: noteId as string, title: noteData.title }
+              });
               await api.deleteNote(noteId as string);
               await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+              logger.info('[NOTE] Note deleted successfully', {
+                attributes: { noteId: noteId as string }
+              });
 
               // Navigate back to the folder/notes list, skipping the view-note screen
               if (router.canGoBack()) {
@@ -206,7 +259,9 @@ export default function EditNoteScreen() {
                 }, NAVIGATION_DELAY);
               }
             } catch (error) {
-              if (__DEV__) console.error('Failed to delete note:', error);
+              logger.error('[NOTE] Failed to delete note', error instanceof Error ? error : undefined, {
+                attributes: { noteId: noteId as string, title: noteData.title }
+              });
               Alert.alert('Error', 'Failed to delete note');
               await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
             }

@@ -1,34 +1,26 @@
 /**
  * Centralized logging utility
- * Integrates with New Relic for production logging
+ * Integrates with Sentry for production logging
  */
 
 import { Platform } from 'react-native';
 
-/**
- * Type definitions for New Relic SDK
- * Based on newrelic-react-native-agent API
- */
-interface NewRelicSDK {
-  setUserId?: (userId: string) => void;
-  setAttribute?: (name: string, value: string | number | boolean) => void;
-  recordError?: (error: Error) => void;
-  logDebug?: (message: string, attributes?: Record<string, unknown>) => void;
-  logInfo?: (message: string, attributes?: Record<string, unknown>) => void;
-  logWarning?: (message: string, attributes?: Record<string, unknown>) => void;
-  logError?: (message: string, attributes?: Record<string, unknown>) => void;
-  recordCustomEvent?: (eventName: string, attributes?: Record<string, unknown>) => void;
-  recordBreadcrumb?: (name: string, attributes?: Record<string, unknown>) => void;
-}
+// Lazy load Sentry to avoid initialization issues
+let Sentry: any = null;
 
-let NewRelic: NewRelicSDK | null = null;
-
-// Initialize New Relic reference
-try {
-  const NewRelicModule = require('newrelic-react-native-agent');
-  NewRelic = NewRelicModule.default || NewRelicModule;
-} catch (error) {
-  console.warn('[Logger] New Relic not available');
+// Initialize Sentry reference (lazy loaded)
+function getSentry() {
+  if (Sentry === null) {
+    try {
+      Sentry = require('@sentry/react-native');
+    } catch (error) {
+      Sentry = false; // Mark as unavailable
+      if (__DEV__) {
+        console.warn('[Logger] Sentry not available');
+      }
+    }
+  }
+  return Sentry || null;
 }
 
 export enum LogLevel {
@@ -41,29 +33,27 @@ export enum LogLevel {
 interface LogOptions {
   /** Additional attributes to attach to the log */
   attributes?: Record<string, unknown>;
-  /** Whether to only send to New Relic (skip console) */
-  newRelicOnly?: boolean;
+  /** Whether to only send to Sentry (skip console) */
+  sentryOnly?: boolean;
 }
 
 /**
  * Main logger class
  */
 class Logger {
-  private isNewRelicAvailable: boolean;
   private userId: string | null = null;
   private sessionAttributes: Record<string, unknown> = {};
-
-  constructor() {
-    this.isNewRelicAvailable = NewRelic !== null;
-  }
 
   /**
    * Set the current user ID for all subsequent logs
    */
   setUserId(userId: string | null): void {
     this.userId = userId;
-    if (this.isNewRelicAvailable && userId && NewRelic.setUserId) {
-      NewRelic.setUserId(userId);
+    const sentry = getSentry();
+    if (sentry && userId) {
+      sentry.setUser({ id: userId });
+    } else if (sentry && !userId) {
+      sentry.setUser(null);
     }
     if (__DEV__) {
       console.log(`[Logger] User ID set: ${userId}`);
@@ -76,12 +66,11 @@ class Logger {
   setSessionAttributes(attributes: Record<string, unknown>): void {
     this.sessionAttributes = { ...this.sessionAttributes, ...attributes };
 
-    // Set each attribute in New Relic
-    if (this.isNewRelicAvailable) {
+    // Set each attribute as a tag in Sentry
+    const sentry = getSentry();
+    if (sentry) {
       Object.entries(attributes).forEach(([key, value]) => {
-        if (NewRelic.setAttribute) {
-          NewRelic.setAttribute(key, value);
-        }
+        sentry.setTag(key, String(value));
       });
     }
 
@@ -96,6 +85,11 @@ class Logger {
   clearSessionAttributes(): void {
     this.userId = null;
     this.sessionAttributes = {};
+
+    const sentry = getSentry();
+    if (sentry) {
+      sentry.setUser(null);
+    }
 
     if (__DEV__) {
       console.log('[Logger] Session attributes cleared');
@@ -143,9 +137,17 @@ class Logger {
       },
     });
 
-    // Also record the error in New Relic's error tracking
-    if (this.isNewRelicAvailable && error && NewRelic.recordError) {
-      NewRelic.recordError(error);
+    // Also capture the exception in Sentry
+    const sentry = getSentry();
+    if (sentry && error) {
+      sentry.captureException(error, {
+        contexts: {
+          additional: {
+            message,
+            ...options?.attributes,
+          },
+        },
+      });
     }
   }
 
@@ -153,14 +155,14 @@ class Logger {
    * Core logging function
    */
   private log(level: LogLevel, message: string, options?: LogOptions): void {
-    const { attributes = {}, newRelicOnly = false } = options || {};
+    const { attributes = {}, sentryOnly = false } = options || {};
 
     // Construct full log message
     const timestamp = new Date().toISOString();
     const fullMessage = `[${timestamp}] [${level}] ${message}`;
 
-    // Log to console (unless newRelicOnly is true)
-    if (!newRelicOnly && __DEV__) {
+    // Log to console (unless sentryOnly is true)
+    if (!sentryOnly && __DEV__) {
       switch (level) {
         case LogLevel.DEBUG:
         case LogLevel.INFO:
@@ -175,9 +177,10 @@ class Logger {
       }
     }
 
-    // Send to New Relic
-    if (this.isNewRelicAvailable) {
-      const logAttributes = {
+    // Send to Sentry
+    const sentry = getSentry();
+    if (sentry) {
+      const logData = {
         level,
         platform: Platform.OS,
         timestamp,
@@ -187,35 +190,50 @@ class Logger {
       };
 
       try {
+        // Send logs using Sentry.logger API for proper log ingestion
         switch (level) {
           case LogLevel.DEBUG:
-            NewRelic.logDebug?.(message, logAttributes);
+            sentry.logger.debug(message, logData);
             break;
           case LogLevel.INFO:
-            NewRelic.logInfo?.(message, logAttributes);
+            sentry.logger.info(message, logData);
             break;
           case LogLevel.WARN:
-            NewRelic.logWarning?.(message, logAttributes);
+            sentry.logger.warn(message, logData);
             break;
           case LogLevel.ERROR:
-            NewRelic.logError?.(message, logAttributes);
+            sentry.logger.error(message, logData);
             break;
         }
-      } catch (error) {
-        // Fallback if New Relic logging fails
+
         if (__DEV__) {
-          console.error('[Logger] Failed to send log to New Relic:', error);
+          console.log(`[Sentry] Sent ${level} log to Sentry: ${message}`);
         }
+      } catch (error) {
+        // Fallback if Sentry logging fails
+        if (__DEV__) {
+          console.error('[Logger] Failed to send log to Sentry:', error);
+        }
+      }
+    } else {
+      if (__DEV__) {
+        console.warn('[Logger] Sentry not available, skipping log');
       }
     }
   }
 
   /**
-   * Record a custom event in New Relic
+   * Record a custom event in Sentry
    */
   recordEvent(eventName: string, attributes?: Record<string, unknown>): void {
-    if (this.isNewRelicAvailable && NewRelic.recordCustomEvent) {
-      NewRelic.recordCustomEvent(eventName, attributes);
+    const sentry = getSentry();
+    if (sentry) {
+      sentry.addBreadcrumb({
+        message: eventName,
+        level: 'info',
+        category: 'custom-event',
+        data: attributes,
+      });
     }
 
     if (__DEV__) {
@@ -227,8 +245,9 @@ class Logger {
    * Set a custom attribute for the session
    */
   setAttribute(name: string, value: string | number | boolean): void {
-    if (this.isNewRelicAvailable && NewRelic.setAttribute) {
-      NewRelic.setAttribute(name, value);
+    const sentry = getSentry();
+    if (sentry) {
+      sentry.setTag(name, String(value));
     }
 
     if (__DEV__) {
@@ -240,8 +259,13 @@ class Logger {
    * Record a breadcrumb (useful for tracking user flow)
    */
   breadcrumb(name: string, attributes?: Record<string, unknown>): void {
-    if (this.isNewRelicAvailable && NewRelic.recordBreadcrumb) {
-      NewRelic.recordBreadcrumb(name, attributes);
+    const sentry = getSentry();
+    if (sentry) {
+      sentry.addBreadcrumb({
+        message: name,
+        level: 'info',
+        data: attributes,
+      });
     }
 
     if (__DEV__) {

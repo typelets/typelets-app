@@ -1,8 +1,9 @@
 import 'expo-router/entry';
 
-import { Platform } from 'react-native';
 import * as Sentry from '@sentry/react-native';
 import Constants from 'expo-constants';
+import { Platform } from 'react-native';
+
 import { APP_VERSION } from './src/constants/version';
 
 // Initialize Sentry for error tracking and performance monitoring
@@ -28,6 +29,8 @@ if (SENTRY_DSN) {
     enableNativeProfiling: Platform.OS === 'ios',
     // Enable automatic performance tracing
     enableAutoPerformanceTracing: true,
+    // Enable structured logs (required for Sentry.logger.* API)
+    enableLogs: true,
   });
 
   if (__DEV__) {

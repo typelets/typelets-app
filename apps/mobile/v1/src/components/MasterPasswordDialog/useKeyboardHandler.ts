@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { Keyboard, Platform, Animated } from 'react-native';
+import { Animated,Keyboard, Platform } from 'react-native';
 
 /**
  * Hook to handle keyboard animations

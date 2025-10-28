@@ -3,15 +3,16 @@
  * Handles file uploads, downloads, and encryption
  */
 
-import * as FileSystem from 'expo-file-system/legacy';
-import * as DocumentPicker from 'expo-document-picker';
-import * as Sharing from 'expo-sharing';
 import * as Crypto from 'expo-crypto';
+import * as DocumentPicker from 'expo-document-picker';
+import * as FileSystem from 'expo-file-system/legacy';
+import * as Sharing from 'expo-sharing';
 import forge from 'node-forge';
-import { encryptWithAESGCM, decryptWithAESGCM } from '../lib/encryption/core/aes';
-import { deriveEncryptionKey } from '../lib/encryption/core/keyDerivation';
+
 import { ENCRYPTION_CONFIG } from '../lib/encryption/config';
-import { getUserSecret, getMasterKey } from '../lib/encryption/storage/secureStorage';
+import { decryptWithAESGCM,encryptWithAESGCM } from '../lib/encryption/core/aes';
+import { deriveEncryptionKey } from '../lib/encryption/core/keyDerivation';
+import { getMasterKey,getUserSecret } from '../lib/encryption/storage/secureStorage';
 import type { FileAttachment } from './api/types';
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3001/api';
@@ -64,13 +65,6 @@ class FileService {
     return bytes;
   }
 
-  /**
-   * Convert base64 to ArrayBuffer
-   */
-  private base64ToArrayBuffer(base64: string): ArrayBuffer {
-    const bytes = this.base64ToUint8Array(base64);
-    return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
-  }
 
   /**
    * Encrypt file content (for uploads - mobile-compatible)

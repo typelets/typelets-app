@@ -1,15 +1,16 @@
-import React, { useState, useRef, useEffect } from 'react';
+import { Ionicons } from '@expo/vector-icons';
+import React, { useEffect,useRef, useState } from 'react';
 import {
-  View,
+  ActivityIndicator,
   Text,
   TextInput,
   TouchableOpacity,
-  ActivityIndicator,
+  View,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+
 import { useTheme } from '../../theme';
-import { usePasswordValidation } from './usePasswordValidation';
 import { styles } from './styles';
+import { usePasswordValidation } from './usePasswordValidation';
 
 interface MasterPasswordFormProps {
   isNewSetup: boolean;

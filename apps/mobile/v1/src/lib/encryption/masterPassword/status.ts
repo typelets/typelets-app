@@ -2,7 +2,7 @@
  * Master Password Status Checks
  */
 
-import { hasMasterPasswordFlag, getMasterKey } from '../storage/secureStorage';
+import { getMasterKey,hasMasterPasswordFlag } from '../storage/secureStorage';
 
 /**
  * Check if user has a master password set

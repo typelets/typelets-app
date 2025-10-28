@@ -1,18 +1,20 @@
-import React, { useState, useRef, useMemo, useCallback, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, Linking, Animated } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useUser } from '@clerk/clerk-expo';
-import { useRouter } from 'expo-router';
-import { useTheme } from '../theme';
-import { LIGHT_THEME_PRESETS, DARK_THEME_PRESETS } from '../theme/presets';
-import { Card } from '@/src/components/ui';
 import { Ionicons } from '@expo/vector-icons';
-import { clearUserEncryptionData } from '../lib/encryption';
-import { forceGlobalMasterPasswordRefresh } from '../hooks/useMasterPassword';
-import { BottomSheetModal, BottomSheetView, BottomSheetBackdrop, BottomSheetScrollView, BottomSheetBackdropProps } from '@gorhom/bottom-sheet';
+import { BottomSheetBackdrop, BottomSheetBackdropProps,BottomSheetModal, BottomSheetScrollView, BottomSheetView } from '@gorhom/bottom-sheet';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { APP_VERSION } from '../constants/version';
+import { useRouter } from 'expo-router';
+import React, { useCallback, useEffect,useMemo, useRef, useState } from 'react';
+import { Alert, Animated,Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
+import { Card } from '@/src/components/ui';
+
 import { UsageBottomSheet } from '../components/settings/UsageBottomSheet';
+import { APP_VERSION } from '../constants/version';
+import { forceGlobalMasterPasswordRefresh } from '../hooks/useMasterPassword';
+import { clearUserEncryptionData } from '../lib/encryption';
+import { useTheme } from '../theme';
+import { DARK_THEME_PRESETS,LIGHT_THEME_PRESETS } from '../theme/presets';
 
 // Type for valid Ionicons names
 type IconName = keyof typeof Ionicons.glyphMap;

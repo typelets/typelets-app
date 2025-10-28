@@ -1,10 +1,10 @@
-import { useRouter, Stack } from 'expo-router';
 import { useAuth, useUser } from '@clerk/clerk-expo';
+import { Stack } from 'expo-router';
+
 import { clearUserEncryptionData } from '@/src/lib/encryption';
 import SettingsScreen from '@/src/screens/SettingsScreen';
 
 export default function SettingsPage() {
-  const router = useRouter();
   const { signOut } = useAuth();
   const { user } = useUser();
 
@@ -41,22 +41,10 @@ export default function SettingsPage() {
     }
   };
 
-  // Create navigation object
-  const navigation = {
-    navigate: (screen: string, params?: any) => {
-      if (__DEV__) {
-        console.log(`Navigate to ${screen} with params:`, params);
-      }
-    },
-    goBack: () => {
-      router.back();
-    }
-  };
-
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
-      <SettingsScreen navigation={navigation} onLogout={handleLogout} />
+      <SettingsScreen onLogout={handleLogout} />
     </>
   );
 }

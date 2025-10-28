@@ -1,24 +1,25 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useSignIn, useSignUp } from '@clerk/clerk-expo';
+import { Ionicons } from '@expo/vector-icons';
+import React, { useEffect, useRef,useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  Platform,
-  Keyboard,
   Animated,
   Dimensions,
-  TextInput,
-  TouchableOpacity,
+  Keyboard,
   Linking,
-  ToastAndroid
-} from 'react-native';
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  ToastAndroid,
+  TouchableOpacity,
+  View} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useSignIn, useSignUp } from '@clerk/clerk-expo';
-import { useTheme } from '../theme';
+
 import { Button , Input } from '@/src/components/ui';
-import { Ionicons } from '@expo/vector-icons';
+
 import { logger } from '../lib/logger';
+import { useTheme } from '../theme';
 
 /**
  * Type definitions for Clerk SDK with legal acceptance fields
@@ -160,7 +161,7 @@ export default function AuthScreen() {
         message = 'Email or password is incorrect';
       }
 
-      logger.error('Sign in failed', err as Error, {
+      logger.error('[AUTH] Sign in failed', err as Error, {
         attributes: {
           email,
           errorMessage: originalMessage,
@@ -214,7 +215,7 @@ export default function AuthScreen() {
         message = 'Unable to create account';
       }
 
-      logger.error('Sign up failed', err as Error, {
+      logger.error('[AUTH] Sign up failed', err as Error, {
         attributes: {
           email,
           firstName,
@@ -271,7 +272,7 @@ export default function AuthScreen() {
         });
       } else {
         const message = 'Unable to complete sign up. Please try again.';
-        logger.warn('Sign up incomplete after verification', {
+        logger.warn('[AUTH] Sign up incomplete after verification', {
           attributes: {
             status: completeSignUp.status,
             missingFields: completeSignUp.missingFields,
@@ -284,7 +285,7 @@ export default function AuthScreen() {
     } catch (err: unknown) {
       const error = err as ClerkError;
       const message = error.errors?.[0]?.message || 'Invalid verification code';
-      logger.error('Email verification failed', err as Error, {
+      logger.error('[AUTH] Email verification failed', err as Error, {
         attributes: {
           email,
           errorMessage: message,
@@ -373,7 +374,7 @@ export default function AuthScreen() {
       const message = error.errors?.[0]?.message || 'Failed to send reset code';
       setErrorMessage(message);
       showToast(message);
-      logger.error('Password reset code send failed', err as Error, {
+      logger.error('[AUTH] Password reset code send failed', err as Error, {
         attributes: { email },
       });
     } finally {
@@ -409,7 +410,7 @@ export default function AuthScreen() {
       const message = error.errors?.[0]?.message || 'Invalid reset code';
       setErrorMessage(message);
       showToast(message);
-      logger.error('Password reset code verification failed', err as Error, {
+      logger.error('[AUTH] Password reset code verification failed', err as Error, {
         attributes: { email },
       });
     } finally {
@@ -428,7 +429,7 @@ export default function AuthScreen() {
       const message = 'Please verify your reset code first';
       setErrorMessage(message);
       showToast(message);
-      logger.warn('Attempted password reset without PIN verification', {
+      logger.warn('[AUTH] Attempted password reset without PIN verification', {
         attributes: { email },
       });
       return;
@@ -470,7 +471,7 @@ export default function AuthScreen() {
       const message = error.errors?.[0]?.message || 'Failed to reset password';
       setErrorMessage(message);
       showToast(message);
-      logger.error('Password reset completion failed', err as Error, {
+      logger.error('[AUTH] Password reset completion failed', err as Error, {
         attributes: { email },
       });
     } finally {

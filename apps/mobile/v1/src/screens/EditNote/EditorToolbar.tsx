@@ -2,10 +2,14 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform, Keyboard } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Highlighter } from 'lucide-react-native';
-import type { EditorBridge } from '@10play/tentap-editor';
+
+// Simple editor interface for toolbar
+interface Editor {
+  blur: () => void;
+}
 
 interface EditorToolbarProps {
-  editor: EditorBridge;
+  editor: Editor;
   keyboardHeight: number;
   bottomInset: number;
   theme: {
@@ -16,7 +20,7 @@ interface EditorToolbarProps {
     };
   };
 }
-export function EditorToolbar({ editor, keyboardHeight, bottomInset, theme }: EditorToolbarProps) {
+export function EditorToolbar({ editor, keyboardHeight, theme }: EditorToolbarProps) {
   // Calculate padding for iOS curved keyboard
   // When keyboard is open, use minimal padding
   const paddingBottom = Platform.OS === 'ios' && keyboardHeight > 0

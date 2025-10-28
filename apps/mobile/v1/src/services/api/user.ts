@@ -3,7 +3,7 @@
  * Handles user-related API operations
  */
 
-import { createHttpClient, type AuthTokenGetter } from './client';
+import { type AuthTokenGetter,createHttpClient } from './client';
 import type { ApiUser } from './types';
 
 export function createUserApi(getToken: AuthTokenGetter) {

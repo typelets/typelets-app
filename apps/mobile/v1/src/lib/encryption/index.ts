@@ -5,15 +5,15 @@
 
 import { MobileEncryptionService } from './EncryptionService';
 import { setupMasterPassword as setupMP } from './masterPassword/setup';
-import { unlockWithMasterPassword as unlockMP } from './masterPassword/unlock';
 import {
   hasMasterPassword as hasMP,
   isMasterPasswordUnlocked as isMPUnlocked,
 } from './masterPassword/status';
+import { unlockWithMasterPassword as unlockMP } from './masterPassword/unlock';
 import type { PotentiallyEncrypted } from './types';
 
 // Re-export types
-export type { EncryptedNote, PotentiallyEncrypted, DecryptedData } from './types';
+export type { DecryptedData,EncryptedNote, PotentiallyEncrypted } from './types';
 
 // Create singleton instance
 export const encryptionService = new MobileEncryptionService();

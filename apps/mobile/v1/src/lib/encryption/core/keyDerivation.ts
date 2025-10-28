@@ -5,6 +5,7 @@
 
 import forge from 'node-forge';
 import { InteractionManager } from 'react-native';
+
 import { ENCRYPTION_CONFIG } from '../config';
 
 

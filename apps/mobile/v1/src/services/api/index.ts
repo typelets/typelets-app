@@ -4,23 +4,23 @@
  */
 
 import { useAuth, useUser } from '@clerk/clerk-expo';
-import { createNotesApi } from './notes';
+
 import { createFoldersApi } from './folders';
+import { createNotesApi } from './notes';
 import { createUserApi } from './user';
 
 // Re-export types for convenience
+export type { PickedFile } from '../fileService';
 export type {
-  Folder,
-  Note,
-  NoteQueryParams,
-  EmptyTrashResponse,
-  NoteCounts,
-  FolderCounts,
   ApiUser,
   ApiUserUsage,
-  FileAttachment
-} from './types';
-export type { PickedFile } from '../fileService';
+  EmptyTrashResponse,
+  FileAttachment,
+  Folder,
+  FolderCounts,
+  Note,
+  NoteCounts,
+  NoteQueryParams} from './types';
 
 /**
  * Main API service hook

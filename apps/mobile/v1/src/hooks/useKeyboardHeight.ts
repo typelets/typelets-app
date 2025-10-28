@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect,useState } from 'react';
 import { Keyboard, Platform } from 'react-native';
 
 const KEYBOARD_TOOLBAR_OFFSET = 8;

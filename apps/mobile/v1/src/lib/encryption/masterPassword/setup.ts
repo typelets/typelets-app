@@ -3,7 +3,7 @@
  */
 
 import { pbkdf2 } from '../core/keyDerivation';
-import { storeMasterKey, deleteOldUserSecret } from '../storage/secureStorage';
+import { deleteOldUserSecret,storeMasterKey } from '../storage/secureStorage';
 import { getUserSalt } from '../storage/storageKeys';
 
 /**

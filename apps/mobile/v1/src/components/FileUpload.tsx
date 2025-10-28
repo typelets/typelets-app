@@ -1,16 +1,18 @@
-import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  ActivityIndicator,
-  Alert,
-} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
+import React, { useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+
+import { logger } from '../lib/logger';
+import { type FileAttachment,useApiService } from '../services/api';
 import { useTheme } from '../theme';
-import { useApiService, type FileAttachment } from '../services/api';
 
 interface FileUploadProps {
   noteId?: string;
@@ -43,11 +45,17 @@ export function FileUpload({
         noteId = await onBeforeUpload();
         if (!noteId) {
           // Upload was cancelled or failed to create note
+          logger.warn('[NOTE] File upload cancelled - no note ID', {
+            attributes: { reason: 'onBeforeUpload returned null' }
+          });
           return;
         }
       }
 
       if (!noteId) {
+        logger.warn('[NOTE] File upload failed - note not saved', {
+          attributes: { reason: 'note must be saved first' }
+        });
         Alert.alert('Error', 'Note must be saved before adding attachments');
         return;
       }
@@ -58,6 +66,10 @@ export function FileUpload({
         return;
       }
 
+      logger.info('[NOTE] Uploading files', {
+        attributes: { noteId, fileCount: files.length, totalSize: files.reduce((sum, f) => sum + (f.size || 0), 0) }
+      });
+
       setIsUploading(true);
       setUploadProgress(0);
 
@@ -66,9 +78,14 @@ export function FileUpload({
       });
 
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      logger.info('[NOTE] Files uploaded successfully', {
+        attributes: { noteId, fileCount: uploadedFiles.length }
+      });
       onUploadComplete?.(uploadedFiles);
     } catch (error) {
-      console.error('Upload error:', error);
+      logger.error('[NOTE] File upload failed', error instanceof Error ? error : undefined, {
+        attributes: { noteId: initialNoteId }
+      });
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       Alert.alert('Upload Failed', error instanceof Error ? error.message : 'Failed to upload files');
     } finally {
@@ -77,18 +94,31 @@ export function FileUpload({
     }
   };
 
-  const handleDownload = async (attachment: FileAttachment) => {
-    try {
-      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  const handleDownloadChoice = async (attachment: FileAttachment) => {
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
+    try {
+      logger.info('[NOTE] Downloading attachment from editor', {
+        attributes: { attachmentId: attachment.id, filename: attachment.originalName }
+      });
       const fileUri = await api.downloadFile(attachment);
       await api.shareFile(fileUri);
 
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      logger.info('[NOTE] Attachment shared from editor', {
+        attributes: { attachmentId: attachment.id, filename: attachment.originalName }
+      });
     } catch (error) {
-      console.error('Download error:', error);
+      logger.error('[NOTE] Failed to download/share attachment from editor', error instanceof Error ? error : undefined, {
+        attributes: { attachmentId: attachment.id, filename: attachment.originalName }
+      });
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      Alert.alert('Download Failed', error instanceof Error ? error.message : 'Failed to download file');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to download file';
+      if (errorMessage.includes('not available')) {
+        Alert.alert('Error', 'Sharing is not available on this device.');
+      } else {
+        Alert.alert('Download Failed', errorMessage);
+      }
     }
   };
 
@@ -107,12 +137,20 @@ export function FileUpload({
             try {
               setDeletingIds((prev) => [...prev, attachment.id]);
 
+              logger.info('[NOTE] Deleting attachment from editor', {
+                attributes: { attachmentId: attachment.id, filename: attachment.originalName }
+              });
               await api.deleteAttachment(attachment.id);
 
               await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+              logger.info('[NOTE] Attachment deleted successfully from editor', {
+                attributes: { attachmentId: attachment.id, filename: attachment.originalName }
+              });
               onDeleteComplete?.();
             } catch (error) {
-              console.error('Delete error:', error);
+              logger.error('[NOTE] Failed to delete attachment from editor', error instanceof Error ? error : undefined, {
+                attributes: { attachmentId: attachment.id, filename: attachment.originalName }
+              });
               await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
               Alert.alert('Delete Failed', error instanceof Error ? error.message : 'Failed to delete attachment');
             } finally {
@@ -124,7 +162,7 @@ export function FileUpload({
     );
   };
 
-  const styles = createStyles(theme);
+  const styles = createStyles();
 
   return (
     <View style={styles.container}>
@@ -192,7 +230,7 @@ export function FileUpload({
                 <View style={styles.actions}>
                   <TouchableOpacity
                     style={[styles.actionButton, { backgroundColor: theme.colors.muted }]}
-                    onPress={() => handleDownload(attachment)}
+                    onPress={() => handleDownloadChoice(attachment)}
                     disabled={isDeleting}
                   >
                     <Ionicons
@@ -223,7 +261,7 @@ export function FileUpload({
   );
 }
 
-const createStyles = (theme: any) =>
+const createStyles = () =>
   StyleSheet.create({
     container: {
       gap: 12,

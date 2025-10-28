@@ -3,12 +3,7 @@
  * Handles note encryption/decryption logic
  */
 
-import {
-  decryptNoteData,
-  encryptNoteData,
-  isNoteEncrypted,
-  clearNoteCacheForUser,
-} from '../../lib/encryption';
+import { clearNoteCacheForUser, decryptNoteData, encryptNoteData, isNoteEncrypted } from '../../lib/encryption';
 import { Note } from './types';
 import { ENCRYPTED_MARKER } from './utils/constants';
 
@@ -60,7 +55,7 @@ export async function decryptNotes(
 
   try {
     // Decrypt notes individually to handle failures gracefully
-    const decryptedNotes = await Promise.all(
+    return await Promise.all(
       notes.map(async (note) => {
         try {
           return await decryptNote(note, userId);
@@ -74,7 +69,6 @@ export async function decryptNotes(
         }
       })
     );
-    return decryptedNotes;
   } catch (error) {
     if (__DEV__) {
       console.error('Error during note decryption batch:', error);

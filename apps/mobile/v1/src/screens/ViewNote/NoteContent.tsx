@@ -1,13 +1,14 @@
 import React, { useRef, useState } from 'react';
-import { View, Text, StyleSheet, Animated, PixelRatio, ScrollView } from 'react-native';
+import { Animated, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { WebView } from 'react-native-webview';
+
 import type { Note } from '../../services/api';
 
 interface NoteContentProps {
   note: Note;
   htmlContent: string;
   scrollY: Animated.Value;
-  scrollViewRef: React.RefObject<ScrollView>;
+  scrollViewRef: React.RefObject<ScrollView | null>;
   showTitle?: boolean;
   theme: {
     colors: {
@@ -26,22 +27,26 @@ interface NoteContentProps {
  * Supports rich text formatting, code blocks with syntax highlighting,
  * and communicates scroll position to React Native
  */
-export function NoteContent({ note, htmlContent, scrollY, scrollViewRef, showTitle = true, theme }: NoteContentProps) {
+export function NoteContent({
+  note,
+  htmlContent,
+  showTitle = true,
+  theme,
+}: NoteContentProps) {
   const webViewRef = useRef<WebView>(null);
   const [webViewHeight, setWebViewHeight] = useState(300);
 
   // Calculate hairline width for CSS (equivalent to StyleSheet.hairlineWidth)
-  const hairlineWidth = StyleSheet.hairlineWidth;
-  const cssHairlineWidth = `${hairlineWidth}px`;
+  const cssHairlineWidth = `${StyleSheet.hairlineWidth}px`;
 
   // Enhanced HTML with optional title and metadata
   const fullHtml = `
     <!DOCTYPE html>
-    <html>
+    <html lang="en">
     <head>
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css" crossorigin="anonymous">
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" crossorigin="anonymous"></script>
       <style>
         body {
           font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
@@ -270,7 +275,9 @@ export function NoteContent({ note, htmlContent, scrollY, scrollViewRef, showTit
       </style>
     </head>
     <body>
-      ${showTitle ? `
+      ${
+        showTitle
+          ? `
       <div class="note-header" id="header">
         <div class="note-title">${note.title}</div>
         <div class="note-metadata">
@@ -282,7 +289,9 @@ export function NoteContent({ note, htmlContent, scrollY, scrollViewRef, showTit
         </div>
         <div class="note-divider"></div>
       </div>
-      ` : ''}
+      `
+          : ''
+      }
       <div class="note-content">${htmlContent.match(/<body>([\s\S]*?)<\/body>/)?.[1] || note.content}</div>
       <script>
         document.querySelectorAll('pre code').forEach((block) => {
@@ -315,7 +324,9 @@ export function NoteContent({ note, htmlContent, scrollY, scrollViewRef, showTit
     <View style={styles.container}>
       {note.hidden ? (
         <View style={styles.hiddenContainer}>
-          <Text style={[styles.hiddenText, { color: theme.colors.mutedForeground }]}>
+          <Text
+            style={[styles.hiddenText, { color: theme.colors.mutedForeground }]}
+          >
             [HIDDEN]
           </Text>
         </View>
@@ -345,8 +356,7 @@ export function NoteContent({ note, htmlContent, scrollY, scrollViewRef, showTit
 }
 
 const styles = StyleSheet.create({
-  container: {
-  },
+  container: {},
   webview: {
     backgroundColor: 'transparent',
   },

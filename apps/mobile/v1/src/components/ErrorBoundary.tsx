@@ -1,6 +1,7 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { ScrollView,StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
 import { logger } from '../lib/logger';
 
 interface Props {
@@ -39,8 +40,8 @@ class ErrorBoundary extends Component<Props, State> {
       errorInfo,
     });
 
-    // Log React error to NewRelic with component stack
-    logger.error('React component error', error, {
+    // Log React error to Sentry with component stack
+    logger.error('[ERROR] React component error', error, {
       attributes: {
         componentStack: errorInfo.componentStack,
         errorBoundary: true,

@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useEffect,useState } from 'react';
+
 import { APP_VERSION } from '../constants/version';
 
 const VERSION_STORAGE_KEY = 'last_seen_version';

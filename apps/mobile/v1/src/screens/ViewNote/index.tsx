@@ -1,13 +1,15 @@
-import React, { useRef, useEffect, useState, useCallback } from 'react';
-import { View, Text, StyleSheet, Animated, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { useTheme } from '../../theme';
+import { useFocusEffect,useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useCallback,useEffect, useRef, useState } from 'react';
+import { ActivityIndicator,Animated, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
 import { useViewNote } from '../../hooks/useViewNote';
-import { useApiService, type FileAttachment } from '../../services/api';
-import { ViewHeader } from './ViewHeader';
+import { logger } from '../../lib/logger';
+import { type FileAttachment,useApiService } from '../../services/api';
+import { useTheme } from '../../theme';
 import { NoteContent } from './NoteContent';
+import { ViewHeader } from './ViewHeader';
 
 export default function ViewNoteScreen() {
   const theme = useTheme();
@@ -15,6 +17,11 @@ export default function ViewNoteScreen() {
   const params = useLocalSearchParams();
   const { noteId } = params;
   const api = useApiService();
+
+  // Log screen mount
+  useEffect(() => {
+    logger.info('[NOTE] ViewNote screen mounted', { attributes: { noteId: noteId as string } });
+  }, [noteId]);
 
   const scrollY = useRef(new Animated.Value(0)).current;
   const scrollViewRef = useRef<ScrollView>(null);
@@ -41,11 +48,17 @@ export default function ViewNoteScreen() {
     try {
       loadingRef.current = true;
       setLoadingAttachments(true);
+      logger.debug('[NOTE] Loading attachments', { attributes: { noteId: noteId as string } });
       const noteAttachments = await api.getAttachments(noteId as string);
       setAttachments(noteAttachments);
       lastLoadedNoteId.current = noteId as string;
+      logger.info('[NOTE] Attachments loaded successfully', {
+        attributes: { noteId: noteId as string, count: noteAttachments.length }
+      });
     } catch (error) {
-      console.error('Failed to load attachments:', error);
+      logger.error('[NOTE] Failed to load attachments', error instanceof Error ? error : undefined, {
+        attributes: { noteId: noteId as string }
+      });
       setAttachments([]);
     } finally {
       setLoadingAttachments(false);
@@ -67,14 +80,24 @@ export default function ViewNoteScreen() {
 
     try {
       setDownloadingId(attachment.id);
+      logger.info('[NOTE] Downloading attachment', {
+        attributes: { attachmentId: attachment.id, filename: attachment.originalName }
+      });
       const fileUri = await api.downloadFile(attachment);
       await api.shareFile(fileUri);
+      logger.info('[NOTE] Attachment shared', {
+        attributes: { attachmentId: attachment.id, filename: attachment.originalName }
+      });
     } catch (error) {
-      console.error('Failed to download attachment:', error);
+      logger.error('[NOTE] Failed to download/share attachment', error instanceof Error ? error : undefined, {
+        attributes: { attachmentId: attachment.id, filename: attachment.originalName }
+      });
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
 
       if (errorMessage.includes('Too Many Requests') || errorMessage.includes('429')) {
         alert('Too many download requests. Please wait 1-2 minutes and try again.');
+      } else if (errorMessage.includes('not available')) {
+        alert('Sharing is not available on this device.');
       } else {
         alert(`Failed to download file: ${errorMessage.substring(0, 100)}`);
       }

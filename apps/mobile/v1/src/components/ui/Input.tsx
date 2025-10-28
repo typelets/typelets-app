@@ -1,9 +1,10 @@
 import React, { forwardRef } from 'react';
-import { TextInput, TextInputProps, ViewStyle, Platform } from 'react-native';
+import { Platform,StyleProp, TextInput, TextInputProps, TextStyle } from 'react-native';
+
 import { useTheme } from '../../theme';
 
 export interface InputProps extends TextInputProps {
-  style?: ViewStyle;
+  style?: StyleProp<TextStyle>;
 }
 
 export const Input = forwardRef<TextInput, InputProps>(({ style, ...props }, ref) => {

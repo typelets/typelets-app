@@ -1,7 +1,8 @@
 import React from 'react';
-import { View, Text, ViewStyle } from 'react-native';
-import { useTheme } from '../../theme';
+import { Text, View, ViewStyle } from 'react-native';
+
 import { NOTE_CARD } from '../../constants/ui';
+import { useTheme } from '../../theme';
 
 interface CardProps {
   children: React.ReactNode;

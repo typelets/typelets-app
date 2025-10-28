@@ -3,8 +3,8 @@
  * LRU-like cache for decrypted notes
  */
 
-import { CacheEntry } from '../types';
 import { CACHE_CONFIG } from '../config';
+import { CacheEntry } from '../types';
 
 export class DecryptionCache {
   private cache = new Map<string, CacheEntry>();

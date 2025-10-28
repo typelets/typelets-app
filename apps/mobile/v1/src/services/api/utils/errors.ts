@@ -2,7 +2,7 @@
  * API Error Handling Utilities
  */
 
-import { logger } from '../../../lib/logger';
+import { logger } from '@/src/lib/logger';
 
 export class ApiError extends Error {
   constructor(
@@ -36,8 +36,8 @@ export function getUserFriendlyErrorMessage(status: number): string {
 }
 
 export function handleApiError(error: unknown, context: string): never {
-  // Log to NewRelic with context
-  logger.error(`API error in ${context}`, error as Error, {
+  // Log to Sentry with context
+  logger.error(`[API] Error in ${context}`, error as Error, {
     attributes: {
       context,
       errorType: error instanceof Error ? error.name : 'Unknown',
