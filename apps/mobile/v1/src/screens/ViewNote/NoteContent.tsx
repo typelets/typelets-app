@@ -45,7 +45,9 @@ export function NoteContent({
     <html lang="en">
     <head>
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <!-- noinspection HtmlUnknownTarget,JSUnresolvedLibraryURL -->
       <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css" crossorigin="anonymous">
+      <!-- noinspection HtmlUnknownTarget,JSUnresolvedLibraryURL -->
       <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" crossorigin="anonymous"></script>
       <style>
         body {
@@ -140,6 +142,7 @@ export function NoteContent({
 
         pre {
           background-color: ${theme.isDark ? 'rgba(255, 255, 255, 0.05)' : theme.colors.muted};
+          /* noinspection CssInvalidPropertyValue */
           border: 1px solid ${theme.colors.border};
           border-radius: 6px;
           padding: 12px 16px;
@@ -163,6 +166,7 @@ export function NoteContent({
           color: ${theme.isDark ? '#ffffff' : 'inherit'} !important;
         }
 
+        /* noinspection CssInvalidFunction,JSUnresolvedReference,JSValidateTypes */
         ${htmlContent.match(/<style>([\s\S]*?)<\/style>/)?.[1] || ''}
 
         /* Override any extracted styles with our custom spacing */
@@ -207,11 +211,13 @@ export function NoteContent({
         hr {
           margin: 16px 0;
           border: none;
+          /* noinspection CssInvalidPropertyValue */
           border-top: 1px solid ${theme.colors.border};
         }
 
         /* Blockquotes */
         blockquote {
+          /* noinspection CssInvalidPropertyValue */
           border-left: 4px solid ${theme.colors.border};
           padding-left: 16px;
           margin: 12px 0;

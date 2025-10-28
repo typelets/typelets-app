@@ -55,7 +55,9 @@ class FileService {
 
   /**
    * Convert base64 to Uint8Array
+   * @deprecated Not currently used - keeping for potential future use
    */
+  // noinspection JSUnusedLocalSymbols
   private base64ToUint8Array(base64: string): Uint8Array {
     const binary = forge.util.decode64(base64);
     const bytes = new Uint8Array(binary.length);
@@ -287,6 +289,7 @@ class FileService {
       if (!response.ok) {
         const errorText = await response.text();
         console.error('[ERROR] Download failed:', response.status, errorText);
+        // noinspection ExceptionCaughtLocallyJS - Intentionally caught locally for logging before re-throw
         throw new Error(`${response.status} ${errorText}`);
       }
 
@@ -370,7 +373,8 @@ class FileService {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    // noinspection JSVoidFunctionReturnValueUsed
+    const i = Math.min(Math.floor(Math.log(bytes) / Math.log(k)), sizes.length - 1);
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   }
 
