@@ -1,3 +1,11 @@
+## [1.30.5](https://github.com/typelets/typelets-app/compare/v1.30.4...v1.30.5) (2025-10-28)
+
+
+### Bug Fixes
+
+* **mobile:** resolve editor Enter key behavior and improve code quality ([12769de](https://github.com/typelets/typelets-app/commit/12769de919222b0c526c24ea20b47e0db32228b7))
+* **mobile:** resolve editor Enter key behavior and improve code quality ([14eefa7](https://github.com/typelets/typelets-app/commit/14eefa708559f4ff9fbb8a5af8b8c02c7b9475de))
+
 ## [1.30.4](https://github.com/typelets/typelets-app/compare/v1.30.3...v1.30.4) (2025-10-26)
 
 
