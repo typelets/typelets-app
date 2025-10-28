@@ -9,6 +9,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Editor, type EditorColors,type EditorRef } from '@/editor/src';
 
 import { FileUpload } from '../../components/FileUpload';
+import { useKeyboardHeight } from '../../hooks/useKeyboardHeight';
 import { logger } from '../../lib/logger';
 import { type FileAttachment,type Note, useApiService } from '../../services/api';
 import { useTheme } from '../../theme';
@@ -32,7 +33,7 @@ export default function EditNoteScreen() {
   const [attachments, setAttachments] = useState<FileAttachment[]>([]);
   const [showAttachments, setShowAttachments] = useState(false);
   const [createdNoteId, setCreatedNoteId] = useState<string | null>(null);
-  const [showHeader, setShowHeader] = useState(false);
+  const [showHeader, setShowHeader] = useState(!isEditing);
   const [showToolbar, setShowToolbar] = useState(true);
   const [activeFormats, setActiveFormats] = useState({
     bold: false,
@@ -48,6 +49,7 @@ export default function EditNoteScreen() {
   });
 
   const editorRef = useRef<EditorRef>(null);
+  const keyboardHeight = useKeyboardHeight();
 
   // Map theme colors to editor colors
   const editorColors: EditorColors = useMemo(() => ({
@@ -576,22 +578,31 @@ export default function EditNoteScreen() {
 
       <View style={[styles.divider, { backgroundColor: theme.colors.border }]} />
 
-      <View style={[
-        styles.richEditor,
-        {
-          backgroundColor: theme.colors.background,
-        }
-      ]}>
-        <Editor
-          ref={editorRef}
-          value={content}
-          onChange={setContent}
-          onFormatChange={setActiveFormats}
-          placeholder="Write your note..."
-          theme={theme.isDark ? 'dark' : 'light'}
-          colors={editorColors}
-        />
-      </View>
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={{ paddingBottom: keyboardHeight > 0 ? keyboardHeight : 0 }}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        bounces={true}
+      >
+        <View style={[
+          styles.richEditor,
+          {
+            backgroundColor: theme.colors.background,
+          }
+        ]}>
+          <Editor
+            ref={editorRef}
+            value={content}
+            onChange={setContent}
+            onFormatChange={setActiveFormats}
+            placeholder="Write your note..."
+            theme={theme.isDark ? 'dark' : 'light'}
+            colors={editorColors}
+            scrollEnabled={false}
+          />
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -627,7 +638,6 @@ const styles = StyleSheet.create({
     marginHorizontal: 0,
   },
   richEditor: {
-    flex: 1,
   },
   toolbarContainer: {
     position: 'absolute',

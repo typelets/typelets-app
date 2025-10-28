@@ -25,6 +25,7 @@ export interface EditorProps {
   editable?: boolean;
   theme?: 'light' | 'dark';
   colors?: EditorColors;
+  scrollEnabled?: boolean;
 }
 
 export interface EditorRef {
@@ -82,6 +83,8 @@ const createEditorHTML = (content: string, placeholder: string, isDark: boolean,
 
     html {
       background: ${editorColors.background};
+      -webkit-overflow-scrolling: touch;
+      overflow-y: auto;
     }
 
     body {
@@ -91,10 +94,9 @@ const createEditorHTML = (content: string, placeholder: string, isDark: boolean,
       color: ${editorColors.foreground};
       font-size: 16px;
       line-height: 1.6;
-      min-height: 100vh;
+      -webkit-overflow-scrolling: touch;
     }
     #editor {
-      min-height: 100vh;
       padding-bottom: 40px;
       outline: none;
     }
@@ -293,6 +295,12 @@ const createEditorHTML = (content: string, placeholder: string, isDark: boolean,
     editor.innerHTML = ${JSON.stringify(content || '<p></p>')};
     isInitialized = true;
 
+    // Send height to React Native
+    function sendHeight() {
+      const height = document.documentElement.scrollHeight;
+      window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'height', height }));
+    }
+
     // Send content changes to React Native (debounced)
     let timeout;
     function notifyChange() {
@@ -300,6 +308,7 @@ const createEditorHTML = (content: string, placeholder: string, isDark: boolean,
       timeout = setTimeout(() => {
         const html = editor.innerHTML;
         window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'content', html }));
+        sendHeight();
       }, 300);
     }
 
@@ -308,6 +317,7 @@ const createEditorHTML = (content: string, placeholder: string, isDark: boolean,
       clearTimeout(timeout);
       const html = editor.innerHTML;
       window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'content', html }));
+      sendHeight();
     });
 
     // Track selection changes to detect active formats
@@ -1857,7 +1867,13 @@ const createEditorHTML = (content: string, placeholder: string, isDark: boolean,
     };
 
     // Auto-focus on load
-    setTimeout(() => editor.focus(), 100);
+    setTimeout(() => {
+      editor.focus();
+      sendHeight();
+    }, 100);
+
+    // Send height on window resize
+    window.addEventListener('resize', sendHeight);
   </script>
 </body>
 </html>
@@ -1865,13 +1881,14 @@ const createEditorHTML = (content: string, placeholder: string, isDark: boolean,
 };
 
 export const Editor = forwardRef<EditorRef, EditorProps>(
-  ({ value, onChange, onFormatChange, placeholder = 'Start typing...', editable = true, theme = 'light', colors }, ref) => {
+  ({ value, onChange, onFormatChange, placeholder = 'Start typing...', editable = true, theme = 'light', colors, scrollEnabled = true }, ref) => {
     const webViewRef = useRef<WebView>(null);
     const isDark = theme === 'dark';
     const [initialContent] = useState(value); // Capture initial content only once
     const lastValueRef = useRef(value); // Track last value to detect external changes
     const lastThemeRef = useRef(isDark); // Track theme changes
     const [themeKey, setThemeKey] = useState(isDark ? 'dark' : 'light');
+    const [webViewHeight, setWebViewHeight] = useState(300);
 
     const execCommand = (command: string, value?: string | number) => {
       webViewRef.current?.injectJavaScript(
@@ -1921,6 +1938,8 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
           onChange(data.html);
         } else if (data.type === 'formats' && onFormatChange) {
           onFormatChange(data.formats);
+        } else if (data.type === 'height') {
+          setWebViewHeight(data.height);
         }
       } catch (error) {
         console.error('Error parsing WebView message:', error);
@@ -1968,8 +1987,14 @@ export const Editor = forwardRef<EditorRef, EditorProps>(
           allowFileAccessFromFileURLs={true}
           allowUniversalAccessFromFileURLs={true}
           mixedContentMode="always"
-          style={[styles.webview, { backgroundColor: colors?.background || (isDark ? '#1a1a1a' : '#fff') }]}
-          scrollEnabled={true}
+          style={[
+            styles.webview,
+            {
+              backgroundColor: colors?.background || (isDark ? '#1a1a1a' : '#fff'),
+              height: scrollEnabled ? undefined : webViewHeight,
+            }
+          ]}
+          scrollEnabled={scrollEnabled}
           showsVerticalScrollIndicator={false}
           keyboardDisplayRequiresUserAction={false}
           hideKeyboardAccessoryView={true}
