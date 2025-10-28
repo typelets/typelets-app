@@ -1,0 +1,60 @@
+# Dependencies
+node_modules
+**/node_modules
+.pnpm-store
+
+# Mobile apps (not needed for web build)
+apps/mobile/
+
+# Build outputs
+dist
+build
+*.log
+
+# Git
+.git
+.gitignore
+.github
+
+# Environment files
+myKEYs.OLD
+.env.local
+.env.*.local
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Testing
+coverage
+.nyc_output
+
+# Documentation
+*.md
+docs
+LICENSE
+
+# Docker
+Dockerfile
+docker-compose*.yml
+.dockerignore
+
+# CI/CD
+.gitlab-ci.yml
+.travis.yml
+.circleci
+azure-pipelines.yml
+
+# Development
+.husky
+.editorconfig
+.eslintcache
+.prettierignore
+
+# OS Files
+Thumbs.db
+Desktop.ini

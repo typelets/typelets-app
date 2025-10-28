@@ -198,7 +198,6 @@ $RECYCLE.BIN/
 *.sqlite3
 
 # Docker
-.dockerignore
 Dockerfile.dev
 docker-compose.override.yml
 
