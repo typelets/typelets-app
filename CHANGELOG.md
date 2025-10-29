@@ -1,3 +1,10 @@
+## [1.30.10](https://github.com/typelets/typelets-app/compare/v1.30.9...v1.30.10) (2025-10-29)
+
+
+### Bug Fixes
+
+* add script-src-elem to CSP to allow Clerk authentication scripts ([1d424f1](https://github.com/typelets/typelets-app/commit/1d424f1817ff754cad2373204eeb55ac61a03ab5))
+
 ## [1.30.9](https://github.com/typelets/typelets-app/compare/v1.30.8...v1.30.9) (2025-10-28)
 
 
