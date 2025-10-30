@@ -1,3 +1,10 @@
+## [1.30.13](https://github.com/typelets/typelets-app/compare/v1.30.12...v1.30.13) (2025-10-30)
+
+
+### Bug Fixes
+
+* **mobile:** persist task checkbox state and improve navigation UX ([89fb1d4](https://github.com/typelets/typelets-app/commit/89fb1d464ab6f98d15a8c502ef43f92a67a8f7e7))
+
 ## [1.30.12](https://github.com/typelets/typelets-app/compare/v1.30.11...v1.30.12) (2025-10-29)
 
 
