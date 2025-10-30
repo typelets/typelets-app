@@ -24,7 +24,7 @@ export function createNotesApi(getToken: AuthTokenGetter, getUserId: () => strin
    */
   const invalidateCountsCache = () => {
     // Clear all counts caches (general and folder-specific)
-    apiCache.clearAll(); // This clears all caches including counts
+    apiCache.clearAll();
   };
 
   return {

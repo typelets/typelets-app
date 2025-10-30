@@ -1,15 +1,22 @@
-import { Ionicons } from '@expo/vector-icons';
-import { BottomSheetBackdrop, BottomSheetBackdropProps,BottomSheetModal, BottomSheetTextInput, BottomSheetView } from '@gorhom/bottom-sheet';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useFocusEffect } from '@react-navigation/native';
-import { useUser } from '@clerk/clerk-expo';
-import * as Haptics from 'expo-haptics';
-import React, { useCallback,useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Animated, FlatList, Keyboard, Pressable, RefreshControl, StyleSheet, Text, TouchableOpacity, useWindowDimensions,View } from 'react-native';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { ActivityIndicator, Alert, Animated, FlatList, Keyboard, Pressable, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-import { FOLDER_CARD, FOLDER_COLORS,NOTE_CARD, SECTION } from '../constants/ui';
-import { type Folder, type FolderCounts,type Note, useApiService } from '../services/api';
-import { decryptNote, isNoteEncrypted } from '../services/api/encryption';
+import { useUser } from '@clerk/clerk-expo';
+import { Ionicons } from '@expo/vector-icons';
+import {
+  BottomSheetBackdrop,
+  BottomSheetBackdropProps,
+  BottomSheetModal,
+  BottomSheetTextInput,
+  BottomSheetView,
+} from '@gorhom/bottom-sheet';
+import { useFocusEffect } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Haptics from 'expo-haptics';
+
+import { FOLDER_CARD, FOLDER_COLORS, NOTE_CARD, SECTION } from '../constants/ui';
+import { type Folder, type FolderCounts, type Note, useApiService } from '../services/api';
+import { decryptNote } from '../services/api/encryption';
 import { useTheme } from '../theme';
 
 interface RouteParams {
@@ -62,7 +69,6 @@ export default function NotesListScreen({ navigation, route, renderHeader, scrol
   const api = useApiService();
   const { user } = useUser();
   const { folderId, viewType, searchQuery } = route?.params || {};
-  const { height: windowHeight } = useWindowDimensions();
 
   const [notes, setNotes] = useState<Note[]>([]);
   const [subfolders, setSubfolders] = useState<Folder[]>([]);
@@ -70,6 +76,10 @@ export default function NotesListScreen({ navigation, route, renderHeader, scrol
   const [loading, setLoading] = useState(true);
   const [showLoading, setShowLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+
+  // Track if notes have been loaded to prevent unnecessary refetch on navigation back
+  const hasLoadedRef = useRef(false);
+  const currentParamsRef = useRef<{ folderId?: string; viewType?: string; searchQuery?: string } | null>(null);
 
   // Performance tracking
   const screenFocusTime = useRef<number>(0);
@@ -169,10 +179,29 @@ export default function NotesListScreen({ navigation, route, renderHeader, scrol
   // Load notes when screen focuses or params change
   useFocusEffect(
     React.useCallback(() => {
-      loadNotes();
-      loadViewMode();
-      // Reset scroll position when screen comes into focus
-      if (flatListRef.current) {
+      // Check if params have changed
+      const paramsChanged =
+        !currentParamsRef.current ||
+        currentParamsRef.current.folderId !== folderId ||
+        currentParamsRef.current.viewType !== viewType ||
+        currentParamsRef.current.searchQuery !== searchQuery;
+
+      // Determine if this is the first load
+      const isFirstLoad = !hasLoadedRef.current;
+
+      // Always reload when screen comes into focus
+      // Use refresh mode if not first load to avoid showing spinner
+      if (isFirstLoad || paramsChanged) {
+        loadNotes(); // Full load with spinner on first load or param change
+        loadViewMode();
+        currentParamsRef.current = { folderId, viewType, searchQuery };
+      } else {
+        // Silent refresh without spinner for subsequent focuses
+        loadNotes(true); // Pass true for isRefresh to skip loading state
+      }
+
+      // Reset scroll position when screen comes into focus (only if params changed)
+      if (paramsChanged && flatListRef.current) {
         flatListRef.current.scrollToOffset({ offset: 0, animated: false });
       }
       // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -298,6 +327,9 @@ export default function NotesListScreen({ navigation, route, renderHeader, scrol
           setLoading(false);
         }
 
+        // Mark that notes have been loaded
+        hasLoadedRef.current = true;
+
         // Decrypt remaining notes in background
         if (remaining.length > 0) {
           const encryptedRemaining = remaining.filter(note =>
@@ -331,6 +363,8 @@ export default function NotesListScreen({ navigation, route, renderHeader, scrol
         if (!isRefresh) {
           setLoading(false);
         }
+        // Mark that notes have been loaded
+        hasLoadedRef.current = true;
       }
 
       // Load subfolders and their counts in background (non-blocking)
@@ -383,6 +417,8 @@ export default function NotesListScreen({ navigation, route, renderHeader, scrol
       if (!isRefresh) {
         setLoading(false);
       }
+      // Mark as loaded even on error to prevent reload loop
+      hasLoadedRef.current = true;
     }
   };
 
@@ -470,10 +506,7 @@ export default function NotesListScreen({ navigation, route, renderHeader, scrol
       if (filterConfig.showStarredOnly && !note.starred) {
         return false;
       }
-      if (filterConfig.showHiddenOnly && !note.hidden) {
-        return false;
-      }
-      return true;
+      return !filterConfig.showHiddenOnly || note.hidden;
     });
 
     // Sort notes
@@ -883,7 +916,7 @@ export default function NotesListScreen({ navigation, route, renderHeader, scrol
         </View>
       </>
     );
-  }, [loading, renderHeader, viewType, subfolders, theme.colors, viewMode, filteredNotes.length, notes.length, hasActiveFilters, handleEmptyTrash, navigation, route?.params?.folderId]);
+  }, [loading, renderHeader, viewType, subfolders, theme.colors, theme.isDark, viewMode, filteredNotes.length, notes.length, hasActiveFilters, handleEmptyTrash, navigation, route?.params?.folderId]);
 
   // Render empty state
   const renderEmptyComponent = useCallback(() => {
@@ -1413,7 +1446,7 @@ const styles = StyleSheet.create({
     fontWeight: '400',
   },
   noteListDivider: {
-    height: StyleSheet.hairlineWidth,
+    height: 1,
     marginLeft: 0,
   },
   // Bottom sheet styles

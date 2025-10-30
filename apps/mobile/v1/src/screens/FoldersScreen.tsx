@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { BottomSheetBackdrop, BottomSheetBackdropProps,BottomSheetModal, BottomSheetTextInput, BottomSheetView } from '@gorhom/bottom-sheet';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useIsFocused } from '@react-navigation/native';
+import { useFocusEffect } from '@react-navigation/native';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import React, { useCallback,useEffect, useMemo, useRef, useState } from 'react';
@@ -107,10 +107,6 @@ export default function FoldersScreen() {
     };
   }, []);
 
-  // Check if screen is focused
-  const isFocused = useIsFocused();
-  const loadTimerRef = useRef<NodeJS.Timeout | null>(null);
-
   // Load folders data
   const loadFoldersData = useCallback(async (isRefresh = false) => {
     try {
@@ -180,23 +176,11 @@ export default function FoldersScreen() {
   }, [loadViewMode]);
 
   // Reload data when screen comes into focus
-  useEffect(() => {
-    if (isFocused) {
-      // Clear any pending load
-      if (loadTimerRef.current) {
-        clearTimeout(loadTimerRef.current);
-      }
-
-      // Load immediately
+  useFocusEffect(
+    useCallback(() => {
       loadFoldersData();
-    }
-
-    return () => {
-      if (loadTimerRef.current) {
-        clearTimeout(loadTimerRef.current);
-      }
-    };
-  }, [isFocused, loadFoldersData]);
+    }, [loadFoldersData])
+  );
 
   // Handle loading delay
   useEffect(() => {

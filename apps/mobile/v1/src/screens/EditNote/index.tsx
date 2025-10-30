@@ -50,6 +50,7 @@ export default function EditNoteScreen() {
 
   const editorRef = useRef<EditorRef>(null);
   const keyboardHeight = useKeyboardHeight();
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Map theme colors to editor colors
   const editorColors: EditorColors = useMemo(() => ({
@@ -106,6 +107,34 @@ export default function EditNoteScreen() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [noteId, isEditing]);
+
+  // Auto-save when content changes (for checkbox clicks)
+  useEffect(() => {
+    // Only auto-save for existing notes when content contains checkboxes and has changed
+    if ((noteId || createdNoteId) && content && content.includes('type="checkbox"')) {
+      // Clear any existing timeout
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+
+      // Set a new timeout to save after 500ms of no changes
+      saveTimeoutRef.current = setTimeout(() => {
+        if (!isSaving) {
+          handleSave({ skipNavigation: true }).catch(error => {
+            logger.error('[NOTE] Auto-save failed', error instanceof Error ? error : undefined);
+          });
+        }
+      }, 500);
+    }
+
+    // Cleanup timeout on unmount
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [content]);
 
   const refreshAttachments = async () => {
     const currentNoteId = (noteId as string) || createdNoteId;

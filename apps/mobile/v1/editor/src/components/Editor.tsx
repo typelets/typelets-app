@@ -75,6 +75,12 @@ const createEditorHTML = (content: string, placeholder: string, isDark: boolean,
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="color-scheme" content="${isDark ? 'dark' : 'light'}">
   <style>
+    :root {
+      --border-color: ${editorColors.border};
+      --blockquote-border-color: ${editorColors.blockquoteBorder};
+      --code-block-border-color: ${editorColors.codeBlockBorder};
+    }
+
     * {
       margin: 0;
       padding: 0;
@@ -144,7 +150,7 @@ const createEditorHTML = (content: string, placeholder: string, isDark: boolean,
     hr {
       margin: 16px 0;
       border: none;
-      border-top: 1px solid ${editorColors.border};
+      border-top: 1px solid var(--border-color);
     }
 
     /* Lists */
@@ -163,7 +169,7 @@ const createEditorHTML = (content: string, placeholder: string, isDark: boolean,
 
     /* Blockquotes */
     blockquote {
-      border-left: 4px solid ${editorColors.blockquoteBorder};
+      border-left: 4px solid var(--blockquote-border-color);
       padding-left: 16px;
       margin: 12px 0;
       color: ${editorColors.blockquoteText};
@@ -244,7 +250,7 @@ const createEditorHTML = (content: string, placeholder: string, isDark: boolean,
 
     pre {
       background-color: ${editorColors.codeBlockBackground};
-      border: 1px solid ${editorColors.codeBlockBorder};
+      border: 1px solid var(--code-block-border-color);
       border-radius: 6px;
       padding: 12px 16px;
       margin: 8px 0;
@@ -384,6 +390,39 @@ const createEditorHTML = (content: string, placeholder: string, isDark: boolean,
 
     editor.addEventListener('selectionchange', checkActiveFormats);
     document.addEventListener('selectionchange', checkActiveFormats);
+
+    // Handle checkbox clicks in task lists
+    editor.addEventListener('click', function(e) {
+      const target = e.target;
+      if (target && target.tagName === 'INPUT' && target.type === 'checkbox') {
+        e.stopPropagation();
+        // Toggle the checkbox state
+        const newChecked = target.checked;
+
+        // Set both the checked attribute (for HTML persistence) and data-checked
+        if (newChecked) {
+          target.setAttribute('checked', 'checked');
+        } else {
+          target.removeAttribute('checked');
+        }
+        target.setAttribute('data-checked', String(newChecked));
+
+        // Find the parent task item and update its data-checked attribute
+        let taskItem = target.parentElement;
+        while (taskItem && taskItem !== editor) {
+          if (taskItem.tagName === 'LI' && taskItem.getAttribute('data-type') === 'taskItem') {
+            taskItem.setAttribute('data-checked', String(newChecked));
+            break;
+          }
+          taskItem = taskItem.parentElement;
+        }
+
+        // Immediately notify React Native of the change
+        clearTimeout(timeout);
+        const html = editor.innerHTML;
+        window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'content', html }));
+      }
+    });
 
     // Handle Enter and Backspace keys
     editor.addEventListener('keydown', function(e) {
@@ -867,7 +906,7 @@ const createEditorHTML = (content: string, placeholder: string, isDark: boolean,
     });
 
     // Handle content updates from React Native (external changes only)
-    window.setContent = function(html) {
+    (window as any).setContent = function(html: string) {
       if (!isInitialized) return;
       if (editor.innerHTML !== html) {
         const selection = window.getSelection();
