@@ -1,15 +1,16 @@
-import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { TouchableOpacity, View, StyleSheet, Text, Animated, Alert, Keyboard, Pressable } from 'react-native';
+import { BottomSheetBackdrop, BottomSheetModal, BottomSheetScrollView, BottomSheetTextInput,BottomSheetView } from '@gorhom/bottom-sheet';
 import * as Haptics from 'expo-haptics';
+import { Stack,useLocalSearchParams, useRouter } from 'expo-router';
+import { useCallback,useEffect, useMemo, useRef, useState } from 'react';
+import { Alert, Animated, Keyboard, Pressable,StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useTheme } from '@/src/theme';
-import NotesListScreen from '@/src/screens/NotesListScreen';
-import { useApiService, type Folder } from '@/src/services/api';
-import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+
 import { Input } from '@/src/components/ui/Input';
-import { BottomSheetModal, BottomSheetView, BottomSheetBackdrop, BottomSheetScrollView, BottomSheetTextInput } from '@gorhom/bottom-sheet';
 import { FOLDER_COLORS } from '@/src/constants/ui';
+import NotesListScreen from '@/src/screens/ListNotes';
+import { type Folder,useApiService } from '@/src/services/api';
+import { useTheme } from '@/src/theme';
 
 function getViewTitle(viewType: string): string {
   switch (viewType) {
@@ -254,7 +255,7 @@ export default function FolderNotesScreen() {
     params: {
       folderId: params.folderId as string,
       folderName: params.folderName as string,
-      viewType: params.viewType as string,
+      viewType: params.viewType as 'all' | 'starred' | 'archived' | 'trash' | undefined,
       searchQuery: searchQuery, // Pass search query to NotesListScreen
     }
   };
