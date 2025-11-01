@@ -8,6 +8,7 @@ import React, { useCallback,useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Animated, Keyboard, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { OfflineIndicator } from '../components/OfflineIndicator';
 import { ACTION_BUTTON, FOLDER_CARD, FOLDER_COLORS } from '../constants/ui';
 import { type Folder, type FolderCounts,useApiService } from '../services/api';
 import { useTheme } from '../theme';
@@ -454,6 +455,9 @@ export default function FoldersScreen() {
       )}
 
       {/* <BottomNavigation navigation={navigation} activeTab="folders" /> */}
+
+      {/* Offline Indicator - Floating Button */}
+      <OfflineIndicator />
 
       {/* Create Folder Bottom Sheet */}
       <BottomSheetModal

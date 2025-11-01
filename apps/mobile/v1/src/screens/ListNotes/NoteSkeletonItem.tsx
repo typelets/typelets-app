@@ -71,6 +71,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   noteListDivider: {
+    // @ts-ignore - StyleSheet.hairlineWidth is intentionally used for height (ultra-thin divider)
     height: StyleSheet.hairlineWidth,
     marginLeft: 0,
   },

@@ -1,9 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect,useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback,useEffect, useRef, useState } from 'react';
-import { ActivityIndicator,Animated, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Animated, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useNetworkStatus } from '../../hooks/useNetworkStatus';
 import { useViewNote } from '../../hooks/useViewNote';
 import { logger } from '../../lib/logger';
 import { type FileAttachment,useApiService } from '../../services/api';
@@ -17,6 +18,8 @@ export default function ViewNoteScreen() {
   const params = useLocalSearchParams();
   const { noteId } = params;
   const api = useApiService();
+  const { isConnected, isInternetReachable } = useNetworkStatus();
+  const isOnline = isConnected && (isInternetReachable ?? false);
 
   // Log screen mount
   useEffect(() => {
@@ -30,7 +33,16 @@ export default function ViewNoteScreen() {
   const [loadingAttachments, setLoadingAttachments] = useState(false);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
-  const { note, loading, htmlContent, handleEdit, handleToggleStar, handleToggleHidden } = useViewNote(noteId as string);
+  const { note, loading, htmlContent, handleEdit: handleEditInternal, handleToggleStar, handleToggleHidden } = useViewNote(noteId as string);
+
+  // Wrap handleEdit with offline check
+  const handleEdit = () => {
+    if (!isOnline) {
+      Alert.alert('Offline', 'You cannot edit notes while offline. Please connect to the internet and try again.');
+      return;
+    }
+    handleEditInternal();
+  };
 
   useEffect(() => {
     scrollY.setValue(0);
@@ -155,6 +167,7 @@ export default function ViewNoteScreen() {
           scrollY={scrollY}
           attachmentsCount={attachments.length}
           showAttachments={showAttachments}
+          isOffline={!isOnline}
           onBack={() => router.back()}
           onToggleStar={handleToggleStar}
           onToggleHidden={handleToggleHidden}

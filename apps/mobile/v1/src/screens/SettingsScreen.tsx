@@ -13,6 +13,7 @@ import { UsageBottomSheet } from '../components/settings/UsageBottomSheet';
 import { APP_VERSION } from '../constants/version';
 import { forceGlobalMasterPasswordRefresh } from '../hooks/useMasterPassword';
 import { clearUserEncryptionData } from '../lib/encryption';
+import { clearDecryptedCache,getCacheDecryptedContentPreference, setCacheDecryptedContentPreference } from '../lib/preferences';
 import { useTheme } from '../theme';
 import { DARK_THEME_PRESETS,LIGHT_THEME_PRESETS } from '../theme/presets';
 
@@ -45,12 +46,16 @@ export default function SettingsScreen({ onLogout }: Props) {
   const deleteAccountSheetRef = useRef<BottomSheetModal>(null);
   const viewModeSheetRef = useRef<BottomSheetModal>(null);
   const usageSheetRef = useRef<BottomSheetModal>(null);
+  const cachePreferenceSheetRef = useRef<BottomSheetModal>(null);
 
   // Scroll tracking
   const scrollY = useRef(new Animated.Value(0)).current;
 
   // View mode state
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
+
+  // Cache decrypted content preference state
+  const [cacheDecrypted, setCacheDecrypted] = useState<boolean>(true);
 
   // Snap points
   const themeModeSnapPoints = useMemo(() => ['45%'], []);
@@ -59,6 +64,7 @@ export default function SettingsScreen({ onLogout }: Props) {
   const deleteAccountSnapPoints = useMemo(() => ['60%'], []);
   const viewModeSnapPoints = useMemo(() => ['40%'], []);
   const usageSnapPoints = useMemo(() => ['50%'], []);
+  const cachePreferenceSnapPoints = useMemo(() => ['45%'], []);
 
   // Backdrop component
   const renderBackdrop = useCallback(
@@ -88,6 +94,21 @@ export default function SettingsScreen({ onLogout }: Props) {
       }
     };
     loadViewMode();
+  }, []);
+
+  // Load cache decrypted content preference
+  useEffect(() => {
+    const loadCachePreference = async () => {
+      try {
+        const preference = await getCacheDecryptedContentPreference();
+        setCacheDecrypted(preference);
+      } catch (error) {
+        if (__DEV__) {
+          console.error('Failed to load cache preference:', error);
+        }
+      }
+    };
+    loadCachePreference();
   }, []);
 
   const saveViewMode = async (mode: 'list' | 'grid') => {
@@ -150,6 +171,12 @@ export default function SettingsScreen({ onLogout }: Props) {
           subtitle: 'Learn how we protect your data',
           icon: 'shield-checkmark-outline',
           onPress: () => securitySheetRef.current?.present(),
+        },
+        {
+          title: 'Encrypted Cache',
+          subtitle: cacheDecrypted ? 'Cache decrypted' : 'Cache encrypted',
+          icon: 'flash-outline',
+          onPress: () => cachePreferenceSheetRef.current?.present(),
         },
         {
           title: 'Change Master Password',
@@ -353,7 +380,7 @@ export default function SettingsScreen({ onLogout }: Props) {
                             styles.toggleThumb,
                             {
                               backgroundColor: theme.colors.background,
-                              transform: [{ translateX: item.value ? 16 : 0 }]
+                              transform: [{ translateX: item.value ? 20 : 0 }]
                             }
                           ]} />
                         </View>
@@ -429,6 +456,93 @@ export default function SettingsScreen({ onLogout }: Props) {
         </BottomSheetView>
       </BottomSheetModal>
 
+      {/* Cache Preference Selection Bottom Sheet */}
+      <BottomSheetModal
+        ref={cachePreferenceSheetRef}
+        snapPoints={cachePreferenceSnapPoints}
+        backdropComponent={renderBackdrop}
+        backgroundStyle={{ backgroundColor: theme.colors.card }}
+        handleIndicatorStyle={{ backgroundColor: theme.colors.border }}
+        topInset={45}
+        enableDynamicSizing={false}
+        enablePanDownToClose={true}
+      >
+        <BottomSheetView>
+          <View style={styles.bottomSheetHeader}>
+            <Text style={[styles.bottomSheetTitle, { color: theme.colors.foreground }]}>
+              Encrypted Cache
+            </Text>
+            <TouchableOpacity
+              style={[styles.iconButton, { backgroundColor: theme.colors.muted }]}
+              onPress={() => cachePreferenceSheetRef.current?.dismiss()}
+            >
+              <Ionicons name="close" size={20} color={theme.colors.mutedForeground} />
+            </TouchableOpacity>
+          </View>
+          <View style={[styles.divider, { backgroundColor: theme.colors.border }]} />
+          <View style={[styles.bottomSheetContent, { paddingTop: 16 }]}>
+            {([
+              {
+                value: true,
+                title: 'Cache Decrypted',
+                subtitle: 'Store decrypted notes locally for instant loading. Requires master password on app start.',
+                icon: 'flash'
+              },
+              {
+                value: false,
+                title: 'Cache Encrypted',
+                subtitle: 'Only store encrypted notes. Slightly slower but maximum security.',
+                icon: 'shield-checkmark'
+              }
+            ] as const).map((option) => (
+              <TouchableOpacity
+                key={option.value.toString()}
+                style={[styles.optionItem, { backgroundColor: theme.colors.card, borderColor: theme.colors.border }]}
+                onPress={async () => {
+                  const newValue = option.value;
+                  setCacheDecrypted(newValue);
+                  await setCacheDecryptedContentPreference(newValue);
+
+                  if (!newValue) {
+                    // Clear decrypted cache when disabling
+                    await clearDecryptedCache();
+                    if (__DEV__) {
+                      console.log('[Settings] Decrypted cache cleared');
+                    }
+                  }
+
+                  cachePreferenceSheetRef.current?.dismiss();
+
+                  // Show informational alert
+                  Alert.alert(
+                    'Cache Preference Updated',
+                    newValue
+                      ? 'Decrypted notes will be cached for instant loading. Close and reopen the app to see the effect.'
+                      : 'Only encrypted notes will be cached. Decrypted cache has been cleared.',
+                    [{ text: 'OK' }]
+                  );
+                }}
+              >
+                <View style={[styles.optionIcon, { backgroundColor: theme.colors.muted }]}>
+                  <Ionicons name={option.icon as IconName} size={20} color={theme.colors.foreground} />
+                </View>
+                <View style={styles.optionText}>
+                  <Text style={[styles.optionTitle, { color: theme.colors.foreground }]}>
+                    {option.title}
+                  </Text>
+                  <Text style={[styles.optionSubtitle, { color: theme.colors.mutedForeground }]}>
+                    {option.subtitle}
+                  </Text>
+                </View>
+                {cacheDecrypted === option.value && (
+                  <Ionicons name="checkmark-circle" size={24} color={theme.colors.primary} />
+                )}
+              </TouchableOpacity>
+            ))}
+          </View>
+        </BottomSheetView>
+      </BottomSheetModal>
+
       {/* Theme Color Selection Bottom Sheet */}
       <BottomSheetModal
         ref={themeColorSheetRef}
@@ -472,7 +586,7 @@ export default function SettingsScreen({ onLogout }: Props) {
                       { backgroundColor: theme.colors.card, borderColor: theme.colors.border }
                     ]}
                     onPress={() => {
-                      theme.setLightTheme(preset.id);
+                      theme.setLightTheme(preset.id as any);
                     }}
                   >
                     <View style={[styles.colorPreview, {
@@ -514,7 +628,7 @@ export default function SettingsScreen({ onLogout }: Props) {
                       { backgroundColor: theme.colors.card, borderColor: theme.colors.border }
                     ]}
                     onPress={() => {
-                      theme.setDarkTheme(preset.id);
+                      theme.setDarkTheme(preset.id as any);
                     }}
                   >
                     <View style={[styles.colorPreview, {

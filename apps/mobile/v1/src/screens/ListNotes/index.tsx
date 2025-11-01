@@ -3,9 +3,9 @@ import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
 import React, { useCallback,useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Animated, FlatList, RefreshControl, StyleSheet, View } from 'react-native';
+import { Alert, Animated, FlatList, RefreshControl, StyleSheet, View } from 'react-native';
 
-import { type Folder, type Note } from '../../services/api';
+import { type Folder, type Note, useApiService } from '../../services/api';
 import { useTheme } from '../../theme';
 import { CreateFolderSheet } from './CreateFolderSheet';
 import { EmptyState } from './EmptyState';
@@ -38,9 +38,9 @@ interface Props {
 export default function NotesListScreen({ navigation, route, renderHeader, scrollY: parentScrollY }: Props) {
   const theme = useTheme();
   const { user } = useUser();
+  const api = useApiService();
   const { folderId, viewType, searchQuery } = route?.params || {};
 
-  const [showLoading, setShowLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
   // Performance tracking
@@ -83,17 +83,6 @@ export default function NotesListScreen({ navigation, route, renderHeader, scrol
   // Scroll tracking for animated divider (use parent's scrollY if provided)
   const localScrollY = useRef(new Animated.Value(0)).current;
   const scrollY = parentScrollY || localScrollY;
-
-  // Handle loading delay
-  useEffect(() => {
-    let timer: number;
-    if (loading) {
-      timer = setTimeout(() => setShowLoading(true), 300);
-    } else {
-      setShowLoading(false);
-    }
-    return () => clearTimeout(timer);
-  }, [loading]);
 
   // Load notes when screen focuses or params change
   useFocusEffect(
@@ -227,7 +216,8 @@ export default function NotesListScreen({ navigation, route, renderHeader, scrol
 
   // Render list header (subfolders and create note button)
   const renderListHeader = useCallback(() => {
-    if (loading) return null;
+    // Don't hide header when loading - show it once we have notes
+    if (loading && notes.length === 0) return null;
 
     return (
       <>
@@ -258,7 +248,7 @@ export default function NotesListScreen({ navigation, route, renderHeader, scrol
         />
       </>
     );
-  }, [loading, renderHeader, viewType, subfolders, viewMode, filteredNotes.length, notes.length, hasActiveFilters, handleEmptyTrash, navigation, route?.params?.folderId, filterSortSheetRef]);
+  }, [loading, notes.length, renderHeader, viewType, subfolders, viewMode, filteredNotes.length, hasActiveFilters, handleEmptyTrash, navigation, route?.params?.folderId, filterSortSheetRef]);
 
   // Render empty state
   const renderEmptyComponent = useCallback(() => {
@@ -269,42 +259,36 @@ export default function NotesListScreen({ navigation, route, renderHeader, scrol
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
 
-      {showLoading ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={theme.colors.primary} />
-        </View>
-      ) : (
-        <Animated.FlatList
-          ref={flatListRef}
-          data={filteredNotes}
-          renderItem={renderNoteItem}
-          keyExtractor={(item) => item.id}
-          ListHeaderComponent={renderListHeader}
-          ListEmptyComponent={renderEmptyComponent}
-          ListFooterComponent={<View style={{ height: 40 }} />}
-          style={styles.scrollView}
-          contentContainerStyle={{ flexGrow: 1 }}
-          showsVerticalScrollIndicator={false}
-          onScroll={Animated.event(
-            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-            { useNativeDriver: false }
-          )}
-          scrollEventThrottle={16}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-              tintColor={theme.isDark ? '#666666' : '#000000'}
-              colors={[theme.isDark ? '#666666' : '#000000']}
-            />
-          }
-          removeClippedSubviews={true}
-          maxToRenderPerBatch={10}
-          updateCellsBatchingPeriod={100}
-          initialNumToRender={10}
-          windowSize={10}
-        />
-      )}
+      <Animated.FlatList
+        ref={flatListRef}
+        data={filteredNotes}
+        renderItem={renderNoteItem}
+        keyExtractor={(item) => item.id}
+        ListHeaderComponent={renderListHeader}
+        ListEmptyComponent={renderEmptyComponent}
+        ListFooterComponent={<View style={{ height: 40 }} />}
+        style={styles.scrollView}
+        contentContainerStyle={{ flexGrow: 1 }}
+        showsVerticalScrollIndicator={false}
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+          { useNativeDriver: false }
+        )}
+        scrollEventThrottle={16}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={theme.isDark ? '#666666' : '#000000'}
+            colors={[theme.isDark ? '#666666' : '#000000']}
+          />
+        }
+        removeClippedSubviews={false}
+        maxToRenderPerBatch={20}
+        updateCellsBatchingPeriod={50}
+        initialNumToRender={100}
+        windowSize={21}
+      />
 
 
       {/* Create Folder Bottom Sheet */}
@@ -330,11 +314,6 @@ export default function NotesListScreen({ navigation, route, renderHeader, scrol
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   scrollView: {
     flex: 1,

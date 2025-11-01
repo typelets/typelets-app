@@ -1,5 +1,6 @@
 import { useCallback, useRef, useState } from 'react';
 import { Alert } from 'react-native';
+
 import type { Folder, FolderCounts, Note } from '../../services/api';
 import { useApiService } from '../../services/api';
 import { decryptNote } from '../../services/api/encryption';
@@ -34,7 +35,14 @@ export function useNotesLoader({
       const loadStartTime = performance.now();
       console.log(`[PERF OPTIMIZED] 🚀 loadNotes started at ${(loadStartTime - screenFocusTime.current).toFixed(2)}ms from screen focus`);
 
-      if (!isRefresh) {
+      // Only show loading state if we don't have notes already
+      // This way, existing notes stay visible while refreshing
+      if (!isRefresh && notes.length === 0) {
+        setLoading(true);
+      } else if (!isRefresh && notes.length > 0) {
+        // We have notes already - just refresh silently in background
+        console.log(`[PERF OPTIMIZED] ⚡ Refreshing ${notes.length} notes silently in background`);
+      } else if (isRefresh) {
         setLoading(true);
       }
 
@@ -104,10 +112,24 @@ export function useNotesLoader({
         return 0;
       });
 
-      // Now decrypt the first 10 notes from the SORTED list
+      // Set ALL notes immediately with [ENCRYPTED] markers so UI shows all items (skeletons)
+      setNotes(sortedNotes);
+
+      // Clear loading state NOW - UI will show immediately with all skeletons
+      if (!isRefresh) {
+        const showUITime = performance.now();
+        console.log(`[PERF OPTIMIZED] ✅ SHOWING UI NOW with ${sortedNotes.length} notes (all as skeletons initially) - Total time: ${(showUITime - screenFocusTime.current).toFixed(2)}ms`);
+        setLoading(false);
+      }
+
+      // Now decrypt the first 10 notes from the SORTED list (after UI renders)
       if (userId && sortedNotes.length > 0) {
         const batchSize = Math.min(10, sortedNotes.length);
         const firstBatch = sortedNotes.slice(0, batchSize);
+        const remaining = sortedNotes.slice(batchSize);
+
+        // Small delay to ensure UI renders with all skeletons first
+        await new Promise(resolve => setTimeout(resolve, 50));
 
         const decryptStart = performance.now();
         console.log(`[PERF OPTIMIZED] 🔐 Starting decryption of first ${batchSize} sorted notes`);
@@ -125,33 +147,40 @@ export function useNotesLoader({
         const decryptEnd = performance.now();
         console.log(`[PERF OPTIMIZED] 🔓 Decrypted first ${batchSize} notes in ${(decryptEnd - decryptStart).toFixed(2)}ms`);
 
-        // Set notes with first batch decrypted, rest still encrypted
-        const remaining = sortedNotes.slice(batchSize);
+        // Update notes with first batch decrypted, rest still encrypted
         setNotes([...decryptedBatch, ...remaining]);
 
-        // Clear loading state NOW - UI will show immediately with 10 real notes + 83 skeletons
-        if (!isRefresh) {
-          const showUITime = performance.now();
-          console.log(`[PERF OPTIMIZED] ✅ SHOWING UI NOW - Total time: ${(showUITime - screenFocusTime.current).toFixed(2)}ms`);
-          setLoading(false);
-        }
-
-        // Decrypt remaining notes in background
+        // Decrypt remaining notes in background (in batches of 10)
         if (remaining.length > 0) {
           const encryptedRemaining = remaining.filter(note =>
             note.title === '[ENCRYPTED]' || note.content === '[ENCRYPTED]'
           );
 
           if (encryptedRemaining.length > 0) {
-            setTimeout(() => {
-              console.log(`[PERF OPTIMIZED] 🔐 Starting background decryption of ${encryptedRemaining.length} notes`);
-              Promise.all(
-                encryptedRemaining.map(note => decryptNote(note, userId))
-              ).then(decryptedRemaining => {
-                // Update notes: replace encrypted notes with decrypted versions
+            console.log(`[PERF OPTIMIZED] 🔐 Starting background decryption of ${encryptedRemaining.length} notes in batches of 10`);
+
+            // Decrypt in batches of 10
+            const decryptInBatches = async () => {
+              const batchSize = 10;
+              let processedCount = 0;
+
+              for (let i = 0; i < encryptedRemaining.length; i += batchSize) {
+                const batch = encryptedRemaining.slice(i, i + batchSize);
+                const batchStart = performance.now();
+
+                // Decrypt this batch
+                const decryptedBatch = await Promise.all(
+                  batch.map(note => decryptNote(note, userId))
+                );
+
+                const batchEnd = performance.now();
+                processedCount += batch.length;
+                console.log(`[PERF OPTIMIZED] 🔓 Decrypted batch ${Math.floor(i / batchSize) + 1} (${batch.length} notes) in ${(batchEnd - batchStart).toFixed(2)}ms - ${processedCount}/${encryptedRemaining.length} total`);
+
+                // Update UI with this batch
                 setNotes(currentNotes => {
                   const updated = [...currentNotes];
-                  decryptedRemaining.forEach(decryptedNote => {
+                  decryptedBatch.forEach(decryptedNote => {
                     const index = updated.findIndex(n => n.id === decryptedNote.id);
                     if (index !== -1) {
                       updated[index] = decryptedNote;
@@ -159,9 +188,20 @@ export function useNotesLoader({
                   });
                   return updated;
                 });
-                console.log(`[PERF OPTIMIZED] ✅ Finished decrypting all ${encryptedRemaining.length} remaining notes`);
-              });
-            }, 500);
+
+                // Small delay between batches to keep UI responsive
+                if (i + batchSize < encryptedRemaining.length) {
+                  await new Promise(resolve => setTimeout(resolve, 100));
+                }
+              }
+
+              console.log(`[PERF OPTIMIZED] ✅ Finished decrypting all ${encryptedRemaining.length} remaining notes`);
+            };
+
+            // Start background decryption after initial render
+            setTimeout(() => {
+              decryptInBatches();
+            }, 300);
           }
         }
       } else {
