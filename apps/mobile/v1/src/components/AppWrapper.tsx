@@ -22,6 +22,8 @@ export const AppWrapper: React.FC<AppWrapperProps> = ({ children }) => {
     isNewSetup,
     isChecking,
     userId,
+    loadingStage,
+    cacheMode,
     onPasswordSuccess,
   } = useMasterPassword();
 
@@ -124,6 +126,8 @@ export const AppWrapper: React.FC<AppWrapperProps> = ({ children }) => {
         key={userId} // Force remount when userId changes to reset all state
         userId={userId || ''}
         isNewSetup={isNewSetup}
+        loadingStage={loadingStage}
+        cacheMode={cacheMode}
         onSuccess={onPasswordSuccess}
       />
     );

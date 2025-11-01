@@ -3,7 +3,7 @@ import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
 import React, { useCallback,useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, Animated, FlatList, RefreshControl, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Alert, Animated, FlatList, RefreshControl, StyleSheet, View } from 'react-native';
 
 import { type Folder, type Note, useApiService } from '../../services/api';
 import { useTheme } from '../../theme';
@@ -258,6 +258,12 @@ export default function NotesListScreen({ navigation, route, renderHeader, scrol
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      {/* Show loading spinner on initial load */}
+      {loading && notes.length === 0 && (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={theme.colors.primary} />
+        </View>
+      )}
 
       <Animated.FlatList
         ref={flatListRef}
@@ -314,6 +320,16 @@ export default function NotesListScreen({ navigation, route, renderHeader, scrol
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  loadingContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
   },
   scrollView: {
     flex: 1,

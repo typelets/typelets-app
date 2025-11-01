@@ -87,6 +87,10 @@ async function migrateDatabase(db: SQLite.SQLiteDatabase): Promise<void> {
           CREATE INDEX IF NOT EXISTS idx_notes_archived ON notes(archived);
           CREATE INDEX IF NOT EXISTS idx_notes_deleted ON notes(deleted);
           CREATE INDEX IF NOT EXISTS idx_folders_user_id ON folders(user_id);
+
+          -- Composite indexes for optimized count queries
+          CREATE INDEX IF NOT EXISTS idx_notes_status_composite ON notes(deleted, archived, starred);
+          CREATE INDEX IF NOT EXISTS idx_notes_folder_status ON notes(folder_id, deleted, archived) WHERE folder_id IS NOT NULL;
         `);
 
         console.log('[SQLite] Migration to v3 completed');
@@ -238,6 +242,10 @@ export async function initializeDatabase(): Promise<SQLite.SQLiteDatabase> {
       CREATE INDEX IF NOT EXISTS idx_folders_user_id ON folders(user_id);
       CREATE INDEX IF NOT EXISTS idx_cache_resource ON cache_metadata(resource_type, resource_id);
       CREATE INDEX IF NOT EXISTS idx_sync_status ON sync_queue(status);
+
+      -- Composite indexes for optimized count queries
+      CREATE INDEX IF NOT EXISTS idx_notes_status_composite ON notes(deleted, archived, starred);
+      CREATE INDEX IF NOT EXISTS idx_notes_folder_status ON notes(folder_id, deleted, archived) WHERE folder_id IS NOT NULL;
     `);
 
     console.log('[SQLite] Database initialized successfully');

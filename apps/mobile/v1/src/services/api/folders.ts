@@ -49,6 +49,15 @@ export function createFoldersApi(getToken: AuthTokenGetter) {
 
           // Refresh cache in background (non-blocking)
           const refreshCache = async () => {
+            // Skip refresh if offline
+            const online = await isOnline();
+            if (!online) {
+              if (__DEV__) {
+                console.log('[API] Device offline - skipping folders background refresh');
+              }
+              return;
+            }
+
             try {
               const folders = await fetchAllPagesParallel<FoldersResponse, Folder>(
                 async (page) => {

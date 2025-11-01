@@ -58,6 +58,16 @@ export default function ViewNoteScreen() {
   const loadAttachments = useCallback(async () => {
     if (!noteId || loadingRef.current) return;
 
+    // Skip attachment loading when offline
+    if (!isOnline) {
+      if (__DEV__) {
+        console.log('[NOTE] Device offline - skipping attachment load');
+      }
+      setAttachments([]);
+      setLoadingAttachments(false);
+      return;
+    }
+
     try {
       loadingRef.current = true;
       setLoadingAttachments(true);
@@ -77,13 +87,19 @@ export default function ViewNoteScreen() {
       setLoadingAttachments(false);
       loadingRef.current = false;
     }
-  }, [noteId, api]);
+  }, [noteId, api, isOnline]);
 
   useEffect(() => {
+    // Reset lastLoadedNoteId when noteId changes
     if (noteId && lastLoadedNoteId.current !== noteId) {
+      lastLoadedNoteId.current = null;
+    }
+
+    // Load attachments if online and not already loaded
+    if (noteId && lastLoadedNoteId.current !== noteId && isOnline) {
       loadAttachments();
     }
-  }, [noteId, loadAttachments]);
+  }, [noteId, isOnline, loadAttachments]);
 
   const handleDownloadAttachment = async (attachment: FileAttachment) => {
     if (downloadingId) {

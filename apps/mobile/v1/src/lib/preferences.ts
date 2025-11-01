@@ -17,11 +17,11 @@ const PREFERENCE_KEYS = {
 /**
  * Get whether to cache decrypted content locally
  *
- * When enabled (default):
+ * When enabled:
  * - Decrypted notes stored in SQLite for instant loading (~50ms)
  * - Better performance but decrypted data stored locally
  *
- * When disabled:
+ * When disabled (default):
  * - Only encrypted notes stored, decrypt on each load (~550ms)
  * - Better security but slower loading
  */
@@ -29,15 +29,15 @@ export async function getCacheDecryptedContentPreference(): Promise<boolean> {
   try {
     const value = await AsyncStorage.getItem(PREFERENCE_KEYS.CACHE_DECRYPTED_CONTENT);
 
-    // Default to true (better UX) if not set
+    // Default to false (better security) if not set
     if (value === null) {
-      return true;
+      return false;
     }
 
     return value === 'true';
   } catch (error) {
     console.error('[Preferences] Failed to get cache preference:', error);
-    return true; // Default to enabled on error
+    return false; // Default to disabled on error
   }
 }
 

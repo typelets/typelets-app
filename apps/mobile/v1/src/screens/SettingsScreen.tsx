@@ -733,6 +733,18 @@ export default function SettingsScreen({ onLogout }: Props) {
                   {`We can't read your notes, recover your password, or access your data. Your privacy is guaranteed by design.`}
                 </Text>
               </View>
+
+              <View>
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+                  <Ionicons name="server" size={20} color={theme.colors.primary} style={{ marginRight: 8 }} />
+                  <Text style={[styles.securityFeatureTitle, { color: theme.colors.foreground }]}>
+                    Offline Cache Security
+                  </Text>
+                </View>
+                <Text style={[styles.securityFeatureDescription, { color: theme.colors.mutedForeground }]}>
+                  Notes are cached encrypted by default - decrypted only when viewed. Enable "Cache Decrypted" for instant loading at the cost of storing decrypted data locally.
+                </Text>
+              </View>
             </View>
           </BottomSheetScrollView>
         </View>

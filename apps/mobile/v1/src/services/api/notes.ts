@@ -55,18 +55,176 @@ export function createNotesApi(getToken: AuthTokenGetter, getUserId: () => strin
     }
   };
 
+  /**
+   * Helper to filter notes locally based on query params
+   * Used when we fetch all notes but need to return filtered subset
+   */
+  const filterNotesLocally = (notes: Note[], params?: NoteQueryParams): Note[] => {
+    if (!params) return notes;
+
+    return notes.filter(note => {
+      // Filter by folderId
+      if (params.folderId !== undefined) {
+        if (note.folderId !== params.folderId) return false;
+      }
+
+      // Filter by starred
+      if (params.starred !== undefined) {
+        if (note.starred !== params.starred) return false;
+      }
+
+      // Filter by archived
+      if (params.archived !== undefined) {
+        if (note.archived !== params.archived) return false;
+      }
+
+      // Filter by deleted
+      if (params.deleted !== undefined) {
+        if (note.deleted !== params.deleted) return false;
+      }
+
+      return true;
+    });
+  };
+
+  /**
+   * Helper: Calculate counts from database with optimized single query
+   * @private
+   */
+  const calculateCountsFromDatabase = async (
+    db: any,
+    folderId?: string
+  ): Promise<NoteCounts> => {
+    if (folderId) {
+      // Return only folder counts for subfolder request
+      return await calculateFolderCounts(db);
+    }
+
+    // Single optimized query for global counts
+    const globalResult = await db.getFirstAsync<{
+      all_count: number;
+      starred_count: number;
+      archived_count: number;
+      trash_count: number;
+    }>(`
+      SELECT
+        COUNT(CASE WHEN deleted = 0 AND archived = 0 THEN 1 END) as all_count,
+        COUNT(CASE WHEN starred = 1 AND deleted = 0 AND archived = 0 THEN 1 END) as starred_count,
+        COUNT(CASE WHEN archived = 1 AND deleted = 0 THEN 1 END) as archived_count,
+        COUNT(CASE WHEN deleted = 1 THEN 1 END) as trash_count
+      FROM notes
+    `);
+
+    // Get per-folder counts
+    const folders = await calculateFolderCounts(db);
+
+    return {
+      all: globalResult?.all_count || 0,
+      starred: globalResult?.starred_count || 0,
+      archived: globalResult?.archived_count || 0,
+      trash: globalResult?.trash_count || 0,
+      folders: folders as Record<string, FolderCounts>,
+    };
+  };
+
+  /**
+   * Helper: Calculate per-folder counts
+   * @private
+   */
+  const calculateFolderCounts = async (db: any): Promise<Record<string, FolderCounts> | NoteCounts> => {
+    const folderCountsRows = await db.getAllAsync<{
+      folder_id: string | null;
+      all_count: number;
+      starred_count: number;
+      archived_count: number;
+      trash_count: number;
+    }>(`
+      SELECT
+        folder_id,
+        SUM(CASE WHEN deleted = 0 AND archived = 0 THEN 1 ELSE 0 END) as all_count,
+        SUM(CASE WHEN starred = 1 AND deleted = 0 AND archived = 0 THEN 1 ELSE 0 END) as starred_count,
+        SUM(CASE WHEN archived = 1 AND deleted = 0 THEN 1 ELSE 0 END) as archived_count,
+        SUM(CASE WHEN deleted = 1 THEN 1 ELSE 0 END) as trash_count
+      FROM notes
+      WHERE folder_id IS NOT NULL
+      GROUP BY folder_id
+    `);
+
+    const result: Record<string, FolderCounts> = {};
+    for (const row of folderCountsRows) {
+      if (row.folder_id !== null && row.folder_id !== undefined) {
+        result[row.folder_id] = {
+          all: row.all_count || 0,
+          starred: row.starred_count || 0,
+          archived: row.archived_count || 0,
+          trash: row.trash_count || 0,
+        };
+      }
+    }
+
+    return result;
+  };
+
   return {
     /**
      * Get note counts by category
-     * Optionally can get counts for a specific folder's children
-     * Results are cached for 2 minutes to reduce redundant API calls
+     *
+     * @param folderId - Optional folder ID to get subfolder counts
+     * @returns Promise<NoteCounts> - Global counts with folders property, or just folder counts
+     *
+     * Behavior:
+     * - Offline: Calculates from SQLite with 10s cache to prevent recalculation
+     * - Online: Fetches from API with 2min cache
+     *
+     * Note: When folderId is provided, returns dictionary of folder counts.
+     *       When omitted, returns global counts plus folders property.
      */
     async getCounts(folderId?: string): Promise<NoteCounts> {
       try {
-        // Check cache first
+        // Check if online before fetching
+        const online = await isOnline();
+
+        // If offline, calculate from database with short-lived cache
+        if (!online) {
+          // Check short-lived cache to avoid recalculation on rapid re-renders
+          const cacheKey = CACHE_KEYS.COUNTS(folderId);
+          const cached = apiCache.get<NoteCounts>(cacheKey);
+          if (cached) {
+            if (__DEV__) {
+              console.log('[API] Returning cached offline counts');
+            }
+            return cached;
+          }
+
+          // Calculate counts from local SQLite cache
+          if (__DEV__) {
+            console.log('[API] Device offline - calculating counts from local cache');
+          }
+
+          try {
+            const db = getDatabase();
+            const counts = await calculateCountsFromDatabase(db, folderId);
+
+            // Cache for 10 seconds to prevent recalculation
+            apiCache.set(cacheKey, counts, 10_000); // 10s TTL
+
+            return counts;
+          } catch (error) {
+            console.error('[API] Failed to calculate counts from cache:', error);
+            // Return complete error response with all properties
+            return folderId
+              ? {} as NoteCounts // Empty dictionary for subfolder request
+              : { all: 0, starred: 0, archived: 0, trash: 0, folders: {} };
+          }
+        }
+
+        // Online: Check in-memory cache first
         const cacheKey = CACHE_KEYS.COUNTS(folderId);
         const cached = apiCache.get<NoteCounts>(cacheKey);
         if (cached) {
+          if (__DEV__) {
+            console.log('[API] Returning cached counts (online)');
+          }
           return cached;
         }
 
@@ -85,7 +243,10 @@ export function createNotesApi(getToken: AuthTokenGetter, getUserId: () => strin
         logger.error('[API] Failed to get note counts', error as Error, {
           attributes: { operation: 'getCounts', folderId },
         });
-        return { all: 0, starred: 0, archived: 0, trash: 0 };
+        // Return complete error response with all properties
+        return folderId
+          ? {} as NoteCounts // Empty dictionary for subfolder request
+          : { all: 0, starred: 0, archived: 0, trash: 0, folders: {} };
       }
     },
 
@@ -98,7 +259,7 @@ export function createNotesApi(getToken: AuthTokenGetter, getUserId: () => strin
      * 3. If 304 Not Modified - return cached data (cheap!)
      * 4. If 200 OK - update database and cache metadata
      */
-    async getNotes(params?: NoteQueryParams): Promise<Note[]> {
+    async getNotes(params?: NoteQueryParams, options?: { skipBackgroundRefresh?: boolean }): Promise<Note[]> {
       try {
         const userId = getUserId();
 
@@ -128,8 +289,25 @@ export function createNotesApi(getToken: AuthTokenGetter, getUserId: () => strin
             console.log(`[API] ⚡ Returning ${cachedNotes.length} cached notes instantly`);
           }
 
+          // Skip background refresh if requested (e.g., during prefetch)
+          if (options?.skipBackgroundRefresh) {
+            if (__DEV__) {
+              console.log(`[API] Skipping background refresh (skipBackgroundRefresh=true)`);
+            }
+            return cachedNotes;
+          }
+
           // Refresh cache in background (non-blocking)
           const refreshCache = async () => {
+            // Skip refresh if offline
+            const online = await isOnline();
+            if (!online) {
+              if (__DEV__) {
+                console.log('[API] Device offline - skipping notes background refresh');
+              }
+              return;
+            }
+
             try {
               const allNotes = await fetchAllPages<NotesResponse, Note>(
                 async (page) => {
@@ -209,56 +387,62 @@ export function createNotesApi(getToken: AuthTokenGetter, getUserId: () => strin
         }
 
         if (__DEV__) {
-          console.log('[API] No cache available - fetching from server');
+          console.log('[API] No cache available - fetching ALL notes from server to populate cache');
         }
 
+        // IMPORTANT: On first load, fetch ALL notes without filters to fully populate cache
+        // This ensures cache has all notes regardless of which view user opens first
         const allNotes = await fetchAllPages<NotesResponse, Note>(
           async (page) => {
-            const searchParams = createPaginationParams(page, params as Record<string, string | boolean | undefined>);
-            // Use makeConditionalRequest for first page only
-            if (page === 1 && cacheMetadata) {
-              const response = await makeConditionalRequest<NotesResponse>(
-                `/notes?${searchParams.toString()}`,
-                {},
-                { eTag: cacheMetadata.eTag, lastModified: cacheMetadata.lastModified }
-              );
-
-              // Store cache metadata from response
-              await setCacheMetadata(resourceType, response.eTag, response.lastModified, 5); // 5 min TTL
-
-              return response.data;
-            }
-
-            // For subsequent pages, use regular request
+            // Fetch without filters to get ALL notes
+            const searchParams = createPaginationParams(page, {} as Record<string, string | boolean | undefined>);
             return await makeRequest<NotesResponse>(`/notes?${searchParams.toString()}`);
           },
           (response) => response.notes || []
         );
 
+        if (__DEV__) {
+          console.log(`[API] Fetched ${allNotes.length} total notes from server (first load)`);
+        }
+
         // Check if user wants decrypted content cached for instant loading
         const cacheDecrypted = await getCacheDecryptedContentPreference();
 
         if (cacheDecrypted && userId) {
-          // Decrypt notes before caching (for instant loading next time)
+          // Decrypt ALL notes before caching (for instant loading next time)
           const decryptedNotes = await decryptNotes(allNotes, userId);
           await storeCachedNotes(decryptedNotes, { storeDecrypted: true });
 
           if (__DEV__) {
-            console.log(`[API] Fetched ${decryptedNotes.length} notes from server (first load, cached DECRYPTED)`);
+            console.log(`[API] Stored ${decryptedNotes.length} notes to cache (DECRYPTED)`);
           }
 
-          // Return encrypted notes for UI layer to decrypt (current load still needs decryption)
-          return allNotes;
+          // Filter decrypted notes locally to match requested view
+          const filteredNotes = filterNotesLocally(decryptedNotes, params);
+
+          if (__DEV__) {
+            console.log(`[API] Returning ${filteredNotes.length} filtered notes for current view (first load, cached DECRYPTED)`);
+          }
+
+          // Return decrypted and filtered notes
+          return filteredNotes;
         } else {
           // Store encrypted only
           await storeCachedNotes(allNotes, { storeDecrypted: false });
 
           if (__DEV__) {
-            console.log(`[API] Fetched ${allNotes.length} notes from server (first load, cached encrypted)`);
+            console.log(`[API] Stored ${allNotes.length} notes to cache (encrypted only)`);
           }
 
-          // Return notes without decrypting - lazy decryption happens in UI layer
-          return allNotes;
+          // Filter notes locally to match requested view
+          const filteredNotes = filterNotesLocally(allNotes, params);
+
+          if (__DEV__) {
+            console.log(`[API] Returning ${filteredNotes.length} filtered notes for current view (first load, cached encrypted)`);
+          }
+
+          // Return filtered notes (still encrypted) - lazy decryption happens in UI layer
+          return filteredNotes;
         }
       } catch (error) {
         // Handle 304 Not Modified - shouldn't happen on first load but just in case
