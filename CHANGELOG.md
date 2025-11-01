@@ -1,3 +1,10 @@
+## [1.31.2](https://github.com/typelets/typelets-app/compare/v1.31.1...v1.31.2) (2025-11-01)
+
+
+### Bug Fixes
+
+* **mobile:** implement cache invalidation, stale-while-revalidate, and autocorrect ([93bce41](https://github.com/typelets/typelets-app/commit/93bce41d3abf6ca5addc047a14907b2b4c19e688))
+
 ## [1.31.1](https://github.com/typelets/typelets-app/compare/v1.31.0...v1.31.1) (2025-11-01)
 
 
