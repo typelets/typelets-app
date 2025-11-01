@@ -10,6 +10,7 @@ import { Editor, type EditorColors,type EditorRef } from '@/editor/src';
 
 import { FileUpload } from '../../components/FileUpload';
 import { useKeyboardHeight } from '../../hooks/useKeyboardHeight';
+import { useNetworkStatus } from '../../hooks/useNetworkStatus';
 import { logger } from '../../lib/logger';
 import { type FileAttachment,type Note, useApiService } from '../../services/api';
 import { useTheme } from '../../theme';
@@ -24,6 +25,8 @@ export default function EditNoteScreen() {
   const params = useLocalSearchParams();
   const { noteId, folderId } = params;
   const isEditing = !!noteId;
+  const { isConnected, isInternetReachable } = useNetworkStatus();
+  const isOnline = isConnected && (isInternetReachable ?? false);
 
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
@@ -128,6 +131,16 @@ export default function EditNoteScreen() {
   const handleSave = async (options?: { skipNavigation?: boolean }) => {
     const titleToUse = title.trim() || 'Untitled';
 
+    // Prevent updates when offline (EXCEPT for temp notes created offline)
+    const currentNoteId = (noteId as string) || createdNoteId;
+    const isTempNote = currentNoteId?.startsWith('temp_');
+    const isUpdatingExistingNote = (isEditing && noteId) || createdNoteId;
+
+    if (!isOnline && isUpdatingExistingNote && !isTempNote) {
+      Alert.alert('Offline', 'You cannot update synced notes while offline. Please connect to the internet and try again.');
+      return null;
+    }
+
     setIsSaving(true);
 
     try {
@@ -230,6 +243,13 @@ export default function EditNoteScreen() {
   const handleDelete = async () => {
     if (!noteData || !noteId) return;
 
+    // Prevent deletes when offline (EXCEPT for temp notes created offline)
+    const isTempNote = (noteId as string).startsWith('temp_');
+    if (!isOnline && !isTempNote) {
+      Alert.alert('Offline', 'You cannot delete synced notes while offline. Please connect to the internet and try again.');
+      return;
+    }
+
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
     Alert.alert(
@@ -294,6 +314,8 @@ export default function EditNoteScreen() {
         isEditing={isEditing}
         noteData={noteData}
         isSaving={isSaving}
+        isOffline={!isOnline}
+        isTempNote={((noteId as string) || createdNoteId)?.startsWith('temp_')}
         attachmentsCount={attachments.length}
         showAttachments={showAttachments}
         showHeader={showHeader}

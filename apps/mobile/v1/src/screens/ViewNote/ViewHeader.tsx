@@ -9,6 +9,8 @@ interface ViewHeaderProps {
   scrollY: Animated.Value;
   attachmentsCount: number;
   showAttachments: boolean;
+  isOffline?: boolean;
+  isTempNote?: boolean;
   onBack: () => void;
   onToggleStar: () => void;
   onToggleHidden: () => void;
@@ -35,6 +37,8 @@ export function ViewHeader({
   scrollY,
   attachmentsCount,
   showAttachments,
+  isOffline = false,
+  isTempNote = false,
   onBack,
   onToggleStar,
   onToggleHidden,
@@ -122,8 +126,9 @@ export function ViewHeader({
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.editButton, { backgroundColor: theme.colors.muted }]}
+            style={[styles.editButton, { backgroundColor: theme.colors.muted, opacity: (isOffline && !isTempNote) ? 0.4 : 1 }]}
             onPress={onEdit}
+            disabled={isOffline && !isTempNote}
           >
             <Ionicons name="create-outline" size={20} color={theme.colors.mutedForeground} />
           </TouchableOpacity>

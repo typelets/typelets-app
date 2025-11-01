@@ -8,7 +8,9 @@ import React, { useCallback,useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Animated, Keyboard, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { OfflineIndicator } from '../components/OfflineIndicator';
 import { ACTION_BUTTON, FOLDER_CARD, FOLDER_COLORS } from '../constants/ui';
+import { useNetworkStatus } from '../hooks/useNetworkStatus';
 import { type Folder, type FolderCounts,useApiService } from '../services/api';
 import { useTheme } from '../theme';
 
@@ -48,6 +50,7 @@ export default function FoldersScreen() {
   const theme = useTheme();
   const api = useApiService();
   const router = useRouter();
+  const { isConnected, isInternetReachable } = useNetworkStatus();
   const [allFolders, setAllFolders] = useState<Folder[]>([]);
   const [loading, setLoading] = useState(true);
   const [showLoading, setShowLoading] = useState(false);
@@ -197,6 +200,21 @@ export default function FoldersScreen() {
       }
     };
   }, [isFocused, loadFoldersData]);
+
+  // Reload data when network status changes (debounced to prevent flaky connections)
+  useEffect(() => {
+    if (!isFocused) return;
+
+    // Debounce network status changes to avoid rapid reloads on flaky connections
+    const timer = setTimeout(() => {
+      if (__DEV__) {
+        console.log('[FoldersScreen] Network status changed, reloading data');
+      }
+      loadFoldersData();
+    }, 500); // 500ms debounce
+
+    return () => clearTimeout(timer);
+  }, [isConnected, isInternetReachable, isFocused, loadFoldersData]);
 
   // Handle loading delay
   useEffect(() => {
@@ -454,6 +472,9 @@ export default function FoldersScreen() {
       )}
 
       {/* <BottomNavigation navigation={navigation} activeTab="folders" /> */}
+
+      {/* Offline Indicator - Floating Button */}
+      <OfflineIndicator />
 
       {/* Create Folder Bottom Sheet */}
       <BottomSheetModal

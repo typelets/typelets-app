@@ -1,15 +1,17 @@
-import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { TouchableOpacity, View, StyleSheet, Text, Animated, Alert, Keyboard, Pressable } from 'react-native';
+import { BottomSheetBackdrop, BottomSheetModal, BottomSheetScrollView, BottomSheetTextInput,BottomSheetView } from '@gorhom/bottom-sheet';
 import * as Haptics from 'expo-haptics';
+import { Stack,useLocalSearchParams, useRouter } from 'expo-router';
+import { useCallback,useEffect, useMemo, useRef, useState } from 'react';
+import { Alert, Animated, Keyboard, Pressable,StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useTheme } from '@/src/theme';
-import NotesListScreen from '@/src/screens/NotesListScreen';
-import { useApiService, type Folder } from '@/src/services/api';
-import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+
+import { OfflineIndicator } from '@/src/components/OfflineIndicator';
 import { Input } from '@/src/components/ui/Input';
-import { BottomSheetModal, BottomSheetView, BottomSheetBackdrop, BottomSheetScrollView, BottomSheetTextInput } from '@gorhom/bottom-sheet';
 import { FOLDER_COLORS } from '@/src/constants/ui';
+import NotesListScreen from '@/src/screens/ListNotes';
+import { type Folder,useApiService } from '@/src/services/api';
+import { useTheme } from '@/src/theme';
 
 function getViewTitle(viewType: string): string {
   switch (viewType) {
@@ -81,12 +83,29 @@ export default function FolderNotesScreen() {
   // Build breadcrumbs by traversing up the folder hierarchy
   useEffect(() => {
     const buildBreadcrumbs = async () => {
-      if (!params.folderId) {
+      if (!params.folderId && !params.viewType) {
+        setBreadcrumbs(['Notes']);
+        // Still fetch folders for navigation menu
+        try {
+          const folders = await api.getFolders();
+          setAllFolders(folders);
+        } catch (error) {
+          console.error('Failed to fetch folders:', error);
+          setAllFolders([]);
+        }
+        return;
+      }
+
+      if (params.viewType) {
         // For special views, just show the view name
-        if (params.viewType) {
-          setBreadcrumbs([getViewTitle(params.viewType as string)]);
-        } else {
-          setBreadcrumbs(['Notes']);
+        setBreadcrumbs([getViewTitle(params.viewType as string)]);
+        // Still fetch folders for navigation menu
+        try {
+          const folders = await api.getFolders();
+          setAllFolders(folders);
+        } catch (error) {
+          console.error('Failed to fetch folders:', error);
+          setAllFolders([]);
         }
         return;
       }
@@ -254,7 +273,7 @@ export default function FolderNotesScreen() {
     params: {
       folderId: params.folderId as string,
       folderName: params.folderName as string,
-      viewType: params.viewType as string,
+      viewType: params.viewType as 'all' | 'starred' | 'archived' | 'trash' | undefined,
       searchQuery: searchQuery, // Pass search query to NotesListScreen
     }
   };
@@ -398,6 +417,9 @@ export default function FolderNotesScreen() {
             }
           }
         }} activeTab="add" /> */}
+
+        {/* Offline Indicator - Floating Button */}
+        <OfflineIndicator />
       </SafeAreaView>
       </Pressable>
 
@@ -445,7 +467,11 @@ export default function FolderNotesScreen() {
               {/* Render folder tree hierarchically */}
               {(() => {
                 const renderFolderTree = (parentId: string | null | undefined, depth: number = 0) => {
-                  const folders = allFolders.filter(f => f.parentId === parentId);
+                  // Handle both null and undefined for root folders
+                  const folders = allFolders.filter(f =>
+                    parentId ? f.parentId === parentId : !f.parentId
+                  );
+
                   return folders.map((folder) => {
                     const isInBreadcrumb = breadcrumbFolders.some(bf => bf.id === folder.id);
                     const isCurrent = breadcrumbFolders[breadcrumbFolders.length - 1]?.id === folder.id;

@@ -5,6 +5,7 @@ import { ActivityIndicator,View } from 'react-native';
 import { useMasterPassword } from '../hooks/useMasterPassword';
 import { logger } from '../lib/logger';
 import AuthScreen from '../screens/AuthScreen';
+import { useSyncOnReconnect } from '../services/sync/useSyncOnReconnect';
 import { useTheme } from '../theme';
 import { MasterPasswordScreen } from './MasterPasswordDialog';
 
@@ -21,12 +22,17 @@ export const AppWrapper: React.FC<AppWrapperProps> = ({ children }) => {
     isNewSetup,
     isChecking,
     userId,
+    loadingStage,
+    cacheMode,
     onPasswordSuccess,
   } = useMasterPassword();
 
   const [showLoading, setShowLoading] = useState(false);
   const lastUserIdRef = useRef<string | undefined>(undefined);
   const [userChanging, setUserChanging] = useState(false);
+
+  // Automatically sync pending mutations when device comes back online
+  useSyncOnReconnect();
 
   // Detect userId change SYNCHRONOUSLY in render
   if (userId !== lastUserIdRef.current) {
@@ -120,6 +126,8 @@ export const AppWrapper: React.FC<AppWrapperProps> = ({ children }) => {
         key={userId} // Force remount when userId changes to reset all state
         userId={userId || ''}
         isNewSetup={isNewSetup}
+        loadingStage={loadingStage}
+        cacheMode={cacheMode}
         onSuccess={onPasswordSuccess}
       />
     );
