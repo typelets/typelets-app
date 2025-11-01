@@ -218,6 +218,7 @@ export async function getCachedNotes(filters?: {
         encryptedContent: row.encrypted_content || undefined,
         iv: row.iv || undefined,
         salt: row.salt || undefined,
+        attachmentCount: row.attachment_count || 0,
       };
     });
   } catch (error) {
@@ -274,8 +275,8 @@ export async function storeCachedNotes(
         `INSERT OR REPLACE INTO notes (
           id, title, content, folder_id, user_id, starred, archived, deleted, hidden,
           created_at, updated_at, encrypted_title, encrypted_content, iv, salt,
-          is_synced, is_dirty, synced_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          is_synced, is_dirty, synced_at, attachment_count
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           note.id,
           title,
@@ -295,6 +296,7 @@ export async function storeCachedNotes(
           1, // is_synced
           0, // is_dirty
           now, // synced_at
+          note.attachmentCount || 0, // attachment_count
         ]
       );
     }

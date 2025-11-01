@@ -114,6 +114,10 @@ export function createNotesApi(getToken: AuthTokenGetter, getUserId: () => strin
         // Step 1: Try to get from local database cache
         const cachedNotes = await getCachedNotes(cacheFilters);
 
+        if (__DEV__) {
+          console.log(`[API] Cache check: found ${cachedNotes.length} notes with filters:`, cacheFilters);
+        }
+
         // Step 2: Get cache metadata for conditional request
         const cacheMetadata = await getCacheMetadata(resourceType);
 
@@ -193,7 +197,17 @@ export function createNotesApi(getToken: AuthTokenGetter, getUserId: () => strin
           return cachedNotes;
         }
 
-        // Step 4: No cache available - wait for API (first load)
+        // Step 4: No cache available - check if online before fetching
+        const online = await isOnline();
+        if (!online) {
+          if (__DEV__) {
+            console.log('[API] Device offline and no cache available - returning empty array');
+          }
+          // Device is offline and no cache available - return empty array
+          // This is a first-time user or cache was cleared
+          return [];
+        }
+
         if (__DEV__) {
           console.log('[API] No cache available - fetching from server');
         }
@@ -537,13 +551,14 @@ export function createNotesApi(getToken: AuthTokenGetter, getUserId: () => strin
             updateFields.push('hidden = ?');
             updateValues.push(updates.hidden ? 1 : 0);
           }
-          if (updates.iv !== undefined) {
+          // Update iv and salt from encrypted payload (not updates)
+          if (updatePayload.iv !== undefined) {
             updateFields.push('iv = ?');
-            updateValues.push(updates.iv);
+            updateValues.push(updatePayload.iv);
           }
-          if (updates.salt !== undefined) {
+          if (updatePayload.salt !== undefined) {
             updateFields.push('salt = ?');
-            updateValues.push(updates.salt);
+            updateValues.push(updatePayload.salt);
           }
 
           // Always update updatedAt timestamp

@@ -35,10 +35,11 @@ export default function ViewNoteScreen() {
 
   const { note, loading, htmlContent, handleEdit: handleEditInternal, handleToggleStar, handleToggleHidden } = useViewNote(noteId as string);
 
-  // Wrap handleEdit with offline check
+  // Wrap handleEdit with offline check (allow editing temp notes created offline)
   const handleEdit = () => {
-    if (!isOnline) {
-      Alert.alert('Offline', 'You cannot edit notes while offline. Please connect to the internet and try again.');
+    const isTempNote = (noteId as string).startsWith('temp_');
+    if (!isOnline && !isTempNote) {
+      Alert.alert('Offline', 'You cannot edit synced notes while offline. Please connect to the internet and try again.');
       return;
     }
     handleEditInternal();
@@ -124,11 +125,7 @@ export default function ViewNoteScreen() {
       if (scrollViewRef.current) {
         scrollViewRef.current.scrollTo({ y: 0, animated: false });
       }
-
-      if (noteId && lastLoadedNoteId.current === noteId && !loadingRef.current) {
-        lastLoadedNoteId.current = null;
-        loadAttachments();
-      }
+      // Don't reload attachments on refocus - they're already loaded
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [scrollY, noteId])
   );
@@ -168,6 +165,7 @@ export default function ViewNoteScreen() {
           attachmentsCount={attachments.length}
           showAttachments={showAttachments}
           isOffline={!isOnline}
+          isTempNote={(noteId as string).startsWith('temp_')}
           onBack={() => router.back()}
           onToggleStar={handleToggleStar}
           onToggleHidden={handleToggleHidden}

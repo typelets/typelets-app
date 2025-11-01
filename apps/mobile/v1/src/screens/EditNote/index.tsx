@@ -131,9 +131,13 @@ export default function EditNoteScreen() {
   const handleSave = async (options?: { skipNavigation?: boolean }) => {
     const titleToUse = title.trim() || 'Untitled';
 
-    // Prevent updates when offline (creates are allowed)
-    if (!isOnline && ((isEditing && noteId) || createdNoteId)) {
-      Alert.alert('Offline', 'You cannot update notes while offline. Please connect to the internet and try again.');
+    // Prevent updates when offline (EXCEPT for temp notes created offline)
+    const currentNoteId = (noteId as string) || createdNoteId;
+    const isTempNote = currentNoteId?.startsWith('temp_');
+    const isUpdatingExistingNote = (isEditing && noteId) || createdNoteId;
+
+    if (!isOnline && isUpdatingExistingNote && !isTempNote) {
+      Alert.alert('Offline', 'You cannot update synced notes while offline. Please connect to the internet and try again.');
       return null;
     }
 
@@ -239,9 +243,10 @@ export default function EditNoteScreen() {
   const handleDelete = async () => {
     if (!noteData || !noteId) return;
 
-    // Prevent deletes when offline
-    if (!isOnline) {
-      Alert.alert('Offline', 'You cannot delete notes while offline. Please connect to the internet and try again.');
+    // Prevent deletes when offline (EXCEPT for temp notes created offline)
+    const isTempNote = (noteId as string).startsWith('temp_');
+    if (!isOnline && !isTempNote) {
+      Alert.alert('Offline', 'You cannot delete synced notes while offline. Please connect to the internet and try again.');
       return;
     }
 
@@ -310,6 +315,7 @@ export default function EditNoteScreen() {
         noteData={noteData}
         isSaving={isSaving}
         isOffline={!isOnline}
+        isTempNote={((noteId as string) || createdNoteId)?.startsWith('temp_')}
         attachmentsCount={attachments.length}
         showAttachments={showAttachments}
         showHeader={showHeader}

@@ -355,6 +355,23 @@ class FileService {
    * Get attachments for a note
    */
   async getAttachments(noteId: string): Promise<FileAttachment[]> {
+    // Temp notes don't exist on server yet - return empty array
+    if (noteId.startsWith('temp_')) {
+      return [];
+    }
+
+    // Check if token provider is set and token is available
+    if (!this.getToken) {
+      console.warn('[FileService] Token provider not set yet - skipping attachment fetch');
+      return [];
+    }
+
+    const token = await this.getToken();
+    if (!token) {
+      console.warn('[FileService] No auth token available yet - skipping attachment fetch');
+      return [];
+    }
+
     const response = await fetch(`${API_BASE_URL}/notes/${noteId}/files`, {
       headers: await this.getAuthHeaders(),
     });

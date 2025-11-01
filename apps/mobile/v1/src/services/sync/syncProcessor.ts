@@ -86,6 +86,18 @@ export async function processSyncQueue(
         continue;
       }
 
+      // Skip update/delete operations for temp notes - they don't exist on server yet
+      // The create operation will include the latest state
+      if (item.resourceId.startsWith('temp_') && (item.operation === 'update' || item.operation === 'delete')) {
+        if (__DEV__) {
+          console.log(`[SyncProcessor] Skipping ${item.operation} for temp note ${item.resourceId} - will be handled by create`);
+        }
+        // Remove from queue since it's not needed
+        const db = getDatabase();
+        await db.runAsync('DELETE FROM sync_queue WHERE id = ?', [item.id]);
+        continue;
+      }
+
       // Skip items that have failed too many times
       if (item.retryCount >= 3) {
         if (__DEV__) {
@@ -203,11 +215,37 @@ async function syncNote(
 
   switch (item.operation) {
     case 'create': {
+      // For temp notes, fetch the latest content from local database
+      // (in case it was edited while offline)
+      let finalPayload = payload;
+      if (item.resourceId.startsWith('temp_')) {
+        const db = getDatabase();
+        const localNote = await db.getFirstAsync<any>(
+          'SELECT * FROM notes WHERE id = ?',
+          [item.resourceId]
+        );
+
+        if (localNote) {
+          // Update payload with latest encrypted content from local DB
+          finalPayload = {
+            ...payload,
+            encryptedTitle: localNote.encrypted_title,
+            encryptedContent: localNote.encrypted_content,
+            iv: localNote.iv,
+            salt: localNote.salt,
+          };
+
+          if (__DEV__) {
+            console.log(`[SyncProcessor] Using latest content from local DB for temp note ${item.resourceId}`);
+          }
+        }
+      }
+
       // Direct POST to /notes - payload is already encrypted
       const response = await fetch(`${API_BASE_URL}/notes`, {
         method: 'POST',
         headers,
-        body: JSON.stringify(payload),
+        body: JSON.stringify(finalPayload),
       });
 
       if (!response.ok) {

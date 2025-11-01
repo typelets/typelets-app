@@ -3,6 +3,7 @@
  * Handles all folder-related API operations with offline-first caching
  */
 
+import { isOnline } from '../network/networkManager';
 import { apiCache, CACHE_KEYS, CACHE_TTL } from './cache';
 import { AuthTokenGetter, createHttpClient, NotModifiedError } from './client';
 import {
@@ -106,9 +107,13 @@ export function createFoldersApi(getToken: AuthTokenGetter) {
           return cachedFolders;
         }
 
-        // Step 4: No cache available - wait for API (first load)
-        if (__DEV__) {
-          console.log('[API] No folders cache available - fetching from server');
+        // Step 4: No cache available - check if online before fetching
+        const online = await isOnline();
+        if (!online) {
+          if (__DEV__) {
+            console.log('[API] Device offline and no folders cache available - returning empty array');
+          }
+          return [];  // Don't try API when offline - prevents error
         }
 
         try {

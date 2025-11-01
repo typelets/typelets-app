@@ -8,6 +8,7 @@ interface EditorHeaderProps {
   noteData: unknown;
   isSaving: boolean;
   isOffline?: boolean;
+  isTempNote?: boolean;
   attachmentsCount?: number;
   showAttachments?: boolean;
   showHeader?: boolean;
@@ -36,6 +37,7 @@ export function EditorHeader({
   isEditing,
   isSaving,
   isOffline = false,
+  isTempNote = false,
   attachmentsCount = 0,
   showAttachments = false,
   showHeader = true,
@@ -142,9 +144,9 @@ export function EditorHeader({
 
         {isEditing && (
           <TouchableOpacity
-            style={[styles.actionButton, { backgroundColor: theme.colors.muted, opacity: isOffline ? 0.4 : 1 }]}
+            style={[styles.actionButton, { backgroundColor: theme.colors.muted, opacity: (isOffline && !isTempNote) ? 0.4 : 1 }]}
             onPress={onDelete}
-            disabled={isOffline}
+            disabled={isOffline && !isTempNote}
             hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
           >
             <Ionicons name="trash" size={20} color={theme.colors.mutedForeground} />
@@ -156,16 +158,16 @@ export function EditorHeader({
             styles.actionButton,
             {
               backgroundColor: theme.colors.muted,
-              opacity: isSaving || (isOffline && isEditing) ? 0.4 : 1
+              opacity: isSaving || (isOffline && isEditing && !isTempNote) ? 0.4 : 1
             }
           ]}
           onPress={() => {
-            if (!isSaving && !(isOffline && isEditing)) {
+            if (!isSaving && !(isOffline && isEditing && !isTempNote)) {
               onSave();
             }
           }}
-          disabled={isOffline && isEditing}
-          activeOpacity={isSaving || (isOffline && isEditing) ? 1 : 0.2}
+          disabled={isOffline && isEditing && !isTempNote}
+          activeOpacity={isSaving || (isOffline && isEditing && !isTempNote) ? 1 : 0.2}
           hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
         >
           <View pointerEvents="none">

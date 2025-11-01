@@ -13,7 +13,7 @@ import * as SQLite from 'expo-sqlite';
 let database: SQLite.SQLiteDatabase | null = null;
 
 const DB_NAME = 'typelets_mobile.db';
-const DB_VERSION = 3;
+const DB_VERSION = 4;
 
 /**
  * Migrate database schema to latest version
@@ -96,9 +96,49 @@ async function migrateDatabase(db: SQLite.SQLiteDatabase): Promise<void> {
       }
     }
 
+    if (currentVersion < 4) {
+      // Migration to v4: Add attachment_count column to notes table
+      console.log('[SQLite] Running migration to v4...');
+
+      try {
+        await db.execAsync(`
+          -- Add attachment_count column to notes table
+          ALTER TABLE notes ADD COLUMN attachment_count INTEGER DEFAULT 0;
+        `);
+
+        console.log('[SQLite] Migration to v4 completed');
+      } catch (error) {
+        console.error('[SQLite] Migration to v4 failed:', error);
+        throw error;
+      }
+    }
+
     // Update schema version
     await db.execAsync(`PRAGMA user_version = ${DB_VERSION}`);
     console.log(`[SQLite] Database migrated to v${DB_VERSION}`);
+  }
+
+  // Safety check: Ensure attachment_count column exists (runs every time)
+  try {
+    const columnCheck = await db.getFirstAsync<{ count: number }>(
+      `SELECT COUNT(*) as count FROM pragma_table_info('notes') WHERE name='attachment_count'`
+    );
+
+    if (columnCheck && columnCheck.count === 0) {
+      console.log('[SQLite] attachment_count column missing, adding it now...');
+      await db.execAsync(`
+        ALTER TABLE notes ADD COLUMN attachment_count INTEGER DEFAULT 0;
+      `);
+      console.log('[SQLite] attachment_count column added successfully');
+
+      // Clear notes cache so they get re-fetched with attachment counts
+      console.log('[SQLite] Clearing notes cache to refresh with attachment counts...');
+      await db.execAsync(`DELETE FROM notes;`);
+      await db.execAsync(`DELETE FROM cache_metadata WHERE resource_type = 'notes';`);
+      console.log('[SQLite] Notes cache cleared - will be refreshed on next load');
+    }
+  } catch (error) {
+    console.error('[SQLite] Failed to check/add attachment_count column:', error);
   }
 }
 
@@ -145,7 +185,8 @@ export async function initializeDatabase(): Promise<SQLite.SQLiteDatabase> {
         encrypted_title TEXT,
         encrypted_content TEXT,
         iv TEXT,
-        salt TEXT
+        salt TEXT,
+        attachment_count INTEGER DEFAULT 0
       );
 
       -- Folders table with cache fields
