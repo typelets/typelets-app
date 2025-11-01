@@ -1,3 +1,21 @@
+# [1.31.0](https://github.com/typelets/typelets-app/compare/v1.30.12...v1.31.0) (2025-11-01)
+
+
+### Bug Fixes
+
+* **mobile:** fix offline note viewing ([0269dcc](https://github.com/typelets/typelets-app/commit/0269dcce8a685d5bd3a8dd962731ae8b12348481))
+* **mobile:** resolve attachment badges, temp note sync, and offline editing issues ([025ac5b](https://github.com/typelets/typelets-app/commit/025ac5b462171540239ff5a6c571a35f36bb0362))
+
+
+### Features
+
+* **mobile:** implement offline-first architecture with SQLite caching ([84d7d7b](https://github.com/typelets/typelets-app/commit/84d7d7b90552b35adc32422fbe60d29eec2b18c0))
+
+
+### Performance Improvements
+
+* **mobile:** optimize offline folder counts with caching and indexing ([9eff343](https://github.com/typelets/typelets-app/commit/9eff343b9d938902b7bad4bff2f39db93d0387a0))
+
 ## [1.30.12](https://github.com/typelets/typelets-app/compare/v1.30.11...v1.30.12) (2025-10-29)
 
 
