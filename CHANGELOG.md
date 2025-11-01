@@ -1,3 +1,10 @@
+## [1.31.1](https://github.com/typelets/typelets-app/compare/v1.31.0...v1.31.1) (2025-11-01)
+
+
+### Bug Fixes
+
+* update @tailwindcss/vite to fix tar security vulnerability ([591ba34](https://github.com/typelets/typelets-app/commit/591ba347feac9d197ba2ca1dc79b458dab90b467))
+
 # [1.31.0](https://github.com/typelets/typelets-app/compare/v1.30.12...v1.31.0) (2025-11-01)
 
 
