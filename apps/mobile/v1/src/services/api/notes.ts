@@ -260,11 +260,60 @@ export function createNotesApi(getToken: AuthTokenGetter, getUserId: () => strin
     },
 
     /**
-     * Get a single note by ID
+     * Get a single note by ID (with offline support)
      */
     async getNote(noteId: string): Promise<Note> {
       try {
         const userId = getUserId();
+
+        // Check if device is online
+        const online = await isOnline();
+
+        if (!online) {
+          // OFFLINE MODE - Get note from local database
+          if (__DEV__) {
+            console.log(`[API] Device offline - fetching note ${noteId} from local database`);
+          }
+
+          const db = getDatabase();
+          const row = await db.getFirstAsync<any>(
+            'SELECT * FROM notes WHERE id = ?',
+            [noteId]
+          );
+
+          if (!row) {
+            throw new Error('Note not found in local database');
+          }
+
+          // Convert database row to Note object
+          const note: Note = {
+            id: row.id,
+            title: row.title,
+            content: row.content,
+            folderId: row.folder_id || undefined,
+            userId: row.user_id,
+            starred: Boolean(row.starred),
+            archived: Boolean(row.archived),
+            deleted: Boolean(row.deleted),
+            hidden: Boolean(row.hidden),
+            hiddenAt: row.hidden_at || null,
+            createdAt: row.created_at,
+            updatedAt: row.updated_at,
+            encryptedTitle: row.encrypted_title || undefined,
+            encryptedContent: row.encrypted_content || undefined,
+            iv: row.iv || undefined,
+            salt: row.salt || undefined,
+          };
+
+          // Decrypt if needed (note already has decrypted content from database)
+          if (userId && !note.title && note.encryptedTitle) {
+            return await decryptNote(note, userId);
+          }
+
+          return note;
+        }
+
+        // ONLINE MODE - Fetch from API
         const note = await makeRequest<Note>(`/notes/${noteId}`);
 
         // Decrypt note if we have a user ID
