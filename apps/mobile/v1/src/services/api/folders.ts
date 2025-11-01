@@ -193,6 +193,10 @@ export function createFoldersApi(getToken: AuthTokenGetter) {
         apiCache.clear(CACHE_KEYS.FOLDERS);
         await invalidateCache('folders');
 
+        // Invalidate counts cache since folder structure changed
+        apiCache.clearAll();
+        await invalidateCache('notes');
+
         return folder;
       } catch (error) {
         return handleApiError(error, 'createFolder');
@@ -213,6 +217,10 @@ export function createFoldersApi(getToken: AuthTokenGetter) {
         apiCache.clear(CACHE_KEYS.FOLDERS);
         await invalidateCache('folders');
 
+        // Invalidate counts cache since folder structure changed
+        apiCache.clearAll();
+        await invalidateCache('notes');
+
         return folder;
       } catch (error) {
         return handleApiError(error, 'updateFolder');
@@ -231,6 +239,10 @@ export function createFoldersApi(getToken: AuthTokenGetter) {
         // Invalidate both memory and database caches
         apiCache.clear(CACHE_KEYS.FOLDERS);
         await invalidateCache('folders');
+
+        // Invalidate counts cache since folder structure changed
+        apiCache.clearAll();
+        await invalidateCache('notes');
       } catch (error) {
         return handleApiError(error, 'deleteFolder');
       }

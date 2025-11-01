@@ -286,7 +286,7 @@ const createEditorHTML = (content: string, placeholder: string, isDark: boolean,
   </style>
 </head>
 <body>
-  <div id="editor" contenteditable="true" data-placeholder="${placeholder}"></div>
+  <div id="editor" contenteditable="true" autocorrect="on" autocapitalize="sentences" spellcheck="true" data-placeholder="${placeholder}"></div>
   <script>
     const editor = document.getElementById('editor');
     let isInitialized = false;

@@ -179,7 +179,7 @@ export function createNotesApi(getToken: AuthTokenGetter, getUserId: () => strin
      * Note: When folderId is provided, returns dictionary of folder counts.
      *       When omitted, returns global counts plus folders property.
      */
-    async getCounts(folderId?: string): Promise<NoteCounts> {
+    async getCounts(folderId?: string, forceRefresh?: boolean): Promise<NoteCounts> {
       try {
         // Check if online before fetching
         const online = await isOnline();
@@ -205,8 +205,9 @@ export function createNotesApi(getToken: AuthTokenGetter, getUserId: () => strin
             const db = getDatabase();
             const counts = await calculateCountsFromDatabase(db, folderId);
 
-            // Cache for 10 seconds to prevent recalculation
-            apiCache.set(cacheKey, counts, 10_000); // 10s TTL
+            // Cache for only 2 seconds - offline counts are "best effort" and may be stale
+            // This prevents stale counts from persisting when network comes back online
+            apiCache.set(cacheKey, counts, 2_000); // 2s TTL (reduced from 10s)
 
             return counts;
           } catch (error) {
@@ -218,17 +219,44 @@ export function createNotesApi(getToken: AuthTokenGetter, getUserId: () => strin
           }
         }
 
-        // Online: Check in-memory cache first
+        // Online: Check in-memory cache first (stale-while-revalidate pattern)
         const cacheKey = CACHE_KEYS.COUNTS(folderId);
-        const cached = apiCache.get<NoteCounts>(cacheKey);
+        const cached = !forceRefresh ? apiCache.get<NoteCounts>(cacheKey) : null;
+
         if (cached) {
           if (__DEV__) {
-            console.log('[API] Returning cached counts (online)');
+            console.log('[API] Returning cached counts, refreshing in background');
           }
+
+          // Return cached data immediately, but refresh in background
+          const refreshCounts = async () => {
+            try {
+              const params = folderId ? `?folder_id=${folderId}` : '';
+              const counts = await makeRequest<NoteCounts | null>(`/notes/counts${params}`);
+              const result = counts || { all: 0, starred: 0, archived: 0, trash: 0 };
+
+              // Update cache with fresh data
+              apiCache.set(cacheKey, result, CACHE_TTL.COUNTS);
+
+              if (__DEV__) {
+                console.log('[API] Counts refreshed in background');
+              }
+            } catch (error) {
+              // Silently fail background refresh - user already has cached data
+              if (__DEV__) {
+                console.log('[API] Background counts refresh failed (cache still valid):', error);
+              }
+            }
+          };
+
+          // Start background refresh (don't await)
+          refreshCounts();
+
+          // Return cached data immediately
           return cached;
         }
 
-        // Fetch from API if not cached
+        // No cache available - fetch from API
         const params = folderId ? `?folder_id=${folderId}` : '';
         const counts = await makeRequest<NoteCounts | null>(`/notes/counts${params}`);
 
@@ -615,6 +643,9 @@ export function createNotesApi(getToken: AuthTokenGetter, getUserId: () => strin
             console.log(`[API] Offline note created: ${tempId}`);
           }
 
+          // Invalidate counts cache to show updated counts immediately
+          invalidateCountsCache();
+
           // Return optimistic note
           return optimisticNote;
         }
@@ -765,6 +796,9 @@ export function createNotesApi(getToken: AuthTokenGetter, getUserId: () => strin
             console.log(`[API] Updated offline note ${noteId} and queued for sync`);
           }
 
+          // Invalidate counts cache (in case starred/archived/folder status changed)
+          invalidateCountsCache();
+
           // Get updated note from database
           const updatedLocalNote = await db.getFirstAsync<any>(
             'SELECT * FROM notes WHERE id = ?',
@@ -854,6 +888,9 @@ export function createNotesApi(getToken: AuthTokenGetter, getUserId: () => strin
           if (__DEV__) {
             console.log(`[API] Marked offline note ${noteId} as deleted and queued for sync`);
           }
+
+          // Invalidate counts cache to show updated counts immediately
+          invalidateCountsCache();
 
           return;
         }

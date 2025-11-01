@@ -115,16 +115,17 @@ export default function FoldersScreen() {
   const loadTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Load folders data
-  const loadFoldersData = useCallback(async (isRefresh = false) => {
+  const loadFoldersData = useCallback(async (isRefresh = false, forceRefresh = false) => {
     try {
       if (!isRefresh) {
         setLoading(true);
       }
 
       // Use the counts endpoint instead of fetching all notes
+      // Force refresh bypasses cache to ensure fresh data (used on pull-to-refresh)
       const [foldersData, noteCounts] = await Promise.all([
         apiRef.current.getFolders(),
-        apiRef.current.getCounts() // Get counts from the API endpoint
+        apiRef.current.getCounts(undefined, forceRefresh) // Get counts from the API endpoint
       ]);
 
       // Show only ROOT folders (no parentId) on main screen
@@ -233,7 +234,7 @@ export default function FoldersScreen() {
       // Clear current data to force fresh load
       setAllFolders([]);
       setCounts({ all: 0, starred: 0, archived: 0, trash: 0 });
-      await loadFoldersData(true);
+      await loadFoldersData(true, true); // isRefresh=true, forceRefresh=true
     } finally {
       setRefreshing(false);
     }

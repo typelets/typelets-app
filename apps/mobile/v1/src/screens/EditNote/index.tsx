@@ -341,6 +341,9 @@ export default function EditNoteScreen() {
             onChangeText={setTitle}
             placeholderTextColor={theme.colors.mutedForeground}
             style={[styles.titleInput, { color: theme.colors.foreground }]}
+            autoCorrect={true}
+            autoCapitalize="sentences"
+            spellCheck={true}
           />
 
           {isEditing && noteData && (
