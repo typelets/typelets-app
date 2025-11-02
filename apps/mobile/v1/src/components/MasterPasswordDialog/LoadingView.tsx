@@ -84,7 +84,7 @@ export function LoadingView({ isNewSetup, stage = 'securing', cacheMode = 'encry
         />
 
         <Text style={[styles.loadingTitle, { color: theme.colors.foreground }]}>
-          Caching Your Data{dots}
+          Caching Your Data
         </Text>
 
         <View
@@ -108,8 +108,8 @@ export function LoadingView({ isNewSetup, stage = 'securing', cacheMode = 'encry
             ]}
           >
             {cacheMode === 'decrypted'
-              ? `This may take 5-10 seconds${dots}`
-              : `This should only take a few seconds${dots}`}
+              ? 'This may take 5-10 seconds'
+              : 'This should only take a few seconds'}
           </Text>
         </View>
       </View>

@@ -371,11 +371,12 @@ export default function AuthScreen() {
       logger.recordEvent('password_reset_code_sent', { email });
     } catch (err: unknown) {
       const error = err as ClerkError;
-      const message = error.errors?.[0]?.message || 'Failed to send reset code';
+      const originalMessage = error.errors?.[0]?.message || '';
+      // Use generic message for security/privacy
+      const message = 'Unable to send reset code. Please check your email and try again.';
       setErrorMessage(message);
-      showToast(message);
       logger.error('[AUTH] Password reset code send failed', err as Error, {
-        attributes: { email },
+        attributes: { email, errorMessage: originalMessage },
       });
     } finally {
       setLoading(false);
@@ -407,11 +408,13 @@ export default function AuthScreen() {
       }
     } catch (err: unknown) {
       const error = err as ClerkError;
-      const message = error.errors?.[0]?.message || 'Invalid reset code';
+      const originalMessage = error.errors?.[0]?.message || '';
+      // Use generic message for security/privacy
+      const message = 'Invalid reset code';
       setErrorMessage(message);
       showToast(message);
       logger.error('[AUTH] Password reset code verification failed', err as Error, {
-        attributes: { email },
+        attributes: { email, errorMessage: originalMessage },
       });
     } finally {
       setLoading(false);
@@ -468,11 +471,13 @@ export default function AuthScreen() {
       }
     } catch (err: unknown) {
       const error = err as ClerkError;
-      const message = error.errors?.[0]?.message || 'Failed to reset password';
+      const originalMessage = error.errors?.[0]?.message || '';
+      // Use generic message for security/privacy
+      const message = 'Unable to reset password. Please try again.';
       setErrorMessage(message);
       showToast(message);
       logger.error('[AUTH] Password reset completion failed', err as Error, {
-        attributes: { email },
+        attributes: { email, errorMessage: originalMessage },
       });
     } finally {
       setLoading(false);
@@ -802,14 +807,18 @@ export default function AuthScreen() {
                     autoCapitalize="none"
                     autoComplete="email"
                     style={(errorMessage && (
+                      isForgotPassword ||
                       (isSignUp && (errorMessage.toLowerCase().includes('email') || errorMessage.toLowerCase().includes('account'))) ||
                       errorMessage.toLowerCase() === 'please enter your email' ||
+                      errorMessage.toLowerCase() === 'please enter your email address' ||
                       (!isSignUp && (errorMessage.toLowerCase().includes('invalid') || errorMessage.toLowerCase().includes('incorrect')))
                     )) ? { borderColor: '#ef4444' } : undefined}
                   />
                   {errorMessage && (
+                    isForgotPassword ||
                     (isSignUp && (errorMessage.toLowerCase().includes('email') || errorMessage.toLowerCase().includes('account'))) ||
                     errorMessage.toLowerCase() === 'please enter your email' ||
+                    errorMessage.toLowerCase() === 'please enter your email address' ||
                     (!isSignUp && (errorMessage.toLowerCase().includes('invalid') || errorMessage.toLowerCase().includes('incorrect')))
                   ) ? (
                     <Text style={[styles.errorText, { color: '#ef4444' }]}>
@@ -1027,20 +1036,20 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 8,
     paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingVertical: 12,
     paddingRight: 48,
-    fontSize: 14,
-    minHeight: 40,
+    fontSize: 16,
+    minHeight: 48,
     // iOS-specific fix for centered placeholder text
     ...(Platform.OS === 'ios' && {
-      paddingTop: 10,
-      paddingBottom: 10,
+      paddingTop: 12,
+      paddingBottom: 12,
     }),
   },
   eyeButton: {
     position: 'absolute',
     right: 12,
-    height: 40,
+    height: 48,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 4,
@@ -1055,8 +1064,8 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   forgotPasswordText: {
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: 16,
+    fontWeight: '600',
   },
   termsContainer: {
     flexDirection: 'row',

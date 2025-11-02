@@ -17,13 +17,13 @@ export const Input = forwardRef<TextInput, InputProps>(({ style, ...props }, ref
         {
           borderWidth: 1,
           borderColor: theme.colors.input,
-          borderRadius: theme.borderRadius.md,
-          paddingHorizontal: theme.spacing.lg, // 12px
-          paddingVertical: theme.spacing.md, // 8px
-          fontSize: theme.typography.fontSize.sm,
+          borderRadius: 8,
+          paddingHorizontal: 12,
+          paddingVertical: 12,
+          fontSize: 16,
           color: theme.colors.foreground,
           backgroundColor: theme.colors.background,
-          minHeight: 40,
+          minHeight: 48,
           // iOS-specific fix for centered placeholder text
           ...(Platform.OS === 'ios' && {
             paddingTop: 12,
