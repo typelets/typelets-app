@@ -5,10 +5,10 @@ import { ActivityIndicator,View } from 'react-native';
 import { useMasterPassword } from '../hooks/useMasterPassword';
 import { logger } from '../lib/logger';
 import AuthScreen from '../screens/AuthScreen';
+import { MasterPasswordScreen } from '../screens/MasterPasswordScreen';
 import { apiCache } from '../services/api/cache';
 import { useSyncOnReconnect } from '../services/sync/useSyncOnReconnect';
 import { useTheme } from '../theme';
-import { MasterPasswordScreen } from './MasterPasswordDialog';
 
 interface AppWrapperProps {
   children: React.ReactNode;
