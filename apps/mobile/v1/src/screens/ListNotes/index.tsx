@@ -2,6 +2,7 @@ import { useUser } from '@clerk/clerk-expo';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
+import { useRouter } from 'expo-router';
 import React, { useCallback,useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Animated, FlatList, RefreshControl, StyleSheet, View } from 'react-native';
 
@@ -39,6 +40,7 @@ export default function NotesListScreen({ navigation, route, renderHeader, scrol
   const theme = useTheme();
   const { user } = useUser();
   const api = useApiService();
+  const router = useRouter();
   const { folderId, viewType, searchQuery } = route?.params || {};
 
   const [refreshing, setRefreshing] = useState(false);
@@ -137,10 +139,13 @@ export default function NotesListScreen({ navigation, route, renderHeader, scrol
               // Empty the trash using the API
               const result = await api.emptyTrash();
 
-              // Reload notes to update the view
-              await loadNotes(true);
+              // Navigate to main folders screen
+              router.replace('/');
 
-              Alert.alert('Success', `${result.deletedCount} notes permanently deleted.`);
+              // Show success alert after navigation
+              setTimeout(() => {
+                Alert.alert('Success', `${result.deletedCount} notes permanently deleted.`);
+              }, 300);
             } catch (error) {
               if (__DEV__) console.error('Failed to empty trash:', error);
               Alert.alert('Error', 'Failed to empty trash. Please try again.');
