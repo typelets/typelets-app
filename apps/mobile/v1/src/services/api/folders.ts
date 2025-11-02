@@ -7,6 +7,7 @@ import { isOnline } from '../network/networkManager';
 import { apiCache, CACHE_KEYS, CACHE_TTL } from './cache';
 import { AuthTokenGetter, createHttpClient, NotModifiedError } from './client';
 import {
+  clearCachedFolders,
   getCachedFolders,
   getCacheMetadata,
   invalidateCache,
@@ -189,6 +190,9 @@ export function createFoldersApi(getToken: AuthTokenGetter) {
           body: JSON.stringify({ name, color, parentId }),
         });
 
+        // Clear cached folder data from SQLite database
+        await clearCachedFolders();
+
         // Invalidate both memory and database caches
         apiCache.clear(CACHE_KEYS.FOLDERS);
         await invalidateCache('folders');
@@ -213,6 +217,9 @@ export function createFoldersApi(getToken: AuthTokenGetter) {
           body: JSON.stringify(updates),
         });
 
+        // Clear cached folder data from SQLite database
+        await clearCachedFolders();
+
         // Invalidate both memory and database caches
         apiCache.clear(CACHE_KEYS.FOLDERS);
         await invalidateCache('folders');
@@ -235,6 +242,9 @@ export function createFoldersApi(getToken: AuthTokenGetter) {
         await makeRequest<void>(`/folders/${folderId}`, {
           method: 'DELETE',
         });
+
+        // Clear cached folder data from SQLite database
+        await clearCachedFolders();
 
         // Invalidate both memory and database caches
         apiCache.clear(CACHE_KEYS.FOLDERS);

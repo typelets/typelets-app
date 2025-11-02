@@ -127,11 +127,17 @@ const createEditorHTML = (content: string, placeholder: string, isDark: boolean,
 
     /* Paragraphs */
     p {
-      margin: 0 0 8px 0;
+      margin: 0;
+      line-height: 1.6;
     }
 
-    /* Empty paragraphs should show as spacing */
+    /* Empty paragraphs should show as single line */
     p:empty {
+      min-height: 1em;
+    }
+
+    /* First empty paragraph in editor gets slightly more height for better UX */
+    #editor > p:first-child:empty {
       min-height: 1.6em;
     }
 

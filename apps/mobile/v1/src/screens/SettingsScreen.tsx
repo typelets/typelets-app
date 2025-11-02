@@ -14,6 +14,8 @@ import { APP_VERSION } from '../constants/version';
 import { forceGlobalMasterPasswordRefresh } from '../hooks/useMasterPassword';
 import { clearUserEncryptionData } from '../lib/encryption';
 import { clearDecryptedCache,getCacheDecryptedContentPreference, setCacheDecryptedContentPreference } from '../lib/preferences';
+import { apiCache } from '../services/api/cache';
+import { clearAllCacheMetadata, clearCachedFolders, clearCachedNotes } from '../services/api/databaseCache';
 import { useTheme } from '../theme';
 import { DARK_THEME_PRESETS,LIGHT_THEME_PRESETS } from '../theme/presets';
 
@@ -121,6 +123,43 @@ export default function SettingsScreen({ onLogout }: Props) {
     }
   };
 
+  const handleClearCache = async () => {
+    Alert.alert(
+      'Clear Cache',
+      'This will clear all cached data. Your notes and folders will be synced from the server on next load.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Clear',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              // Clear in-memory API cache
+              apiCache.clearAll();
+
+              // Clear SQLite cached data
+              await clearCachedFolders();
+              await clearCachedNotes();
+              await clearAllCacheMetadata();
+
+              // Clear decrypted cache
+              await clearDecryptedCache();
+
+              if (__DEV__) {
+                console.log('[Settings] All caches cleared successfully');
+              }
+
+              Alert.alert('Success', 'Cache cleared successfully. Pull to refresh to reload your data.');
+            } catch (error) {
+              Alert.alert('Error', 'Failed to clear cache. Please try again.');
+              if (__DEV__) console.error('Clear cache error:', error);
+            }
+          }
+        }
+      ]
+    );
+  };
+
   const handleResetMasterPassword = async () => {
     Alert.alert(
       'Change Master Password',
@@ -223,6 +262,12 @@ export default function SettingsScreen({ onLogout }: Props) {
           subtitle: 'Last synced: Just now',
           icon: 'sync-outline',
           onPress: undefined,
+        },
+        {
+          title: 'Clear Cache',
+          subtitle: 'Clear all cached data',
+          icon: 'trash-bin-outline',
+          onPress: handleClearCache,
         },
       ],
     },

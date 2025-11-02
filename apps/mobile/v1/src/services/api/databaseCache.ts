@@ -417,3 +417,75 @@ export async function storeCachedFolders(folders: Folder[]): Promise<void> {
     console.error('[DatabaseCache] Failed to store cached folders:', error);
   }
 }
+
+/**
+ * Clear all cached folders from database
+ * Called when invalidating folder cache to ensure stale data is removed
+ */
+export async function clearCachedFolders(): Promise<void> {
+  try {
+    const db = getDatabase();
+
+    await db.runAsync(`DELETE FROM folders`);
+
+    if (__DEV__) {
+      console.log('[DatabaseCache] Cleared all cached folders');
+    }
+  } catch (error) {
+    if (error instanceof Error && error.message.includes('Database not initialized')) {
+      if (__DEV__) {
+        console.log('[DatabaseCache] Database not ready yet, skipping folders clear');
+      }
+      return;
+    }
+    console.error('[DatabaseCache] Failed to clear cached folders:', error);
+  }
+}
+
+/**
+ * Clear all cached notes from database
+ * Called when clearing all caches
+ */
+export async function clearCachedNotes(): Promise<void> {
+  try {
+    const db = getDatabase();
+
+    await db.runAsync(`DELETE FROM notes`);
+
+    if (__DEV__) {
+      console.log('[DatabaseCache] Cleared all cached notes');
+    }
+  } catch (error) {
+    if (error instanceof Error && error.message.includes('Database not initialized')) {
+      if (__DEV__) {
+        console.log('[DatabaseCache] Database not ready yet, skipping notes clear');
+      }
+      return;
+    }
+    console.error('[DatabaseCache] Failed to clear cached notes:', error);
+  }
+}
+
+/**
+ * Clear all cache metadata
+ * Called when clearing all caches
+ */
+export async function clearAllCacheMetadata(): Promise<void> {
+  try {
+    const db = getDatabase();
+
+    await db.runAsync(`DELETE FROM cache_metadata`);
+
+    if (__DEV__) {
+      console.log('[DatabaseCache] Cleared all cache metadata');
+    }
+  } catch (error) {
+    if (error instanceof Error && error.message.includes('Database not initialized')) {
+      if (__DEV__) {
+        console.log('[DatabaseCache] Database not ready yet, skipping metadata clear');
+      }
+      return;
+    }
+    console.error('[DatabaseCache] Failed to clear cache metadata:', error);
+  }
+}
