@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 
-import type { Folder } from '../../services/api';
+import type { Folder } from '@/src/services/api';
 
 /**
  * Pre-calculate folder paths for all folders (O(n) once instead of O(n*m) repeatedly)

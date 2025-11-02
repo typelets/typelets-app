@@ -40,7 +40,7 @@ export function FileUpload({
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
       // If no noteId, get it from onBeforeUpload callback
-      let noteId = initialNoteId;
+      let noteId: string | null = initialNoteId;
       if (!noteId && onBeforeUpload) {
         noteId = await onBeforeUpload();
         if (!noteId) {

@@ -2,8 +2,8 @@ import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-import { NOTE_CARD } from '../../constants/ui';
-import { useTheme } from '../../theme';
+import { NOTE_CARD } from '@/src/constants/ui';
+import { useTheme } from '@/src/theme';
 
 interface NotesHeaderProps {
   filteredNotesCount: number;

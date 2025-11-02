@@ -8,11 +8,11 @@ import React, { useCallback,useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Animated, Keyboard, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { OfflineIndicator } from '../components/OfflineIndicator';
-import { ACTION_BUTTON, FOLDER_CARD, FOLDER_COLORS } from '../constants/ui';
-import { useNetworkStatus } from '../hooks/useNetworkStatus';
-import { type Folder, type FolderCounts,useApiService } from '../services/api';
-import { useTheme } from '../theme';
+import { OfflineIndicator } from '../../components/OfflineIndicator';
+import { ACTION_BUTTON, FOLDER_CARD, FOLDER_COLORS } from '../../constants/ui';
+import { useNetworkStatus } from '../../hooks/useNetworkStatus';
+import { type Folder, type FolderCounts,useApiService } from '../../services/api';
+import { useTheme } from '../../theme';
 
 // Special views configuration matching web app
 const SPECIAL_VIEWS = [
@@ -46,7 +46,7 @@ function getTimeOfDay(): string {
   return 'evening';
 }
 
-export default function FoldersScreen() {
+export default function HomeScreen() {
   const theme = useTheme();
   const api = useApiService();
   const router = useRouter();
@@ -222,7 +222,7 @@ export default function FoldersScreen() {
     // Debounce network status changes to avoid rapid reloads on flaky connections
     const timer = setTimeout(() => {
       if (__DEV__) {
-        console.log('[FoldersScreen] Network status changed, reloading data');
+        console.log('[HomeScreen] Network status changed, reloading data');
       }
       loadFoldersData();
     }, 500); // 500ms debounce
@@ -484,8 +484,6 @@ export default function FoldersScreen() {
           )}
         </ScrollView>
       )}
-
-      {/* <BottomNavigation navigation={navigation} activeTab="folders" /> */}
 
       {/* Offline Indicator - Floating Button */}
       <OfflineIndicator />

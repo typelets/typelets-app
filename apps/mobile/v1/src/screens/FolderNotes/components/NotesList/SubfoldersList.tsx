@@ -3,9 +3,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import React from 'react';
 import { Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-import { FOLDER_CARD } from '../../constants/ui';
-import type { Folder } from '../../services/api';
-import { useTheme } from '../../theme';
+import { FOLDER_CARD } from '@/src/constants/ui';
+import type { Folder } from '@/src/services/api';
+import { useTheme } from '@/src/theme';
 
 interface SubfoldersListProps {
   subfolders: (Folder & { noteCount?: number })[];

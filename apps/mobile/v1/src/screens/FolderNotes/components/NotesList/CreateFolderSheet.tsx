@@ -4,9 +4,9 @@ import * as Haptics from 'expo-haptics';
 import React, { forwardRef, useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, Keyboard, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-import { FOLDER_COLORS } from '../../constants/ui';
-import { type Folder, useApiService } from '../../services/api';
-import { useTheme } from '../../theme';
+import { FOLDER_COLORS } from '@/src/constants/ui';
+import { type Folder, useApiService } from '@/src/services/api';
+import { useTheme } from '@/src/theme';
 
 interface CreateFolderSheetProps {
   folderId?: string;

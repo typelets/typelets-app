@@ -23,7 +23,6 @@ const clerkPublishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY || '';
 function NavigationContent() {
   const theme = useTheme();
 
-  // Create custom navigation theme with app colors
   const customLightTheme = {
     ...DefaultTheme,
     colors: {
@@ -114,10 +113,10 @@ export default Sentry.wrap(function RootLayout() {
   useEffect(() => {
     initializeDatabase()
       .then(() => {
-        console.log('[App] ✅ SQLite database initialized - offline caching enabled');
+        console.log('[App] SQLite database initialized - offline caching enabled');
       })
       .catch((error) => {
-        console.error('[App] ❌ Failed to initialize SQLite database:', error);
+        console.error('[App] Failed to initialize SQLite database:', error);
       });
   }, []);
 

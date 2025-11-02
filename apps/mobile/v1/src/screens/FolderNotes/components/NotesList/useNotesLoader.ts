@@ -1,9 +1,10 @@
 import { useCallback, useRef, useState } from 'react';
 import { Alert } from 'react-native';
 
-import type { Folder, FolderCounts, Note } from '../../services/api';
-import { useApiService } from '../../services/api';
-import { decryptNote } from '../../services/api/encryption';
+import type { Folder, FolderCounts, Note } from '@/src/services/api';
+import { useApiService } from '@/src/services/api';
+import { decryptNote } from '@/src/services/api/encryption';
+
 import type { SortConfig } from './FilterSortSheet';
 
 interface UseNotesLoaderProps {

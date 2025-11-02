@@ -18,8 +18,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button , Input } from '@/src/components/ui';
 
-import { logger } from '../lib/logger';
-import { useTheme } from '../theme';
+import { logger } from '../../lib/logger';
+import { useTheme } from '../../theme';
 
 /**
  * Type definitions for Clerk SDK with legal acceptance fields

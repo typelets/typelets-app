@@ -3,7 +3,7 @@ import { BottomSheetBackdrop, BottomSheetBackdropProps, BottomSheetModal, Bottom
 import React, { forwardRef, useCallback, useMemo } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-import { useTheme } from '../../theme';
+import { useTheme } from '@/src/theme';
 
 export interface FilterConfig {
   showAttachmentsOnly: boolean;

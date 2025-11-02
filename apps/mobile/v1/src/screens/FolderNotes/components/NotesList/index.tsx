@@ -6,8 +6,9 @@ import { useRouter } from 'expo-router';
 import React, { useCallback,useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Animated, FlatList, RefreshControl, StyleSheet, View } from 'react-native';
 
-import { type Folder, type Note, useApiService } from '../../services/api';
-import { useTheme } from '../../theme';
+import { type Folder, type Note, useApiService } from '@/src/services/api';
+import { useTheme } from '@/src/theme';
+
 import { CreateFolderSheet } from './CreateFolderSheet';
 import { EmptyState } from './EmptyState';
 import { FilterConfig, FilterSortSheet, SortConfig } from './FilterSortSheet';
@@ -36,7 +37,7 @@ interface Props {
   scrollY?: Animated.Value;
 }
 
-export default function NotesListScreen({ navigation, route, renderHeader, scrollY: parentScrollY }: Props) {
+export default function NotesList({ navigation, route, renderHeader, scrollY: parentScrollY }: Props) {
   const theme = useTheme();
   const { user } = useUser();
   const api = useApiService();

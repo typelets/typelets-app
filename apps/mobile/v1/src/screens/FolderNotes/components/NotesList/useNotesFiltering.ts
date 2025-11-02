@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 
-import type { Note } from '../../services/api';
+import type { Note } from '@/src/services/api';
+
 import type { FilterConfig, SortConfig } from './FilterSortSheet';
 
 export function useNotesFiltering(

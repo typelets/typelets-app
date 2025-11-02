@@ -2,9 +2,10 @@ import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 
-import type { Folder, Note } from '../../services/api';
-import { useTheme } from '../../theme';
-import { stripHtmlTags } from '../../utils/noteUtils';
+import type { Folder, Note } from '@/src/services/api';
+import { useTheme } from '@/src/theme';
+import { stripHtmlTags } from '@/src/utils/noteUtils';
+
 import { NoteSkeletonItem } from './NoteSkeletonItem';
 
 interface NoteListItemProps {
