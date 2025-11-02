@@ -1,3 +1,10 @@
+## [1.32.1](https://github.com/typelets/typelets-app/compare/v1.32.0...v1.32.1) (2025-11-02)
+
+
+### Bug Fixes
+
+* **mobile:** navigate to home and refresh counts after empty trash ([039bb42](https://github.com/typelets/typelets-app/commit/039bb427851daca71ed20097ee14ab3365e5411e))
+
 # [1.32.0](https://github.com/typelets/typelets-app/compare/v1.31.6...v1.32.0) (2025-11-02)
 
 
