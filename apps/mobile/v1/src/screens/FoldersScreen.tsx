@@ -114,11 +114,14 @@ export default function FoldersScreen() {
   const isFocused = useIsFocused();
   const loadTimerRef = useRef<NodeJS.Timeout | null>(null);
   const isFirstMountRef = useRef(true);
+  const hasDataRef = useRef(false);
 
   // Load folders data
   const loadFoldersData = useCallback(async (isRefresh = false, forceRefresh = false) => {
     try {
-      if (!isRefresh) {
+      // Only show loading state if we don't have data yet (first load)
+      // On refocus, show existing data immediately and update in background (no flicker)
+      if (!isRefresh && !hasDataRef.current) {
         setLoading(true);
       }
 
@@ -156,6 +159,9 @@ export default function FoldersScreen() {
       };
 
       setCounts(newCounts);
+
+      // Mark that we have data now (prevents loading state on refocus)
+      hasDataRef.current = true;
     } catch (error) {
       if (__DEV__) console.error('Failed to load folders data:', error);
       setAllFolders([]);

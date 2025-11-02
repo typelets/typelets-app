@@ -4,7 +4,7 @@
  */
 
 import { Ionicons } from '@expo/vector-icons';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { useNetworkStatus } from '../services/network/networkManager';
@@ -13,6 +13,22 @@ import { useTheme } from '../theme';
 export const OfflineIndicator: React.FC = () => {
   const theme = useTheme();
   const { isOnline } = useNetworkStatus();
+  const [isReady, setIsReady] = useState(false);
+
+  // Add 2-second grace period on mount to prevent flicker during app startup
+  // Network status can be unstable during initialization
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsReady(true);
+    }, 2000); // 2 second grace period
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Don't show until grace period is over
+  if (!isReady) {
+    return null;
+  }
 
   // Only show when offline
   if (isOnline) {
