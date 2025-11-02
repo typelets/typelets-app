@@ -1,3 +1,10 @@
+## [1.31.3](https://github.com/typelets/typelets-app/compare/v1.31.2...v1.31.3) (2025-11-02)
+
+
+### Bug Fixes
+
+* **mobile:** cache invalidation, startup refresh, and autocorrect ([9570c4d](https://github.com/typelets/typelets-app/commit/9570c4d1fac27c26cda76429b65ec9b179dc41c3))
+
 ## [1.31.2](https://github.com/typelets/typelets-app/compare/v1.31.1...v1.31.2) (2025-11-01)
 
 
