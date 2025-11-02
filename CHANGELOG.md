@@ -1,3 +1,10 @@
+## [1.31.4](https://github.com/typelets/typelets-app/compare/v1.31.3...v1.31.4) (2025-11-02)
+
+
+### Bug Fixes
+
+* **mobile:** eliminate flickers, cache invalidation, and autocorrect ([4ffcdd4](https://github.com/typelets/typelets-app/commit/4ffcdd4fa2df7dcbf590551b86243d13fba299fa))
+
 ## [1.31.3](https://github.com/typelets/typelets-app/compare/v1.31.2...v1.31.3) (2025-11-02)
 
 
