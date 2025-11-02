@@ -186,19 +186,23 @@ export function createNotesApi(getToken: AuthTokenGetter, getUserId: () => strin
 
         // If offline, calculate from database with short-lived cache
         if (!online) {
-          // Check short-lived cache to avoid recalculation on rapid re-renders
           const cacheKey = CACHE_KEYS.COUNTS(folderId);
-          const cached = apiCache.get<NoteCounts>(cacheKey);
-          if (cached) {
-            if (__DEV__) {
-              console.log('[API] Returning cached offline counts');
+
+          // Check short-lived cache to avoid recalculation on rapid re-renders
+          // Skip cache if forceRefresh is true (e.g., on app startup to avoid stale data)
+          if (!forceRefresh) {
+            const cached = apiCache.get<NoteCounts>(cacheKey);
+            if (cached) {
+              if (__DEV__) {
+                console.log('[API] Returning cached offline counts');
+              }
+              return cached;
             }
-            return cached;
           }
 
           // Calculate counts from local SQLite cache
           if (__DEV__) {
-            console.log('[API] Device offline - calculating counts from local cache');
+            console.log('[API] Device offline - calculating counts from local cache', { forceRefresh });
           }
 
           try {
@@ -207,7 +211,10 @@ export function createNotesApi(getToken: AuthTokenGetter, getUserId: () => strin
 
             // Cache for only 2 seconds - offline counts are "best effort" and may be stale
             // This prevents stale counts from persisting when network comes back online
-            apiCache.set(cacheKey, counts, 2_000); // 2s TTL (reduced from 10s)
+            // Don't cache if forceRefresh is true to ensure next call gets fresh data
+            if (!forceRefresh) {
+              apiCache.set(cacheKey, counts, 2_000); // 2s TTL (reduced from 10s)
+            }
 
             return counts;
           } catch (error) {

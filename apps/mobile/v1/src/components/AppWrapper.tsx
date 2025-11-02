@@ -5,6 +5,7 @@ import { ActivityIndicator,View } from 'react-native';
 import { useMasterPassword } from '../hooks/useMasterPassword';
 import { logger } from '../lib/logger';
 import AuthScreen from '../screens/AuthScreen';
+import { apiCache } from '../services/api/cache';
 import { useSyncOnReconnect } from '../services/sync/useSyncOnReconnect';
 import { useTheme } from '../theme';
 import { MasterPasswordScreen } from './MasterPasswordDialog';
@@ -33,6 +34,14 @@ export const AppWrapper: React.FC<AppWrapperProps> = ({ children }) => {
 
   // Automatically sync pending mutations when device comes back online
   useSyncOnReconnect();
+
+  // Clear API cache on app mount to prevent stale data from previous session
+  useEffect(() => {
+    apiCache.clearAll();
+    if (__DEV__) {
+      console.log('[AppWrapper] Cleared API cache on app startup');
+    }
+  }, []);
 
   // Detect userId change SYNCHRONOUSLY in render
   if (userId !== lastUserIdRef.current) {

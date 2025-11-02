@@ -113,6 +113,7 @@ export default function FoldersScreen() {
   // Check if screen is focused
   const isFocused = useIsFocused();
   const loadTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const isFirstMountRef = useRef(true);
 
   // Load folders data
   const loadFoldersData = useCallback(async (isRefresh = false, forceRefresh = false) => {
@@ -191,8 +192,14 @@ export default function FoldersScreen() {
         clearTimeout(loadTimerRef.current);
       }
 
-      // Load immediately
-      loadFoldersData();
+      // Force refresh on first mount to ensure fresh data (prevents stale counts on app reload)
+      const shouldForceRefresh = isFirstMountRef.current;
+      if (isFirstMountRef.current) {
+        isFirstMountRef.current = false;
+      }
+
+      // Load immediately with force refresh on first mount
+      loadFoldersData(false, shouldForceRefresh);
     }
 
     return () => {
