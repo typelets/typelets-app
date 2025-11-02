@@ -489,3 +489,85 @@ export async function clearAllCacheMetadata(): Promise<void> {
     console.error('[DatabaseCache] Failed to clear cache metadata:', error);
   }
 }
+
+// ============================================================================
+// Cache Statistics
+// ============================================================================
+
+export interface CacheStats {
+  noteCount: number;
+  folderCount: number;
+  cacheSizeBytes: number;
+  cacheSizeMB: number;
+  hasDecryptedContent: boolean;
+}
+
+/**
+ * Get cache statistics for display in settings
+ * Returns information about cached notes, folders, and cache size
+ */
+export async function getCacheStats(): Promise<CacheStats> {
+  try {
+    const db = getDatabase();
+
+    // Get note count
+    const noteCountResult = await db.getFirstAsync<{ count: number }>(
+      'SELECT COUNT(*) as count FROM notes'
+    );
+    const noteCount = noteCountResult?.count || 0;
+
+    // Get folder count
+    const folderCountResult = await db.getFirstAsync<{ count: number }>(
+      'SELECT COUNT(*) as count FROM folders'
+    );
+    const folderCount = folderCountResult?.count || 0;
+
+    // Check if any notes have decrypted content (non-empty title/content)
+    const decryptedCheck = await db.getFirstAsync<{ count: number }>(
+      'SELECT COUNT(*) as count FROM notes WHERE title != "" OR content != ""'
+    );
+    const hasDecryptedContent = (decryptedCheck?.count || 0) > 0;
+
+    // Calculate approximate cache size by getting total length of all cached data
+    const sizeResult = await db.getFirstAsync<{ total_size: number }>(
+      `SELECT
+        COALESCE((SELECT SUM(
+          COALESCE(LENGTH(title), 0) +
+          COALESCE(LENGTH(content), 0) +
+          COALESCE(LENGTH(encrypted_title), 0) +
+          COALESCE(LENGTH(encrypted_content), 0)
+        ) FROM notes), 0) +
+        COALESCE((SELECT SUM(COALESCE(LENGTH(name), 0)) FROM folders), 0) +
+        COALESCE((SELECT SUM(COALESCE(LENGTH(e_tag), 0) + COALESCE(LENGTH(id), 0)) FROM cache_metadata), 0)
+        as total_size`
+    );
+
+    const cacheSizeBytes = sizeResult?.total_size || 0;
+    const cacheSizeMB = Number((cacheSizeBytes / (1024 * 1024)).toFixed(2));
+
+    return {
+      noteCount,
+      folderCount,
+      cacheSizeBytes,
+      cacheSizeMB,
+      hasDecryptedContent,
+    };
+  } catch (error) {
+    if (error instanceof Error && error.message.includes('Database not initialized')) {
+      if (__DEV__) {
+        console.log('[DatabaseCache] Database not ready yet, returning empty stats');
+      }
+    } else {
+      console.error('[DatabaseCache] Failed to get cache stats:', error);
+    }
+
+    // Return empty stats on error
+    return {
+      noteCount: 0,
+      folderCount: 0,
+      cacheSizeBytes: 0,
+      cacheSizeMB: 0,
+      hasDecryptedContent: false,
+    };
+  }
+}

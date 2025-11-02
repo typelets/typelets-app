@@ -98,7 +98,7 @@ export const AppWrapper: React.FC<AppWrapperProps> = ({ children }) => {
   }, [isSignedIn, user?.id, user?.primaryEmailAddress?.emailAddress, user?.username]);
 
   // Show loading while Clerk initializes, user loads, or checking master password
-  if (showLoading) {
+  if (showLoading || isChecking) {
     return (
       <View style={{
         flex: 1,

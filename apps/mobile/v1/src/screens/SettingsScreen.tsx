@@ -15,7 +15,7 @@ import { forceGlobalMasterPasswordRefresh } from '../hooks/useMasterPassword';
 import { clearUserEncryptionData } from '../lib/encryption';
 import { clearDecryptedCache,getCacheDecryptedContentPreference, setCacheDecryptedContentPreference } from '../lib/preferences';
 import { apiCache } from '../services/api/cache';
-import { clearAllCacheMetadata, clearCachedFolders, clearCachedNotes } from '../services/api/databaseCache';
+import { clearAllCacheMetadata, clearCachedFolders, clearCachedNotes, getCacheStats, type CacheStats } from '../services/api/databaseCache';
 import { useTheme } from '../theme';
 import { DARK_THEME_PRESETS,LIGHT_THEME_PRESETS } from '../theme/presets';
 
@@ -58,6 +58,15 @@ export default function SettingsScreen({ onLogout }: Props) {
 
   // Cache decrypted content preference state
   const [cacheDecrypted, setCacheDecrypted] = useState<boolean>(true);
+
+  // Cache stats state
+  const [cacheStats, setCacheStats] = useState<CacheStats>({
+    noteCount: 0,
+    folderCount: 0,
+    cacheSizeBytes: 0,
+    cacheSizeMB: 0,
+    hasDecryptedContent: false,
+  });
 
   // Snap points
   const themeModeSnapPoints = useMemo(() => ['45%'], []);
@@ -113,6 +122,22 @@ export default function SettingsScreen({ onLogout }: Props) {
     loadCachePreference();
   }, []);
 
+  // Load cache stats
+  useEffect(() => {
+    loadCacheStats();
+  }, []);
+
+  const loadCacheStats = async () => {
+    try {
+      const stats = await getCacheStats();
+      setCacheStats(stats);
+    } catch (error) {
+      if (__DEV__) {
+        console.error('Failed to load cache stats:', error);
+      }
+    }
+  };
+
   const saveViewMode = async (mode: 'list' | 'grid') => {
     try {
       setViewMode(mode);
@@ -149,10 +174,55 @@ export default function SettingsScreen({ onLogout }: Props) {
                 console.log('[Settings] All caches cleared successfully');
               }
 
+              // Refresh cache stats
+              await loadCacheStats();
+
               Alert.alert('Success', 'Cache cleared successfully. Pull to refresh to reload your data.');
             } catch (error) {
               Alert.alert('Error', 'Failed to clear cache. Please try again.');
               if (__DEV__) console.error('Clear cache error:', error);
+            }
+          }
+        }
+      ]
+    );
+  };
+
+  const handleRefreshCache = async () => {
+    Alert.alert(
+      'Refresh Cache',
+      'This will clear your cache and reload all notes from the server. This may take a few moments.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Refresh',
+          onPress: async () => {
+            try {
+              // Clear in-memory API cache
+              apiCache.clearAll();
+
+              // Clear SQLite cached data
+              await clearCachedFolders();
+              await clearCachedNotes();
+              await clearAllCacheMetadata();
+
+              // Clear decrypted cache
+              await clearDecryptedCache();
+
+              if (__DEV__) {
+                console.log('[Settings] Cache cleared, navigating back to trigger refresh');
+              }
+
+              // Navigate back to trigger data refresh
+              router.back();
+
+              // Small delay to allow navigation, then show success
+              setTimeout(() => {
+                Alert.alert('Cache Refreshed', 'Your data is being reloaded from the server.');
+              }, 300);
+            } catch (error) {
+              Alert.alert('Error', 'Failed to refresh cache. Please try again.');
+              if (__DEV__) console.error('Refresh cache error:', error);
             }
           }
         }
@@ -258,9 +328,9 @@ export default function SettingsScreen({ onLogout }: Props) {
           onPress: () => usageSheetRef.current?.present(),
         },
         {
-          title: 'Sync Status',
-          subtitle: 'Last synced: Just now',
-          icon: 'sync-outline',
+          title: 'Cache Status',
+          subtitle: `${cacheStats.noteCount} notes, ${cacheStats.folderCount} folders • ${cacheStats.cacheSizeMB} MB • ${cacheStats.hasDecryptedContent ? 'Decrypted' : 'Encrypted'}`,
+          icon: 'server-outline',
           onPress: undefined,
         },
         {
@@ -268,6 +338,12 @@ export default function SettingsScreen({ onLogout }: Props) {
           subtitle: 'Clear all cached data',
           icon: 'trash-bin-outline',
           onPress: handleClearCache,
+        },
+        {
+          title: 'Refresh Cache',
+          subtitle: 'Re-download all notes from server',
+          icon: 'refresh-outline',
+          onPress: handleRefreshCache,
         },
       ],
     },
