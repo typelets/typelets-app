@@ -1,3 +1,10 @@
+# [1.32.0](https://github.com/typelets/typelets-app/compare/v1.31.6...v1.32.0) (2025-11-02)
+
+
+### Features
+
+* **mobile:** add cache status info and refresh cache action ([fe94e20](https://github.com/typelets/typelets-app/commit/fe94e2027a33dab16ff095068d8a65bc9d271b51))
+
 ## [1.31.6](https://github.com/typelets/typelets-app/compare/v1.31.5...v1.31.6) (2025-11-02)
 
 
