@@ -1,3 +1,10 @@
+## [1.31.5](https://github.com/typelets/typelets-app/compare/v1.31.4...v1.31.5) (2025-11-02)
+
+
+### Bug Fixes
+
+* **mobile:** cache management, editor spacing, and UX improvements ([a3ca6e1](https://github.com/typelets/typelets-app/commit/a3ca6e1c978ed2fc4a06d0de3f5053a483057322))
+
 ## [1.31.4](https://github.com/typelets/typelets-app/compare/v1.31.3...v1.31.4) (2025-11-02)
 
 
