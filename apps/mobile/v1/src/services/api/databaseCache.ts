@@ -234,9 +234,10 @@ export async function getCachedNotes(filters?: {
       console.error('[DatabaseCache] Failed to get cached notes (invalid dates - clearing cache):', error);
       try {
         const db = getDatabase();
-        await db.runAsync('DELETE FROM notes');
+        // Only delete synced notes to preserve unsynced offline changes
+        await db.runAsync('DELETE FROM notes WHERE is_synced = 1');
         if (__DEV__) {
-          console.log('[DatabaseCache] Cleared notes cache due to invalid data');
+          console.log('[DatabaseCache] Cleared synced notes cache due to invalid data (preserved unsynced notes)');
         }
       } catch (clearError) {
         console.error('[DatabaseCache] Failed to clear notes cache:', clearError);
@@ -444,16 +445,18 @@ export async function clearCachedFolders(): Promise<void> {
 
 /**
  * Clear all cached notes from database
- * Called when clearing all caches
+ * Called when clearing all caches from settings
+ * IMPORTANT: Preserves unsynced notes to prevent data loss
  */
 export async function clearCachedNotes(): Promise<void> {
   try {
     const db = getDatabase();
 
-    await db.runAsync(`DELETE FROM notes`);
+    // Only delete synced notes to preserve unsynced offline changes
+    await db.runAsync(`DELETE FROM notes WHERE is_synced = 1`);
 
     if (__DEV__) {
-      console.log('[DatabaseCache] Cleared all cached notes');
+      console.log('[DatabaseCache] Cleared synced cached notes (preserved unsynced notes)');
     }
   } catch (error) {
     if (error instanceof Error && error.message.includes('Database not initialized')) {

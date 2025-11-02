@@ -3,6 +3,8 @@
  * Handles all note-related API operations
  */
 
+import * as SQLite from 'expo-sqlite';
+
 import { getDatabase } from '../../lib/database';
 import { logger } from '../../lib/logger';
 import { getCacheDecryptedContentPreference } from '../../lib/preferences';
@@ -19,7 +21,7 @@ import {
   storeCachedNotes,
 } from './databaseCache';
 import { clearEncryptionCache,decryptNote, decryptNotes, encryptNoteForApi } from './encryption';
-import { EmptyTrashResponse, FileAttachment, Note, NoteCounts,NoteQueryParams, NotesResponse } from './types';
+import { EmptyTrashResponse, FileAttachment, FolderCounts, Note, NoteCounts,NoteQueryParams, NotesResponse } from './types';
 import { handleApiError } from './utils/errors';
 import { createPaginationParams,fetchAllPages } from './utils/pagination';
 
@@ -40,13 +42,14 @@ export function createNotesApi(getToken: AuthTokenGetter, getUserId: () => strin
     // Invalidate database cache metadata so next fetch will get fresh data
     await invalidateCache('notes');
 
-    // Also clear the actual cached notes from SQLite so we don't return stale data
-    // This ensures the next fetch will show updated notes immediately
+    // Clear cached notes from SQLite, but preserve unsynced temp notes
+    // This ensures next fetch shows updated notes while keeping offline edits
     try {
       const db = getDatabase();
-      await db.runAsync('DELETE FROM notes');
+      // Only delete synced notes (is_synced = 1) to preserve temp/unsynced notes
+      await db.runAsync('DELETE FROM notes WHERE is_synced = 1');
       if (__DEV__) {
-        console.log('[API] Cleared cached notes from database after mutation');
+        console.log('[API] Cleared synced cached notes from database (preserved unsynced temp notes)');
       }
     } catch (error) {
       if (__DEV__) {
@@ -92,7 +95,7 @@ export function createNotesApi(getToken: AuthTokenGetter, getUserId: () => strin
    * @private
    */
   const calculateCountsFromDatabase = async (
-    db: any,
+    db: SQLite.SQLiteDatabase,
     folderId?: string
   ): Promise<NoteCounts> => {
     if (folderId) {
@@ -131,7 +134,7 @@ export function createNotesApi(getToken: AuthTokenGetter, getUserId: () => strin
    * Helper: Calculate per-folder counts
    * @private
    */
-  const calculateFolderCounts = async (db: any): Promise<Record<string, FolderCounts> | NoteCounts> => {
+  const calculateFolderCounts = async (db: SQLite.SQLiteDatabase): Promise<Record<string, FolderCounts> | NoteCounts> => {
     const folderCountsRows = await db.getAllAsync<{
       folder_id: string | null;
       all_count: number;
@@ -621,8 +624,9 @@ export function createNotesApi(getToken: AuthTokenGetter, getUserId: () => strin
           await db.runAsync(
             `INSERT INTO notes (
               id, title, content, folder_id, user_id, starred, archived, deleted, hidden, hidden_at,
-              created_at, updated_at, encrypted_title, encrypted_content, iv, salt
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+              created_at, updated_at, encrypted_title, encrypted_content, iv, salt,
+              is_synced, is_dirty, synced_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
               optimisticNote.id,
               optimisticNote.title,
@@ -640,6 +644,9 @@ export function createNotesApi(getToken: AuthTokenGetter, getUserId: () => strin
               optimisticNote.encryptedContent ?? null,
               optimisticNote.iv ?? null,
               optimisticNote.salt ?? null,
+              0, // is_synced = false (not synced yet)
+              1, // is_dirty = true (has local changes)
+              null, // synced_at = null (never synced)
             ]
           );
 
@@ -783,9 +790,9 @@ export function createNotesApi(getToken: AuthTokenGetter, getUserId: () => strin
             updateValues.push(updatePayload.salt);
           }
 
-          // Always update updatedAt timestamp
-          updateFields.push('updated_at = ?');
-          updateValues.push(new Date().toISOString());
+          // Always update updatedAt timestamp and mark as dirty
+          updateFields.push('updated_at = ?', 'is_dirty = ?');
+          updateValues.push(new Date().toISOString(), 1);
 
           // Add noteId for WHERE clause
           updateValues.push(noteId);

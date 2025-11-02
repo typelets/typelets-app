@@ -43,7 +43,8 @@ export function useMasterPassword() {
 
   const checkMasterPasswordStatus = useCallback(async () => {
     if (!userLoaded || !userId || !isSignedIn) {
-      setIsChecking(true);
+      // Not checking anything when no user - should show sign in screen
+      setIsChecking(false);
       setNeedsUnlock(true); // Assume locked when no user
       return;
     }

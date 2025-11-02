@@ -147,10 +147,11 @@ export async function processSyncQueue(
     if (successCount > 0) {
       try {
         const db = getDatabase();
-        // Clear all cached notes to force fresh fetch with updated IDs
-        await db.runAsync('DELETE FROM notes');
+        // Only delete synced notes to preserve any notes created during sync (race condition)
+        // Unsynced notes will be in the sync queue and will be processed in the next sync
+        await db.runAsync('DELETE FROM notes WHERE is_synced = 1');
         if (__DEV__) {
-          console.log('[SyncProcessor] Cleared notes cache to trigger UI refresh with updated IDs');
+          console.log('[SyncProcessor] Cleared synced notes cache (preserved unsynced notes created during sync)');
         }
       } catch (error) {
         console.error('[SyncProcessor] Failed to clear cache after sync:', error);
