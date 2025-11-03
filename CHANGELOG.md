@@ -1,3 +1,10 @@
+## [1.32.3](https://github.com/typelets/typelets-app/compare/v1.32.2...v1.32.3) (2025-11-03)
+
+
+### Bug Fixes
+
+* **mobile:** reorganize screens and clean up route files ([453273b](https://github.com/typelets/typelets-app/commit/453273b9b2dd56e00fe2cf04d837cf35c582e59d))
+
 ## [1.32.2](https://github.com/typelets/typelets-app/compare/v1.32.1...v1.32.2) (2025-11-02)
 
 
