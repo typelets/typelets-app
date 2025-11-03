@@ -1,3 +1,10 @@
+# [1.33.0](https://github.com/typelets/typelets-app/compare/v1.32.6...v1.33.0) (2025-11-03)
+
+
+### Features
+
+* add mermaid diagram editor with rich visual tooling ([8ae6651](https://github.com/typelets/typelets-app/commit/8ae665103dc2f9774c07f69ab0e0593af385beb2))
+
 ## [1.32.6](https://github.com/typelets/typelets-app/compare/v1.32.5...v1.32.6) (2025-11-03)
 
 
