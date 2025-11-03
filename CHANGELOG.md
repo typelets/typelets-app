@@ -1,3 +1,10 @@
+## [1.32.5](https://github.com/typelets/typelets-app/compare/v1.32.4...v1.32.5) (2025-11-03)
+
+
+### Bug Fixes
+
+* **mobile:** resolve infinite spinner on pull-to-refresh ([afd41be](https://github.com/typelets/typelets-app/commit/afd41be14beac2fe3a17bec51a73798e3c0c21db))
+
 ## [1.32.4](https://github.com/typelets/typelets-app/compare/v1.32.3...v1.32.4) (2025-11-03)
 
 
