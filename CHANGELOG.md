@@ -1,3 +1,10 @@
+## [1.33.3](https://github.com/typelets/typelets-app/compare/v1.33.2...v1.33.3) (2025-11-03)
+
+
+### Bug Fixes
+
+* add cdn.jsdelivr.net to CSP for Monaco editor scripts and styles ([9954207](https://github.com/typelets/typelets-app/commit/995420712b971d5be2d52282814abc5793b5951e))
+
 ## [1.33.2](https://github.com/typelets/typelets-app/compare/v1.33.1...v1.33.2) (2025-11-03)
 
 
