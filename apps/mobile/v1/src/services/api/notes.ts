@@ -100,7 +100,14 @@ export function createNotesApi(getToken: AuthTokenGetter, getUserId: () => strin
   ): Promise<NoteCounts> => {
     if (folderId) {
       // Return only folder counts for subfolder request
-      return await calculateFolderCounts(db);
+      const folderCounts = await calculateFolderCounts(db);
+      return {
+        all: 0,
+        starred: 0,
+        archived: 0,
+        trash: 0,
+        ...folderCounts,
+      };
     }
 
     // Single optimized query for global counts
@@ -134,7 +141,7 @@ export function createNotesApi(getToken: AuthTokenGetter, getUserId: () => strin
    * Helper: Calculate per-folder counts
    * @private
    */
-  const calculateFolderCounts = async (db: SQLite.SQLiteDatabase): Promise<Record<string, FolderCounts> | NoteCounts> => {
+  const calculateFolderCounts = async (db: SQLite.SQLiteDatabase): Promise<Record<string, FolderCounts>> => {
     const folderCountsRows = await db.getAllAsync<{
       folder_id: string | null;
       all_count: number;

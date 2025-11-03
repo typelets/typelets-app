@@ -96,13 +96,6 @@ export interface EmptyTrashResponse {
   deletedCount: number;
 }
 
-export interface NoteCounts {
-  all: number;
-  starred: number;
-  archived: number;
-  trash: number;
-}
-
 export interface ApiUserUsage {
   storage: {
     totalBytes: number;
@@ -141,10 +134,10 @@ export interface FolderCounts {
 // - Without folder_id: { all, starred, archived, trash, folders: { folderId: {...} } }
 // - With folder_id: { childFolderId: { all, starred, ... } }
 export interface NoteCounts {
-  all?: number;
-  starred?: number;
-  archived?: number;
-  trash?: number;
+  all: number;
+  starred: number;
+  archived: number;
+  trash: number;
   folders?: Record<string, FolderCounts>;
   // When folder_id is passed, folder counts are at root level
   [folderId: string]: number | FolderCounts | Record<string, FolderCounts> | undefined;

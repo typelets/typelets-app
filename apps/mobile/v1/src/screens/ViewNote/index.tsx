@@ -301,6 +301,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   divider: {
+    // @ts-ignore - StyleSheet.hairlineWidth is intentionally used for height (ultra-thin divider)
     height: StyleSheet.hairlineWidth,
     marginHorizontal: 0,
     marginBottom: 2,

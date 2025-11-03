@@ -173,6 +173,7 @@ const styles = StyleSheet.create({
     fontWeight: '400',
   },
   noteListDivider: {
+    // @ts-ignore - StyleSheet.hairlineWidth is intentionally used for height (ultra-thin divider)
     height: StyleSheet.hairlineWidth,
     marginLeft: 0,
   },

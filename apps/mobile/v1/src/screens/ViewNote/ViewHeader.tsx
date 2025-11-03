@@ -158,6 +158,7 @@ const styles = StyleSheet.create({
     minHeight: 44,
   },
   divider: {
+    // @ts-ignore - StyleSheet.hairlineWidth is intentionally used for height (ultra-thin divider)
     height: StyleSheet.hairlineWidth,
   },
   headerButton: {

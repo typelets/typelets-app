@@ -94,6 +94,10 @@ export function useMasterPassword() {
   useEffect(() => {
     if (isSignedIn && userLoaded && userId) {
       checkMasterPasswordStatus();
+    } else {
+      // User is not signed in - stop checking immediately
+      setIsChecking(false);
+      setNeedsUnlock(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isSignedIn, userLoaded, userId]);

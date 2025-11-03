@@ -775,6 +775,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   headerDivider: {
+    // @ts-ignore - StyleSheet.hairlineWidth is intentionally used for height (ultra-thin divider)
     height: StyleSheet.hairlineWidth,
   },
 });

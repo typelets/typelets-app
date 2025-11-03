@@ -7,14 +7,14 @@ import React, { useCallback, useEffect,useMemo, useRef, useState } from 'react';
 import { Alert, Animated,Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { Card } from '../../components/ui';
 import { UsageBottomSheet } from '../../components/settings/UsageBottomSheet';
+import { Card } from '../../components/ui';
 import { APP_VERSION } from '../../constants/version';
 import { forceGlobalMasterPasswordRefresh } from '../../hooks/useMasterPassword';
 import { clearUserEncryptionData } from '../../lib/encryption';
 import { clearDecryptedCache,getCacheDecryptedContentPreference, setCacheDecryptedContentPreference } from '../../lib/preferences';
 import { apiCache } from '../../services/api/cache';
-import { clearAllCacheMetadata, clearCachedFolders, clearCachedNotes, getCacheStats, type CacheStats } from '../../services/api/databaseCache';
+import { type CacheStats,clearAllCacheMetadata, clearCachedFolders, clearCachedNotes, getCacheStats } from '../../services/api/databaseCache';
 import { useTheme } from '../../theme';
 import { DARK_THEME_PRESETS,LIGHT_THEME_PRESETS } from '../../theme/presets';
 
@@ -862,7 +862,7 @@ export default function SettingsScreen({ onLogout }: Props) {
                   </Text>
                 </View>
                 <Text style={[styles.securityFeatureDescription, { color: theme.colors.mutedForeground }]}>
-                  Notes are cached encrypted by default - decrypted only when viewed. Enable "Cache Decrypted" for instant loading at the cost of storing decrypted data locally.
+                  Notes are cached encrypted by default - decrypted only when viewed. Enable &ldquo;Cache Decrypted&rdquo; for instant loading at the cost of storing decrypted data locally.
                 </Text>
               </View>
             </View>
@@ -1052,6 +1052,7 @@ const styles = StyleSheet.create({
   },
   headerDivider: {
     // @ts-ignore - StyleSheet.hairlineWidth is intentionally used for height (ultra-thin divider)
+     
     height: StyleSheet.hairlineWidth,
   },
   scrollView: {

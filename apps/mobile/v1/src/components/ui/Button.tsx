@@ -25,7 +25,13 @@ export function Button({
 }: ButtonProps) {
   const theme = useTheme();
 
-  const getVariantStyles = () => {
+  const getVariantStyles = (): {
+    backgroundColor: string;
+    color: string;
+    borderWidth?: number;
+    borderColor?: string;
+    textDecorationLine?: 'underline' | 'none' | 'line-through' | 'underline line-through';
+  } => {
     switch (variant) {
       case 'destructive':
         return {
