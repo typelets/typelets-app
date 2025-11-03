@@ -1,3 +1,10 @@
+## [1.32.6](https://github.com/typelets/typelets-app/compare/v1.32.5...v1.32.6) (2025-11-03)
+
+
+### Bug Fixes
+
+* **mobile:** fix cache clearing bug and add orientation lock for phones ([5b2fe31](https://github.com/typelets/typelets-app/commit/5b2fe31f415877f8c3150b9e25e5413777bff419))
+
 ## [1.32.5](https://github.com/typelets/typelets-app/compare/v1.32.4...v1.32.5) (2025-11-03)
 
 

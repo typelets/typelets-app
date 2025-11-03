@@ -1,7 +1,7 @@
 {
   "name": "v1",
   "main": "index.js",
-  "version": "1.32.5",
+  "version": "1.32.6",
   "scripts": {
     "start": "expo start",
     "reset-project": "node ./scripts/reset-project.js",
