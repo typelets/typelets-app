@@ -41,6 +41,7 @@ export interface FilesPanelProps {
   onSelectNote: (note: Note) => void;
   onToggleStar: (noteId: string) => Promise<void>;
   onCreateNote: (templateContent?: { title: string; content: string }) => void;
+  onCreateDiagram?: () => void;
   onToggleFolderPanel: () => void;
   onEmptyTrash: () => Promise<void>;
   creatingNote?: boolean;

@@ -6,6 +6,7 @@ import {
   Filter,
   FilterX,
   ChevronDown,
+  Network,
 } from 'lucide-react';
 import NotesList from '@/components/notes/NotesPanel/NotesList.tsx';
 import { Button } from '@/components/ui/button.tsx';
@@ -14,9 +15,13 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { NOTE_TEMPLATES } from '@/constants/templates';
+import { DIAGRAM_TEMPLATES } from '@/components/diagrams/templates';
 import type { Note, Folder as FolderType, ViewMode } from '@/types/note.ts';
 
 type SortOption = 'updated' | 'created' | 'title' | 'starred';
@@ -30,6 +35,7 @@ interface FilterConfig {
   showAttachmentsOnly: boolean;
   showStarredOnly: boolean;
   showHiddenOnly: boolean;
+  showDiagramsOnly: boolean;
 }
 
 interface FilesPanelProps {
@@ -42,7 +48,8 @@ interface FilesPanelProps {
   isFolderPanelOpen: boolean;
   onSelectNote: (note: Note) => void;
   onToggleStar: (noteId: string) => void;
-  onCreateNote: (templateContent?: { title: string; content: string }) => void;
+  onCreateNote: (templateContent?: { title: string; content: string; type?: string }) => void;
+  onCreateDiagram?: (templateCode?: string) => void;
   onToggleFolderPanel: () => void;
   onEmptyTrash?: () => Promise<void>;
   creatingNote?: boolean;
@@ -61,6 +68,7 @@ export default function FilesPanel({
   onSelectNote,
   onToggleStar,
   onCreateNote,
+  onCreateDiagram,
   onToggleFolderPanel,
   onEmptyTrash,
   creatingNote = false,
@@ -76,6 +84,7 @@ export default function FilesPanel({
     showAttachmentsOnly: false,
     showStarredOnly: false,
     showHiddenOnly: false,
+    showDiagramsOnly: false,
   });
 
   const sortNotes = (notes: Note[], config: SortConfig): Note[] => {
@@ -120,8 +129,9 @@ export default function FilesPanel({
       const excludeByAttachments = config.showAttachmentsOnly && !hasAttachments;
       const excludeByStarred = config.showStarredOnly && !note.starred;
       const excludeByHidden = config.showHiddenOnly && !note.hidden;
+      const excludeByDiagrams = config.showDiagramsOnly && note.type !== 'diagram';
 
-      return !(excludeByAttachments || excludeByStarred || excludeByHidden);
+      return !(excludeByAttachments || excludeByStarred || excludeByHidden || excludeByDiagrams);
     });
   };
 
@@ -147,6 +157,7 @@ export default function FilesPanel({
       activeFilters.push('With Attachments');
     if (filterConfig.showStarredOnly) activeFilters.push('Starred');
     if (filterConfig.showHiddenOnly) activeFilters.push('Hidden');
+    if (filterConfig.showDiagramsOnly) activeFilters.push('Diagrams');
 
     if (activeFilters.length === 0) return `Sort: ${getSortLabel()}`;
     return `Filter: ${activeFilters.join(', ')} | Sort: ${getSortLabel()}`;
@@ -155,7 +166,8 @@ export default function FilesPanel({
   const hasActiveFilters =
     filterConfig.showAttachmentsOnly ||
     filterConfig.showStarredOnly ||
-    filterConfig.showHiddenOnly;
+    filterConfig.showHiddenOnly ||
+    filterConfig.showDiagramsOnly;
 
   const getPanelTitle = () => {
     if (selectedFolder) {
@@ -299,16 +311,29 @@ export default function FilesPanel({
               >
                 {filterConfig.showHiddenOnly ? '✓' : '○'} Hidden
               </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() =>
+                  setFilterConfig((prev) => ({
+                    ...prev,
+                    showDiagramsOnly: !prev.showDiagramsOnly,
+                  }))
+                }
+                className={`${filterConfig.showDiagramsOnly ? 'bg-accent' : ''} mb-1`}
+              >
+                {filterConfig.showDiagramsOnly ? '✓' : '○'} Diagrams
+              </DropdownMenuItem>
 
               {(filterConfig.showAttachmentsOnly ||
                 filterConfig.showStarredOnly ||
-                filterConfig.showHiddenOnly) && (
+                filterConfig.showHiddenOnly ||
+                filterConfig.showDiagramsOnly) && (
                 <DropdownMenuItem
                   onClick={() =>
                     setFilterConfig({
                       showAttachmentsOnly: false,
                       showStarredOnly: false,
                       showHiddenOnly: false,
+                      showDiagramsOnly: false,
                     })
                   }
                   className="text-muted-foreground mb-1"
@@ -380,26 +405,125 @@ export default function FilesPanel({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-64" sideOffset={8}>
-                <div className="text-muted-foreground px-2 py-1.5 text-xs font-medium">
-                  CREATE FROM TEMPLATE
-                </div>
-                {NOTE_TEMPLATES.map((template) => (
+                {/* Blank Note */}
+                <DropdownMenuItem
+                  onClick={() => onCreateNote()}
+                  className="flex flex-col items-start gap-1 py-2"
+                >
+                  <div className="font-medium">Blank Note</div>
+                  <div className="text-muted-foreground text-xs">
+                    Start with an empty note
+                  </div>
+                </DropdownMenuItem>
+
+                {/* Blank Diagram */}
+                {onCreateDiagram && (
                   <DropdownMenuItem
-                    key={template.id}
-                    onClick={() =>
-                      onCreateNote({
-                        title: template.title,
-                        content: template.content,
-                      })
-                    }
+                    onClick={() => onCreateDiagram()}
                     className="flex flex-col items-start gap-1 py-2"
                   >
-                    <div className="font-medium">{template.name}</div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">Blank Diagram</span>
+                      <Network className="h-3.5 w-3.5 text-cyan-500" />
+                    </div>
                     <div className="text-muted-foreground text-xs">
-                      {template.description}
+                      Start with an empty diagram
                     </div>
                   </DropdownMenuItem>
-                ))}
+                )}
+
+                <DropdownMenuSeparator />
+
+                {/* Note Templates Submenu */}
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger className="flex items-center justify-between">
+                    <span>Note Templates</span>
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuSubContent className="w-64">
+                    {NOTE_TEMPLATES.map((template) => (
+                      <DropdownMenuItem
+                        key={template.id}
+                        onClick={() =>
+                          onCreateNote({
+                            title: template.title,
+                            content: template.content,
+                          })
+                        }
+                        className="flex flex-col items-start gap-1 py-2"
+                      >
+                        <div className="font-medium">{template.name}</div>
+                        <div className="text-muted-foreground text-xs">
+                          {template.description}
+                        </div>
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuSubContent>
+                </DropdownMenuSub>
+
+                {/* Diagram Templates Submenu */}
+                {onCreateDiagram && (
+                  <DropdownMenuSub>
+                    <DropdownMenuSubTrigger className="flex items-center justify-between">
+                      <span>Diagram Templates</span>
+                    </DropdownMenuSubTrigger>
+                    <DropdownMenuSubContent className="w-64">
+                      <DropdownMenuItem
+                        onClick={() => onCreateDiagram(DIAGRAM_TEMPLATES.flowchart)}
+                        className="flex flex-col items-start gap-1 py-2"
+                      >
+                        <div className="font-medium">Flowchart</div>
+                        <div className="text-muted-foreground text-xs">
+                          Decision trees and processes
+                        </div>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => onCreateDiagram(DIAGRAM_TEMPLATES.sequence)}
+                        className="flex flex-col items-start gap-1 py-2"
+                      >
+                        <div className="font-medium">Sequence Diagram</div>
+                        <div className="text-muted-foreground text-xs">
+                          Interaction flows and messaging
+                        </div>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => onCreateDiagram(DIAGRAM_TEMPLATES.class)}
+                        className="flex flex-col items-start gap-1 py-2"
+                      >
+                        <div className="font-medium">Class Diagram</div>
+                        <div className="text-muted-foreground text-xs">
+                          Object-oriented structures
+                        </div>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => onCreateDiagram(DIAGRAM_TEMPLATES.state)}
+                        className="flex flex-col items-start gap-1 py-2"
+                      >
+                        <div className="font-medium">State Diagram</div>
+                        <div className="text-muted-foreground text-xs">
+                          State machines and transitions
+                        </div>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => onCreateDiagram(DIAGRAM_TEMPLATES.gantt)}
+                        className="flex flex-col items-start gap-1 py-2"
+                      >
+                        <div className="font-medium">Gantt Chart</div>
+                        <div className="text-muted-foreground text-xs">
+                          Project timelines and tasks
+                        </div>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => onCreateDiagram(DIAGRAM_TEMPLATES.pie)}
+                        className="flex flex-col items-start gap-1 py-2"
+                      >
+                        <div className="font-medium">Pie Chart</div>
+                        <div className="text-muted-foreground text-xs">
+                          Data distribution and percentages
+                        </div>
+                      </DropdownMenuItem>
+                    </DropdownMenuSubContent>
+                  </DropdownMenuSub>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
           )}

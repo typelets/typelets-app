@@ -49,7 +49,7 @@ export function useNotesOperations({
   const createNote = useCallback(
     async (
       folderId?: string,
-      templateContent?: { title: string; content: string }
+      templateContent?: { title: string; content: string; type?: 'note' | 'diagram' }
     ) => {
       let showSpinner = false;
       const spinnerTimeout = setTimeout(() => {
@@ -82,11 +82,16 @@ export function useNotesOperations({
           folderId: noteFolderId,
           starred: false,
           tags: [],
+          type: templateContent?.type,
         });
 
         const noteWithFolder = convertApiNote(newNote);
         noteWithFolder.folder = folder;
         noteWithFolder.isNew = true; // Mark as new
+        // Preserve type from template (in case backend doesn't return it yet)
+        if (templateContent?.type) {
+          noteWithFolder.type = templateContent.type;
+        }
 
         setNotes((prev) => [noteWithFolder, ...prev]);
         setSelectedNote(noteWithFolder);

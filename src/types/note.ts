@@ -12,6 +12,7 @@ export interface Note {
   id: string;
   title: string;
   content: string;
+  type?: 'note' | 'diagram'; // Type of note: regular note or diagram
   createdAt: Date;
   updatedAt: Date;
   starred: boolean;
