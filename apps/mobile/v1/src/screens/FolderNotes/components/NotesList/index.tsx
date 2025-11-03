@@ -361,6 +361,9 @@ export default function NotesList({ navigation, route, renderHeader, scrollY: pa
         style={styles.scrollView}
         contentContainerStyle={{ flexGrow: 1 }}
         showsVerticalScrollIndicator={false}
+        scrollEnabled={true}
+        bounces={true}
+        alwaysBounceVertical={true}
         onScroll={Animated.event(
           [{ nativeEvent: { contentOffset: { y: scrollY } } }],
           { useNativeDriver: false }

@@ -36,16 +36,15 @@ export function useNotesLoader({
       const loadStartTime = performance.now();
       console.log(`[PERF OPTIMIZED] 🚀 loadNotes started at ${(loadStartTime - screenFocusTime.current).toFixed(2)}ms from screen focus`);
 
-      // Only show loading state if we don't have notes already
-      // This way, existing notes stay visible while refreshing
+      // Only show loading state if we don't have notes already AND not refreshing
+      // When refreshing, the RefreshControl shows its own spinner, so we don't need the loading overlay
       if (!isRefresh && notes.length === 0) {
         setLoading(true);
       } else if (!isRefresh && notes.length > 0) {
         // We have notes already - just refresh silently in background
         console.log(`[PERF OPTIMIZED] ⚡ Refreshing ${notes.length} notes silently in background`);
-      } else if (isRefresh) {
-        setLoading(true);
       }
+      // Note: When isRefresh=true, we don't set loading=true because RefreshControl shows its own spinner
 
       // Build query params for server-side filtering
       const queryParams: Record<string, string | boolean | undefined> = {};
@@ -258,10 +257,8 @@ export function useNotesLoader({
       Alert.alert('Error', 'Failed to load notes. Please try again.');
       setNotes([]);
       setSubfolders([]);
-      // Clear loading state on error
-      if (!isRefresh) {
-        setLoading(false);
-      }
+      // Always clear loading state on error
+      setLoading(false);
     }
   }, [api, folderId, viewType, sortConfig, userId, screenFocusTime]);
 
