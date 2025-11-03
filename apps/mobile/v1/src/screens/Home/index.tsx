@@ -8,9 +8,11 @@ import React, { useCallback,useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Animated, Keyboard, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { ACTION_BUTTON, FOLDER_CARD, FOLDER_COLORS } from '../constants/ui';
-import { type Folder, type FolderCounts,useApiService } from '../services/api';
-import { useTheme } from '../theme';
+import { OfflineIndicator } from '../../components/OfflineIndicator';
+import { ACTION_BUTTON, FOLDER_CARD, FOLDER_COLORS } from '../../constants/ui';
+import { useNetworkStatus } from '../../hooks/useNetworkStatus';
+import { type Folder, type FolderCounts,useApiService } from '../../services/api';
+import { useTheme } from '../../theme';
 
 // Special views configuration matching web app
 const SPECIAL_VIEWS = [
@@ -44,10 +46,11 @@ function getTimeOfDay(): string {
   return 'evening';
 }
 
-export default function FoldersScreen() {
+export default function HomeScreen() {
   const theme = useTheme();
   const api = useApiService();
   const router = useRouter();
+  const { isConnected, isInternetReachable } = useNetworkStatus();
   const [allFolders, setAllFolders] = useState<Folder[]>([]);
   const [loading, setLoading] = useState(true);
   const [showLoading, setShowLoading] = useState(false);
@@ -110,18 +113,23 @@ export default function FoldersScreen() {
   // Check if screen is focused
   const isFocused = useIsFocused();
   const loadTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const isFirstMountRef = useRef(true);
+  const hasDataRef = useRef(false);
 
   // Load folders data
-  const loadFoldersData = useCallback(async (isRefresh = false) => {
+  const loadFoldersData = useCallback(async (isRefresh = false, forceRefresh = false) => {
     try {
-      if (!isRefresh) {
+      // Only show loading state if we don't have data yet (first load)
+      // On refocus, show existing data immediately and update in background (no flicker)
+      if (!isRefresh && !hasDataRef.current) {
         setLoading(true);
       }
 
       // Use the counts endpoint instead of fetching all notes
+      // Force refresh bypasses cache to ensure fresh data (used on pull-to-refresh)
       const [foldersData, noteCounts] = await Promise.all([
         apiRef.current.getFolders(),
-        apiRef.current.getCounts() // Get counts from the API endpoint
+        apiRef.current.getCounts(undefined, forceRefresh) // Get counts from the API endpoint
       ]);
 
       // Show only ROOT folders (no parentId) on main screen
@@ -151,6 +159,9 @@ export default function FoldersScreen() {
       };
 
       setCounts(newCounts);
+
+      // Mark that we have data now (prevents loading state on refocus)
+      hasDataRef.current = true;
     } catch (error) {
       if (__DEV__) console.error('Failed to load folders data:', error);
       setAllFolders([]);
@@ -187,8 +198,14 @@ export default function FoldersScreen() {
         clearTimeout(loadTimerRef.current);
       }
 
-      // Load immediately
-      loadFoldersData();
+      // Force refresh on first mount to ensure fresh data (prevents stale counts on app reload)
+      const shouldForceRefresh = isFirstMountRef.current;
+      if (isFirstMountRef.current) {
+        isFirstMountRef.current = false;
+      }
+
+      // Load immediately with force refresh on first mount
+      loadFoldersData(false, shouldForceRefresh);
     }
 
     return () => {
@@ -197,6 +214,21 @@ export default function FoldersScreen() {
       }
     };
   }, [isFocused, loadFoldersData]);
+
+  // Reload data when network status changes (debounced to prevent flaky connections)
+  useEffect(() => {
+    if (!isFocused) return;
+
+    // Debounce network status changes to avoid rapid reloads on flaky connections
+    const timer = setTimeout(() => {
+      if (__DEV__) {
+        console.log('[HomeScreen] Network status changed, reloading data');
+      }
+      loadFoldersData();
+    }, 500); // 500ms debounce
+
+    return () => clearTimeout(timer);
+  }, [isConnected, isInternetReachable, isFocused, loadFoldersData]);
 
   // Handle loading delay
   useEffect(() => {
@@ -215,7 +247,7 @@ export default function FoldersScreen() {
       // Clear current data to force fresh load
       setAllFolders([]);
       setCounts({ all: 0, starred: 0, archived: 0, trash: 0 });
-      await loadFoldersData(true);
+      await loadFoldersData(true, true); // isRefresh=true, forceRefresh=true
     } finally {
       setRefreshing(false);
     }
@@ -453,7 +485,8 @@ export default function FoldersScreen() {
         </ScrollView>
       )}
 
-      {/* <BottomNavigation navigation={navigation} activeTab="folders" /> */}
+      {/* Offline Indicator - Floating Button */}
+      <OfflineIndicator />
 
       {/* Create Folder Bottom Sheet */}
       <BottomSheetModal

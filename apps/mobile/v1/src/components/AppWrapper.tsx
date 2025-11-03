@@ -4,9 +4,11 @@ import { ActivityIndicator,View } from 'react-native';
 
 import { useMasterPassword } from '../hooks/useMasterPassword';
 import { logger } from '../lib/logger';
-import AuthScreen from '../screens/AuthScreen';
+import AuthScreen from '../screens/Auth';
+import { MasterPasswordScreen } from '../screens/MasterPassword';
+import { apiCache } from '../services/api/cache';
+import { useSyncOnReconnect } from '../services/sync/useSyncOnReconnect';
 import { useTheme } from '../theme';
-import { MasterPasswordScreen } from './MasterPasswordDialog';
 
 interface AppWrapperProps {
   children: React.ReactNode;
@@ -21,12 +23,25 @@ export const AppWrapper: React.FC<AppWrapperProps> = ({ children }) => {
     isNewSetup,
     isChecking,
     userId,
+    loadingStage,
+    cacheMode,
     onPasswordSuccess,
   } = useMasterPassword();
 
   const [showLoading, setShowLoading] = useState(false);
   const lastUserIdRef = useRef<string | undefined>(undefined);
   const [userChanging, setUserChanging] = useState(false);
+
+  // Automatically sync pending mutations when device comes back online
+  useSyncOnReconnect();
+
+  // Clear API cache on app mount to prevent stale data from previous session
+  useEffect(() => {
+    apiCache.clearAll();
+    if (__DEV__) {
+      console.log('[AppWrapper] Cleared API cache on app startup');
+    }
+  }, []);
 
   // Detect userId change SYNCHRONOUSLY in render
   if (userId !== lastUserIdRef.current) {
@@ -83,7 +98,7 @@ export const AppWrapper: React.FC<AppWrapperProps> = ({ children }) => {
   }, [isSignedIn, user?.id, user?.primaryEmailAddress?.emailAddress, user?.username]);
 
   // Show loading while Clerk initializes, user loads, or checking master password
-  if (showLoading) {
+  if (showLoading || isChecking) {
     return (
       <View style={{
         flex: 1,
@@ -120,6 +135,8 @@ export const AppWrapper: React.FC<AppWrapperProps> = ({ children }) => {
         key={userId} // Force remount when userId changes to reset all state
         userId={userId || ''}
         isNewSetup={isNewSetup}
+        loadingStage={loadingStage}
+        cacheMode={cacheMode}
         onSuccess={onPasswordSuccess}
       />
     );

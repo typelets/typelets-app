@@ -1,3 +1,112 @@
+## [1.32.6](https://github.com/typelets/typelets-app/compare/v1.32.5...v1.32.6) (2025-11-03)
+
+
+### Bug Fixes
+
+* **mobile:** fix cache clearing bug and add orientation lock for phones ([5b2fe31](https://github.com/typelets/typelets-app/commit/5b2fe31f415877f8c3150b9e25e5413777bff419))
+
+## [1.32.5](https://github.com/typelets/typelets-app/compare/v1.32.4...v1.32.5) (2025-11-03)
+
+
+### Bug Fixes
+
+* **mobile:** resolve infinite spinner on pull-to-refresh ([afd41be](https://github.com/typelets/typelets-app/commit/afd41be14beac2fe3a17bec51a73798e3c0c21db))
+
+## [1.32.4](https://github.com/typelets/typelets-app/compare/v1.32.3...v1.32.4) (2025-11-03)
+
+
+### Bug Fixes
+
+* **mobile:** implement optimistic UI updates and fix cache staleness issues ([8aeeaa1](https://github.com/typelets/typelets-app/commit/8aeeaa13e7a7d7889380838263ebb51cb9a0ce8d))
+
+## [1.32.3](https://github.com/typelets/typelets-app/compare/v1.32.2...v1.32.3) (2025-11-03)
+
+
+### Bug Fixes
+
+* **mobile:** reorganize screens and clean up route files ([453273b](https://github.com/typelets/typelets-app/commit/453273b9b2dd56e00fe2cf04d837cf35c582e59d))
+
+## [1.32.2](https://github.com/typelets/typelets-app/compare/v1.32.1...v1.32.2) (2025-11-02)
+
+
+### Bug Fixes
+
+* **mobile:** navigate to home and refresh counts after empty trash ([e3ca48d](https://github.com/typelets/typelets-app/commit/e3ca48d7d1bc3f187e04eac6185b4e71d0c287fc))
+
+## [1.32.1](https://github.com/typelets/typelets-app/compare/v1.32.0...v1.32.1) (2025-11-02)
+
+
+### Bug Fixes
+
+* **mobile:** navigate to home and refresh counts after empty trash ([039bb42](https://github.com/typelets/typelets-app/commit/039bb427851daca71ed20097ee14ab3365e5411e))
+
+# [1.32.0](https://github.com/typelets/typelets-app/compare/v1.31.6...v1.32.0) (2025-11-02)
+
+
+### Features
+
+* **mobile:** add cache status info and refresh cache action ([fe94e20](https://github.com/typelets/typelets-app/commit/fe94e2027a33dab16ff095068d8a65bc9d271b51))
+
+## [1.31.6](https://github.com/typelets/typelets-app/compare/v1.31.5...v1.31.6) (2025-11-02)
+
+
+### Bug Fixes
+
+* **mobile:** consistent sizing, cache management, and UX improvements ([da69978](https://github.com/typelets/typelets-app/commit/da69978607bd272c9b3403c68910ca21e7b45f19))
+
+## [1.31.5](https://github.com/typelets/typelets-app/compare/v1.31.4...v1.31.5) (2025-11-02)
+
+
+### Bug Fixes
+
+* **mobile:** cache management, editor spacing, and UX improvements ([a3ca6e1](https://github.com/typelets/typelets-app/commit/a3ca6e1c978ed2fc4a06d0de3f5053a483057322))
+
+## [1.31.4](https://github.com/typelets/typelets-app/compare/v1.31.3...v1.31.4) (2025-11-02)
+
+
+### Bug Fixes
+
+* **mobile:** eliminate flickers, cache invalidation, and autocorrect ([4ffcdd4](https://github.com/typelets/typelets-app/commit/4ffcdd4fa2df7dcbf590551b86243d13fba299fa))
+
+## [1.31.3](https://github.com/typelets/typelets-app/compare/v1.31.2...v1.31.3) (2025-11-02)
+
+
+### Bug Fixes
+
+* **mobile:** cache invalidation, startup refresh, and autocorrect ([9570c4d](https://github.com/typelets/typelets-app/commit/9570c4d1fac27c26cda76429b65ec9b179dc41c3))
+
+## [1.31.2](https://github.com/typelets/typelets-app/compare/v1.31.1...v1.31.2) (2025-11-01)
+
+
+### Bug Fixes
+
+* **mobile:** implement cache invalidation, stale-while-revalidate, and autocorrect ([93bce41](https://github.com/typelets/typelets-app/commit/93bce41d3abf6ca5addc047a14907b2b4c19e688))
+
+## [1.31.1](https://github.com/typelets/typelets-app/compare/v1.31.0...v1.31.1) (2025-11-01)
+
+
+### Bug Fixes
+
+* update @tailwindcss/vite to fix tar security vulnerability ([591ba34](https://github.com/typelets/typelets-app/commit/591ba347feac9d197ba2ca1dc79b458dab90b467))
+
+# [1.31.0](https://github.com/typelets/typelets-app/compare/v1.30.12...v1.31.0) (2025-11-01)
+
+
+### Bug Fixes
+
+* **mobile:** fix offline note viewing ([0269dcc](https://github.com/typelets/typelets-app/commit/0269dcce8a685d5bd3a8dd962731ae8b12348481))
+* **mobile:** resolve attachment badges, temp note sync, and offline editing issues ([025ac5b](https://github.com/typelets/typelets-app/commit/025ac5b462171540239ff5a6c571a35f36bb0362))
+
+
+### Features
+
+* **mobile:** implement offline-first architecture with SQLite caching ([84d7d7b](https://github.com/typelets/typelets-app/commit/84d7d7b90552b35adc32422fbe60d29eec2b18c0))
+
+
+### Performance Improvements
+
+* **mobile:** optimize offline folder counts with caching and indexing ([9eff343](https://github.com/typelets/typelets-app/commit/9eff343b9d938902b7bad4bff2f39db93d0387a0))
+
 ## [1.30.12](https://github.com/typelets/typelets-app/compare/v1.30.11...v1.30.12) (2025-10-29)
 
 

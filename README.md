@@ -1,4 +1,4 @@
-# Typelets
+# Typelets - Secure Notes
 
 <div style="text-align: left;">
 

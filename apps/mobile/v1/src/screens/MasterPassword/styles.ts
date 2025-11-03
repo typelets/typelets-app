@@ -45,9 +45,11 @@ export const styles = StyleSheet.create({
   input: {
     borderWidth: 1,
     borderRadius: 8,
-    padding: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
     paddingRight: 48,
     fontSize: 16,
+    minHeight: 48,
     // iOS-specific fix for centered placeholder text
     ...(Platform.OS === 'ios' && {
       paddingTop: 12,

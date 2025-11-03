@@ -2,7 +2,7 @@ import { useAuth, useUser } from '@clerk/clerk-expo';
 import { Stack } from 'expo-router';
 
 import { clearUserEncryptionData } from '@/src/lib/encryption';
-import SettingsScreen from '@/src/screens/SettingsScreen';
+import SettingsScreen from '@/src/screens/Settings';
 
 export default function SettingsPage() {
   const { signOut } = useAuth();

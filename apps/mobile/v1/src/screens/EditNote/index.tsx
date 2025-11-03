@@ -3,13 +3,14 @@ import * as Haptics from 'expo-haptics';
 import { useLocalSearchParams,useRouter } from 'expo-router';
 import { Code,Quote, Redo, Undo } from 'lucide-react-native';
 import React, { useEffect, useMemo,useRef, useState } from 'react';
-import { Alert, Keyboard,ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, DeviceEventEmitter,Keyboard,ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Editor, type EditorColors,type EditorRef } from '@/editor/src';
 
 import { FileUpload } from '../../components/FileUpload';
 import { useKeyboardHeight } from '../../hooks/useKeyboardHeight';
+import { useNetworkStatus } from '../../hooks/useNetworkStatus';
 import { logger } from '../../lib/logger';
 import { type FileAttachment,type Note, useApiService } from '../../services/api';
 import { useTheme } from '../../theme';
@@ -24,6 +25,8 @@ export default function EditNoteScreen() {
   const params = useLocalSearchParams();
   const { noteId, folderId } = params;
   const isEditing = !!noteId;
+  const { isConnected, isInternetReachable } = useNetworkStatus();
+  const isOnline = isConnected && (isInternetReachable ?? false);
 
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
@@ -128,6 +131,16 @@ export default function EditNoteScreen() {
   const handleSave = async (options?: { skipNavigation?: boolean }) => {
     const titleToUse = title.trim() || 'Untitled';
 
+    // Prevent updates when offline (EXCEPT for temp notes created offline)
+    const currentNoteId = (noteId as string) || createdNoteId;
+    const isTempNote = currentNoteId?.startsWith('temp_');
+    const isUpdatingExistingNote = (isEditing && noteId) || createdNoteId;
+
+    if (!isOnline && isUpdatingExistingNote && !isTempNote) {
+      Alert.alert('Offline', 'You cannot update synced notes while offline. Please connect to the internet and try again.');
+      return null;
+    }
+
     setIsSaving(true);
 
     try {
@@ -147,6 +160,9 @@ export default function EditNoteScreen() {
         logger.info('[NOTE] Note updated successfully', {
           attributes: { noteId: currentNoteId, title: titleToUse }
         });
+
+        // Emit event for optimistic UI update in notes list
+        DeviceEventEmitter.emit('noteUpdated', savedNote);
       } else {
         logger.info('[NOTE] Creating new note', {
           attributes: { title: titleToUse, contentLength: htmlContent.length, folderId: folderId as string | undefined }
@@ -165,6 +181,9 @@ export default function EditNoteScreen() {
         logger.info('[NOTE] Note created successfully', {
           attributes: { noteId: savedNote.id, title: titleToUse }
         });
+
+        // Emit event for optimistic UI update in notes list
+        DeviceEventEmitter.emit('noteCreated', savedNote);
       }
 
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -230,6 +249,13 @@ export default function EditNoteScreen() {
   const handleDelete = async () => {
     if (!noteData || !noteId) return;
 
+    // Prevent deletes when offline (EXCEPT for temp notes created offline)
+    const isTempNote = (noteId as string).startsWith('temp_');
+    if (!isOnline && !isTempNote) {
+      Alert.alert('Offline', 'You cannot delete synced notes while offline. Please connect to the internet and try again.');
+      return;
+    }
+
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
     Alert.alert(
@@ -250,6 +276,9 @@ export default function EditNoteScreen() {
               logger.info('[NOTE] Note deleted successfully', {
                 attributes: { noteId: noteId as string }
               });
+
+              // Emit event for optimistic UI update in notes list
+              DeviceEventEmitter.emit('noteDeleted', noteId as string);
 
               // Navigate back to the folder/notes list, skipping the view-note screen
               if (router.canGoBack()) {
@@ -294,6 +323,8 @@ export default function EditNoteScreen() {
         isEditing={isEditing}
         noteData={noteData}
         isSaving={isSaving}
+        isOffline={!isOnline}
+        isTempNote={((noteId as string) || createdNoteId)?.startsWith('temp_')}
         attachmentsCount={attachments.length}
         showAttachments={showAttachments}
         showHeader={showHeader}
@@ -319,6 +350,9 @@ export default function EditNoteScreen() {
             onChangeText={setTitle}
             placeholderTextColor={theme.colors.mutedForeground}
             style={[styles.titleInput, { color: theme.colors.foreground }]}
+            autoCorrect={true}
+            autoCapitalize="sentences"
+            spellCheck={true}
           />
 
           {isEditing && noteData && (
@@ -634,6 +668,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   divider: {
+    // @ts-ignore - StyleSheet.hairlineWidth is intentionally used for height (ultra-thin divider)
     height: StyleSheet.hairlineWidth,
     marginHorizontal: 0,
   },

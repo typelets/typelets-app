@@ -25,7 +25,13 @@ export function Button({
 }: ButtonProps) {
   const theme = useTheme();
 
-  const getVariantStyles = () => {
+  const getVariantStyles = (): {
+    backgroundColor: string;
+    color: string;
+    borderWidth?: number;
+    borderColor?: string;
+    textDecorationLine?: 'underline' | 'none' | 'line-through' | 'underline line-through';
+  } => {
     switch (variant) {
       case 'destructive':
         return {
@@ -72,7 +78,7 @@ export function Button({
       case 'icon':
         return { height: 40, width: 40, paddingHorizontal: 0 };
       default:
-        return { paddingVertical: 8, paddingHorizontal: 16 };
+        return { minHeight: 48, paddingVertical: 12, paddingHorizontal: 16 };
     }
   };
 
@@ -117,11 +123,11 @@ const styles = StyleSheet.create({
   base: {
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 6,
+    borderRadius: 8,
   },
   baseText: {
-    fontWeight: '500',
-    fontSize: 14,
+    fontWeight: '600',
+    fontSize: 16,
   },
   pressed: {
     opacity: 0.9,

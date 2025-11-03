@@ -1,9 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect,useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback,useEffect, useRef, useState } from 'react';
-import { ActivityIndicator,Animated, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Animated, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useNetworkStatus } from '../../hooks/useNetworkStatus';
 import { useViewNote } from '../../hooks/useViewNote';
 import { logger } from '../../lib/logger';
 import { type FileAttachment,useApiService } from '../../services/api';
@@ -17,6 +18,8 @@ export default function ViewNoteScreen() {
   const params = useLocalSearchParams();
   const { noteId } = params;
   const api = useApiService();
+  const { isConnected, isInternetReachable } = useNetworkStatus();
+  const isOnline = isConnected && (isInternetReachable ?? false);
 
   // Log screen mount
   useEffect(() => {
@@ -30,7 +33,17 @@ export default function ViewNoteScreen() {
   const [loadingAttachments, setLoadingAttachments] = useState(false);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
-  const { note, loading, htmlContent, handleEdit, handleToggleStar, handleToggleHidden } = useViewNote(noteId as string);
+  const { note, loading, htmlContent, handleEdit: handleEditInternal, handleToggleStar, handleToggleHidden } = useViewNote(noteId as string);
+
+  // Wrap handleEdit with offline check (allow editing temp notes created offline)
+  const handleEdit = () => {
+    const isTempNote = (noteId as string).startsWith('temp_');
+    if (!isOnline && !isTempNote) {
+      Alert.alert('Offline', 'You cannot edit synced notes while offline. Please connect to the internet and try again.');
+      return;
+    }
+    handleEditInternal();
+  };
 
   useEffect(() => {
     scrollY.setValue(0);
@@ -44,6 +57,16 @@ export default function ViewNoteScreen() {
 
   const loadAttachments = useCallback(async () => {
     if (!noteId || loadingRef.current) return;
+
+    // Skip attachment loading when offline
+    if (!isOnline) {
+      if (__DEV__) {
+        console.log('[NOTE] Device offline - skipping attachment load');
+      }
+      setAttachments([]);
+      setLoadingAttachments(false);
+      return;
+    }
 
     try {
       loadingRef.current = true;
@@ -64,13 +87,19 @@ export default function ViewNoteScreen() {
       setLoadingAttachments(false);
       loadingRef.current = false;
     }
-  }, [noteId, api]);
+  }, [noteId, api, isOnline]);
 
   useEffect(() => {
+    // Reset lastLoadedNoteId when noteId changes
     if (noteId && lastLoadedNoteId.current !== noteId) {
+      lastLoadedNoteId.current = null;
+    }
+
+    // Load attachments if online and not already loaded
+    if (noteId && lastLoadedNoteId.current !== noteId && isOnline) {
       loadAttachments();
     }
-  }, [noteId, loadAttachments]);
+  }, [noteId, isOnline, loadAttachments]);
 
   const handleDownloadAttachment = async (attachment: FileAttachment) => {
     if (downloadingId) {
@@ -112,11 +141,7 @@ export default function ViewNoteScreen() {
       if (scrollViewRef.current) {
         scrollViewRef.current.scrollTo({ y: 0, animated: false });
       }
-
-      if (noteId && lastLoadedNoteId.current === noteId && !loadingRef.current) {
-        lastLoadedNoteId.current = null;
-        loadAttachments();
-      }
+      // Don't reload attachments on refocus - they're already loaded
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [scrollY, noteId])
   );
@@ -155,6 +180,8 @@ export default function ViewNoteScreen() {
           scrollY={scrollY}
           attachmentsCount={attachments.length}
           showAttachments={showAttachments}
+          isOffline={!isOnline}
+          isTempNote={(noteId as string).startsWith('temp_')}
           onBack={() => router.back()}
           onToggleStar={handleToggleStar}
           onToggleHidden={handleToggleHidden}
@@ -274,6 +301,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   divider: {
+    // @ts-ignore - StyleSheet.hairlineWidth is intentionally used for height (ultra-thin divider)
     height: StyleSheet.hairlineWidth,
     marginHorizontal: 0,
     marginBottom: 2,

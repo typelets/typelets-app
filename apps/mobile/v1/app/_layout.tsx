@@ -7,11 +7,14 @@ import { DarkTheme, DefaultTheme, ThemeProvider as NavigationThemeProvider } fro
 import * as Sentry from '@sentry/react-native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { useEffect } from 'react';
 import { View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { AppWrapper } from '@/src/components/AppWrapper';
 import ErrorBoundary from '@/src/components/ErrorBoundary';
+import { useOrientationLock } from '@/src/hooks/useOrientationLock';
+import { initializeDatabase } from '@/src/lib/database';
 import { ThemeProvider, useTheme } from '@/src/theme';
 
 
@@ -21,7 +24,6 @@ const clerkPublishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY || '';
 function NavigationContent() {
   const theme = useTheme();
 
-  // Create custom navigation theme with app colors
   const customLightTheme = {
     ...DefaultTheme,
     colors: {
@@ -106,6 +108,21 @@ export default Sentry.wrap(function RootLayout() {
     console.log('=== MOBILE V1 APP WITH CLERK ===');
     console.log('Clerk key loaded:', clerkPublishableKey ? 'YES' : 'NO');
   }
+
+  // Lock orientation based on device type (phones: portrait only, tablets: all)
+  useOrientationLock();
+
+  // Initialize SQLite database on app start
+  // Works in Expo Go and custom builds!
+  useEffect(() => {
+    initializeDatabase()
+      .then(() => {
+        console.log('[App] SQLite database initialized - offline caching enabled');
+      })
+      .catch((error) => {
+        console.error('[App] Failed to initialize SQLite database:', error);
+      });
+  }, []);
 
   // If no Clerk key, show error
   if (!clerkPublishableKey) {

@@ -1,12 +1,13 @@
-import { useState, useMemo, useCallback, useRef } from 'react';
-import { Alert } from 'react-native';
-import { useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 import * as Haptics from 'expo-haptics';
-import { useApiService, type Note } from '../services/api';
-import { useTheme } from '../theme';
-import { generateNoteHtml } from '../screens/ViewNote/htmlGenerator';
+import { useRouter } from 'expo-router';
+import { useCallback, useMemo, useRef,useState } from 'react';
+import { Alert } from 'react-native';
+
 import { logger } from '../lib/logger';
+import { generateNoteHtml } from '../screens/ViewNote/htmlGenerator';
+import { type Note,useApiService } from '../services/api';
+import { useTheme } from '../theme';
 
 interface UseViewNoteReturn {
   note: Note | null;

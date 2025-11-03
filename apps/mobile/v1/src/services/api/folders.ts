@@ -1,46 +1,180 @@
 /**
  * Folders API Module
- * Handles all folder-related API operations
+ * Handles all folder-related API operations with offline-first caching
  */
 
+import { isOnline } from '../network/networkManager';
 import { apiCache, CACHE_KEYS, CACHE_TTL } from './cache';
-import { AuthTokenGetter, createHttpClient } from './client';
+import { AuthTokenGetter, createHttpClient, NotModifiedError } from './client';
+import {
+  clearCachedFolders,
+  getCachedFolders,
+  getCacheMetadata,
+  invalidateCache,
+  setCacheMetadata,
+  storeCachedFolders,
+} from './databaseCache';
 import { Folder, FoldersResponse } from './types';
 import { handleApiError } from './utils/errors';
 import { createPaginationParams, fetchAllPagesParallel } from './utils/pagination';
 
 export function createFoldersApi(getToken: AuthTokenGetter) {
-  const { makeRequest } = createHttpClient(getToken);
+  const { makeRequest, makeConditionalRequest } = createHttpClient(getToken);
 
   return {
     /**
-     * Get all folders with parallel pagination (optimized for performance)
-     * Fetches pages in parallel instead of sequentially, eliminating delays
-     * Results are cached for 5 minutes to reduce redundant API calls
+     * Get all folders (offline-first with conditional requests)
+     *
+     * Strategy:
+     * 1. Check local database cache first
+     * 2. Make conditional request with ETag/Last-Modified
+     * 3. If 304 Not Modified - return cached data (cheap!)
+     * 4. If 200 OK - update database and cache metadata
      */
     async getFolders(): Promise<Folder[]> {
       try {
-        // Check cache first
-        const cached = apiCache.get<Folder[]>(CACHE_KEYS.FOLDERS);
-        if (cached) {
-          return cached;
+        const resourceType = 'folders';
+
+        // Step 1: Try to get from local database cache
+        const cachedFolders = await getCachedFolders();
+
+        // Step 2: Get cache metadata for conditional request
+        const cacheMetadata = await getCacheMetadata(resourceType);
+
+        // Step 3: INSTANT RETURN - If we have cached data, return it immediately
+        // Then refresh in background (stale-while-revalidate pattern)
+        if (cachedFolders.length > 0) {
+          if (__DEV__) {
+            console.log(`[API] ⚡ Returning ${cachedFolders.length} cached folders instantly`);
+          }
+
+          // Refresh cache in background (non-blocking)
+          const refreshCache = async () => {
+            // Skip refresh if offline
+            const online = await isOnline();
+            if (!online) {
+              if (__DEV__) {
+                console.log('[API] Device offline - skipping folders background refresh');
+              }
+              return;
+            }
+
+            try {
+              const folders = await fetchAllPagesParallel<FoldersResponse, Folder>(
+                async (page) => {
+                  const params = createPaginationParams(page);
+                  // Use makeConditionalRequest for first page only
+                  if (page === 1 && cacheMetadata) {
+                    const response = await makeConditionalRequest<FoldersResponse>(
+                      `/folders?${params.toString()}`,
+                      {},
+                      { eTag: cacheMetadata.eTag, lastModified: cacheMetadata.lastModified }
+                    );
+
+                    // Store cache metadata from response
+                    await setCacheMetadata(resourceType, response.eTag, response.lastModified, 10); // 10 min TTL
+
+                    return response.data;
+                  }
+
+                  // For subsequent pages, use regular request
+                  return await makeRequest<FoldersResponse>(
+                    `/folders?${params.toString()}`
+                  );
+                },
+                (response) => response.folders || []
+              );
+
+              // Update database cache for next time
+              await storeCachedFolders(folders);
+
+              // Also cache in memory for backward compatibility
+              apiCache.set(CACHE_KEYS.FOLDERS, folders, CACHE_TTL.FOLDERS);
+
+              if (__DEV__) {
+                console.log(`[API] 🔄 Background refresh completed - ${folders.length} folders updated in cache`);
+              }
+            } catch (error) {
+              // Handle 304 Not Modified - cache is already up to date
+              if (error instanceof NotModifiedError) {
+                if (__DEV__) {
+                  console.log(`[API] ✅ Folders cache is up to date (304 Not Modified)`);
+                }
+                return;
+              }
+
+              // Silently fail background refresh - user already has cached data
+              if (__DEV__) {
+                console.log('[API] Folders background refresh failed (cache still valid):', error);
+              }
+            }
+          };
+
+          // Start background refresh (don't await)
+          refreshCache();
+
+          // Return cached data immediately
+          return cachedFolders;
         }
 
-        // Fetch from API if not cached
-        const folders = await fetchAllPagesParallel<FoldersResponse, Folder>(
-          async (page) => {
-            const params = createPaginationParams(page);
-            return await makeRequest<FoldersResponse>(
-              `/folders?${params.toString()}`
-            );
-          },
-          (response) => response.folders || []
-        );
+        // Step 4: No cache available - check if online before fetching
+        const online = await isOnline();
+        if (!online) {
+          if (__DEV__) {
+            console.log('[API] Device offline and no folders cache available - returning empty array');
+          }
+          return [];  // Don't try API when offline - prevents error
+        }
 
-        // Cache the result
-        apiCache.set(CACHE_KEYS.FOLDERS, folders, CACHE_TTL.FOLDERS);
+        try {
+          const folders = await fetchAllPagesParallel<FoldersResponse, Folder>(
+            async (page) => {
+              const params = createPaginationParams(page);
+              // Use makeConditionalRequest for first page only
+              if (page === 1 && cacheMetadata) {
+                const response = await makeConditionalRequest<FoldersResponse>(
+                  `/folders?${params.toString()}`,
+                  {},
+                  { eTag: cacheMetadata.eTag, lastModified: cacheMetadata.lastModified }
+                );
 
-        return folders;
+                // Store cache metadata from response
+                await setCacheMetadata(resourceType, response.eTag, response.lastModified, 10); // 10 min TTL
+
+                return response.data;
+              }
+
+              // For subsequent pages, use regular request
+              return await makeRequest<FoldersResponse>(
+                `/folders?${params.toString()}`
+              );
+            },
+            (response) => response.folders || []
+          );
+
+          // Store folders to database cache
+          await storeCachedFolders(folders);
+
+          // Also cache in memory for backward compatibility
+          apiCache.set(CACHE_KEYS.FOLDERS, folders, CACHE_TTL.FOLDERS);
+
+          if (__DEV__) {
+            console.log(`[API] Fetched ${folders.length} folders from server (first load)`);
+          }
+
+          return folders;
+        } catch (error) {
+          // Handle 304 Not Modified - shouldn't happen on first load
+          if (error instanceof NotModifiedError) {
+            if (__DEV__) {
+              console.log(`[API] Folders not modified (unexpected on first load)`);
+            }
+            return [];
+          }
+
+          // No cache available and API failed
+          throw error;
+        }
       } catch (error) {
         return handleApiError(error, 'getFolders');
       }
@@ -56,8 +190,16 @@ export function createFoldersApi(getToken: AuthTokenGetter) {
           body: JSON.stringify({ name, color, parentId }),
         });
 
-        // Invalidate folders cache
+        // Clear cached folder data from SQLite database
+        await clearCachedFolders();
+
+        // Invalidate both memory and database caches
         apiCache.clear(CACHE_KEYS.FOLDERS);
+        await invalidateCache('folders');
+
+        // Invalidate counts cache since folder structure changed
+        apiCache.clearAll();
+        await invalidateCache('notes');
 
         return folder;
       } catch (error) {
@@ -75,8 +217,16 @@ export function createFoldersApi(getToken: AuthTokenGetter) {
           body: JSON.stringify(updates),
         });
 
-        // Invalidate folders cache
+        // Clear cached folder data from SQLite database
+        await clearCachedFolders();
+
+        // Invalidate both memory and database caches
         apiCache.clear(CACHE_KEYS.FOLDERS);
+        await invalidateCache('folders');
+
+        // Invalidate counts cache since folder structure changed
+        apiCache.clearAll();
+        await invalidateCache('notes');
 
         return folder;
       } catch (error) {
@@ -93,8 +243,16 @@ export function createFoldersApi(getToken: AuthTokenGetter) {
           method: 'DELETE',
         });
 
-        // Invalidate folders cache
+        // Clear cached folder data from SQLite database
+        await clearCachedFolders();
+
+        // Invalidate both memory and database caches
         apiCache.clear(CACHE_KEYS.FOLDERS);
+        await invalidateCache('folders');
+
+        // Invalidate counts cache since folder structure changed
+        apiCache.clearAll();
+        await invalidateCache('notes');
       } catch (error) {
         return handleApiError(error, 'deleteFolder');
       }

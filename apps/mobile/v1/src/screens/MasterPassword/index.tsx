@@ -12,6 +12,8 @@ import { useKeyboardHandler } from './useKeyboardHandler';
 interface MasterPasswordScreenProps {
   userId: string;
   isNewSetup: boolean;
+  loadingStage?: 'securing' | 'caching';
+  cacheMode?: 'encrypted' | 'decrypted';
   onSuccess: (password: string) => Promise<void>;
 }
 
@@ -21,6 +23,8 @@ interface MasterPasswordScreenProps {
  */
 export function MasterPasswordScreen({
   isNewSetup,
+  loadingStage = 'securing',
+  cacheMode = 'encrypted',
   onSuccess,
 }: MasterPasswordScreenProps) {
   const theme = useTheme();
@@ -72,7 +76,11 @@ export function MasterPasswordScreen({
               onSubmit={handleFormSubmit}
             />
           ) : (
-            <LoadingView isNewSetup={isNewSetup} />
+            <LoadingView
+              isNewSetup={isNewSetup}
+              stage={loadingStage}
+              cacheMode={cacheMode}
+            />
           )}
         </ScrollView>
       </Animated.View>

@@ -1,12 +1,14 @@
-import React from 'react';
-import { View, StyleSheet, TouchableOpacity, ActivityIndicator, Text, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Check } from 'lucide-react-native';
+import React from 'react';
+import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 interface EditorHeaderProps {
   isEditing: boolean;
   noteData: unknown;
   isSaving: boolean;
+  isOffline?: boolean;
+  isTempNote?: boolean;
   attachmentsCount?: number;
   showAttachments?: boolean;
   showHeader?: boolean;
@@ -33,8 +35,9 @@ interface EditorHeaderProps {
 }
 export function EditorHeader({
   isEditing,
-  noteData,
   isSaving,
+  isOffline = false,
+  isTempNote = false,
   attachmentsCount = 0,
   showAttachments = false,
   showHeader = true,
@@ -141,8 +144,9 @@ export function EditorHeader({
 
         {isEditing && (
           <TouchableOpacity
-            style={[styles.actionButton, { backgroundColor: theme.colors.muted }]}
+            style={[styles.actionButton, { backgroundColor: theme.colors.muted, opacity: (isOffline && !isTempNote) ? 0.4 : 1 }]}
             onPress={onDelete}
+            disabled={isOffline && !isTempNote}
             hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
           >
             <Ionicons name="trash" size={20} color={theme.colors.mutedForeground} />
@@ -150,13 +154,20 @@ export function EditorHeader({
         )}
 
         <TouchableOpacity
-          style={[styles.actionButton, { backgroundColor: theme.colors.muted, opacity: isSaving ? 0.5 : 1 }]}
+          style={[
+            styles.actionButton,
+            {
+              backgroundColor: theme.colors.muted,
+              opacity: isSaving || (isOffline && isEditing && !isTempNote) ? 0.4 : 1
+            }
+          ]}
           onPress={() => {
-            if (!isSaving) {
+            if (!isSaving && !(isOffline && isEditing && !isTempNote)) {
               onSave();
             }
           }}
-          activeOpacity={isSaving ? 1 : 0.2}
+          disabled={isOffline && isEditing && !isTempNote}
+          activeOpacity={isSaving || (isOffline && isEditing && !isTempNote) ? 1 : 0.2}
           hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
         >
           <View pointerEvents="none">
@@ -181,9 +192,6 @@ const styles = StyleSheet.create({
     paddingTop: 4,
     paddingBottom: 8,
     minHeight: 44,
-  },
-  headerDivider: {
-    height: StyleSheet.hairlineWidth,
   },
   headerButton: {
     width: 34,

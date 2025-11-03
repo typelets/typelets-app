@@ -10,6 +10,8 @@ import {
   unlockWithMasterPassword,
 } from '../lib/encryption';
 import { logger } from '../lib/logger';
+import { getCacheDecryptedContentPreference } from '../lib/preferences';
+import { useApiService } from '../services/api';
 
 // Global function to force all hook instances to refresh
 export function forceGlobalMasterPasswordRefresh() {
@@ -23,6 +25,9 @@ export function useMasterPassword() {
   const [isNewSetup, setIsNewSetup] = useState(false);
   const [isChecking, setIsChecking] = useState(true);
   const [, setLastCheckTime] = useState<number>(0);
+  const [loadingStage, setLoadingStage] = useState<'securing' | 'caching'>('securing');
+  const [cacheMode, setCacheMode] = useState<'encrypted' | 'decrypted'>('encrypted');
+  const api = useApiService();
 
   const userId = user?.id;
 
@@ -38,7 +43,8 @@ export function useMasterPassword() {
 
   const checkMasterPasswordStatus = useCallback(async () => {
     if (!userLoaded || !userId || !isSignedIn) {
-      setIsChecking(true);
+      // Not checking anything when no user - should show sign in screen
+      setIsChecking(false);
       setNeedsUnlock(true); // Assume locked when no user
       return;
     }
@@ -88,6 +94,10 @@ export function useMasterPassword() {
   useEffect(() => {
     if (isSignedIn && userLoaded && userId) {
       checkMasterPasswordStatus();
+    } else {
+      // User is not signed in - stop checking immediately
+      setIsChecking(false);
+      setNeedsUnlock(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isSignedIn, userLoaded, userId]);
@@ -111,6 +121,9 @@ export function useMasterPassword() {
     }
 
     try {
+      // Stage 1: Securing (PBKDF2 key derivation)
+      setLoadingStage('securing');
+
       if (isNewSetup) {
         // Setting up new master password
         await setupMasterPassword(password, userId);
@@ -133,7 +146,60 @@ export function useMasterPassword() {
         });
       }
 
-      // Successfully authenticated - update state
+      // Stage 2: Caching (prefetch notes and folders)
+      setLoadingStage('caching');
+
+      // Check cache mode preference
+      const cacheDecrypted = await getCacheDecryptedContentPreference();
+      setCacheMode(cacheDecrypted ? 'decrypted' : 'encrypted');
+
+      if (__DEV__) {
+        console.log(`[PREFETCH] Starting prefetch with ${cacheDecrypted ? 'DECRYPTED' : 'ENCRYPTED'} cache mode`);
+      }
+
+      try {
+        const prefetchStart = performance.now();
+
+        // Prefetch folders first (faster)
+        if (__DEV__) console.log('[PREFETCH] Step 1: Fetching folders...');
+        await api.getFolders();
+        if (__DEV__) console.log('[PREFETCH] Step 1 complete: Folders fetched');
+
+        // Then prefetch notes (slower)
+        if (__DEV__) console.log('[PREFETCH] Step 2: Fetching notes...');
+
+        // Add 15 second timeout for notes fetch
+        // IMPORTANT: Skip background refresh during prefetch to prevent hanging
+        const notesFetchPromise = api.getNotes({}, { skipBackgroundRefresh: true });
+        const timeoutPromise = new Promise<never>((_, reject) => {
+          setTimeout(() => reject(new Error('Notes fetch timeout after 15 seconds')), 15000);
+        });
+
+        await Promise.race([notesFetchPromise, timeoutPromise]);
+        if (__DEV__) console.log('[PREFETCH] Step 2 complete: Notes fetched');
+
+        const prefetchEnd = performance.now();
+        if (__DEV__) {
+          console.log(`[PREFETCH] ✅ Completed in ${(prefetchEnd - prefetchStart).toFixed(2)}ms - cache ready!`);
+        }
+
+        logger.recordEvent('notes_prefetch_completed', {
+          durationMs: prefetchEnd - prefetchStart,
+          cacheMode: cacheDecrypted ? 'decrypted' : 'encrypted',
+        });
+      } catch (error) {
+        // Log error but continue - user can still use app, they'll just fetch on demand
+        if (__DEV__) {
+          console.error('[PREFETCH] Failed to prefetch notes (non-critical):', error);
+        }
+        logger.warn('[PREFETCH] Failed to prefetch notes', {
+          attributes: {
+            error: error instanceof Error ? error.message : 'Unknown error',
+          },
+        });
+      }
+
+      // Successfully authenticated and cached - update state
       setNeedsUnlock(false);
       setIsNewSetup(false);
       setIsChecking(false);
@@ -162,6 +228,8 @@ export function useMasterPassword() {
     isNewSetup,
     isChecking,
     userId,
+    loadingStage,
+    cacheMode,
     onPasswordSuccess,
     signOut,
     refreshStatus: checkMasterPasswordStatus,
