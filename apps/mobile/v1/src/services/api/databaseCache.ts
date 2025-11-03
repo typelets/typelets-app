@@ -448,15 +448,22 @@ export async function clearCachedFolders(): Promise<void> {
  * Called when clearing all caches from settings
  * IMPORTANT: Preserves unsynced notes to prevent data loss
  */
-export async function clearCachedNotes(): Promise<void> {
+export async function clearCachedNotes(clearAll = false): Promise<void> {
   try {
     const db = getDatabase();
 
-    // Only delete synced notes to preserve unsynced offline changes
-    await db.runAsync(`DELETE FROM notes WHERE is_synced = 1`);
-
-    if (__DEV__) {
-      console.log('[DatabaseCache] Cleared synced cached notes (preserved unsynced notes)');
+    if (clearAll) {
+      // Clear ALL notes (used when user manually clears cache)
+      await db.runAsync(`DELETE FROM notes`);
+      if (__DEV__) {
+        console.log('[DatabaseCache] Cleared ALL cached notes (including unsynced)');
+      }
+    } else {
+      // Only delete synced notes to preserve unsynced offline changes
+      await db.runAsync(`DELETE FROM notes WHERE is_synced = 1`);
+      if (__DEV__) {
+        console.log('[DatabaseCache] Cleared synced cached notes (preserved unsynced notes)');
+      }
     }
   } catch (error) {
     if (error instanceof Error && error.message.includes('Database not initialized')) {

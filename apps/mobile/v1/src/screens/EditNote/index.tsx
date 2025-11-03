@@ -3,7 +3,7 @@ import * as Haptics from 'expo-haptics';
 import { useLocalSearchParams,useRouter } from 'expo-router';
 import { Code,Quote, Redo, Undo } from 'lucide-react-native';
 import React, { useEffect, useMemo,useRef, useState } from 'react';
-import { Alert, Keyboard,ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, DeviceEventEmitter,Keyboard,ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Editor, type EditorColors,type EditorRef } from '@/editor/src';
@@ -160,6 +160,9 @@ export default function EditNoteScreen() {
         logger.info('[NOTE] Note updated successfully', {
           attributes: { noteId: currentNoteId, title: titleToUse }
         });
+
+        // Emit event for optimistic UI update in notes list
+        DeviceEventEmitter.emit('noteUpdated', savedNote);
       } else {
         logger.info('[NOTE] Creating new note', {
           attributes: { title: titleToUse, contentLength: htmlContent.length, folderId: folderId as string | undefined }
@@ -178,6 +181,9 @@ export default function EditNoteScreen() {
         logger.info('[NOTE] Note created successfully', {
           attributes: { noteId: savedNote.id, title: titleToUse }
         });
+
+        // Emit event for optimistic UI update in notes list
+        DeviceEventEmitter.emit('noteCreated', savedNote);
       }
 
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -270,6 +276,9 @@ export default function EditNoteScreen() {
               logger.info('[NOTE] Note deleted successfully', {
                 attributes: { noteId: noteId as string }
               });
+
+              // Emit event for optimistic UI update in notes list
+              DeviceEventEmitter.emit('noteDeleted', noteId as string);
 
               // Navigate back to the folder/notes list, skipping the view-note screen
               if (router.canGoBack()) {

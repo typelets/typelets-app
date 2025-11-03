@@ -163,7 +163,7 @@ export default function SettingsScreen({ onLogout }: Props) {
 
               // Clear SQLite cached data
               await clearCachedFolders();
-              await clearCachedNotes();
+              await clearCachedNotes(true); // Clear ALL notes including unsynced
               await clearAllCacheMetadata();
 
               // Clear decrypted cache
@@ -202,7 +202,7 @@ export default function SettingsScreen({ onLogout }: Props) {
 
               // Clear SQLite cached data
               await clearCachedFolders();
-              await clearCachedNotes();
+              await clearCachedNotes(true); // Clear ALL notes including unsynced
               await clearAllCacheMetadata();
 
               // Clear decrypted cache

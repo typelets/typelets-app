@@ -42,18 +42,26 @@ export function createNotesApi(getToken: AuthTokenGetter, getUserId: () => strin
     // Invalidate database cache metadata so next fetch will get fresh data
     await invalidateCache('notes');
 
-    // Clear cached notes from SQLite, but preserve unsynced temp notes
-    // This ensures next fetch shows updated notes while keeping offline edits
-    try {
-      const db = getDatabase();
-      // Only delete synced notes (is_synced = 1) to preserve temp/unsynced notes
-      await db.runAsync('DELETE FROM notes WHERE is_synced = 1');
-      if (__DEV__) {
-        console.log('[API] Cleared synced cached notes from database (preserved unsynced temp notes)');
+    // Only clear cached notes when ONLINE - offline we need to keep them
+    // because we can't refetch them
+    if (navigator.onLine) {
+      // Clear cached notes from SQLite, but preserve unsynced temp notes
+      // This ensures next fetch shows updated notes while keeping offline edits
+      try {
+        const db = getDatabase();
+        // Only delete synced notes (is_synced = 1) to preserve temp/unsynced notes
+        await db.runAsync('DELETE FROM notes WHERE is_synced = 1');
+        if (__DEV__) {
+          console.log('[API] Cleared synced cached notes from database (preserved unsynced temp notes)');
+        }
+      } catch (error) {
+        if (__DEV__) {
+          console.error('[API] Failed to clear cached notes:', error);
+        }
       }
-    } catch (error) {
+    } else {
       if (__DEV__) {
-        console.error('[API] Failed to clear cached notes:', error);
+        console.log('[API] Skipped clearing cached notes - offline mode');
       }
     }
   };
@@ -376,6 +384,37 @@ export function createNotesApi(getToken: AuthTokenGetter, getUserId: () => strin
                 },
                 (response) => response.notes || []
               );
+
+              // IMPORTANT: Clear old cached notes matching this filter before storing new ones
+              // This ensures deleted notes on server are removed from cache
+              try {
+                const db = getDatabase();
+                if (params?.deleted !== undefined) {
+                  await db.runAsync('DELETE FROM notes WHERE deleted = ?', [params.deleted ? 1 : 0]);
+                  if (__DEV__) {
+                    console.log(`[API] Cleared cached notes with deleted=${params.deleted} before refresh`);
+                  }
+                } else if (params?.archived !== undefined) {
+                  await db.runAsync('DELETE FROM notes WHERE archived = ? AND deleted = 0', [params.archived ? 1 : 0]);
+                  if (__DEV__) {
+                    console.log(`[API] Cleared cached notes with archived=${params.archived} before refresh`);
+                  }
+                } else if (params?.starred !== undefined) {
+                  await db.runAsync('DELETE FROM notes WHERE starred = ? AND deleted = 0 AND archived = 0', [params.starred ? 1 : 0]);
+                  if (__DEV__) {
+                    console.log(`[API] Cleared cached notes with starred=${params.starred} before refresh`);
+                  }
+                } else if (params?.folderId !== undefined) {
+                  await db.runAsync('DELETE FROM notes WHERE folder_id = ? AND deleted = 0', [params.folderId]);
+                  if (__DEV__) {
+                    console.log(`[API] Cleared cached notes in folder ${params.folderId} before refresh`);
+                  }
+                }
+              } catch (error) {
+                if (__DEV__) {
+                  console.error('[API] Failed to clear filtered cached notes:', error);
+                }
+              }
 
               // Check if user wants decrypted content cached for instant loading
               const cacheDecrypted = await getCacheDecryptedContentPreference();
@@ -982,6 +1021,19 @@ export function createNotesApi(getToken: AuthTokenGetter, getUserId: () => strin
         const result = await makeRequest<EmptyTrashResponse>('/notes/empty-trash', {
           method: 'DELETE',
         });
+
+        // Delete all deleted notes from SQLite cache
+        try {
+          const db = getDatabase();
+          await db.runAsync('DELETE FROM notes WHERE deleted = 1');
+          if (__DEV__) {
+            console.log('[API] Cleared deleted notes from cache after empty trash');
+          }
+        } catch (error) {
+          if (__DEV__) {
+            console.error('[API] Failed to clear deleted notes from cache:', error);
+          }
+        }
 
         // Invalidate counts cache
         invalidateCountsCache();

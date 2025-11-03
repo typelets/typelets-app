@@ -4,7 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import React, { useCallback,useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Animated, FlatList, RefreshControl, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Alert, Animated, DeviceEventEmitter,FlatList, RefreshControl, StyleSheet, View } from 'react-native';
 
 import { type Folder, type Note, useApiService } from '@/src/services/api';
 import { useTheme } from '@/src/theme';
@@ -87,9 +87,63 @@ export default function NotesList({ navigation, route, renderHeader, scrollY: pa
   const localScrollY = useRef(new Animated.Value(0)).current;
   const scrollY = parentScrollY || localScrollY;
 
+  // Track last optimistic update to prevent immediate reload from overwriting it
+  const lastOptimisticUpdateRef = useRef<number>(0);
+
+  // Listen for note creation/update/delete events for optimistic UI updates
+  useEffect(() => {
+    const createdSubscription = DeviceEventEmitter.addListener('noteCreated', (note: Note) => {
+      // Optimistically add the note to the list immediately
+      setNotes(prevNotes => {
+        // Check if note already exists (avoid duplicates)
+        if (prevNotes.some(n => n.id === note.id)) {
+          return prevNotes;
+        }
+        // Add note to the beginning of the list
+        return [note, ...prevNotes];
+      });
+      // Track that we just did an optimistic update
+      lastOptimisticUpdateRef.current = Date.now();
+    });
+
+    const updatedSubscription = DeviceEventEmitter.addListener('noteUpdated', (note: Note) => {
+      // Optimistically update the note in the list immediately
+      setNotes(prevNotes => {
+        return prevNotes.map(n => n.id === note.id ? note : n);
+      });
+      // Track that we just did an optimistic update
+      lastOptimisticUpdateRef.current = Date.now();
+    });
+
+    const deletedSubscription = DeviceEventEmitter.addListener('noteDeleted', (noteId: string) => {
+      // Optimistically remove the note from the list immediately
+      setNotes(prevNotes => {
+        return prevNotes.filter(n => n.id !== noteId);
+      });
+      // Track that we just did an optimistic update
+      lastOptimisticUpdateRef.current = Date.now();
+    });
+
+    return () => {
+      createdSubscription.remove();
+      updatedSubscription.remove();
+      deletedSubscription.remove();
+    };
+  }, [setNotes]);
+
   // Load notes when screen focuses or params change
   useFocusEffect(
     React.useCallback(() => {
+      // Skip reload if we just did an optimistic update (within 500ms)
+      const timeSinceOptimisticUpdate = Date.now() - lastOptimisticUpdateRef.current;
+      if (timeSinceOptimisticUpdate < 500) {
+        if (__DEV__) {
+          console.log('[NotesList] Skipping reload - just did optimistic update');
+        }
+        loadViewMode();
+        return;
+      }
+
       loadNotes();
       loadViewMode();
       // Reset scroll position when screen comes into focus
@@ -136,9 +190,32 @@ export default function NotesList({ navigation, route, renderHeader, scrollY: pa
           text: 'Empty Trash',
           style: 'destructive',
           onPress: async () => {
+            // Save current notes in case we need to restore on error
+            const previousNotes = [...notes];
+
             try {
+              if (__DEV__) {
+                console.log(`[NotesList] Empty trash - clearing ${deletedNotes.length} notes optimistically`);
+              }
+
+              // Optimistically clear all deleted notes from the list immediately
+              setNotes(prevNotes => {
+                const filtered = prevNotes.filter(n => !n.deleted);
+                if (__DEV__) {
+                  console.log(`[NotesList] After filter: ${prevNotes.length} -> ${filtered.length} notes`);
+                }
+                return filtered;
+              });
+              lastOptimisticUpdateRef.current = Date.now();
+
               // Empty the trash using the API
+              if (__DEV__) {
+                console.log(`[NotesList] Calling api.emptyTrash()`);
+              }
               const result = await api.emptyTrash();
+              if (__DEV__) {
+                console.log(`[NotesList] api.emptyTrash() completed - ${result.deletedCount} deleted`);
+              }
 
               // Navigate to main folders screen
               router.replace('/');
@@ -148,6 +225,8 @@ export default function NotesList({ navigation, route, renderHeader, scrollY: pa
                 Alert.alert('Success', `${result.deletedCount} notes permanently deleted.`);
               }, 300);
             } catch (error) {
+              // Restore notes on error
+              setNotes(previousNotes);
               if (__DEV__) console.error('Failed to empty trash:', error);
               Alert.alert('Error', 'Failed to empty trash. Please try again.');
             }
