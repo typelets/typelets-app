@@ -387,29 +387,40 @@ export function createNotesApi(getToken: AuthTokenGetter, getUserId: () => strin
 
               // IMPORTANT: Clear old cached notes matching this filter before storing new ones
               // This ensures deleted notes on server are removed from cache
+              // Only clear when viewing a SPECIFIC category (not when filtering)
               try {
                 const db = getDatabase();
-                if (params?.deleted !== undefined) {
-                  await db.runAsync('DELETE FROM notes WHERE deleted = ?', [params.deleted ? 1 : 0]);
-                  if (__DEV__) {
-                    console.log(`[API] Cleared cached notes with deleted=${params.deleted} before refresh`);
-                  }
-                } else if (params?.archived !== undefined) {
-                  await db.runAsync('DELETE FROM notes WHERE archived = ? AND deleted = 0', [params.archived ? 1 : 0]);
-                  if (__DEV__) {
-                    console.log(`[API] Cleared cached notes with archived=${params.archived} before refresh`);
-                  }
-                } else if (params?.starred !== undefined) {
-                  await db.runAsync('DELETE FROM notes WHERE starred = ? AND deleted = 0 AND archived = 0', [params.starred ? 1 : 0]);
-                  if (__DEV__) {
-                    console.log(`[API] Cleared cached notes with starred=${params.starred} before refresh`);
-                  }
-                } else if (params?.folderId !== undefined) {
-                  await db.runAsync('DELETE FROM notes WHERE folder_id = ? AND deleted = 0', [params.folderId]);
+
+                // Check most specific condition first (folderId)
+                if (params?.folderId !== undefined) {
+                  // Folder view - only clear notes in this specific folder
+                  await db.runAsync('DELETE FROM notes WHERE folder_id = ? AND deleted = 0 AND archived = 0', [params.folderId]);
                   if (__DEV__) {
                     console.log(`[API] Cleared cached notes in folder ${params.folderId} before refresh`);
                   }
                 }
+                // Only clear when flag is TRUE (viewing that category), not FALSE (filtering)
+                else if (params?.deleted === true) {
+                  // Trash view - clear all deleted notes
+                  await db.runAsync('DELETE FROM notes WHERE deleted = 1');
+                  if (__DEV__) {
+                    console.log(`[API] Cleared cached trash notes before refresh`);
+                  }
+                } else if (params?.archived === true) {
+                  // Archived view - clear all archived notes
+                  await db.runAsync('DELETE FROM notes WHERE archived = 1 AND deleted = 0');
+                  if (__DEV__) {
+                    console.log(`[API] Cleared cached archived notes before refresh`);
+                  }
+                } else if (params?.starred === true) {
+                  // Starred view - clear all starred notes
+                  await db.runAsync('DELETE FROM notes WHERE starred = 1 AND deleted = 0 AND archived = 0');
+                  if (__DEV__) {
+                    console.log(`[API] Cleared cached starred notes before refresh`);
+                  }
+                }
+                // For "All Notes" view (deleted: false, archived: false, no folderId),
+                // don't clear anything - just let INSERT OR REPLACE update existing notes
               } catch (error) {
                 if (__DEV__) {
                   console.error('[API] Failed to clear filtered cached notes:', error);

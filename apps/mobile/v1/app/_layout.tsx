@@ -13,6 +13,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { AppWrapper } from '@/src/components/AppWrapper';
 import ErrorBoundary from '@/src/components/ErrorBoundary';
+import { useOrientationLock } from '@/src/hooks/useOrientationLock';
 import { initializeDatabase } from '@/src/lib/database';
 import { ThemeProvider, useTheme } from '@/src/theme';
 
@@ -107,6 +108,9 @@ export default Sentry.wrap(function RootLayout() {
     console.log('=== MOBILE V1 APP WITH CLERK ===');
     console.log('Clerk key loaded:', clerkPublishableKey ? 'YES' : 'NO');
   }
+
+  // Lock orientation based on device type (phones: portrait only, tablets: all)
+  useOrientationLock();
 
   // Initialize SQLite database on app start
   // Works in Expo Go and custom builds!
