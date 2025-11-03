@@ -1,3 +1,10 @@
+## [1.32.4](https://github.com/typelets/typelets-app/compare/v1.32.3...v1.32.4) (2025-11-03)
+
+
+### Bug Fixes
+
+* **mobile:** implement optimistic UI updates and fix cache staleness issues ([8aeeaa1](https://github.com/typelets/typelets-app/commit/8aeeaa13e7a7d7889380838263ebb51cb9a0ce8d))
+
 ## [1.32.3](https://github.com/typelets/typelets-app/compare/v1.32.2...v1.32.3) (2025-11-03)
 
 
