@@ -37,6 +37,7 @@ import { StatusBar } from '@/components/editor/Editor/StatusBar';
 import { useEditorState } from '@/components/editor/hooks/useEditorState';
 import { useEditorEffects } from '@/components/editor/hooks/useEditorEffects';
 import { fileService } from '@/services/fileService';
+import DiagramEditor from '@/components/diagrams/DiagramEditor';
 import type { Note, Folder as FolderType, FileAttachment } from '@/types/note';
 import type { WebSocketStatus } from '@/types/websocket';
 
@@ -603,6 +604,46 @@ export default function Index({
 
   if (!note) {
     return <EmptyState />;
+  }
+
+  // Show diagram editor if this is a diagram note
+  if (note.type === 'diagram') {
+    const handleUpdateDiagram = async (code: string, title: string) => {
+      // Only update if content or title actually changed
+      if (code !== note.content || title !== note.title) {
+        await onUpdateNote(note.id, { content: code, title });
+      }
+    };
+
+    const handleMoveNoteDiagram = (noteId: string, updates: { folderId: string | null }) => {
+      onUpdateNote(noteId, updates);
+    };
+
+    return (
+      <DiagramEditor
+        noteId={note.id}
+        initialCode={note.content}
+        initialTitle={note.title}
+        createdAt={note.createdAt}
+        updatedAt={note.updatedAt}
+        starred={note.starred}
+        hidden={note.hidden}
+        folders={folders}
+        folderId={note.folderId}
+        onSave={handleUpdateDiagram}
+        onToggleStar={onToggleStar}
+        starringStar={starringStar}
+        onHideNote={onHideNote}
+        onUnhideNote={onUnhideNote}
+        hidingNote={hidingNote}
+        onRefreshNote={onRefreshNote}
+        onArchiveNote={onArchiveNote}
+        onDeleteNote={onDeleteNote}
+        onMoveNote={handleMoveNoteDiagram}
+        onToggleNotesPanel={onToggleNotesPanel}
+        isNotesPanelOpen={isNotesPanelOpen}
+      />
+    );
   }
 
   const currentFolder = getCurrentFolder();

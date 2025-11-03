@@ -83,6 +83,32 @@ export default function MainLayout() {
     [createNote, filesPanelOpen]
   );
 
+  const handleCreateDiagram = useCallback(async (templateCode?: string) => {
+    try {
+      // Use provided template code or default template
+      const defaultDiagramCode = `graph TD
+    A[Start] --> B{Is it working?}
+    B -->|Yes| C[Great!]
+    B -->|No| D[Debug]
+    D --> B
+    C --> E[End]`;
+
+      const content = templateCode || defaultDiagramCode;
+
+      await createNote(undefined, {
+        title: 'Untitled Diagram',
+        content,
+        type: 'diagram'
+      });
+
+      if (!filesPanelOpen) setFilesPanelOpen(true);
+    } catch (error) {
+      console.error('Failed to create diagram:', error);
+    }
+  }, [createNote, filesPanelOpen]);
+
+
+
   const handleEmptyTrash = useCallback(async () => {
     try {
       // Clear selected note if it's in trash, regardless of current view
@@ -233,6 +259,7 @@ export default function MainLayout() {
     onSelectNote: handleSelectNote,
     onToggleStar: toggleStar,
     onCreateNote: handleCreateNote,
+    onCreateDiagram: handleCreateDiagram,
     onToggleFolderPanel: handleToggleFolderPanel,
     onEmptyTrash: handleEmptyTrash,
     creatingNote,

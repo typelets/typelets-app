@@ -38,6 +38,7 @@ export interface ApiNote {
   createdAt: string;
   updatedAt: string;
   attachmentCount?: number;
+  type?: 'note' | 'diagram';
 }
 
 export interface ApiFolder {
@@ -358,6 +359,7 @@ class ClerkEncryptedApiService {
     folderId?: string | null;
     starred?: boolean;
     tags?: string[];
+    type?: 'note' | 'diagram';
   }): Promise<ApiNote> {
     const title = noteData.title ?? 'Untitled';
     const content = noteData.content ?? '';
