@@ -14,6 +14,7 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { ButtonGroup } from '@/components/ui/button-group';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -80,6 +81,7 @@ interface NoteEditorProps {
   userId?: string;
   isNotesPanelOpen?: boolean;
   onToggleNotesPanel?: () => void;
+  onDirtyChange?: (isDirty: boolean) => void;
   // WebSocket sync status props (optional)
   wsStatus?: WebSocketStatus;
   wsIsAuthenticated?: boolean;
@@ -104,6 +106,7 @@ export default function Index({
   userId = 'current-user',
   isNotesPanelOpen,
   onToggleNotesPanel,
+  onDirtyChange,
   wsStatus,
   wsIsAuthenticated,
   wsLastSync,
@@ -385,6 +388,21 @@ export default function Index({
     }
   }, [note?.id, note?.title]);
 
+  // Track dirty state and notify parent
+  useEffect(() => {
+    if (!note || !editor) {
+      onDirtyChange?.(false);
+      return;
+    }
+
+    const currentContent = editor.getHTML();
+    const isDirty =
+      currentContent !== note.content ||
+      localTitle !== note.title;
+
+    onDirtyChange?.(isDirty);
+  }, [note, editor, localTitle, onDirtyChange]);
+
   const saveTitleToServer = useCallback(
     (title: string) => {
       if (!note || title === note.title) return;
@@ -643,6 +661,7 @@ export default function Index({
         onMoveNote={handleMoveNoteDiagram}
         onToggleNotesPanel={onToggleNotesPanel}
         isNotesPanelOpen={isNotesPanelOpen}
+        onDirtyChange={onDirtyChange}
       />
     );
   }
@@ -771,6 +790,7 @@ export default function Index({
         onMoveNote={handleMoveNoteCode}
         onToggleNotesPanel={onToggleNotesPanel}
         isNotesPanelOpen={isNotesPanelOpen}
+        onDirtyChange={onDirtyChange}
       />
     );
   }
@@ -812,9 +832,9 @@ export default function Index({
             </div>
 
             <div className="flex flex-shrink-0 items-center gap-2">
-              <div className="relative">
+              <div className="relative mr-2">
                 <Button
-                  variant="ghost"
+                  variant="outline"
                   size="sm"
                   onClick={() => setShowAttachments(!showAttachments)}
                   className={
@@ -837,101 +857,104 @@ export default function Index({
                 </span>
               </div>
 
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => onToggleStar(note.id)}
-                className={
-                  note.starred ? 'text-yellow-500' : 'text-muted-foreground'
-                }
-                title={note.starred ? 'Remove from starred' : 'Add to starred'}
-                disabled={starringStar}
-              >
-                {starringStar ? (
-                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                ) : (
-                  <Star
-                    className={`h-4 w-4 ${note.starred ? 'fill-current' : ''}`}
-                  />
-                )}
-              </Button>
+              <ButtonGroup>
 
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() =>
-                  note.hidden ? onUnhideNote(note.id) : onHideNote(note.id)
-                }
-                className={
-                  note.hidden ? 'text-primary' : 'text-muted-foreground'
-                }
-                title={note.hidden ? 'Unhide note' : 'Hide note'}
-                disabled={hidingNote}
-              >
-                {hidingNote ? (
-                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                ) : note.hidden ? (
-                  <EyeOff className="h-4 w-4" />
-                ) : (
-                  <Eye className="h-4 w-4" />
-                )}
-              </Button>
-
-              {onRefreshNote && (
                 <Button
-                  variant="ghost"
+                  variant="outline"
                   size="sm"
-                  onClick={async () => {
-                    setIsRefreshing(true);
-                    try {
-                      await onRefreshNote(note.id);
-                    } finally {
-                      setIsRefreshing(false);
-                    }
-                  }}
-                  className="text-muted-foreground"
-                  title="Refresh note from server"
-                  disabled={isRefreshing}
+                  onClick={() => onToggleStar(note.id)}
+                  className={
+                    note.starred ? 'text-yellow-500' : 'text-muted-foreground'
+                  }
+                  title={note.starred ? 'Remove from starred' : 'Add to starred'}
+                  disabled={starringStar}
                 >
-                  <RefreshCw
-                    className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`}
-                  />
+                  {starringStar ? (
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                  ) : (
+                    <Star
+                      className={`h-4 w-4 ${note.starred ? 'fill-current' : ''}`}
+                    />
+                  )}
                 </Button>
-              )}
 
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm">
-                    <MoreHorizontal className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => onToggleStar(note.id)}>
-                    <Star className="mr-2 h-4 w-4" />
-                    {note.starred ? 'Unstar' : 'Star'}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setIsMoveModalOpen(true)}>
-                    <FolderInput className="mr-2 h-4 w-4" />
-                    Move
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handlePrint}>
-                    <Printer className="mr-2 h-4 w-4" />
-                    Print
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => onArchiveNote(note.id)}>
-                    <Archive className="mr-2 h-4 w-4" />
-                    Archive
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={() => onDeleteNote(note.id)}
-                    className="text"
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    note.hidden ? onUnhideNote(note.id) : onHideNote(note.id)
+                  }
+                  className={
+                    note.hidden ? 'text-primary' : 'text-muted-foreground'
+                  }
+                  title={note.hidden ? 'Unhide note' : 'Hide note'}
+                  disabled={hidingNote}
+                >
+                  {hidingNote ? (
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                  ) : note.hidden ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </Button>
+
+                {onRefreshNote && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={async () => {
+                      setIsRefreshing(true);
+                      try {
+                        await onRefreshNote(note.id);
+                      } finally {
+                        setIsRefreshing(false);
+                      }
+                    }}
+                    className="text-muted-foreground"
+                    title="Refresh note from server"
+                    disabled={isRefreshing}
                   >
-                    <Trash2 className="mr-2 h-4 w-4" />
-                    Trash
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+                    <RefreshCw
+                      className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`}
+                    />
+                  </Button>
+                )}
+
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm">
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => onToggleStar(note.id)}>
+                      <Star className="mr-2 h-4 w-4" />
+                      {note.starred ? 'Unstar' : 'Star'}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setIsMoveModalOpen(true)}>
+                      <FolderInput className="mr-2 h-4 w-4" />
+                      Move
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handlePrint}>
+                      <Printer className="mr-2 h-4 w-4" />
+                      Print
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => onArchiveNote(note.id)}>
+                      <Archive className="mr-2 h-4 w-4" />
+                      Archive
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={() => onDeleteNote(note.id)}
+                      className="text"
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Trash
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </ButtonGroup>
             </div>
           </div>
 

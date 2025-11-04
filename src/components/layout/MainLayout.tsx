@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { MasterPasswordDialog } from '@/components/password/MasterPasswordDialog';
 import { MobileLayout } from './MobileLayout';
 import { DesktopLayout } from './DesktopLayout';
+import type { Tab } from './TabBar';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import {
   useResponsiveFolderPanel,
@@ -27,6 +28,10 @@ export default function MainLayout() {
   const responsiveNotesPanel = useResponsiveNotesPanel(!isMobile);
   const [folderSidebarOpen, setFolderSidebarOpen] = useState(!isMobile);
   const [filesPanelOpen, setFilesPanelOpen] = useState(!isMobile);
+
+  // Tab state management
+  const [openTabs, setOpenTabs] = useState<Tab[]>([]);
+  const [activeTabId, setActiveTabId] = useState<string | null>(null);
 
   // Sync responsive panel states with local states for desktop
   useEffect(() => {
@@ -168,14 +173,90 @@ export default function MainLayout() {
 
   const handleSelectNote = useCallback(
     (note: Note) => {
-      setSelectedNote(note);
+      // Check if tab already exists for this note
+      const existingTab = openTabs.find(t => t.noteId === note.id);
+
+      if (existingTab) {
+        // Tab already open, just switch to it
+        setActiveTabId(existingTab.id);
+        setSelectedNote(note);
+      } else {
+        // Open in new tab
+        const newTab: Tab = {
+          id: `tab-${note.id}-${Date.now()}`,
+          noteId: note.id,
+          title: note.title || 'Untitled',
+          type: note.type || 'note',
+          isDirty: false,
+        };
+        setOpenTabs(prev => [...prev, newTab]);
+        setActiveTabId(newTab.id);
+        setSelectedNote(note);
+      }
+
       if (isMobile) {
         setFolderSidebarOpen(false);
         setFilesPanelOpen(false);
       }
     },
-    [isMobile, setSelectedNote]
+    [isMobile, openTabs, setSelectedNote]
   );
+
+  const handleTabClick = useCallback((tabId: string) => {
+    const tab = openTabs.find(t => t.id === tabId);
+    if (tab) {
+      setActiveTabId(tabId);
+      const note = notes.find(n => n.id === tab.noteId);
+      if (note) {
+        setSelectedNote(note);
+      }
+    }
+  }, [openTabs, notes, setSelectedNote]);
+
+  const handleTabClose = useCallback((tabId: string) => {
+    // No warning needed - autosave handles saving changes
+    const tabIndex = openTabs.findIndex(t => t.id === tabId);
+    const newTabs = openTabs.filter(t => t.id !== tabId);
+    setOpenTabs(newTabs);
+
+    // Switch to adjacent tab if closing active tab
+    if (tabId === activeTabId) {
+      const newActiveTab = newTabs[tabIndex - 1] || newTabs[0];
+      if (newActiveTab) {
+        setActiveTabId(newActiveTab.id);
+        const note = notes.find(n => n.id === newActiveTab.noteId);
+        if (note) {
+          setSelectedNote(note);
+        }
+      } else {
+        setActiveTabId(null);
+        setSelectedNote(null);
+      }
+    }
+  }, [openTabs, activeTabId, notes, setSelectedNote]);
+
+  const handleDirtyChange = useCallback((isDirty: boolean) => {
+    if (!selectedNote) return;
+
+    setOpenTabs(tabs =>
+      tabs.map(tab =>
+        tab.noteId === selectedNote.id ? { ...tab, isDirty } : tab
+      )
+    );
+  }, [selectedNote]);
+
+  // Update tab title when note title changes
+  useEffect(() => {
+    if (!selectedNote?.id) return;
+
+    setOpenTabs(tabs =>
+      tabs.map(tab =>
+        tab.noteId === selectedNote.id
+          ? { ...tab, title: selectedNote.title || 'Untitled', type: selectedNote.type || 'note' }
+          : tab
+      )
+    );
+  }, [selectedNote]);
 
   const handlePasswordChange = useCallback(() => {
     setSelectedNote(null);
@@ -293,6 +374,7 @@ export default function MainLayout() {
     userId,
     isNotesPanelOpen: filesPanelOpen,
     onToggleNotesPanel: handleToggleNotesPanel,
+    onDirtyChange: handleDirtyChange,
     // BACKLOG: WebSocket moved to upcoming release
     // wsStatus: webSocket.status,
     // wsIsAuthenticated: webSocket.isAuthenticated,
@@ -351,6 +433,10 @@ export default function MainLayout() {
       folderPanelProps={folderPanelProps}
       filesPanelProps={filesPanelProps}
       editorProps={editorProps}
+      openTabs={openTabs}
+      activeTabId={activeTabId}
+      onTabClick={handleTabClick}
+      onTabClose={handleTabClose}
     />
   );
 }

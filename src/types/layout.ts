@@ -65,6 +65,7 @@ export interface EditorProps {
   userId?: string;
   isNotesPanelOpen?: boolean;
   onToggleNotesPanel?: () => void;
+  onDirtyChange?: (isDirty: boolean) => void;
   wsStatus?: WebSocketStatus;
   wsIsAuthenticated?: boolean;
   wsLastSync?: number | null;
