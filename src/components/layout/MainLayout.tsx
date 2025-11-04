@@ -85,15 +85,8 @@ export default function MainLayout() {
 
   const handleCreateDiagram = useCallback(async (templateCode?: string) => {
     try {
-      // Use provided template code or default template
-      const defaultDiagramCode = `graph TD
-    A[Start] --> B{Is it working?}
-    B -->|Yes| C[Great!]
-    B -->|No| D[Debug]
-    D --> B
-    C --> E[End]`;
-
-      const content = templateCode || defaultDiagramCode;
+      // If templateCode is provided, use it; otherwise create blank diagram
+      const content = templateCode || '';
 
       await createNote(undefined, {
         title: 'Untitled Diagram',
@@ -107,7 +100,26 @@ export default function MainLayout() {
     }
   }, [createNote, filesPanelOpen]);
 
+  const handleCreateCode = useCallback(async (templateData?: { language: string; code: string }) => {
+    try {
+      // If templateData is provided, use it; otherwise create blank code note
+      const language = templateData?.language || 'javascript';
+      const code = templateData?.code || '';
 
+      // Store both language and code in content as JSON
+      const content = JSON.stringify({ language, code });
+
+      await createNote(undefined, {
+        title: 'Untitled Code',
+        content,
+        type: 'code'
+      });
+
+      if (!filesPanelOpen) setFilesPanelOpen(true);
+    } catch (error) {
+      console.error('Failed to create code note:', error);
+    }
+  }, [createNote, filesPanelOpen]);
 
   const handleEmptyTrash = useCallback(async () => {
     try {
@@ -260,6 +272,7 @@ export default function MainLayout() {
     onToggleStar: toggleStar,
     onCreateNote: handleCreateNote,
     onCreateDiagram: handleCreateDiagram,
+    onCreateCode: handleCreateCode,
     onToggleFolderPanel: handleToggleFolderPanel,
     onEmptyTrash: handleEmptyTrash,
     creatingNote,

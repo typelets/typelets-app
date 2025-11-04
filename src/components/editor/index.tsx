@@ -38,6 +38,7 @@ import { useEditorState } from '@/components/editor/hooks/useEditorState';
 import { useEditorEffects } from '@/components/editor/hooks/useEditorEffects';
 import { fileService } from '@/services/fileService';
 import DiagramEditor from '@/components/diagrams/DiagramEditor';
+import CodeEditor from '@/components/code/CodeEditor';
 import type { Note, Folder as FolderType, FileAttachment } from '@/types/note';
 import type { WebSocketStatus } from '@/types/websocket';
 
@@ -640,6 +641,134 @@ export default function Index({
         onArchiveNote={onArchiveNote}
         onDeleteNote={onDeleteNote}
         onMoveNote={handleMoveNoteDiagram}
+        onToggleNotesPanel={onToggleNotesPanel}
+        isNotesPanelOpen={isNotesPanelOpen}
+      />
+    );
+  }
+
+  // Show code editor if this is a code note
+  if (note.type === 'code') {
+    // Parse the JSON content to extract language, code, and lastExecution
+    let parsedContent: {
+      language: string;
+      code: string;
+      lastExecution?: {
+        output: string;
+        error?: string;
+        executionTime: number;
+        status?: { id: number; description: string };
+        timestamp?: string;
+      } | null;
+    } = { language: 'javascript', code: '', lastExecution: null };
+
+    try {
+      const parsed = JSON.parse(note.content);
+
+      // Validate the structure of the parsed content
+      if (typeof parsed !== 'object' || parsed === null) {
+        throw new Error('Invalid code note structure: content is not an object');
+      }
+
+      if (!('code' in parsed)) {
+        throw new Error('Invalid code note structure: missing "code" field');
+      }
+
+      // Set parsed content with defaults for missing fields
+      parsedContent = {
+        language: typeof parsed.language === 'string' ? parsed.language : 'javascript',
+        code: typeof parsed.code === 'string' ? parsed.code : '',
+        lastExecution: parsed.lastExecution || null,
+      };
+    } catch (error) {
+      // Log the error for debugging
+      console.error('Failed to parse code note content:', error, 'Note ID:', note.id);
+
+      // If parsing fails, show an error state
+      return (
+        <div className="flex h-full flex-col items-center justify-center gap-4 p-8">
+          <div className="text-destructive flex flex-col items-center gap-2">
+            <div className="text-4xl">⚠️</div>
+            <h3 className="text-lg font-semibold">Failed to Load Code Note</h3>
+            <p className="text-muted-foreground text-center text-sm">
+              This code note appears to be corrupted or in an invalid format.
+            </p>
+            <p className="text-muted-foreground text-center text-xs">
+              Note ID: {note.id}
+            </p>
+          </div>
+          <div className="flex gap-2">
+            {onRefreshNote && (
+              <Button
+                onClick={() => onRefreshNote(note.id)}
+                variant="outline"
+              >
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Refresh
+              </Button>
+            )}
+            <Button
+              onClick={() => {
+                // Copy error details to clipboard for debugging
+                navigator.clipboard.writeText(
+                  `Note ID: ${note.id}\nError: ${error}\nContent: ${note.content.substring(0, 200)}`
+                );
+              }}
+              variant="outline"
+            >
+              Copy Debug Info
+            </Button>
+          </div>
+        </div>
+      );
+    }
+
+    const handleUpdateCode = async (
+      code: string,
+      title: string,
+      language: string,
+      lastExecution?: {
+        output: string;
+        error?: string;
+        executionTime: number;
+        status?: { id: number; description: string };
+        timestamp?: string;
+      } | null
+    ) => {
+      const newContent = JSON.stringify({ language, code, lastExecution });
+      // Only update if content or title actually changed
+      if (newContent !== note.content || title !== note.title) {
+        await onUpdateNote(note.id, { content: newContent, title });
+      }
+    };
+
+    const handleMoveNoteCode = (noteId: string, updates: { folderId: string | null }) => {
+      onUpdateNote(noteId, updates);
+    };
+
+    return (
+      <CodeEditor
+        noteId={note.id}
+        initialCode={parsedContent.code}
+        initialLanguage={parsedContent.language}
+        initialTitle={note.title}
+        initialLastExecution={parsedContent.lastExecution}
+        createdAt={note.createdAt}
+        updatedAt={note.updatedAt}
+        starred={note.starred}
+        hidden={note.hidden}
+        folders={folders}
+        folderId={note.folderId}
+        onSave={handleUpdateCode}
+        onToggleStar={onToggleStar}
+        starringStar={starringStar}
+        onHideNote={onHideNote}
+        onUnhideNote={onUnhideNote}
+        hidingNote={hidingNote}
+        onRefreshNote={onRefreshNote}
+        onArchiveNote={onArchiveNote}
+        onDeleteNote={onDeleteNote}
+        onMoveNote={handleMoveNoteCode}
         onToggleNotesPanel={onToggleNotesPanel}
         isNotesPanelOpen={isNotesPanelOpen}
       />

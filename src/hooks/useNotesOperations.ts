@@ -49,7 +49,7 @@ export function useNotesOperations({
   const createNote = useCallback(
     async (
       folderId?: string,
-      templateContent?: { title: string; content: string; type?: 'note' | 'diagram' }
+      templateContent?: { title: string; content: string; type?: 'note' | 'diagram' | 'code' }
     ) => {
       let showSpinner = false;
       const spinnerTimeout = setTimeout(() => {

@@ -359,7 +359,7 @@ class ClerkEncryptedApiService {
     folderId?: string | null;
     starred?: boolean;
     tags?: string[];
-    type?: 'note' | 'diagram';
+    type?: 'note' | 'diagram' | 'code';
   }): Promise<ApiNote> {
     const title = noteData.title ?? 'Untitled';
     const content = noteData.content ?? '';

@@ -7,6 +7,7 @@ import {
   FilterX,
   ChevronDown,
   Network,
+  Code2,
 } from 'lucide-react';
 import NotesList from '@/components/notes/NotesPanel/NotesList.tsx';
 import { Button } from '@/components/ui/button.tsx';
@@ -22,6 +23,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { NOTE_TEMPLATES } from '@/constants/templates';
 import { DIAGRAM_TEMPLATES } from '@/components/diagrams/templates';
+import { CODE_TEMPLATES } from '@/components/code/templates';
 import type { Note, Folder as FolderType, ViewMode } from '@/types/note.ts';
 
 type SortOption = 'updated' | 'created' | 'title' | 'starred';
@@ -36,6 +38,7 @@ interface FilterConfig {
   showStarredOnly: boolean;
   showHiddenOnly: boolean;
   showDiagramsOnly: boolean;
+  showCodeOnly: boolean;
 }
 
 interface FilesPanelProps {
@@ -50,6 +53,7 @@ interface FilesPanelProps {
   onToggleStar: (noteId: string) => void;
   onCreateNote: (templateContent?: { title: string; content: string; type?: string }) => void;
   onCreateDiagram?: (templateCode?: string) => void;
+  onCreateCode?: (templateData?: { language: string; code: string }) => void;
   onToggleFolderPanel: () => void;
   onEmptyTrash?: () => Promise<void>;
   creatingNote?: boolean;
@@ -69,6 +73,7 @@ export default function FilesPanel({
   onToggleStar,
   onCreateNote,
   onCreateDiagram,
+  onCreateCode,
   onToggleFolderPanel,
   onEmptyTrash,
   creatingNote = false,
@@ -85,6 +90,7 @@ export default function FilesPanel({
     showStarredOnly: false,
     showHiddenOnly: false,
     showDiagramsOnly: false,
+    showCodeOnly: false,
   });
 
   const sortNotes = (notes: Note[], config: SortConfig): Note[] => {
@@ -130,8 +136,9 @@ export default function FilesPanel({
       const excludeByStarred = config.showStarredOnly && !note.starred;
       const excludeByHidden = config.showHiddenOnly && !note.hidden;
       const excludeByDiagrams = config.showDiagramsOnly && note.type !== 'diagram';
+      const excludeByCode = config.showCodeOnly && note.type !== 'code';
 
-      return !(excludeByAttachments || excludeByStarred || excludeByHidden || excludeByDiagrams);
+      return !(excludeByAttachments || excludeByStarred || excludeByHidden || excludeByDiagrams || excludeByCode);
     });
   };
 
@@ -158,6 +165,7 @@ export default function FilesPanel({
     if (filterConfig.showStarredOnly) activeFilters.push('Starred');
     if (filterConfig.showHiddenOnly) activeFilters.push('Hidden');
     if (filterConfig.showDiagramsOnly) activeFilters.push('Diagrams');
+    if (filterConfig.showCodeOnly) activeFilters.push('Code');
 
     if (activeFilters.length === 0) return `Sort: ${getSortLabel()}`;
     return `Filter: ${activeFilters.join(', ')} | Sort: ${getSortLabel()}`;
@@ -167,7 +175,8 @@ export default function FilesPanel({
     filterConfig.showAttachmentsOnly ||
     filterConfig.showStarredOnly ||
     filterConfig.showHiddenOnly ||
-    filterConfig.showDiagramsOnly;
+    filterConfig.showDiagramsOnly ||
+    filterConfig.showCodeOnly;
 
   const getPanelTitle = () => {
     if (selectedFolder) {
@@ -322,11 +331,23 @@ export default function FilesPanel({
               >
                 {filterConfig.showDiagramsOnly ? '✓' : '○'} Diagrams
               </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() =>
+                  setFilterConfig((prev) => ({
+                    ...prev,
+                    showCodeOnly: !prev.showCodeOnly,
+                  }))
+                }
+                className={`${filterConfig.showCodeOnly ? 'bg-accent' : ''} mb-1`}
+              >
+                {filterConfig.showCodeOnly ? '✓' : '○'} Code
+              </DropdownMenuItem>
 
               {(filterConfig.showAttachmentsOnly ||
                 filterConfig.showStarredOnly ||
                 filterConfig.showHiddenOnly ||
-                filterConfig.showDiagramsOnly) && (
+                filterConfig.showDiagramsOnly ||
+                filterConfig.showCodeOnly) && (
                 <DropdownMenuItem
                   onClick={() =>
                     setFilterConfig({
@@ -334,6 +355,7 @@ export default function FilesPanel({
                       showStarredOnly: false,
                       showHiddenOnly: false,
                       showDiagramsOnly: false,
+                      showCodeOnly: false,
                     })
                   }
                   className="text-muted-foreground mb-1"
@@ -432,6 +454,22 @@ export default function FilesPanel({
                   </DropdownMenuItem>
                 )}
 
+                {/* Blank Code */}
+                {onCreateCode && (
+                  <DropdownMenuItem
+                    onClick={() => onCreateCode()}
+                    className="flex flex-col items-start gap-1 py-2"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">Blank Code</span>
+                      <Code2 className="h-3.5 w-3.5 text-green-500" />
+                    </div>
+                    <div className="text-muted-foreground text-xs">
+                      Start with an executable code note
+                    </div>
+                  </DropdownMenuItem>
+                )}
+
                 <DropdownMenuSeparator />
 
                 {/* Note Templates Submenu */}
@@ -519,6 +557,89 @@ export default function FilesPanel({
                         <div className="font-medium">Pie Chart</div>
                         <div className="text-muted-foreground text-xs">
                           Data distribution and percentages
+                        </div>
+                      </DropdownMenuItem>
+                    </DropdownMenuSubContent>
+                  </DropdownMenuSub>
+                )}
+
+                {/* Code Templates Submenu */}
+                {onCreateCode && (
+                  <DropdownMenuSub>
+                    <DropdownMenuSubTrigger className="flex items-center justify-between">
+                      <span>Code Templates</span>
+                    </DropdownMenuSubTrigger>
+                    <DropdownMenuSubContent className="w-64">
+                      <DropdownMenuItem
+                        onClick={() => onCreateCode(CODE_TEMPLATES.javascript)}
+                        className="flex flex-col items-start gap-1 py-2"
+                      >
+                        <div className="font-medium">JavaScript</div>
+                        <div className="text-muted-foreground text-xs">
+                          Array methods and functions
+                        </div>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => onCreateCode(CODE_TEMPLATES.python)}
+                        className="flex flex-col items-start gap-1 py-2"
+                      >
+                        <div className="font-medium">Python</div>
+                        <div className="text-muted-foreground text-xs">
+                          List comprehensions and functions
+                        </div>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => onCreateCode(CODE_TEMPLATES.typescript)}
+                        className="flex flex-col items-start gap-1 py-2"
+                      >
+                        <div className="font-medium">TypeScript</div>
+                        <div className="text-muted-foreground text-xs">
+                          Interfaces and generics
+                        </div>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => onCreateCode(CODE_TEMPLATES.java)}
+                        className="flex flex-col items-start gap-1 py-2"
+                      >
+                        <div className="font-medium">Java</div>
+                        <div className="text-muted-foreground text-xs">
+                          Classes and methods
+                        </div>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => onCreateCode(CODE_TEMPLATES.cpp)}
+                        className="flex flex-col items-start gap-1 py-2"
+                      >
+                        <div className="font-medium">C++</div>
+                        <div className="text-muted-foreground text-xs">
+                          STL vectors and loops
+                        </div>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => onCreateCode(CODE_TEMPLATES.python_data)}
+                        className="flex flex-col items-start gap-1 py-2"
+                      >
+                        <div className="font-medium">Python Data Analysis</div>
+                        <div className="text-muted-foreground text-xs">
+                          Statistics and calculations
+                        </div>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => onCreateCode(CODE_TEMPLATES.javascript_async)}
+                        className="flex flex-col items-start gap-1 py-2"
+                      >
+                        <div className="font-medium">JavaScript Async</div>
+                        <div className="text-muted-foreground text-xs">
+                          Promises and async/await
+                        </div>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => onCreateCode(CODE_TEMPLATES.python_algorithm)}
+                        className="flex flex-col items-start gap-1 py-2"
+                      >
+                        <div className="font-medium">Python Algorithm</div>
+                        <div className="text-muted-foreground text-xs">
+                          Binary search example
                         </div>
                       </DropdownMenuItem>
                     </DropdownMenuSubContent>

@@ -1,5 +1,5 @@
 import { memo, useMemo } from 'react';
-import { Star, Paperclip, Codesandbox, Network } from 'lucide-react';
+import { Star, Paperclip, Codesandbox, Network, Code2 } from 'lucide-react';
 import type { Note, Folder as FolderType } from '@/types/note.ts';
 
 interface NoteCardProps {
@@ -137,6 +137,14 @@ function NoteCard({
                 title="Diagram"
               >
                 <Network className="h-3.5 w-3.5 text-cyan-500" />
+              </div>
+            )}
+            {note.type === 'code' && (
+              <div
+                className="flex items-center text-xs"
+                title="Code"
+              >
+                <Code2 className="h-3.5 w-3.5 text-green-500" />
               </div>
             )}
             {hasExecutableCode && (
