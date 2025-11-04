@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import NotesList from '@/components/notes/NotesPanel/NotesList.tsx';
 import { Button } from '@/components/ui/button.tsx';
+import { ButtonGroup } from '@/components/ui/button-group';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -237,6 +238,7 @@ export default function FilesPanel({
               variant="outline"
               size="icon"
               onClick={onToggleFolderPanel}
+              className="shadow-none"
               title={
                 isFolderPanelOpen ? 'Hide folder panel' : 'Show folder panel'
               }
@@ -266,23 +268,24 @@ export default function FilesPanel({
         </div>
 
         <div className="flex shrink-0 items-center gap-2">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                className={`flex items-center justify-center ${isMobile ? 'h-9 w-9 touch-manipulation p-0' : 'h-6 w-6 p-0'}`}
-                title={getFilterLabel()}
-              >
-                {hasActiveFilters ? (
-                  <FilterX
-                    className={`${isMobile ? 'h-3 w-3' : 'h-2 w-2'} text-primary`}
-                  />
-                ) : (
-                  <Filter className={isMobile ? 'h-3 w-3' : 'h-2 w-2'} />
-                )}
-              </Button>
-            </DropdownMenuTrigger>
+          <ButtonGroup>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className={`shadow-none flex items-center justify-center ${isMobile ? 'h-9 w-9 touch-manipulation p-0' : ''}`}
+                  title={getFilterLabel()}
+                >
+                  {hasActiveFilters ? (
+                    <FilterX
+                      className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'} text-primary`}
+                    />
+                  ) : (
+                    <Filter className={isMobile ? 'h-3 w-3' : 'h-4 w-4'} />
+                  )}
+                </Button>
+              </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-52" sideOffset={8}>
               <div className="text-muted-foreground px-2 py-1.5 text-xs font-medium">
                 FILTER
@@ -410,18 +413,18 @@ export default function FilesPanel({
                 <Button
                   variant="outline"
                   size="sm"
-                  className={`flex items-center justify-center gap-1 ${isMobile ? 'h-9 touch-manipulation px-3' : 'h-6 px-2'}`}
+                  className={`shadow-none flex items-center justify-center gap-1 ${isMobile ? 'h-9 touch-manipulation px-3' : ''}`}
                   title="Create new note from template"
                   disabled={creatingNote}
                 >
                   {creatingNote ? (
                     <div
-                      className={`${isMobile ? 'h-4 w-4' : 'h-3 w-3'} animate-spin rounded-full border-2 border-current border-t-transparent`}
+                      className={`${isMobile ? 'h-4 w-4' : 'h-4 w-4'} animate-spin rounded-full border-2 border-current border-t-transparent`}
                     />
                   ) : (
                     <>
-                      <Plus className={isMobile ? 'h-4 w-4' : 'h-3 w-3'} />
-                      {!isMobile && <ChevronDown className="h-2 w-2" />}
+                      <Plus className={isMobile ? 'h-4 w-4' : 'h-4 w-4'} />
+                      {!isMobile && <ChevronDown className="h-3 w-3" />}
                     </>
                   )}
                 </Button>
@@ -648,6 +651,7 @@ export default function FilesPanel({
               </DropdownMenuContent>
             </DropdownMenu>
           )}
+          </ButtonGroup>
         </div>
       </div>
 

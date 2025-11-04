@@ -837,13 +837,13 @@ export default function Index({
                   variant="outline"
                   size="sm"
                   onClick={() => setShowAttachments(!showAttachments)}
-                  className={
+                  className={`shadow-none ${
                     showAttachments
                       ? 'bg-accent text-accent-foreground'
                       : note.attachments && note.attachments.length > 0
                         ? 'text-primary'
                         : 'text-muted-foreground'
-                  }
+                  }`}
                   title={
                     showAttachments ? 'Hide attachments' : 'Show attachments'
                   }
