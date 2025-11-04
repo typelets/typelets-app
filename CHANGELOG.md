@@ -1,3 +1,10 @@
+# [1.34.0](https://github.com/typelets/typelets-app/compare/v1.33.3...v1.34.0) (2025-11-04)
+
+
+### Features
+
+* add code note editor with execution and error handling ([605974a](https://github.com/typelets/typelets-app/commit/605974ad0214a977b4f54a9b2bdfa973b5c24b3c))
+
 ## [1.33.3](https://github.com/typelets/typelets-app/compare/v1.33.2...v1.33.3) (2025-11-03)
 
 
