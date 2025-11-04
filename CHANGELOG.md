@@ -1,3 +1,10 @@
+# [1.35.0](https://github.com/typelets/typelets-app/compare/v1.34.0...v1.35.0) (2025-11-04)
+
+
+### Features
+
+* add tabbed interface for notes, diagrams, and code editors ([b18175b](https://github.com/typelets/typelets-app/commit/b18175b38b52f324ad1c5951ba772fbdde9761b8))
+
 # [1.34.0](https://github.com/typelets/typelets-app/compare/v1.33.3...v1.34.0) (2025-11-04)
 
 
