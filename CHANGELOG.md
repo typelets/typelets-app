@@ -1,3 +1,10 @@
+## [1.35.1](https://github.com/typelets/typelets-app/compare/v1.35.0...v1.35.1) (2025-11-05)
+
+
+### Bug Fixes
+
+* add blob: to CSP for Monaco Editor web workers ([7a4d7d7](https://github.com/typelets/typelets-app/commit/7a4d7d7f2fac135ae04c5a8b1c197d830f9bb65e))
+
 # [1.35.0](https://github.com/typelets/typelets-app/compare/v1.34.0...v1.35.0) (2025-11-04)
 
 
