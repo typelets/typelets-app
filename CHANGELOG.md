@@ -1,3 +1,10 @@
+## [1.36.1](https://github.com/typelets/typelets-app/compare/v1.36.0...v1.36.1) (2025-11-06)
+
+
+### Bug Fixes
+
+* decode base64 encoded output from piston API ([3b9dd6a](https://github.com/typelets/typelets-app/commit/3b9dd6a569aa5f775ac95728d81858c190173cd0))
+
 # [1.36.0](https://github.com/typelets/typelets-app/compare/v1.35.1...v1.36.0) (2025-11-06)
 
 
