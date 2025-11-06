@@ -1,3 +1,10 @@
+# [1.36.0](https://github.com/typelets/typelets-app/compare/v1.35.1...v1.36.0) (2025-11-06)
+
+
+### Features
+
+* add diagram support with Mermaid.js and optimize notes list performance ([0b88759](https://github.com/typelets/typelets-app/commit/0b887599ec9bec7e2494411e18f5119b7f262706))
+
 ## [1.35.1](https://github.com/typelets/typelets-app/compare/v1.35.0...v1.35.1) (2025-11-05)
 
 
