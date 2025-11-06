@@ -1,5 +1,9 @@
 import 'expo-router/entry';
 
+// Install crypto polyfills FIRST (before any other imports that might need Buffer)
+import { install } from 'react-native-quick-crypto';
+install();
+
 import * as Sentry from '@sentry/react-native';
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';

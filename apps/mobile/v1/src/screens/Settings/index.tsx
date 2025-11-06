@@ -10,6 +10,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { UsageBottomSheet } from '../../components/settings/UsageBottomSheet';
 import { Card } from '../../components/ui';
 import { APP_VERSION } from '../../constants/version';
+import { NOTE_CARD } from '../../constants/ui';
 import { forceGlobalMasterPasswordRefresh } from '../../hooks/useMasterPassword';
 import { clearUserEncryptionData } from '../../lib/encryption';
 import { clearDecryptedCache,getCacheDecryptedContentPreference, setCacheDecryptedContentPreference } from '../../lib/preferences';
@@ -1003,7 +1004,7 @@ export default function SettingsScreen({ onLogout }: Props) {
                   backgroundColor: '#ef4444',
                   paddingVertical: 14,
                   paddingHorizontal: 20,
-                  borderRadius: 8,
+                  borderRadius: 4,
                   alignItems: 'center',
                   marginTop: 8,
                 }}
@@ -1097,7 +1098,7 @@ const styles = StyleSheet.create({
   iconContainer: {
     width: 36,
     height: 36,
-    borderRadius: 8,
+    borderRadius: NOTE_CARD.BORDER_RADIUS,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -1174,7 +1175,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: 16,
-    borderRadius: 12,
+    borderRadius: 4,
     borderWidth: 1,
   },
   optionIcon: {
@@ -1207,7 +1208,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: 16,
-    borderRadius: 12,
+    borderRadius: 4,
     borderWidth: 1,
     marginBottom: 12,
   },
@@ -1221,7 +1222,7 @@ const styles = StyleSheet.create({
   themeOptionIcon: {
     width: 36,
     height: 36,
-    borderRadius: 8,
+    borderRadius: NOTE_CARD.BORDER_RADIUS,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -1251,7 +1252,7 @@ const styles = StyleSheet.create({
   colorPreview: {
     width: 36,
     height: 36,
-    borderRadius: 8,
+    borderRadius: NOTE_CARD.BORDER_RADIUS,
     marginRight: 12,
     borderWidth: 1,
     padding: 4,
@@ -1261,7 +1262,7 @@ const styles = StyleSheet.create({
   colorPreviewInner: {
     width: 20,
     height: 20,
-    borderRadius: 4,
+    borderRadius: NOTE_CARD.BORDER_RADIUS,
   },
   radioButton: {
     width: 20,

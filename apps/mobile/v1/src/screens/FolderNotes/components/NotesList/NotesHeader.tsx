@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { NOTE_CARD } from '@/src/constants/ui';
 import { useTheme } from '@/src/theme';
@@ -52,36 +52,32 @@ export const NotesHeader: React.FC<NotesHeaderProps> = ({
         </TouchableOpacity>
       </View>
 
-      {/* Create Note Button / Empty Trash Button */}
+      {/* Create Note Button / Empty Trash Button - Full width to match note list */}
       {viewType === 'trash' ? (
         filteredNotesCount > 0 && (
-          <View style={{ paddingHorizontal: 16, marginBottom: NOTE_CARD.SPACING }}>
-            <TouchableOpacity
-              style={[styles.createNoteButton, { backgroundColor: theme.colors.card, borderColor: theme.colors.destructive }]}
+          <View style={styles.buttonWrapper}>
+            <Pressable
+              style={[styles.createNoteButton, { backgroundColor: theme.colors.card, borderColor: theme.colors.destructive, flexDirection: 'row', alignItems: 'center' }]}
               onPress={onEmptyTrashPress}
             >
-              <View style={styles.buttonContent}>
-                <Ionicons name="trash" size={16} color={theme.colors.destructive} style={{ marginRight: 12 }} />
-                <Text style={[styles.buttonText, { color: theme.colors.destructive }]}>
-                  Empty Trash
-                </Text>
-              </View>
-            </TouchableOpacity>
+              <Ionicons name="trash" size={16} color={theme.colors.destructive} style={{ marginRight: 12 }} />
+              <Text style={[styles.buttonText, { color: theme.colors.destructive }]}>
+                Empty Trash
+              </Text>
+            </Pressable>
           </View>
         )
       ) : (
-        <View style={{ paddingHorizontal: 16, marginBottom: NOTE_CARD.SPACING }}>
-          <TouchableOpacity
-            style={[styles.createNoteButton, { backgroundColor: theme.isDark ? theme.colors.card : theme.colors.secondary, borderColor: theme.colors.border }]}
+        <View style={styles.buttonWrapper}>
+          <Pressable
+            style={[styles.createNoteButton, { backgroundColor: theme.isDark ? theme.colors.card : theme.colors.secondary, borderColor: theme.colors.border, flexDirection: 'row', alignItems: 'center' }]}
             onPress={onCreateNotePress}
           >
-            <View style={styles.buttonContent}>
-              <Ionicons name="add" size={16} color={theme.colors.primary} style={{ marginRight: 12 }} />
-              <Text style={[styles.buttonText, { color: theme.colors.foreground }]}>
-                Create Note
-              </Text>
-            </View>
-          </TouchableOpacity>
+            <Ionicons name="add" size={16} color={theme.colors.primary} style={{ marginRight: 12 }} />
+            <Text style={[styles.buttonText, { color: theme.colors.foreground }]}>
+              Create Note
+            </Text>
+          </Pressable>
         </View>
       )}
     </View>
@@ -114,18 +110,16 @@ const styles = StyleSheet.create({
   viewModeButtonActive: {
     backgroundColor: 'rgba(59, 130, 246, 0.1)',
   },
-  createNoteButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 12,
-    borderRadius: 12,
-    borderWidth: 1,
+  buttonWrapper: {
+    paddingHorizontal: 16,
+    marginBottom: NOTE_CARD.SPACING,
   },
-  buttonContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
+  createNoteButton: {
+    borderRadius: NOTE_CARD.BORDER_RADIUS,
+    borderWidth: 1,
+    paddingVertical: 12,
+    paddingLeft: 12,
+    paddingRight: 12,
   },
   buttonText: {
     fontSize: 15,

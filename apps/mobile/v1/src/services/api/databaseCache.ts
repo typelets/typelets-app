@@ -261,45 +261,58 @@ export async function storeCachedNotes(
   notes: Note[],
   options?: { storeDecrypted?: boolean }
 ): Promise<void> {
+  if (!notes.length) return;
+
   try {
     const db = getDatabase();
     const now = Date.now();
     const storeDecrypted = options?.storeDecrypted ?? false;
 
-    for (const note of notes) {
-      // If storing decrypted, use the actual title/content
-      // If not, clear title/content and only keep encrypted versions
-      const title = storeDecrypted ? note.title : '';
-      const content = storeDecrypted ? note.content : '';
+    // Process in smaller chunks to avoid overwhelming the database
+    const CHUNK_SIZE = 50;
+    for (let i = 0; i < notes.length; i += CHUNK_SIZE) {
+      const chunk = notes.slice(i, i + CHUNK_SIZE);
 
-      await db.runAsync(
-        `INSERT OR REPLACE INTO notes (
-          id, title, content, folder_id, user_id, starred, archived, deleted, hidden,
-          created_at, updated_at, encrypted_title, encrypted_content, iv, salt,
-          is_synced, is_dirty, synced_at, attachment_count
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [
-          note.id,
-          title,
-          content,
-          note.folderId || null,
-          note.userId,
-          note.starred ? 1 : 0,
-          note.archived ? 1 : 0,
-          note.deleted ? 1 : 0,
-          note.hidden ? 1 : 0,
-          note.createdAt, // Store as ISO string
-          note.updatedAt, // Store as ISO string
-          note.encryptedTitle || null,
-          note.encryptedContent || null,
-          note.iv || null,
-          note.salt || null,
-          1, // is_synced
-          0, // is_dirty
-          now, // synced_at
-          note.attachmentCount || 0, // attachment_count
-        ]
-      );
+      for (const note of chunk) {
+        try {
+          // If storing decrypted, use the actual title/content
+          // If not, clear title/content and only keep encrypted versions
+          const title = storeDecrypted ? note.title : '';
+          const content = storeDecrypted ? note.content : '';
+
+          await db.runAsync(
+            `INSERT OR REPLACE INTO notes (
+              id, title, content, folder_id, user_id, starred, archived, deleted, hidden,
+              created_at, updated_at, encrypted_title, encrypted_content, iv, salt,
+              is_synced, is_dirty, synced_at, attachment_count
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+              note.id,
+              title,
+              content,
+              note.folderId || null,
+              note.userId,
+              note.starred ? 1 : 0,
+              note.archived ? 1 : 0,
+              note.deleted ? 1 : 0,
+              note.hidden ? 1 : 0,
+              note.createdAt, // Store as ISO string
+              note.updatedAt, // Store as ISO string
+              note.encryptedTitle || null,
+              note.encryptedContent || null,
+              note.iv || null,
+              note.salt || null,
+              1, // is_synced
+              0, // is_dirty
+              now, // synced_at
+              note.attachmentCount || 0, // attachment_count
+            ]
+          );
+        } catch (noteError) {
+          // Skip individual note errors, continue with others
+          console.warn(`[DatabaseCache] Failed to store note ${note.id}:`, noteError);
+        }
+      }
     }
 
     if (__DEV__ && storeDecrypted) {
@@ -383,30 +396,37 @@ export async function getCachedFolders(): Promise<Folder[]> {
  * Store folders to database cache
  */
 export async function storeCachedFolders(folders: Folder[]): Promise<void> {
+  if (!folders.length) return;
+
   try {
     const db = getDatabase();
     const now = Date.now();
 
     for (const folder of folders) {
-      await db.runAsync(
-        `INSERT OR REPLACE INTO folders (
-          id, name, color, parent_id, user_id, sort_order,
-          created_at, updated_at, is_synced, is_dirty, synced_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [
-          folder.id,
-          folder.name,
-          folder.color,
-          folder.parentId || null,
-          folder.userId,
-          folder.sortOrder || 0,
-          folder.createdAt, // Store as ISO string
-          folder.updatedAt, // Store as ISO string
-          1, // is_synced
-          0, // is_dirty
-          now, // synced_at
-        ]
-      );
+      try {
+        await db.runAsync(
+          `INSERT OR REPLACE INTO folders (
+            id, name, color, parent_id, user_id, sort_order,
+            created_at, updated_at, is_synced, is_dirty, synced_at
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            folder.id,
+            folder.name,
+            folder.color,
+            folder.parentId || null,
+            folder.userId,
+            folder.sortOrder || 0,
+            folder.createdAt, // Store as ISO string
+            folder.updatedAt, // Store as ISO string
+            1, // is_synced
+            0, // is_dirty
+            now, // synced_at
+          ]
+        );
+      } catch (folderError) {
+        // Skip individual folder errors, continue with others
+        console.warn(`[DatabaseCache] Failed to store folder ${folder.id}:`, folderError);
+      }
     }
   } catch (error) {
     if (error instanceof Error && error.message.includes('Database not initialized')) {

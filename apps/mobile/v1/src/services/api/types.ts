@@ -31,6 +31,7 @@ export interface Note {
   id: string;
   title: string;
   content: string;
+  type?: 'note' | 'diagram' | 'code'; // Type of note: regular note, diagram, or code
   folderId?: string;
   userId: string;
   starred: boolean;

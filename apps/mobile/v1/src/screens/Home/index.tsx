@@ -618,7 +618,9 @@ const styles = StyleSheet.create({
   newNoteAction: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: ACTION_BUTTON.PADDING,
+    paddingVertical: 12,
+    paddingLeft: 12,
+    paddingRight: 12,
     borderRadius: ACTION_BUTTON.BORDER_RADIUS,
     borderWidth: 1,
   },
@@ -626,7 +628,7 @@ const styles = StyleSheet.create({
     marginRight: ACTION_BUTTON.ICON_SPACING,
   },
   actionText: {
-    fontSize: ACTION_BUTTON.TEXT_SIZE,
+    fontSize: 15,
     fontWeight: '500',
   },
   section: {
@@ -668,7 +670,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: FOLDER_CARD.PADDING,
+    paddingVertical: 12,
+    paddingLeft: 12,
+    paddingRight: 12,
     borderRadius: FOLDER_CARD.BORDER_RADIUS,
     borderWidth: 1,
   },
@@ -681,7 +685,7 @@ const styles = StyleSheet.create({
     marginRight: FOLDER_CARD.PADDING,
   },
   specialViewLabel: {
-    fontSize: FOLDER_CARD.NAME_SIZE,
+    fontSize: 15,
     fontWeight: '500',
   },
   countBadge: {
@@ -709,7 +713,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: FOLDER_CARD.PADDING,
+    paddingVertical: 12,
+    paddingLeft: 12,
+    paddingRight: 12,
     borderRadius: FOLDER_CARD.BORDER_RADIUS,
     borderWidth: 1,
   },
@@ -738,7 +744,7 @@ const styles = StyleSheet.create({
     marginRight: FOLDER_CARD.PADDING,
   },
   folderName: {
-    fontSize: FOLDER_CARD.NAME_SIZE,
+    fontSize: 15,
     fontWeight: '500',
   },
   emptyState: {

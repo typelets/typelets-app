@@ -17,6 +17,7 @@ import { DecryptedData, EncryptedNote, PotentiallyEncrypted } from './types';
 export class MobileEncryptionService {
   private cache: DecryptionCache;
   private masterPasswordMode = false;
+  private keyCache: Map<string, string> = new Map(); // Cache for derived keys by salt
 
   constructor() {
     this.cache = new DecryptionCache();
@@ -30,17 +31,30 @@ export class MobileEncryptionService {
       throw new Error('Key derivation attempted without user ID');
     }
 
+    // Check key cache first (critical for performance!)
+    const cacheKey = `${userId}:${saltBase64}`;
+    const cachedKey = this.keyCache.get(cacheKey);
+    if (cachedKey) {
+      return cachedKey;
+    }
+
     try {
       const masterKey = await getMasterKey(userId);
 
       if (this.masterPasswordMode && masterKey) {
         // In master password mode, return the stored key directly
+        this.keyCache.set(cacheKey, masterKey);
         return masterKey;
       }
 
       // For non-master password mode, derive key from user secret and salt
       const userSecret = await getUserSecret(userId);
-      return await deriveEncryptionKey(userId, userSecret, saltBase64);
+      const derivedKey = await deriveEncryptionKey(userId, userSecret, saltBase64);
+
+      // Cache the derived key to avoid expensive re-derivation
+      this.keyCache.set(cacheKey, derivedKey);
+
+      return derivedKey;
     } catch (error) {
       throw new Error(`Key derivation failed: ${error}`);
     }
@@ -150,6 +164,7 @@ export class MobileEncryptionService {
    */
   clearKeys(): void {
     this.cache.clearAll();
+    this.keyCache.clear(); // Also clear key derivation cache
   }
 
   /**
@@ -157,6 +172,15 @@ export class MobileEncryptionService {
    */
   clearNoteCache(userId: string, encryptedTitle?: string): void {
     this.cache.clearUser(userId, encryptedTitle);
+
+    // Clear key cache entries for this user
+    const keysToDelete: string[] = [];
+    for (const key of this.keyCache.keys()) {
+      if (key.startsWith(`${userId}:`)) {
+        keysToDelete.push(key);
+      }
+    }
+    keysToDelete.forEach((key) => this.keyCache.delete(key));
   }
 
   /**
