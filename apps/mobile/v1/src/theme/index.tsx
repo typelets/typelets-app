@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import React, { createContext, useContext, useEffect,useState } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { useColorScheme } from 'react-native';
 
 import { DARK_THEME_PRESETS, type DarkThemePreset,LIGHT_THEME_PRESETS, type LightThemePreset } from './presets';
@@ -224,7 +224,8 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     ? DARK_THEME_PRESETS[darkTheme].colors
     : LIGHT_THEME_PRESETS[lightTheme].colors;
 
-  const value = {
+  // Memoize context value to prevent unnecessary re-renders across entire app
+  const value = useMemo(() => ({
     colors: currentColors,
     spacing: theme.spacing,
     typography: theme.typography,
@@ -237,7 +238,20 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setLightTheme,
     setDarkTheme,
     toggleTheme,
-  };
+  }), [
+    currentColors,
+    theme.spacing,
+    theme.typography,
+    theme.borderRadius,
+    isDark,
+    themeMode,
+    lightTheme,
+    darkTheme,
+    setThemeMode,
+    setLightTheme,
+    setDarkTheme,
+    toggleTheme,
+  ]);
 
   // Don't render until preferences are loaded
   if (!isLoaded) {

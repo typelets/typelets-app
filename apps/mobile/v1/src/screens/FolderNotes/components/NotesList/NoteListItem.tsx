@@ -3,7 +3,6 @@ import React from 'react';
 import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import type { Folder, Note } from '@/src/services/api';
-import { useTheme } from '@/src/theme';
 import { stripHtmlTags } from '@/src/utils/noteUtils';
 
 import { NoteSkeletonItem } from './NoteSkeletonItem';
@@ -17,9 +16,14 @@ interface NoteListItemProps {
   foldersMap: Map<string, Folder>;
   skeletonOpacity: Animated.Value;
   enhancedDataCache: React.MutableRefObject<Map<string, { preview: string; formattedDate: string }>>;
+  // Pass theme colors as props instead of using hook in each item
+  foregroundColor: string;
+  mutedForegroundColor: string;
+  mutedColor: string;
+  borderColor: string;
 }
 
-export const NoteListItem: React.FC<NoteListItemProps> = ({
+const NoteListItemComponent: React.FC<NoteListItemProps> = ({
   note,
   isLastItem,
   folderId,
@@ -28,8 +32,11 @@ export const NoteListItem: React.FC<NoteListItemProps> = ({
   foldersMap,
   skeletonOpacity,
   enhancedDataCache,
+  foregroundColor,
+  mutedForegroundColor,
+  mutedColor,
+  borderColor,
 }) => {
-  const theme = useTheme();
 
   // Check if note is still encrypted (loading skeleton)
   const noteIsEncrypted = note.title === '[ENCRYPTED]' || note.content === '[ENCRYPTED]';
@@ -40,10 +47,18 @@ export const NoteListItem: React.FC<NoteListItemProps> = ({
   }
 
   // Lazy calculation - strip HTML and format date only when rendered
+  // Use cache version if available, otherwise create minimal version
   let enhancedData = enhancedDataCache.current.get(note.id);
   if (!enhancedData) {
+    // For encrypted notes, skip expensive HTML stripping - just show placeholder
+    const preview = note.hidden
+      ? '[HIDDEN]'
+      : note.content
+        ? stripHtmlTags(note.content).substring(0, 200) // Limit preview length
+        : '';
+
     enhancedData = {
-      preview: note.hidden ? '[HIDDEN]' : stripHtmlTags(note.content || ''),
+      preview,
       formattedDate: new Date(note.createdAt || Date.now()).toLocaleDateString('en-US', {
         month: 'short',
         day: 'numeric',
@@ -60,12 +75,12 @@ export const NoteListItem: React.FC<NoteListItemProps> = ({
       <Pressable
         onPress={() => onPress(note.id)}
         style={styles.noteListItem}
-        android_ripple={{ color: theme.colors.muted }}
+        android_ripple={{ color: mutedColor }}
       >
         <View style={styles.noteListContent}>
           <View style={styles.noteListHeader}>
             <Text
-              style={[styles.noteListTitle, { color: theme.colors.foreground }]}
+              style={[styles.noteListTitle, { color: foregroundColor }]}
               numberOfLines={1}
               ellipsizeMode="tail"
             >
@@ -85,13 +100,13 @@ export const NoteListItem: React.FC<NoteListItemProps> = ({
               {note.starred && (
                 <Ionicons name="star" size={14} color="#f59e0b" style={{ marginRight: 8 }} />
               )}
-              <Text style={[styles.noteListTime, { color: theme.colors.mutedForeground }]}>
+              <Text style={[styles.noteListTime, { color: mutedForegroundColor }]}>
                 {enhancedData?.formattedDate || ''}
               </Text>
             </View>
           </View>
           <Text
-            style={[styles.noteListPreview, { color: theme.colors.mutedForeground }]}
+            style={[styles.noteListPreview, { color: mutedForegroundColor }]}
             numberOfLines={2}
           >
             {enhancedData?.preview || ''}
@@ -99,17 +114,21 @@ export const NoteListItem: React.FC<NoteListItemProps> = ({
           {!folderId && folderPath && (
             <View style={styles.noteListFolderInfo}>
               <View style={[styles.noteListFolderDot, { backgroundColor: noteFolder?.color || '#6b7280' }]} />
-              <Text style={[styles.noteListFolderPath, { color: theme.colors.mutedForeground }]} numberOfLines={1}>
+              <Text style={[styles.noteListFolderPath, { color: mutedForegroundColor }]} numberOfLines={1}>
                 {folderPath}
               </Text>
             </View>
           )}
         </View>
       </Pressable>
-      {!isLastItem && <View style={[styles.noteListDivider, { backgroundColor: theme.colors.border }]} />}
+      {!isLastItem && <View style={[styles.noteListDivider, { backgroundColor: borderColor }]} />}
     </View>
   );
 };
+
+// Memoized version - just use default shallow comparison
+// This is faster than custom comparison during scroll
+export const NoteListItem = React.memo(NoteListItemComponent);
 
 const styles = StyleSheet.create({
   noteListItemWrapper: {

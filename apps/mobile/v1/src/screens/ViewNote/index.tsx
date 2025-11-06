@@ -195,6 +195,7 @@ export default function ViewNoteScreen() {
         ref={scrollViewRef}
         style={{ flex: 1 }}
         showsVerticalScrollIndicator={false}
+        scrollEnabled={note.type !== 'diagram'}
         onScroll={Animated.event(
           [{ nativeEvent: { contentOffset: { y: scrollY } } }],
           { useNativeDriver: false }

@@ -131,6 +131,9 @@ export default function NotesList({ navigation, route, renderHeader, scrollY: pa
     };
   }, [setNotes]);
 
+  // Track if this is the first focus (to force load)
+  const isFirstFocus = useRef(true);
+
   // Load notes when screen focuses or params change
   useFocusEffect(
     React.useCallback(() => {
@@ -143,6 +146,26 @@ export default function NotesList({ navigation, route, renderHeader, scrollY: pa
         loadViewMode();
         return;
       }
+
+      // Skip full reload on navigation back IF we already have decrypted notes
+      // Only reload on first focus or when params change (deps)
+      // Check if notes are actually decrypted (not just encrypted placeholders)
+      const hasDecryptedNotes = notes.length > 0 && notes.some(note =>
+        note.title !== '[ENCRYPTED]' && note.content !== '[ENCRYPTED]'
+      );
+
+      if (!isFirstFocus.current && hasDecryptedNotes) {
+        if (__DEV__) {
+          console.log('[NotesList] Skipping reload - already have', notes.length, 'decrypted notes cached');
+        }
+        loadViewMode();
+        return;
+      }
+
+      if (__DEV__) {
+        console.log('[NotesList] Full reload - first focus or params changed');
+      }
+      isFirstFocus.current = false;
 
       loadNotes();
       loadViewMode();
@@ -243,12 +266,8 @@ export default function NotesList({ navigation, route, renderHeader, scrollY: pa
   const folderPathsMap = useFolderPaths(allFolders);
 
   // Lazy cache for note previews and dates (only calculate when rendered)
+  // DON'T clear this cache - let it persist across updates
   const notesEnhancedDataCache = useRef(new Map<string, { preview: string; formattedDate: string }>());
-
-  // Clear cache when notes change
-  useEffect(() => {
-    notesEnhancedDataCache.current.clear();
-  }, [notes]);
 
   // Create a folder lookup map for O(1) access
   const foldersMap = useMemo(() => {
@@ -257,6 +276,12 @@ export default function NotesList({ navigation, route, renderHeader, scrollY: pa
 
   // Check if any filters are active
   const hasActiveFilters = filterConfig.showAttachmentsOnly || filterConfig.showStarredOnly || filterConfig.showHiddenOnly;
+
+  // Extract theme colors as individual values to prevent object recreation
+  const foregroundColor = theme.colors.foreground;
+  const mutedForegroundColor = theme.colors.mutedForeground;
+  const mutedColor = theme.colors.muted;
+  const borderColor = theme.colors.border;
 
   // Skeleton shimmer animation
   const skeletonOpacity = useRef(new Animated.Value(0.3)).current;
@@ -283,6 +308,11 @@ export default function NotesList({ navigation, route, renderHeader, scrollY: pa
     return () => skeletonOpacity.stopAnimation();
   }, [skeletonOpacity]);
 
+  // Stable onPress handler (fixes React.memo breaking)
+  const handleNotePress = useCallback((noteId: string) => {
+    navigation?.navigate('ViewNote', { noteId });
+  }, [navigation]);
+
   // Render individual note item
   const renderNoteItem = useCallback(({ item: note, index }: { item: Note; index: number }) => {
     return (
@@ -290,14 +320,28 @@ export default function NotesList({ navigation, route, renderHeader, scrollY: pa
         note={note}
         isLastItem={index === filteredNotes.length - 1}
         folderId={folderId}
-        onPress={(noteId) => navigation?.navigate('ViewNote', { noteId })}
+        onPress={handleNotePress}
         folderPathsMap={folderPathsMap}
         foldersMap={foldersMap}
         skeletonOpacity={skeletonOpacity}
         enhancedDataCache={notesEnhancedDataCache}
+        foregroundColor={foregroundColor}
+        mutedForegroundColor={mutedForegroundColor}
+        mutedColor={mutedColor}
+        borderColor={borderColor}
       />
     );
-  }, [filteredNotes.length, folderId, navigation, folderPathsMap, foldersMap, skeletonOpacity, notesEnhancedDataCache]);
+  }, [filteredNotes.length, folderId, handleNotePress, folderPathsMap, foldersMap, skeletonOpacity, notesEnhancedDataCache, foregroundColor, mutedForegroundColor, mutedColor, borderColor]);
+
+  // Critical optimization: Tell FlatList exact item heights for instant scrolling
+  const getItemLayout = useCallback((_data: Note[] | null | undefined, index: number) => {
+    const ITEM_HEIGHT = 108; // Average height: padding(24) + title(23) + preview(40) + meta(20) + divider(1)
+    return {
+      length: ITEM_HEIGHT,
+      offset: ITEM_HEIGHT * index,
+      index,
+    };
+  }, []);
 
   // Render list header (subfolders and create note button)
   const renderListHeader = useCallback(() => {
@@ -350,25 +394,18 @@ export default function NotesList({ navigation, route, renderHeader, scrollY: pa
         </View>
       )}
 
-      <Animated.FlatList
+      <FlatList
         ref={flatListRef}
         data={filteredNotes}
         renderItem={renderNoteItem}
         keyExtractor={(item) => item.id}
+        getItemLayout={getItemLayout}
         ListHeaderComponent={renderListHeader}
         ListEmptyComponent={renderEmptyComponent}
         ListFooterComponent={<View style={{ height: 40 }} />}
         style={styles.scrollView}
         contentContainerStyle={{ flexGrow: 1 }}
         showsVerticalScrollIndicator={false}
-        scrollEnabled={true}
-        bounces={true}
-        alwaysBounceVertical={true}
-        onScroll={Animated.event(
-          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-          { useNativeDriver: false }
-        )}
-        scrollEventThrottle={16}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -377,11 +414,11 @@ export default function NotesList({ navigation, route, renderHeader, scrollY: pa
             colors={[theme.isDark ? '#666666' : '#000000']}
           />
         }
-        removeClippedSubviews={false}
-        maxToRenderPerBatch={20}
+        removeClippedSubviews={true}
+        maxToRenderPerBatch={15}
         updateCellsBatchingPeriod={50}
-        initialNumToRender={100}
-        windowSize={21}
+        initialNumToRender={15}
+        windowSize={7}
       />
 
 

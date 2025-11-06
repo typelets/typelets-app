@@ -11,6 +11,7 @@ interface NoteSkeletonItemProps {
 export const NoteSkeletonItem: React.FC<NoteSkeletonItemProps> = ({ skeletonOpacity, isLastItem }) => {
   const theme = useTheme();
 
+  // Use shared animation from parent - NO per-item animations for performance
   return (
     <View style={styles.noteListItemWrapper}>
       <View style={styles.noteListItem}>

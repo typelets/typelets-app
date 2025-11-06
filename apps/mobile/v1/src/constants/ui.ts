@@ -2,7 +2,7 @@
  * Shared UI constants for consistent design across the app
  */
 
-const SHARED_BORDER_RADIUS = 8;
+const SHARED_BORDER_RADIUS = 4;
 
 export const NOTE_CARD = {
   BORDER_RADIUS: SHARED_BORDER_RADIUS,

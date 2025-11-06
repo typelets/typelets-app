@@ -1,5 +1,5 @@
-import React, { useRef, useState } from 'react';
-import { Animated, ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useRef, useState, useMemo } from 'react';
+import { Animated, Dimensions, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { WebView } from 'react-native-webview';
 
 import type { Note } from '../../services/api';
@@ -34,21 +34,29 @@ export function NoteContent({
   theme,
 }: NoteContentProps) {
   const webViewRef = useRef<WebView>(null);
-  const [webViewHeight, setWebViewHeight] = useState(300);
+  // For diagrams, use screen height; for regular notes, use dynamic height
+  const [webViewHeight, setWebViewHeight] = useState(
+    note.type === 'diagram' ? Dimensions.get('window').height - 150 : 300
+  );
 
   // Calculate hairline width for CSS (equivalent to StyleSheet.hairlineWidth)
   const cssHairlineWidth = `${StyleSheet.hairlineWidth}px`;
 
+  // Check if this is a diagram note
+  const isDiagram = note.type === 'diagram';
+
   // Enhanced HTML with optional title and metadata
-  const fullHtml = `
+  // Memoized to prevent expensive re-generation on every render
+  const fullHtml = useMemo(() => `
     <!DOCTYPE html>
     <html lang="en">
     <head>
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0${isDiagram ? ', user-scalable=yes, maximum-scale=5.0, minimum-scale=0.5' : ''}">
       <!-- noinspection HtmlUnknownTarget,JSUnresolvedLibraryURL -->
       <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css" crossorigin="anonymous">
       <!-- noinspection HtmlUnknownTarget,JSUnresolvedLibraryURL -->
       <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" crossorigin="anonymous"></script>
+      ${isDiagram ? '<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.0/dist/mermaid.min.js" crossorigin="anonymous"></script>' : ''}
       <style>
         body {
           font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
@@ -278,6 +286,32 @@ export function NoteContent({
           height: auto;
           display: block;
         }
+
+        /* Diagram-specific styles */
+        ${isDiagram ? `
+        body {
+          overflow: visible;
+          margin: 0;
+          padding: 0;
+        }
+        .diagram-container {
+          padding: 16px;
+          display: block;
+          width: 100%;
+          overflow: visible;
+        }
+        .mermaid {
+          display: block;
+          width: 100%;
+          height: auto;
+          transform-origin: top left;
+        }
+        .mermaid svg {
+          display: block;
+          width: 100%;
+          height: auto;
+        }
+        ` : ''}
       </style>
     </head>
     <body>
@@ -298,11 +332,30 @@ export function NoteContent({
       `
           : ''
       }
+      ${isDiagram ? `
+      <div class="diagram-container">
+        <div class="mermaid">
+${note.content}
+        </div>
+      </div>
+      ` : `
       <div class="note-content">${htmlContent.match(/<body>([\s\S]*?)<\/body>/)?.[1] || note.content}</div>
+      `}
       <script>
+        ${isDiagram ? `
+        // Initialize Mermaid for diagrams
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: '${theme.isDark ? 'dark' : 'default'}',
+          securityLevel: 'loose',
+          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+        });
+        ` : `
+        // Syntax highlighting for code blocks
         document.querySelectorAll('pre code').forEach((block) => {
           hljs.highlightElement(block);
         });
+        `}
 
         // Send content height to React Native
         function sendHeight() {
@@ -321,10 +374,42 @@ export function NoteContent({
             setTimeout(sendHeight, 100);
           });
         }
+
+        // For diagrams, send height again after Mermaid renders
+        ${isDiagram ? `
+        if (typeof mermaid !== 'undefined') {
+          mermaid.run().then(() => {
+            setTimeout(sendHeight, 200);
+          }).catch((error) => {
+            console.error('Mermaid render error:', error);
+            window.ReactNativeWebView.postMessage(JSON.stringify({
+              type: 'error',
+              error: error.message
+            }));
+          });
+        }
+        ` : ''}
       </script>
     </body>
     </html>
-  `;
+  `, [
+    note.id,        // Re-generate when viewing different note
+    note.content,   // Re-generate when content changes
+    note.type,      // Re-generate when note type changes (diagram vs regular)
+    note.title,     // Re-generate when title changes
+    note.createdAt, // Re-generate when metadata changes
+    note.updatedAt,
+    htmlContent,    // Re-generate when HTML content changes
+    showTitle,      // Re-generate when title visibility changes
+    isDiagram,      // Re-generate when diagram state changes
+    theme.colors.foreground,      // Re-generate when theme colors change
+    theme.colors.mutedForeground,
+    theme.colors.border,
+    theme.colors.muted,
+    theme.colors.primary,
+    theme.isDark,   // Re-generate when dark mode toggles
+    cssHairlineWidth, // Re-generate if hairline width changes (rare)
+  ]);
 
   return (
     <View style={styles.container}>
@@ -341,15 +426,37 @@ export function NoteContent({
           ref={webViewRef}
           source={{ html: fullHtml }}
           style={[styles.webview, { height: webViewHeight }]}
-          scrollEnabled={false}
+          scrollEnabled={true}
           showsVerticalScrollIndicator={false}
           showsHorizontalScrollIndicator={false}
           originWhitelist={['*']}
+          javaScriptEnabled={true}
+          domStorageEnabled={true}
+          // @ts-ignore - Android specific - enable zoom
+          setSupportMultipleWindows={false}
+          // @ts-ignore - Android specific - enable zoom controls
+          builtInZoomControls={isDiagram}
+          // @ts-ignore - Android specific - hide on-screen zoom buttons
+          displayZoomControls={false}
+          // @ts-ignore - Android specific - allow zooming
+          useWebViewClient={true}
+          // @ts-ignore - iOS specific prop
+          allowsInlineMediaPlayback={true}
+          // @ts-ignore - iOS specific prop
+          bounces={true}
+          // @ts-ignore - iOS specific - disable link preview
+          allowsLinkPreview={false}
           onMessage={(event) => {
             try {
               const data = JSON.parse(event.nativeEvent.data);
               if (data.type === 'height') {
-                setWebViewHeight(data.height);
+                // For diagrams, keep initial screen height - don't update
+                // For regular notes, use exact content height
+                if (!isDiagram) {
+                  setWebViewHeight(data.height);
+                }
+              } else if (data.type === 'error') {
+                console.error('WebView error:', data.error);
               }
             } catch {
               // Ignore parse errors
@@ -362,9 +469,12 @@ export function NoteContent({
 }
 
 const styles = StyleSheet.create({
-  container: {},
+  container: {
+    // No flex needed - inside ScrollView
+  },
   webview: {
     backgroundColor: 'transparent',
+    // Height set inline based on content or screen size
   },
   hiddenContainer: {
     minHeight: 200,

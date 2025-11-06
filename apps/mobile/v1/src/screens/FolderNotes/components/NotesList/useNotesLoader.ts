@@ -157,51 +157,30 @@ export function useNotesLoader({
           );
 
           if (encryptedRemaining.length > 0) {
-            console.log(`[PERF OPTIMIZED] 🔐 Starting background decryption of ${encryptedRemaining.length} notes in batches of 10`);
+            console.log(`[PERF OPTIMIZED] 🔐 Starting background decryption of ${encryptedRemaining.length} notes - will update once at end`);
 
-            // Decrypt in batches of 10
-            const decryptInBatches = async () => {
-              const batchSize = 10;
-              let processedCount = 0;
-
-              for (let i = 0; i < encryptedRemaining.length; i += batchSize) {
-                const batch = encryptedRemaining.slice(i, i + batchSize);
-                const batchStart = performance.now();
-
-                // Decrypt this batch
-                const decryptedBatch = await Promise.all(
-                  batch.map(note => decryptNote(note, userId))
+            // Decrypt ALL in background, update UI ONCE at end to avoid scroll jank
+            setTimeout(async () => {
+              try {
+                // Decrypt all remaining notes at once (parallel for speed)
+                const allDecrypted = await Promise.all(
+                  encryptedRemaining.map(note => decryptNote(note, userId))
                 );
 
-                const batchEnd = performance.now();
-                processedCount += batch.length;
-                console.log(`[PERF OPTIMIZED] 🔓 Decrypted batch ${Math.floor(i / batchSize) + 1} (${batch.length} notes) in ${(batchEnd - batchStart).toFixed(2)}ms - ${processedCount}/${encryptedRemaining.length} total`);
+                console.log(`[PERF OPTIMIZED] ✅ Decrypted all ${encryptedRemaining.length} notes - applying single update`);
 
-                // Update UI with this batch
+                // Single UI update with all decrypted notes
+                const updateMap = new Map(allDecrypted.map(n => [n.id, n]));
+
                 setNotes(currentNotes => {
-                  const updated = [...currentNotes];
-                  decryptedBatch.forEach(decryptedNote => {
-                    const index = updated.findIndex(n => n.id === decryptedNote.id);
-                    if (index !== -1) {
-                      updated[index] = decryptedNote;
-                    }
-                  });
-                  return updated;
+                  return currentNotes.map(note => updateMap.get(note.id) || note);
                 });
 
-                // Small delay between batches to keep UI responsive
-                if (i + batchSize < encryptedRemaining.length) {
-                  await new Promise(resolve => setTimeout(resolve, 100));
-                }
+                console.log(`[PERF OPTIMIZED] 🎉 UI updated with all decrypted notes`);
+              } catch (error) {
+                console.error('[PERF OPTIMIZED] Decryption error:', error);
               }
-
-              console.log(`[PERF OPTIMIZED] ✅ Finished decrypting all ${encryptedRemaining.length} remaining notes`);
-            };
-
-            // Start background decryption after initial render
-            setTimeout(() => {
-              decryptInBatches();
-            }, 300);
+            }, 1000); // Wait longer before starting decryption
           }
         }
       } else {
