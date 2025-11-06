@@ -191,6 +191,17 @@ class CodeExecutionService {
     }
   }
 
+  private decodeBase64(str: string | null | undefined): string {
+    if (!str) return '';
+    try {
+      // Decode base64 string
+      return atob(str);
+    } catch {
+      // If not base64 encoded (backend already decoded it), return as-is
+      return str || '';
+    }
+  }
+
   private async pollForResult(
     token: string,
     startTime: number,
@@ -232,9 +243,14 @@ class CodeExecutionService {
         }
 
         if (statusId && statusId !== 1 && statusId !== 2) {
+          // Decode base64 encoded output from Judge0
+          const stdout = this.decodeBase64(result.stdout);
+          const stderr = this.decodeBase64(result.stderr);
+          const compileOutput = this.decodeBase64(result.compile_output);
+
           if (statusId === 3) {
             return {
-              output: result.stdout || '',
+              output: stdout || '',
               error: undefined,
               executionTime:
                 parseFloat(result.time) * 1000 || Date.now() - startTime,
@@ -247,20 +263,20 @@ class CodeExecutionService {
           } else {
             let errorMessage = statusDescription;
 
-            if (result.stderr) {
-              const stderrContent = result.stderr.trim();
+            if (stderr) {
+              const stderrContent = stderr.trim();
               if (stderrContent) {
                 errorMessage += `\n\nDetails:\n${stderrContent}`;
               }
-            } else if (result.compile_output) {
-              const compileOutput = result.compile_output.trim();
-              if (compileOutput) {
-                errorMessage += `\n\nCompilation details:\n${compileOutput}`;
+            } else if (compileOutput) {
+              const compileOutputContent = compileOutput.trim();
+              if (compileOutputContent) {
+                errorMessage += `\n\nCompilation details:\n${compileOutputContent}`;
               }
             }
 
             return {
-              output: result.stdout || '',
+              output: stdout || '',
               error: errorMessage,
               executionTime:
                 parseFloat(result.time) * 1000 || Date.now() - startTime,
