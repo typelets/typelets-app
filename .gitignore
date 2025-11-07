@@ -265,3 +265,8 @@ drizzle/
 
 # Windows reserved device names
 nul
+
+# Expo prebuild native folders
+ios/
+android/
+.expo/
