@@ -1,3 +1,10 @@
+## [1.36.2](https://github.com/typelets/typelets-app/compare/v1.36.1...v1.36.2) (2025-11-07)
+
+
+### Bug Fixes
+
+* **mobile:** update metro config for expo-router and sync lockfile ([46d91a3](https://github.com/typelets/typelets-app/commit/46d91a3ca237e8b6ef2cefac968b5d36605cfec0))
+
 ## [1.36.1](https://github.com/typelets/typelets-app/compare/v1.36.0...v1.36.1) (2025-11-06)
 
 
