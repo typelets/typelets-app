@@ -169,10 +169,67 @@ class CodeExecutionService {
       }
 
       const submissionResult = await response.json();
+
+      // Check if this is a synchronous response (Piston) with immediate results
+      // Piston returns stdout, stderr, status all in the initial response
+      if (submissionResult.stdout !== undefined || submissionResult.stderr !== undefined) {
+        // Synchronous execution (Piston) - results are already available
+        const statusId = submissionResult.status?.id || 3;
+        const statusDescription = submissionResult.status?.description || 'Accepted';
+
+        if (onStatusUpdate) {
+          onStatusUpdate({ id: statusId, description: statusDescription });
+        }
+
+        // Piston returns plain text (not base64), but check just in case
+        const stdout = this.decodeBase64(submissionResult.stdout) || submissionResult.stdout || '';
+        const stderr = this.decodeBase64(submissionResult.stderr) || submissionResult.stderr || '';
+        const compileOutput = this.decodeBase64(submissionResult.compile_output) || submissionResult.compile_output || '';
+
+        if (statusId === 3) {
+          return {
+            output: stdout,
+            error: undefined,
+            executionTime: parseFloat(submissionResult.time || '0') || Date.now() - startTime,
+            language,
+            status: {
+              id: statusId,
+              description: statusDescription,
+            },
+          };
+        } else {
+          let errorMessage = statusDescription;
+
+          if (stderr) {
+            const stderrContent = stderr.trim();
+            if (stderrContent) {
+              errorMessage += `\n\nDetails:\n${stderrContent}`;
+            }
+          } else if (compileOutput) {
+            const compileOutputContent = compileOutput.trim();
+            if (compileOutputContent) {
+              errorMessage += `\n\nCompilation details:\n${compileOutputContent}`;
+            }
+          }
+
+          return {
+            output: stdout || '',
+            error: errorMessage,
+            executionTime: parseFloat(submissionResult.time || '0') || Date.now() - startTime,
+            language,
+            status: {
+              id: statusId,
+              description: statusDescription,
+            },
+          };
+        }
+      }
+
+      // Asynchronous execution (Judge0) - need to poll for results
       const submissionToken = submissionResult.token;
 
       if (!submissionToken) {
-        throw new Error('No submission token returned from Judge0');
+        throw new Error('No submission token returned from execution service');
       }
 
       return await this.pollForResult(
@@ -243,7 +300,7 @@ class CodeExecutionService {
         }
 
         if (statusId && statusId !== 1 && statusId !== 2) {
-          // Decode base64 encoded output from Judge0
+          // Decode base64 encoded output (Judge0 uses base64 encoding)
           const stdout = this.decodeBase64(result.stdout);
           const stderr = this.decodeBase64(result.stderr);
           const compileOutput = this.decodeBase64(result.compile_output);
@@ -307,7 +364,7 @@ class CodeExecutionService {
 
     return {
       output: '',
-      error: 'Execution timeout - Judge0 took too long to process',
+      error: 'Execution timeout - code execution took too long to process',
       executionTime: Date.now() - startTime,
       language,
       status: {

@@ -99,8 +99,22 @@ Available on iOS and Android with the same powerful features and encryption.
 - 🔄 **Resizable Code Blocks** - Drag to adjust editor height for optimal viewing
 - 🌙 **Theme Toggle** - Switch between light and dark Monaco editor themes
 - 💾 **Persistent Results** - Code output is automatically saved with your notes
-- 🔒 **Secure Sandboxed Execution** - Code runs in isolated environments via Judge0 API
+- 🔒 **Secure Sandboxed Execution** - Code runs in isolated environments via Piston API on EC2
 - 📋 **Error Handling** - Clear error messages and compilation details for debugging
+
+### 📊 Diagram Support
+
+![Create Diagram Demo](https://github.com/typelets/typelets-app/blob/main/assets/diagram-demo.gif)
+
+Create beautiful diagrams with Mermaid and PlantUML support:
+
+- 📐 **Mermaid Diagrams** - Flowcharts, sequence diagrams, class diagrams, state diagrams, ER diagrams, and more
+- 🎨 **PlantUML Support** - UML diagrams, architecture diagrams, and technical drawings
+- 🚀 **Quick Create** - Use the "New Diagram" button or slash command `/diagram`
+- 👁️ **Live Preview** - See your diagram update in real-time as you type
+- 📋 **Diagram Templates** - Start with pre-built templates for common diagram types
+- 💾 **Auto-Save** - Diagrams are automatically saved with your notes
+- 🔄 **Instant Conversion** - Convert existing notes to diagram notes with one click
 
 ## 🔒 Security First
 
@@ -175,7 +189,7 @@ VITE_APP_VERSION=0.5.0
 
 **Code Execution Setup:**
 - Code execution is handled securely by your backend API
-- The backend proxy manages Judge0 API integration
+- The backend uses Piston API running on EC2 for isolated code execution
 - No client-side API keys required for security
 
 ### Development Proxy
@@ -405,7 +419,7 @@ typelets/
 - **Styling:** Tailwind CSS v4
 - **Editor:** TipTap with code highlighting
 - **Code Editor:** Monaco Editor (VS Code engine)
-- **Code Execution:** Judge0 API for 15+ programming languages
+- **Code Execution:** Piston API (self-hosted on EC2) for 15+ programming languages
 - **Authentication:** Clerk
 - **UI Components:** Radix UI
 - **Encryption:** Web Crypto API with AES-256-GCM
