@@ -1,3 +1,10 @@
+# [1.37.0](https://github.com/typelets/typelets-app/compare/v1.36.2...v1.37.0) (2025-11-09)
+
+
+### Features
+
+* **mobile:** enhance note type detection with visual indicators and performance improvements ([3e4ce3d](https://github.com/typelets/typelets-app/commit/3e4ce3d2e96a64535c1289a30ece4c4ee7d07d92))
+
 ## [1.36.2](https://github.com/typelets/typelets-app/compare/v1.36.1...v1.36.2) (2025-11-07)
 
 
