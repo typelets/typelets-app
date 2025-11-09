@@ -9,6 +9,8 @@ export interface FilterConfig {
   showAttachmentsOnly: boolean;
   showStarredOnly: boolean;
   showHiddenOnly: boolean;
+  showCodeOnly: boolean;
+  showDiagramOnly: boolean;
 }
 
 export interface SortConfig {
@@ -28,7 +30,7 @@ export const FilterSortSheet = forwardRef<BottomSheetModal, FilterSortSheetProps
   ({ filterConfig, setFilterConfig, sortConfig, setSortConfig, hasActiveFilters }, ref) => {
     const theme = useTheme();
 
-    const snapPoints = useMemo(() => ['70%'], []);
+    const snapPoints = useMemo(() => ['80%'], []);
 
     const renderBackdrop = useCallback(
       (props: BottomSheetBackdropProps) => (
@@ -70,7 +72,7 @@ export const FilterSortSheet = forwardRef<BottomSheetModal, FilterSortSheetProps
               <Text style={[styles.inputLabel, { color: theme.colors.mutedForeground }]}>FILTER</Text>
               <TouchableOpacity
                 style={[styles.viewModeButton, { backgroundColor: theme.colors.muted, opacity: hasActiveFilters ? 1 : 0 }]}
-                onPress={() => setFilterConfig({ showAttachmentsOnly: false, showStarredOnly: false, showHiddenOnly: false })}
+                onPress={() => setFilterConfig({ showAttachmentsOnly: false, showStarredOnly: false, showHiddenOnly: false, showCodeOnly: false, showDiagramOnly: false })}
                 activeOpacity={0.7}
                 disabled={!hasActiveFilters}
               >
@@ -87,7 +89,7 @@ export const FilterSortSheet = forwardRef<BottomSheetModal, FilterSortSheetProps
                 size={24}
                 color={filterConfig.showAttachmentsOnly ? theme.colors.primary : theme.colors.mutedForeground}
               />
-              <Text style={[styles.filterOptionText, { color: theme.colors.foreground }]}>Attachments Only</Text>
+              <Text style={[styles.filterOptionText, { color: theme.colors.foreground }]}>Attachment</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -99,7 +101,7 @@ export const FilterSortSheet = forwardRef<BottomSheetModal, FilterSortSheetProps
                 size={24}
                 color={filterConfig.showStarredOnly ? theme.colors.primary : theme.colors.mutedForeground}
               />
-              <Text style={[styles.filterOptionText, { color: theme.colors.foreground }]}>Starred Only</Text>
+              <Text style={[styles.filterOptionText, { color: theme.colors.foreground }]}>Starred</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -111,7 +113,31 @@ export const FilterSortSheet = forwardRef<BottomSheetModal, FilterSortSheetProps
                 size={24}
                 color={filterConfig.showHiddenOnly ? theme.colors.primary : theme.colors.mutedForeground}
               />
-              <Text style={[styles.filterOptionText, { color: theme.colors.foreground }]}>Hidden Only</Text>
+              <Text style={[styles.filterOptionText, { color: theme.colors.foreground }]}>Hidden</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.filterOption, { backgroundColor: filterConfig.showCodeOnly ? 'rgba(59, 130, 246, 0.1)' : 'transparent' }]}
+              onPress={() => setFilterConfig(prev => ({ ...prev, showCodeOnly: !prev.showCodeOnly }))}
+            >
+              <Ionicons
+                name={filterConfig.showCodeOnly ? "checkbox" : "square-outline"}
+                size={24}
+                color={filterConfig.showCodeOnly ? theme.colors.primary : theme.colors.mutedForeground}
+              />
+              <Text style={[styles.filterOptionText, { color: theme.colors.foreground }]}>Code</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.filterOption, { backgroundColor: filterConfig.showDiagramOnly ? 'rgba(59, 130, 246, 0.1)' : 'transparent' }]}
+              onPress={() => setFilterConfig(prev => ({ ...prev, showDiagramOnly: !prev.showDiagramOnly }))}
+            >
+              <Ionicons
+                name={filterConfig.showDiagramOnly ? "checkbox" : "square-outline"}
+                size={24}
+                color={filterConfig.showDiagramOnly ? theme.colors.primary : theme.colors.mutedForeground}
+              />
+              <Text style={[styles.filterOptionText, { color: theme.colors.foreground }]}>Diagram</Text>
             </TouchableOpacity>
 
             <Text style={[styles.inputLabel, { color: theme.colors.mutedForeground, marginTop: 24 }]}>SORT BY</Text>

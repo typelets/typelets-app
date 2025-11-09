@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { BottomSheetBackdrop, BottomSheetModal, BottomSheetScrollView, BottomSheetTextInput,BottomSheetView } from '@gorhom/bottom-sheet';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
+import { House } from 'lucide-react-native';
 import { useCallback,useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Animated, Keyboard, Pressable,StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -305,7 +306,7 @@ export default function FolderNotesScreen({ folderId, folderName, viewType }: Fo
           <View style={[styles.headerContainer, { backgroundColor: theme.colors.background, borderBottomColor: theme.colors.border }]}>
             <View style={styles.header}>
               <TouchableOpacity
-                style={[styles.iconButton, { backgroundColor: theme.colors.muted }]}
+                style={styles.iconButton}
                 onPress={() => router.back()}
               >
                 <Ionicons name="chevron-back" size={20} color={theme.colors.mutedForeground} style={{ marginLeft: -2 }} />
@@ -315,7 +316,7 @@ export default function FolderNotesScreen({ folderId, folderName, viewType }: Fo
 
               <View style={styles.headerActions}>
                 <TouchableOpacity
-                  style={[styles.iconButton, { backgroundColor: theme.colors.muted }]}
+                  style={styles.iconButton}
                   onPress={() => breadcrumbSheetRef.current?.present()}
                 >
                   <Ionicons
@@ -326,7 +327,7 @@ export default function FolderNotesScreen({ folderId, folderName, viewType }: Fo
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  style={[styles.iconButton, { backgroundColor: theme.colors.muted }]}
+                  style={styles.iconButton}
                   onPress={() => {
                     if (isSearchVisible) {
                       setIsSearchVisible(false);
@@ -345,7 +346,7 @@ export default function FolderNotesScreen({ folderId, folderName, viewType }: Fo
 
                 <View>
                   <TouchableOpacity
-                    style={[styles.iconButton, { backgroundColor: theme.colors.muted }]}
+                    style={styles.iconButton}
                     onPress={() => setShowSettingsDropdown(!showSettingsDropdown)}
                   >
                     <Ionicons name="settings-outline" size={20} color={theme.colors.mutedForeground} />
@@ -431,7 +432,7 @@ export default function FolderNotesScreen({ folderId, folderName, viewType }: Fo
           <View style={styles.bottomSheetHeader}>
             <Text style={[styles.bottomSheetTitle, { color: theme.colors.foreground }]}>Navigate to Folder</Text>
             <TouchableOpacity
-              style={[styles.iconButton, { backgroundColor: theme.colors.muted }]}
+              style={styles.iconButton}
               onPress={() => breadcrumbSheetRef.current?.dismiss()}
             >
               <Ionicons name="close" size={20} color={theme.colors.mutedForeground} />
@@ -452,7 +453,7 @@ export default function FolderNotesScreen({ folderId, folderName, viewType }: Fo
                   router.replace('/');
                 }}
               >
-                <Ionicons name="home" size={20} color={theme.colors.foreground} />
+                <House size={20} color={theme.colors.foreground} />
                 <Text style={[styles.breadcrumbMenuText, { color: theme.colors.foreground }]}>Home</Text>
               </TouchableOpacity>
 
@@ -527,7 +528,7 @@ export default function FolderNotesScreen({ folderId, folderName, viewType }: Fo
           <View style={styles.bottomSheetHeader}>
             <Text style={[styles.bottomSheetTitle, { color: theme.colors.foreground }]}>Folder Settings</Text>
             <TouchableOpacity
-              style={[styles.iconButton, { backgroundColor: theme.colors.muted }]}
+              style={styles.iconButton}
               onPress={() => folderSettingsSheetRef.current?.dismiss()}
             >
               <Ionicons name="close" size={20} color={theme.colors.mutedForeground} />

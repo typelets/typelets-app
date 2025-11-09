@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 
 import type { Note } from '@/src/services/api';
+import { isCodeContent, isDiagramContent } from '@/src/utils/noteTypeDetection';
 
 import type { FilterConfig, SortConfig } from './FilterSortSheet';
 
@@ -14,8 +15,8 @@ export function useNotesFiltering(
     // Filter notes by search query
     const searchFilteredNotes = notes.filter(
       note =>
-        note.title.toLowerCase().includes((searchQuery || '').toLowerCase()) ||
-        note.content.toLowerCase().includes((searchQuery || '').toLowerCase())
+        (note.title || '').toLowerCase().includes((searchQuery || '').toLowerCase()) ||
+        (note.content || '').toLowerCase().includes((searchQuery || '').toLowerCase())
     );
 
     // Apply additional filters
@@ -28,6 +29,16 @@ export function useNotesFiltering(
       }
       if (filterConfig.showHiddenOnly && !note.hidden) {
         return false;
+      }
+      // Check for code filter
+      if (filterConfig.showCodeOnly) {
+        const isCode = note.type === 'code' || (note.content && isCodeContent(note.content));
+        if (!isCode) return false;
+      }
+      // Check for diagram filter
+      if (filterConfig.showDiagramOnly) {
+        const isDiagram = note.type === 'diagram' || (note.content && isDiagramContent(note.content));
+        if (!isDiagram) return false;
       }
       return true;
     });

@@ -143,10 +143,10 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         if (savedMode) {
           setThemeModeState(savedMode as ThemeMode);
         }
-        if (savedLightTheme) {
+        if (savedLightTheme && LIGHT_THEME_PRESETS[savedLightTheme as LightThemePreset]) {
           setLightThemeState(savedLightTheme as LightThemePreset);
         }
-        if (savedDarkTheme) {
+        if (savedDarkTheme && DARK_THEME_PRESETS[savedDarkTheme as DarkThemePreset]) {
           setDarkThemeState(savedDarkTheme as DarkThemePreset);
         }
       } catch (error) {
@@ -219,10 +219,10 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   };
 
-  // Get current color scheme from preset
+  // Get current color scheme from preset with fallback
   const currentColors = isDark
-    ? DARK_THEME_PRESETS[darkTheme].colors
-    : LIGHT_THEME_PRESETS[lightTheme].colors;
+    ? (DARK_THEME_PRESETS[darkTheme]?.colors || DARK_THEME_PRESETS.trueBlack.colors)
+    : (LIGHT_THEME_PRESETS[lightTheme]?.colors || LIGHT_THEME_PRESETS.default.colors);
 
   // Memoize context value to prevent unnecessary re-renders across entire app
   const value = useMemo(() => ({

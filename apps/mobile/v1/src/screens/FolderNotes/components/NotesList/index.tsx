@@ -1,17 +1,26 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useUser } from '@clerk/clerk-expo';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
+import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import React, { useCallback,useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Animated, DeviceEventEmitter,FlatList, RefreshControl, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Alert, Animated, DeviceEventEmitter,FlatList, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { type Folder, type Note, useApiService } from '@/src/services/api';
 import { useTheme } from '@/src/theme';
 
+// Constants for FAB scroll behavior
+const FAB_SCROLL_THRESHOLD_START = 100; // Start showing FAB when scrolled past this
+const FAB_SCROLL_THRESHOLD_END = 140;   // Fully visible at this scroll position
+const FAB_ANIMATION_DISTANCE = 20;      // Distance to slide up during animation
+
 import { CreateFolderSheet } from './CreateFolderSheet';
 import { EmptyState } from './EmptyState';
 import { FilterConfig, FilterSortSheet, SortConfig } from './FilterSortSheet';
+import { NoteActionsSheet, type NoteActionsSheetRef } from './NoteActionsSheet';
 import { NoteListItem } from './NoteListItem';
 import { NotesHeader } from './NotesHeader';
 import { SubfoldersList } from './SubfoldersList';
@@ -42,6 +51,7 @@ export default function NotesList({ navigation, route, renderHeader, scrollY: pa
   const { user } = useUser();
   const api = useApiService();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { folderId, viewType, searchQuery } = route?.params || {};
 
   const [refreshing, setRefreshing] = useState(false);
@@ -54,6 +64,8 @@ export default function NotesList({ navigation, route, renderHeader, scrollY: pa
     showAttachmentsOnly: false,
     showStarredOnly: false,
     showHiddenOnly: false,
+    showCodeOnly: false,
+    showDiagramOnly: false,
   });
   const [sortConfig, setSortConfig] = useState<SortConfig>({
     option: 'created',
@@ -81,11 +93,26 @@ export default function NotesList({ navigation, route, renderHeader, scrollY: pa
   // Bottom sheet refs
   const createFolderSheetRef = useRef<BottomSheetModal>(null);
   const filterSortSheetRef = useRef<BottomSheetModal>(null);
+  const noteActionsSheetRef = useRef<NoteActionsSheetRef>(null);
   const flatListRef = useRef<FlatList<Note>>(null);
 
   // Scroll tracking for animated divider (use parent's scrollY if provided)
   const localScrollY = useRef(new Animated.Value(0)).current;
   const scrollY = parentScrollY || localScrollY;
+
+  // Calculate FAB visibility based on scroll position
+  // Show FAB when scrolled past the header
+  const fabOpacity = scrollY.interpolate({
+    inputRange: [FAB_SCROLL_THRESHOLD_START, FAB_SCROLL_THRESHOLD_END],
+    outputRange: [0, 1],
+    extrapolate: 'clamp',
+  });
+
+  const fabTranslateY = scrollY.interpolate({
+    inputRange: [FAB_SCROLL_THRESHOLD_START, FAB_SCROLL_THRESHOLD_END],
+    outputRange: [FAB_ANIMATION_DISTANCE, 0],
+    extrapolate: 'clamp',
+  });
 
   // Track last optimistic update to prevent immediate reload from overwriting it
   const lastOptimisticUpdateRef = useRef<number>(0);
@@ -106,10 +133,10 @@ export default function NotesList({ navigation, route, renderHeader, scrollY: pa
       lastOptimisticUpdateRef.current = Date.now();
     });
 
-    const updatedSubscription = DeviceEventEmitter.addListener('noteUpdated', (note: Note) => {
+    const updatedSubscription = DeviceEventEmitter.addListener('noteUpdated', (updatedData: Partial<Note> & { id: string }) => {
       // Optimistically update the note in the list immediately
       setNotes(prevNotes => {
-        return prevNotes.map(n => n.id === note.id ? note : n);
+        return prevNotes.map(n => n.id === updatedData.id ? { ...n, ...updatedData } : n);
       });
       // Track that we just did an optimistic update
       lastOptimisticUpdateRef.current = Date.now();
@@ -275,13 +302,14 @@ export default function NotesList({ navigation, route, renderHeader, scrollY: pa
   }, [allFolders]);
 
   // Check if any filters are active
-  const hasActiveFilters = filterConfig.showAttachmentsOnly || filterConfig.showStarredOnly || filterConfig.showHiddenOnly;
+  const hasActiveFilters = filterConfig.showAttachmentsOnly || filterConfig.showStarredOnly || filterConfig.showHiddenOnly || filterConfig.showCodeOnly || filterConfig.showDiagramOnly;
 
   // Extract theme colors as individual values to prevent object recreation
   const foregroundColor = theme.colors.foreground;
   const mutedForegroundColor = theme.colors.mutedForeground;
   const mutedColor = theme.colors.muted;
   const borderColor = theme.colors.border;
+  const backgroundColor = theme.colors.background;
 
   // Skeleton shimmer animation
   const skeletonOpacity = useRef(new Animated.Value(0.3)).current;
@@ -313,6 +341,132 @@ export default function NotesList({ navigation, route, renderHeader, scrollY: pa
     navigation?.navigate('ViewNote', { noteId });
   }, [navigation]);
 
+  // Handle long press to show actions
+  const handleNoteLongPress = useCallback((note: Note) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    noteActionsSheetRef.current?.present(note);
+  }, []);
+
+  // Handle edit note
+  const handleEditNote = useCallback((noteId: string) => {
+    navigation?.navigate('EditNote', { noteId });
+  }, [navigation]);
+
+  // Handle move to folder
+  const handleMoveToFolder = useCallback(async (noteId: string, newFolderId: string | null) => {
+    try {
+      // Build update object
+      const updateData: { folderId?: string; archived?: boolean; deleted?: boolean } = {
+        folderId: newFolderId || undefined,
+      };
+
+      // If moving from archive or trash, unset those flags
+      if (viewType === 'archived') {
+        updateData.archived = false;
+      } else if (viewType === 'trash') {
+        updateData.deleted = false;
+      }
+
+      await api.updateNote(noteId, updateData);
+
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+
+      // If we're viewing a specific folder and the note is moved to a different folder, remove it from view
+      if (folderId && newFolderId !== folderId) {
+        // Remove from current view since it's no longer in this folder
+        setNotes(prevNotes => prevNotes.filter(n => n.id !== noteId));
+      } else if (viewType === 'archived' || viewType === 'trash') {
+        // If viewing archive or trash, remove the note when moved (it's now unarchived/undeleted)
+        setNotes(prevNotes => prevNotes.filter(n => n.id !== noteId));
+      } else {
+        // Otherwise just update the folderId in place (e.g., "All Notes" view, starred view, etc.)
+        setNotes(prevNotes =>
+          prevNotes.map(n => n.id === noteId ? { ...n, folderId: newFolderId || undefined } : n)
+        );
+      }
+      lastOptimisticUpdateRef.current = Date.now();
+
+      // Emit event for other listeners
+      DeviceEventEmitter.emit('noteUpdated', { id: noteId, folderId: newFolderId });
+    } catch (error) {
+      console.error('Failed to move note:', error);
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      Alert.alert('Error', 'Failed to move note. Please try again.');
+      loadNotes();
+    }
+  }, [api, folderId, viewType, setNotes, loadNotes]);
+
+  // Handle toggle star
+  const handleToggleStar = useCallback(async (noteId: string) => {
+    try {
+      const note = notes.find(n => n.id === noteId);
+      if (!note) return;
+
+      const newStarredValue = !note.starred;
+
+      // Haptic feedback
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+
+      // Optimistically update the note in the list FIRST for instant feedback
+      setNotes(prevNotes =>
+        prevNotes.map(n => n.id === noteId ? { ...n, starred: newStarredValue } : n)
+      );
+      lastOptimisticUpdateRef.current = Date.now();
+
+      // Then update via API
+      await api.updateNote(noteId, { starred: newStarredValue });
+
+      // Emit event for other listeners
+      DeviceEventEmitter.emit('noteUpdated', { id: noteId, starred: newStarredValue });
+    } catch (error) {
+      console.error('Failed to toggle star:', error);
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      Alert.alert('Error', 'Failed to update note. Please try again.');
+      // Reload to restore correct state
+      loadNotes();
+    }
+  }, [api, notes, setNotes, loadNotes]);
+
+  // Handle delete note (move to trash)
+  const handleDeleteNote = useCallback(async (noteId: string) => {
+    try {
+      // Update note as deleted FIRST
+      await api.updateNote(noteId, { deleted: true });
+
+      // Only after API success, do the optimistic update
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      setNotes(prevNotes => prevNotes.filter(n => n.id !== noteId));
+      lastOptimisticUpdateRef.current = Date.now();
+
+      // Emit event for other listeners
+      DeviceEventEmitter.emit('noteDeleted', noteId);
+    } catch (error) {
+      console.error('Failed to delete note:', error);
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      Alert.alert('Error', 'Failed to delete note. Please try again.');
+    }
+  }, [api, setNotes, loadNotes]);
+
+  // Handle archive note
+  const handleArchiveNote = useCallback(async (noteId: string) => {
+    try {
+      // Update note as archived FIRST
+      await api.updateNote(noteId, { archived: true });
+
+      // Only after API success, do the optimistic update
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      setNotes(prevNotes => prevNotes.filter(n => n.id !== noteId));
+      lastOptimisticUpdateRef.current = Date.now();
+
+      // Emit event for other listeners
+      DeviceEventEmitter.emit('noteUpdated', { id: noteId, archived: true });
+    } catch (error) {
+      console.error('Failed to archive note:', error);
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      Alert.alert('Error', 'Failed to archive note. Please try again.');
+    }
+  }, [api, setNotes, loadNotes]);
+
   // Render individual note item
   const renderNoteItem = useCallback(({ item: note, index }: { item: Note; index: number }) => {
     return (
@@ -321,6 +475,9 @@ export default function NotesList({ navigation, route, renderHeader, scrollY: pa
         isLastItem={index === filteredNotes.length - 1}
         folderId={folderId}
         onPress={handleNotePress}
+        onLongPress={handleNoteLongPress}
+        onDelete={handleDeleteNote}
+        onArchive={handleArchiveNote}
         folderPathsMap={folderPathsMap}
         foldersMap={foldersMap}
         skeletonOpacity={skeletonOpacity}
@@ -329,9 +486,10 @@ export default function NotesList({ navigation, route, renderHeader, scrollY: pa
         mutedForegroundColor={mutedForegroundColor}
         mutedColor={mutedColor}
         borderColor={borderColor}
+        backgroundColor={backgroundColor}
       />
     );
-  }, [filteredNotes.length, folderId, handleNotePress, folderPathsMap, foldersMap, skeletonOpacity, notesEnhancedDataCache, foregroundColor, mutedForegroundColor, mutedColor, borderColor]);
+  }, [filteredNotes.length, folderId, handleNotePress, handleNoteLongPress, handleDeleteNote, handleArchiveNote, folderPathsMap, foldersMap, skeletonOpacity, notesEnhancedDataCache, foregroundColor, mutedForegroundColor, mutedColor, borderColor, backgroundColor]);
 
   // Critical optimization: Tell FlatList exact item heights for instant scrolling
   const getItemLayout = useCallback((_data: Note[] | null | undefined, index: number) => {
@@ -402,10 +560,15 @@ export default function NotesList({ navigation, route, renderHeader, scrollY: pa
         getItemLayout={getItemLayout}
         ListHeaderComponent={renderListHeader}
         ListEmptyComponent={renderEmptyComponent}
-        ListFooterComponent={<View style={{ height: 40 }} />}
+        ListFooterComponent={<View style={{ height: 100 }} />}
         style={styles.scrollView}
         contentContainerStyle={{ flexGrow: 1 }}
         showsVerticalScrollIndicator={false}
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+          { useNativeDriver: false }
+        )}
+        scrollEventThrottle={16}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -438,6 +601,42 @@ export default function NotesList({ navigation, route, renderHeader, scrollY: pa
         setSortConfig={setSortConfig}
         hasActiveFilters={hasActiveFilters}
       />
+
+      {/* Note Actions Bottom Sheet */}
+      <NoteActionsSheet
+        ref={noteActionsSheetRef}
+        note={null}
+        folders={allFolders}
+        onEdit={handleEditNote}
+        onMoveToFolder={handleMoveToFolder}
+        onToggleStar={handleToggleStar}
+        onArchive={handleArchiveNote}
+        onDelete={handleDeleteNote}
+      />
+
+      {/* Floating Action Button - Only visible when Create Note button scrolls off screen */}
+      {viewType !== 'trash' && (
+        <Animated.View
+          style={[
+            styles.fab,
+            {
+              backgroundColor: theme.colors.primary,
+              bottom: insets.bottom + 20,
+              right: 20,
+              opacity: fabOpacity,
+              transform: [{ translateY: fabTranslateY }],
+            }
+          ]}
+        >
+          <Pressable
+            style={styles.fabButton}
+            onPress={() => navigation?.navigate('CreateNote', { folderId: route?.params?.folderId })}
+            android_ripple={{ color: 'rgba(255, 255, 255, 0.3)', radius: 20 }}
+          >
+            <Ionicons name="add" size={20} color={theme.colors.primaryForeground} />
+          </Pressable>
+        </Animated.View>
+      )}
     </View>
   );
 }
@@ -460,5 +659,23 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 0,
     paddingTop: 0,
+  },
+  fab: {
+    position: 'absolute',
+    width: 40,
+    height: 40,
+    borderRadius: 6,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  fabButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 6,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

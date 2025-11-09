@@ -1,8 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
-import React from 'react';
+import { Code2, Network } from 'lucide-react-native';
+import React, { useMemo, useRef } from 'react';
 import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
+import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
+import Reanimated, { useAnimatedStyle } from 'react-native-reanimated';
 
 import type { Folder, Note } from '@/src/services/api';
+import { detectNoteType } from '@/src/utils/noteTypeDetection';
 import { stripHtmlTags } from '@/src/utils/noteUtils';
 
 import { NoteSkeletonItem } from './NoteSkeletonItem';
@@ -12,6 +16,9 @@ interface NoteListItemProps {
   isLastItem: boolean;
   folderId?: string;
   onPress: (noteId: string) => void;
+  onLongPress?: (note: Note) => void;
+  onDelete?: (noteId: string) => void;
+  onArchive?: (noteId: string) => void;
   folderPathsMap: Map<string, string>;
   foldersMap: Map<string, Folder>;
   skeletonOpacity: Animated.Value;
@@ -21,6 +28,7 @@ interface NoteListItemProps {
   mutedForegroundColor: string;
   mutedColor: string;
   borderColor: string;
+  backgroundColor: string;
 }
 
 const NoteListItemComponent: React.FC<NoteListItemProps> = ({
@@ -28,6 +36,9 @@ const NoteListItemComponent: React.FC<NoteListItemProps> = ({
   isLastItem,
   folderId,
   onPress,
+  onLongPress,
+  onDelete,
+  onArchive,
   folderPathsMap,
   foldersMap,
   skeletonOpacity,
@@ -36,7 +47,15 @@ const NoteListItemComponent: React.FC<NoteListItemProps> = ({
   mutedForegroundColor,
   mutedColor,
   borderColor,
+  backgroundColor,
 }) => {
+  const swipeableRef = useRef<Swipeable>(null);
+
+  // Detect note type from content with memoization for performance
+  // MUST be called before any conditional returns (React hooks rules)
+  const noteType = useMemo(() => detectNoteType(note), [note]);
+  const isDiagram = noteType === 'diagram';
+  const isCode = noteType === 'code';
 
   // Check if note is still encrypted (loading skeleton)
   const noteIsEncrypted = note.title === '[ENCRYPTED]' || note.content === '[ENCRYPTED]';
@@ -70,14 +89,119 @@ const NoteListItemComponent: React.FC<NoteListItemProps> = ({
   const folderPath = note.folderId ? folderPathsMap.get(note.folderId) || '' : '';
   const noteFolder = note.folderId ? foldersMap.get(note.folderId) : undefined;
 
+  // Render right swipe action (Delete - red)
+  const renderRightActions = (prog: Reanimated.SharedValue<number>, drag: Reanimated.SharedValue<number>) => {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    const styleAnimation = useAnimatedStyle(() => {
+      const width = Math.abs(drag.value);
+      return {
+        width: Math.max(width, 80),
+        transform: [{ translateX: 0 }],
+      };
+    });
+
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    const iconOpacity = useAnimatedStyle(() => {
+      const dragAmount = Math.abs(drag.value);
+      if (dragAmount < 100) return { opacity: 1 };
+      const opacity = Math.max(1 - (dragAmount - 100) / 20, 0);
+      return { opacity };
+    });
+
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    const textOpacity = useAnimatedStyle(() => {
+      const dragAmount = Math.abs(drag.value);
+      if (dragAmount < 100) return { opacity: 0 };
+      const opacity = Math.min((dragAmount - 100) / 20, 1);
+      return { opacity };
+    });
+
+    return (
+      <Reanimated.View style={[styles.deleteAction, styleAnimation]}>
+        <Reanimated.View style={[styles.swipeActionContent, iconOpacity]}>
+          <Ionicons name="trash-outline" size={24} color="#fff" />
+        </Reanimated.View>
+        <Reanimated.View style={[styles.swipeActionContent, textOpacity]}>
+          <Text style={styles.swipeActionText}>Delete</Text>
+        </Reanimated.View>
+      </Reanimated.View>
+    );
+  };
+
+  // Render left swipe action (Archive - blue)
+  // IMPORTANT: Always define this function to avoid hooks count issues
+  const canArchive = !note.archived && !note.deleted;
+  const renderLeftActions = (prog: Reanimated.SharedValue<number>, drag: Reanimated.SharedValue<number>) => {
+    // Always call hooks in the same order to avoid React hooks errors
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    const styleAnimation = useAnimatedStyle(() => {
+      const width = Math.abs(drag.value);
+      return {
+        width: Math.max(width, 80),
+        transform: [{ translateX: 0 }],
+      };
+    });
+
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    const iconOpacity = useAnimatedStyle(() => {
+      const dragAmount = Math.abs(drag.value);
+      if (dragAmount < 100) return { opacity: 1 };
+      const opacity = Math.max(1 - (dragAmount - 100) / 20, 0);
+      return { opacity };
+    });
+
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    const textOpacity = useAnimatedStyle(() => {
+      const dragAmount = Math.abs(drag.value);
+      if (dragAmount < 100) return { opacity: 0 };
+      const opacity = Math.min((dragAmount - 100) / 20, 1);
+      return { opacity };
+    });
+
+    // Return null AFTER all hooks are called
+    if (!canArchive) return null;
+
+    return (
+      <Reanimated.View style={[styles.archiveAction, styleAnimation]}>
+        <Reanimated.View style={[styles.swipeActionContent, iconOpacity]}>
+          <Ionicons name="archive-outline" size={24} color="#fff" />
+        </Reanimated.View>
+        <Reanimated.View style={[styles.swipeActionContent, textOpacity]}>
+          <Text style={styles.swipeActionText}>Archive</Text>
+        </Reanimated.View>
+      </Reanimated.View>
+    );
+  };
+
   return (
     <View style={styles.noteListItemWrapper}>
-      <Pressable
-        onPress={() => onPress(note.id)}
-        style={styles.noteListItem}
-        android_ripple={{ color: mutedColor }}
+      <Swipeable
+        ref={swipeableRef}
+        friction={2}
+        rightThreshold={80}
+        leftThreshold={80}
+        overshootRight={true}
+        overshootLeft={canArchive}
+        renderRightActions={renderRightActions}
+        renderLeftActions={canArchive ? renderLeftActions : undefined}
+        onSwipeableWillOpen={(direction) => {
+          // Auto-execute action when fully swiped
+          // direction 'left' = swiping left = delete (right actions opening)
+          // direction 'right' = swiping right = archive (left actions opening)
+          if (direction === 'right' && canArchive) {
+            onArchive?.(note.id);
+          } else if (direction === 'left') {
+            onDelete?.(note.id);
+          }
+        }}
       >
-        <View style={styles.noteListContent}>
+        <Pressable
+          onPress={() => onPress(note.id)}
+          onLongPress={() => onLongPress?.(note)}
+          style={[styles.noteListItem, { backgroundColor, paddingHorizontal: 16 }]}
+          android_ripple={{ color: mutedColor }}
+        >
+          <View style={styles.noteListContent}>
           <View style={styles.noteListHeader}>
             <Text
               style={[styles.noteListTitle, { color: foregroundColor }]}
@@ -87,6 +211,12 @@ const NoteListItemComponent: React.FC<NoteListItemProps> = ({
               {String(note.title || 'Untitled')}
             </Text>
             <View style={styles.noteListMeta}>
+              {isDiagram && (
+                <Network size={12} color="#06b6d4" style={{ marginRight: 8 }} />
+              )}
+              {isCode && (
+                <Code2 size={12} color="#22c55e" style={{ marginRight: 8 }} />
+              )}
               {((note.attachments?.length ?? 0) > 0 || (note.attachmentCount ?? 0) > 0) && (
                 <View style={styles.attachmentBadge}>
                   <View style={{ transform: [{ rotate: '45deg' }] }}>
@@ -121,6 +251,7 @@ const NoteListItemComponent: React.FC<NoteListItemProps> = ({
           )}
         </View>
       </Pressable>
+      </Swipeable>
       {!isLastItem && <View style={[styles.noteListDivider, { backgroundColor: borderColor }]} />}
     </View>
   );
@@ -132,7 +263,6 @@ export const NoteListItem = React.memo(NoteListItemComponent);
 
 const styles = StyleSheet.create({
   noteListItemWrapper: {
-    paddingHorizontal: 16,
   },
   noteListItem: {
   },
@@ -193,7 +323,32 @@ const styles = StyleSheet.create({
   },
   noteListDivider: {
     // @ts-ignore - StyleSheet.hairlineWidth is intentionally used for height (ultra-thin divider)
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     height: StyleSheet.hairlineWidth,
-    marginLeft: 0,
+    marginHorizontal: 16,
+  },
+  deleteAction: {
+    backgroundColor: '#ef4444',
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
+    height: '100%',
+  },
+  archiveAction: {
+    backgroundColor: '#3b82f6',
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
+    height: '100%',
+  },
+  swipeActionContent: {
+    position: 'absolute',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  swipeActionText: {
+    color: '#fff',
+    fontSize: 13,
+    fontWeight: '600',
   },
 });

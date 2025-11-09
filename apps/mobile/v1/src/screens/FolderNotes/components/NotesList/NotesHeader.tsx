@@ -57,11 +57,11 @@ export const NotesHeader: React.FC<NotesHeaderProps> = ({
         filteredNotesCount > 0 && (
           <View style={styles.buttonWrapper}>
             <Pressable
-              style={[styles.createNoteButton, { backgroundColor: theme.colors.card, borderColor: theme.colors.destructive, flexDirection: 'row', alignItems: 'center' }]}
+              style={[styles.createNoteButton, { backgroundColor: theme.isDark ? theme.colors.card : theme.colors.secondary, borderColor: theme.colors.border, flexDirection: 'row', alignItems: 'center' }]}
               onPress={onEmptyTrashPress}
             >
-              <Ionicons name="trash" size={16} color={theme.colors.destructive} style={{ marginRight: 12 }} />
-              <Text style={[styles.buttonText, { color: theme.colors.destructive }]}>
+              <Ionicons name="trash" size={16} color={theme.colors.foreground} style={{ marginRight: 12 }} />
+              <Text style={[styles.buttonText, { color: theme.colors.foreground }]}>
                 Empty Trash
               </Text>
             </Pressable>
