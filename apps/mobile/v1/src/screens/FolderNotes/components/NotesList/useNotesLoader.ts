@@ -23,9 +23,10 @@ interface UseNotesLoaderProps {
 async function decryptNotesWithYield(
   notes: Note[],
   userId: string,
-  chunkSize: number = 2
+  chunkSize: number = 5
 ): Promise<Note[]> {
   const results: Note[] = [];
+  let chunksProcessed = 0;
 
   for (let i = 0; i < notes.length; i += chunkSize) {
     const chunk = notes.slice(i, i + chunkSize);
@@ -41,11 +42,12 @@ async function decryptNotesWithYield(
     );
 
     results.push(...decryptedChunk);
+    chunksProcessed++;
 
-    // Yield to the event loop every chunk to keep UI responsive
-    // This allows touch events, animations, etc. to process
-    if (i + chunkSize < notes.length) {
-      await new Promise(resolve => setImmediate(resolve));
+    // Yield every 2 chunks (10 notes) to keep UI responsive while maximizing speed
+    // Use requestAnimationFrame for better timing than setImmediate
+    if (chunksProcessed % 2 === 0 && i + chunkSize < notes.length) {
+      await new Promise(resolve => requestAnimationFrame(() => resolve(undefined)));
     }
   }
 
@@ -67,10 +69,12 @@ export function useNotesLoader({
   const [loading, setLoading] = useState(true);
 
   const notesLoadedTime = useRef<number>(0);
-  const cacheKey = `notes-cache-${viewType || 'folder'}-${folderId || 'root'}`;
+  const cacheKey = `notes-cache-v2-${viewType || 'folder'}-${folderId || 'root'}`; // v2 to invalidate old encrypted caches
+  const cacheTimestampKey = `${cacheKey}-timestamp`;
   const cacheLoadedRef = useRef<boolean>(false); // Track if cache was loaded
   const cacheLoadingRef = useRef<Promise<void> | null>(null); // Track if cache is currently loading
   const cachedNotesRef = useRef<Note[]>([]); // Store cached notes for immediate access (state may lag)
+  const cacheTimestampRef = useRef<number>(0); // When cache was last saved
 
   // Helper to create lightweight note previews for caching (minimal content to fit 2MB limit)
   const createNotePreviews = (notes: Note[]): Note[] => {
@@ -86,7 +90,16 @@ export function useNotesLoader({
       return text.replace(/\s+/g, ' ').trim();
     };
 
-    return notes.map(note => ({
+    // CRITICAL: Filter out any encrypted notes before caching
+    const decryptedNotes = notes.filter(note =>
+      note.title !== '[ENCRYPTED]' && note.content !== '[ENCRYPTED]'
+    );
+
+    if (decryptedNotes.length < notes.length) {
+      console.warn(`[CACHE] ⚠️ Filtered out ${notes.length - decryptedNotes.length} encrypted notes from cache`);
+    }
+
+    return decryptedNotes.map(note => ({
       id: note.id,
       title: note.title,
       // Strip HTML and save plain text preview for faster scroll rendering
@@ -114,28 +127,45 @@ export function useNotesLoader({
     const loadCachedNotes = async () => {
       const cacheLoadStart = performance.now();
       try {
-        const cached = await AsyncStorage.getItem(cacheKey);
+        const [cached, timestampStr] = await Promise.all([
+          AsyncStorage.getItem(cacheKey),
+          AsyncStorage.getItem(cacheTimestampKey)
+        ]);
+
         if (cached) {
           const cachedNotes = JSON.parse(cached) as Note[];
+          const cacheTimestamp = timestampStr ? parseInt(timestampStr, 10) : 0;
+          const cacheAge = Date.now() - cacheTimestamp;
+          cacheTimestampRef.current = cacheTimestamp;
 
           // Check if cache contains encrypted notes (skeletons)
           const encryptedCount = cachedNotes.filter(n =>
             n.title === '[ENCRYPTED]' || n.content === '[ENCRYPTED]'
           ).length;
 
+          // REJECT cache if it contains ANY encrypted notes
+          if (encryptedCount > 0) {
+            console.error(`[CACHE] ❌ REJECTED: Cache contains ${encryptedCount}/${cachedNotes.length} encrypted notes - clearing bad cache`);
+            await AsyncStorage.removeItem(cacheKey);
+            await AsyncStorage.removeItem(cacheTimestampKey);
+            cacheLoadedRef.current = false;
+            return; // Don't use this cache
+          }
+
           // Store in ref for immediate access (state may lag due to async updates)
           cachedNotesRef.current = cachedNotes;
+
+          // CRITICAL: Set state synchronously to avoid 0 notes state
           setNotes(cachedNotes);
           setLoading(false); // Don't show loading if we have cached data
           cacheLoadedRef.current = true; // Mark cache as loaded
 
+          console.log(`[CACHE] ✅ State updated with ${cachedNotes.length} cached notes`);
+
           const cacheLoadEnd = performance.now();
-          console.log(`[CACHE] ✅ Loaded ${cachedNotes.length} notes from cache in ${(cacheLoadEnd - cacheLoadStart).toFixed(2)}ms`);
-          if (encryptedCount > 0) {
-            console.warn(`[CACHE] ⚠️ WARNING: ${encryptedCount}/${cachedNotes.length} cached notes are ENCRYPTED (will show skeletons!)`);
-          } else {
-            console.log(`[CACHE] ✅ All cached notes are decrypted (no skeletons)`);
-          }
+          const ageMinutes = (cacheAge / 1000 / 60).toFixed(1);
+          console.log(`[CACHE] ✅ Loaded ${cachedNotes.length} fully decrypted notes from cache in ${(cacheLoadEnd - cacheLoadStart).toFixed(2)}ms (age: ${ageMinutes}min)`);
+          console.log(`[CACHE] ✅ All cached notes are decrypted (no skeletons)`);
         } else {
           console.log(`[CACHE] No cache found for ${cacheKey}`);
         }
@@ -242,10 +272,15 @@ export function useNotesLoader({
 
       // If we have cached notes loaded, DON'T replace them with encrypted skeletons
       // Keep cached notes visible and merge with API response during decryption
-      // DON'T check notes.length - it may be 0 due to React state update timing!
+      // Use cachedNotesRef (not state) because state may lag!
       if (cacheLoadedRef.current) {
-        console.log(`[PERF OPTIMIZED] Cache active - keeping cached notes visible (${notes.length} in state), will merge after decryption`);
+        console.log(`[PERF OPTIMIZED] Cache active - keeping cached notes visible (${cachedNotesRef.current.length} in ref, ${notes.length} in state), will merge after decryption`);
         // Don't replace with encrypted notes - keep cache visible until decryption
+        // But ensure state has the cached notes if it doesn't already
+        if (notes.length === 0 && cachedNotesRef.current.length > 0) {
+          console.log(`[PERF OPTIMIZED] 🔧 State was empty, re-setting from cache ref (${cachedNotesRef.current.length} notes)`);
+          setNotes(cachedNotesRef.current);
+        }
       } else {
         // No cache - set encrypted notes immediately (will show skeletons)
         setNotes(sortedNotes);
@@ -263,23 +298,62 @@ export function useNotesLoader({
         setLoading(false);
       }
 
-      // Now decrypt the first 10 notes from the SORTED list (after UI renders)
+      // Check if cache is very recent (< 30 seconds) - if so, SKIP decryption entirely!
+      const cacheAge = Date.now() - cacheTimestampRef.current;
+      const cacheIsFresh = cacheLoadedRef.current && cacheAge < 30000; // 30 seconds
+
+      if (cacheIsFresh && cachedNotesRef.current.length > 0) {
+        console.log(`[PERF ⚡⚡⚡] ULTRA FAST MODE: Cache is ${(cacheAge / 1000).toFixed(1)}s old - SKIPPING ALL DECRYPTION!`);
+        console.log(`[PERF ⚡⚡⚡] Using ${cachedNotesRef.current.length} cached notes directly - INSTANT LOAD!`);
+
+        // Just use cache directly, no decryption needed
+        setNotes(cachedNotesRef.current);
+        if (!isRefresh) {
+          setLoading(false);
+        }
+
+        // Still load folders in background
+        (async () => {
+          try {
+            if (folderId) {
+              const [foldersData, noteCounts] = await Promise.all([
+                api.getFolders(),
+                api.getCounts(folderId)
+              ]);
+              const currentFolderSubfolders = foldersData.filter(folder => folder.parentId === folderId);
+              const subfoldersWithCounts = currentFolderSubfolders.map(folder => {
+                const folderCount = noteCounts[folder.id] as FolderCounts | undefined;
+                return { ...folder, noteCount: folderCount?.all || 0 };
+              });
+              setSubfolders(subfoldersWithCounts);
+              setAllFolders(foldersData);
+            } else {
+              setSubfolders([]);
+              const foldersData = await api.getFolders();
+              setAllFolders(foldersData);
+            }
+          } catch (error) {
+            console.error('[PERF ⚡⚡⚡] Failed to load folders:', error);
+            setSubfolders([]);
+          }
+        })();
+
+        console.log(`[PERF ⚡⚡⚡] 🎉 ULTRA FAST loadNotes completed - INSTANT!`);
+        return;
+      }
+
+      // Cache is stale or doesn't exist - proceed with decryption
+      // Now decrypt the first 20 notes from the SORTED list IMMEDIATELY (no waiting)
       if (userId && sortedNotes.length > 0) {
-        const batchSize = Math.min(10, sortedNotes.length);
+        const batchSize = Math.min(20, sortedNotes.length);
         const firstBatch = sortedNotes.slice(0, batchSize);
         const remaining = sortedNotes.slice(batchSize);
 
-        // Wait for any interactions to complete before starting decryption
-        // This ensures UI is fully interactive before CPU-intensive decryption starts
-        await new Promise(resolve => {
-          InteractionManager.runAfterInteractions(() => resolve(undefined));
-        });
-
         const decryptStart = performance.now();
-        console.log(`[PERF OPTIMIZED] 🔐 Starting non-blocking decryption of first ${batchSize} sorted notes`);
+        console.log(`[PERF OPTIMIZED] 🔐 Starting IMMEDIATE non-blocking decryption of first ${batchSize} sorted notes`);
 
-        // Decrypt first batch with yields to keep UI responsive (2 notes at a time)
-        const decryptedBatch = await decryptNotesWithYield(firstBatch, userId, 2);
+        // Decrypt first batch with yields to keep UI responsive (5 notes at a time for speed)
+        const decryptedBatch = await decryptNotesWithYield(firstBatch, userId, 5);
 
         const decryptEnd = performance.now();
         console.log(`[PERF OPTIMIZED] 🔓 Non-blocking decryption of first ${batchSize} notes completed in ${(decryptEnd - decryptStart).toFixed(2)}ms`);
@@ -338,16 +412,16 @@ export function useNotesLoader({
 
           if (encryptedRemaining.length > 0) {
             const bgDecryptStartTime = performance.now();
-            console.log(`[PERF OPTIMIZED] 🔐 Starting background decryption of ${encryptedRemaining.length} notes in 100ms...`);
+            console.log(`[PERF OPTIMIZED] 🔐 Starting background decryption of ${encryptedRemaining.length} notes IMMEDIATELY...`);
 
-            // Decrypt ALL in background with yields to keep UI responsive
+            // Decrypt ALL in background with yields to keep UI responsive (NO DELAY!)
             setTimeout(async () => {
               try {
                 console.log(`[PERF OPTIMIZED] 🔐 Non-blocking background decryption starting now...`);
                 const bgDecryptActualStart = performance.now();
 
-                // Decrypt all remaining notes with yields (2 at a time to keep UI responsive)
-                const allDecrypted = await decryptNotesWithYield(encryptedRemaining, userId, 2);
+                // Decrypt all remaining notes with yields (8 at a time for faster background processing)
+                const allDecrypted = await decryptNotesWithYield(encryptedRemaining, userId, 8);
 
                 const bgDecryptEnd = performance.now();
                 const totalTime = (bgDecryptEnd - bgDecryptStartTime).toFixed(2);
@@ -364,28 +438,42 @@ export function useNotesLoader({
 
                   // Update cache with fully decrypted notes (runs async, doesn't block UI)
                   const cacheStartTime = performance.now();
-                  const notePreviews = createNotePreviews(updatedNotes);
 
-                  // Check if any are still encrypted (shouldn't be!)
+                  // Check if any are still encrypted before creating previews
                   const stillEncrypted = updatedNotes.filter(n =>
                     n.title === '[ENCRYPTED]' || n.content === '[ENCRYPTED]'
                   ).length;
 
-                  AsyncStorage.setItem(cacheKey, JSON.stringify(notePreviews))
-                    .then(() => {
-                      const cacheEndTime = performance.now();
-                      console.log(`[CACHE] 💾 Saved all ${updatedNotes.length} fully decrypted notes to cache in ${(cacheEndTime - cacheStartTime).toFixed(2)}ms`);
-                      if (stillEncrypted > 0) {
-                        console.error(`[CACHE] ❌ ERROR: ${stillEncrypted} notes are still encrypted in cache!`);
-                      } else {
+                  if (stillEncrypted > 0) {
+                    console.error(`[CACHE] ❌ SKIPPING CACHE: ${stillEncrypted}/${updatedNotes.length} notes are still encrypted`);
+                  } else {
+                    // Only cache if ALL notes are fully decrypted
+                    const notePreviews = createNotePreviews(updatedNotes);
+
+                    // Double-check notePreviews don't contain encrypted notes
+                    if (notePreviews.length < updatedNotes.length) {
+                      console.error(`[CACHE] ❌ ERROR: createNotePreviews filtered out ${updatedNotes.length - notePreviews.length} notes!`);
+                    }
+
+                    const timestamp = Date.now();
+                    cacheTimestampRef.current = timestamp;
+
+                    Promise.all([
+                      AsyncStorage.setItem(cacheKey, JSON.stringify(notePreviews)),
+                      AsyncStorage.setItem(cacheTimestampKey, timestamp.toString())
+                    ])
+                      .then(() => {
+                        const cacheEndTime = performance.now();
+                        console.log(`[CACHE] 💾 Saved ${notePreviews.length} fully decrypted notes to cache in ${(cacheEndTime - cacheStartTime).toFixed(2)}ms`);
                         console.log(`[CACHE] ✅ Verified: All cached notes are decrypted (no skeletons next time)`);
-                      }
-                    })
-                    .catch(error => {
-                      console.error('[CACHE] Failed to update cache with decrypted notes:', error);
-                      // Clear old cache on error
-                      AsyncStorage.removeItem(cacheKey).catch(() => {});
-                    });
+                      })
+                      .catch(error => {
+                        console.error('[CACHE] Failed to update cache with decrypted notes:', error);
+                        // Clear old cache on error
+                        AsyncStorage.removeItem(cacheKey).catch(() => {});
+                        AsyncStorage.removeItem(cacheTimestampKey).catch(() => {});
+                      });
+                  }
 
                   return updatedNotes;
                 });
@@ -394,7 +482,7 @@ export function useNotesLoader({
               } catch (error) {
                 console.error('[PERF OPTIMIZED] Decryption error:', error);
               }
-            }, 100); // Start background decryption quickly to cache all notes
+            }, 0); // Start background decryption IMMEDIATELY to cache all notes
           }
         }
       } else {

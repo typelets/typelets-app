@@ -73,8 +73,8 @@ const NoteListItemComponent: React.FC<NoteListItemProps> = ({
     if (note.hidden) {
       preview = '[HIDDEN]';
     } else if (!note.content || note.content.trim() === '') {
-      // Empty content - show placeholder based on note type
-      preview = isDiagram ? 'Diagram (loading...)' : isCode ? 'Code (loading...)' : 'Loading...';
+      // Empty content - just show blank
+      preview = '';
     } else {
       // Content is already stripped HTML from cache or freshly decrypted
       // Only strip HTML if it contains tags (cached notes are pre-stripped)

@@ -287,36 +287,36 @@ export default function NotesList({ navigation, route, renderHeader, scrollY: pa
     );
   };
 
-  // Filter and sort notes
-  const filteredNotes = useNotesFiltering(notes, searchQuery, filterConfig, sortConfig);
-
-  // Pre-calculate folder paths
-  const folderPathsMap = useFolderPaths(allFolders);
-
   // Lazy cache for note previews and dates (only calculate when rendered)
   // DON'T clear this cache - let it persist across updates
   const notesEnhancedDataCache = useRef(new Map<string, { preview: string; formattedDate: string }>());
 
-  // Pre-populate the enhanced data cache to avoid computing during scroll
-  useEffect(() => {
+  // Pre-populate the enhanced data cache SYNCHRONOUSLY before filtering
+  // This ensures FlashList has all preview data ready when rendering
+  useMemo(() => {
+    // Skip if no notes
+    if (notes.length === 0) return;
+
     const populateStart = performance.now();
     let newEntriesCount = 0;
+
+    // Pre-create date formatter for better performance
+    const dateFormatter = new Intl.DateTimeFormat('en-US', {
+      month: 'short',
+      day: 'numeric',
+    });
 
     notes.forEach(note => {
       // Skip if already in cache
       if (notesEnhancedDataCache.current.has(note.id)) return;
-
-      // Detect note type for placeholder text
-      const noteType = detectNoteType(note);
-      const isDiagram = noteType === 'diagram';
-      const isCode = noteType === 'code';
 
       // Generate preview (same logic as NoteListItem)
       let preview: string;
       if (note.hidden) {
         preview = '[HIDDEN]';
       } else if (!note.content || note.content.trim() === '') {
-        preview = isDiagram ? 'Diagram (loading...)' : isCode ? 'Code (loading...)' : 'Loading...';
+        // Empty content - just show blank (skip detectNoteType for performance)
+        preview = '';
       } else {
         // Content is already stripped in cache, but check just in case
         const hasHtmlTags = note.content.includes('<');
@@ -325,11 +325,8 @@ export default function NotesList({ navigation, route, renderHeader, scrollY: pa
           : note.content.substring(0, 200);
       }
 
-      // Format date
-      const formattedDate = new Date(note.createdAt || Date.now()).toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-      });
+      // Format date using pre-created formatter (faster)
+      const formattedDate = dateFormatter.format(new Date(note.createdAt || Date.now()));
 
       notesEnhancedDataCache.current.set(note.id, { preview, formattedDate });
       newEntriesCount++;
@@ -337,9 +334,15 @@ export default function NotesList({ navigation, route, renderHeader, scrollY: pa
 
     const populateEnd = performance.now();
     if (newEntriesCount > 0) {
-      console.log(`[CACHE] ⚡ Pre-populated ${newEntriesCount} note previews in ${(populateEnd - populateStart).toFixed(2)}ms`);
+      console.log(`[CACHE] ⚡ Pre-populated ${newEntriesCount} note previews in ${(populateEnd - populateStart).toFixed(2)}ms (synchronous)`);
     }
   }, [notes]);
+
+  // Filter and sort notes (enhanced cache is populated above)
+  const filteredNotes = useNotesFiltering(notes, searchQuery, filterConfig, sortConfig);
+
+  // Pre-calculate folder paths
+  const folderPathsMap = useFolderPaths(allFolders);
 
   // Create a folder lookup map for O(1) access
   const foldersMap = useMemo(() => {
@@ -590,7 +593,6 @@ export default function NotesList({ navigation, route, renderHeader, scrollY: pa
         renderItem={renderNoteItem}
         keyExtractor={(item) => item.id}
         estimatedItemSize={108}
-        estimatedListSize={{ height: 700, width: 400 }}
         ListHeaderComponent={renderListHeader}
         ListEmptyComponent={renderEmptyComponent}
         ListFooterComponent={<View style={{ height: 100 }} />}
@@ -608,13 +610,16 @@ export default function NotesList({ navigation, route, renderHeader, scrollY: pa
             colors={[theme.isDark ? '#666666' : '#000000']}
           />
         }
-        drawDistance={800}
+        drawDistance={2000}
+        getItemType={(item) => {
+          // Help FlashList recycle items better
+          return 'note';
+        }}
         overrideItemLayout={(layout, item) => {
-          // More accurate layout for better blank space prevention
+          // Fixed layout for all items
           layout.size = 108;
         }}
       />
-
 
       {/* Create Folder Bottom Sheet */}
       <CreateFolderSheet
