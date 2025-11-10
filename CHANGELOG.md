@@ -1,3 +1,10 @@
+## [1.37.2](https://github.com/typelets/typelets-app/compare/v1.37.1...v1.37.2) (2025-11-10)
+
+
+### Bug Fixes
+
+* **mobile:** optimize notes list scrolling and decryption performance ([b14644b](https://github.com/typelets/typelets-app/commit/b14644be3f45291d874f17336d9960434bc3c080))
+
 ## [1.37.1](https://github.com/typelets/typelets-app/compare/v1.37.0...v1.37.1) (2025-11-09)
 
 
