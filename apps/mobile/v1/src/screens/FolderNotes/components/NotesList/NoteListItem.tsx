@@ -69,12 +69,20 @@ const NoteListItemComponent: React.FC<NoteListItemProps> = ({
   // Use cache version if available, otherwise create minimal version
   let enhancedData = enhancedDataCache.current.get(note.id);
   if (!enhancedData) {
-    // For encrypted notes, skip expensive HTML stripping - just show placeholder
-    const preview = note.hidden
-      ? '[HIDDEN]'
-      : note.content
-        ? stripHtmlTags(note.content).substring(0, 200) // Limit preview length
-        : '';
+    let preview: string;
+    if (note.hidden) {
+      preview = '[HIDDEN]';
+    } else if (!note.content || note.content.trim() === '') {
+      // Empty content - show placeholder based on note type
+      preview = isDiagram ? 'Diagram (loading...)' : isCode ? 'Code (loading...)' : 'Loading...';
+    } else {
+      // Content is already stripped HTML from cache or freshly decrypted
+      // Only strip HTML if it contains tags (cached notes are pre-stripped)
+      const hasHtmlTags = note.content.includes('<');
+      preview = hasHtmlTags
+        ? stripHtmlTags(note.content).substring(0, 200)
+        : note.content.substring(0, 200); // Already stripped, just truncate
+    }
 
     enhancedData = {
       preview,
@@ -177,21 +185,25 @@ const NoteListItemComponent: React.FC<NoteListItemProps> = ({
     <View style={styles.noteListItemWrapper}>
       <Swipeable
         ref={swipeableRef}
-        friction={2}
-        rightThreshold={80}
-        leftThreshold={80}
+        friction={1.2}
+        rightThreshold={100}
+        leftThreshold={100}
         overshootRight={true}
         overshootLeft={canArchive}
         renderRightActions={renderRightActions}
         renderLeftActions={canArchive ? renderLeftActions : undefined}
-        onSwipeableWillOpen={(direction) => {
-          // Auto-execute action when fully swiped
+        onSwipeableOpen={(direction) => {
+          // Auto-execute action when fully swiped through
           // direction 'left' = swiping left = delete (right actions opening)
           // direction 'right' = swiping right = archive (left actions opening)
           if (direction === 'right' && canArchive) {
             onArchive?.(note.id);
+            // Close swipeable after action
+            setTimeout(() => swipeableRef.current?.close(), 300);
           } else if (direction === 'left') {
             onDelete?.(note.id);
+            // Close swipeable after action
+            setTimeout(() => swipeableRef.current?.close(), 300);
           }
         }}
       >

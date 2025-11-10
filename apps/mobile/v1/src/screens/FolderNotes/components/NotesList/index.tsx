@@ -1,16 +1,19 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useUser } from '@clerk/clerk-expo';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
+import { FlashList } from '@shopify/flash-list';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import React, { useCallback,useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Animated, DeviceEventEmitter,FlatList, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Alert, Animated, DeviceEventEmitter, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { type Folder, type Note, useApiService } from '@/src/services/api';
 import { useTheme } from '@/src/theme';
+import { detectNoteType } from '@/src/utils/noteTypeDetection';
+import { stripHtmlTags } from '@/src/utils/noteUtils';
 
 // Constants for FAB scroll behavior
 const FAB_SCROLL_THRESHOLD_START = 100; // Start showing FAB when scrolled past this
@@ -94,7 +97,7 @@ export default function NotesList({ navigation, route, renderHeader, scrollY: pa
   const createFolderSheetRef = useRef<BottomSheetModal>(null);
   const filterSortSheetRef = useRef<BottomSheetModal>(null);
   const noteActionsSheetRef = useRef<NoteActionsSheetRef>(null);
-  const flatListRef = useRef<FlatList<Note>>(null);
+  const flatListRef = useRef<FlashList<Note>>(null);
 
   // Scroll tracking for animated divider (use parent's scrollY if provided)
   const localScrollY = useRef(new Animated.Value(0)).current;
@@ -267,13 +270,11 @@ export default function NotesList({ navigation, route, renderHeader, scrollY: pa
                 console.log(`[NotesList] api.emptyTrash() completed - ${result.deletedCount} deleted`);
               }
 
+              // Success haptic feedback
+              await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+
               // Navigate to main folders screen
               router.replace('/');
-
-              // Show success alert after navigation
-              setTimeout(() => {
-                Alert.alert('Success', `${result.deletedCount} notes permanently deleted.`);
-              }, 300);
             } catch (error) {
               // Restore notes on error
               setNotes(previousNotes);
@@ -295,6 +296,50 @@ export default function NotesList({ navigation, route, renderHeader, scrollY: pa
   // Lazy cache for note previews and dates (only calculate when rendered)
   // DON'T clear this cache - let it persist across updates
   const notesEnhancedDataCache = useRef(new Map<string, { preview: string; formattedDate: string }>());
+
+  // Pre-populate the enhanced data cache to avoid computing during scroll
+  useEffect(() => {
+    const populateStart = performance.now();
+    let newEntriesCount = 0;
+
+    notes.forEach(note => {
+      // Skip if already in cache
+      if (notesEnhancedDataCache.current.has(note.id)) return;
+
+      // Detect note type for placeholder text
+      const noteType = detectNoteType(note);
+      const isDiagram = noteType === 'diagram';
+      const isCode = noteType === 'code';
+
+      // Generate preview (same logic as NoteListItem)
+      let preview: string;
+      if (note.hidden) {
+        preview = '[HIDDEN]';
+      } else if (!note.content || note.content.trim() === '') {
+        preview = isDiagram ? 'Diagram (loading...)' : isCode ? 'Code (loading...)' : 'Loading...';
+      } else {
+        // Content is already stripped in cache, but check just in case
+        const hasHtmlTags = note.content.includes('<');
+        preview = hasHtmlTags
+          ? stripHtmlTags(note.content).substring(0, 200)
+          : note.content.substring(0, 200);
+      }
+
+      // Format date
+      const formattedDate = new Date(note.createdAt || Date.now()).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+      });
+
+      notesEnhancedDataCache.current.set(note.id, { preview, formattedDate });
+      newEntriesCount++;
+    });
+
+    const populateEnd = performance.now();
+    if (newEntriesCount > 0) {
+      console.log(`[CACHE] ⚡ Pre-populated ${newEntriesCount} note previews in ${(populateEnd - populateStart).toFixed(2)}ms`);
+    }
+  }, [notes]);
 
   // Create a folder lookup map for O(1) access
   const foldersMap = useMemo(() => {
@@ -433,19 +478,14 @@ export default function NotesList({ navigation, route, renderHeader, scrollY: pa
       // Update note as deleted FIRST
       await api.updateNote(noteId, { deleted: true });
 
-      // Only after API success, do the optimistic update
-      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      setNotes(prevNotes => prevNotes.filter(n => n.id !== noteId));
-      lastOptimisticUpdateRef.current = Date.now();
-
-      // Emit event for other listeners
+      // Emit event - the event listener will handle removing from UI
       DeviceEventEmitter.emit('noteDeleted', noteId);
     } catch (error) {
       console.error('Failed to delete note:', error);
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       Alert.alert('Error', 'Failed to delete note. Please try again.');
     }
-  }, [api, setNotes, loadNotes]);
+  }, [api]);
 
   // Handle archive note
   const handleArchiveNote = useCallback(async (noteId: string) => {
@@ -453,8 +493,10 @@ export default function NotesList({ navigation, route, renderHeader, scrollY: pa
       // Update note as archived FIRST
       await api.updateNote(noteId, { archived: true });
 
-      // Only after API success, do the optimistic update
+      // Success haptic feedback
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+
+      // Remove from current view immediately (archived notes don't show in folder/all views)
       setNotes(prevNotes => prevNotes.filter(n => n.id !== noteId));
       lastOptimisticUpdateRef.current = Date.now();
 
@@ -465,7 +507,7 @@ export default function NotesList({ navigation, route, renderHeader, scrollY: pa
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       Alert.alert('Error', 'Failed to archive note. Please try again.');
     }
-  }, [api, setNotes, loadNotes]);
+  }, [api, setNotes]);
 
   // Render individual note item
   const renderNoteItem = useCallback(({ item: note, index }: { item: Note; index: number }) => {
@@ -490,16 +532,6 @@ export default function NotesList({ navigation, route, renderHeader, scrollY: pa
       />
     );
   }, [filteredNotes.length, folderId, handleNotePress, handleNoteLongPress, handleDeleteNote, handleArchiveNote, folderPathsMap, foldersMap, skeletonOpacity, notesEnhancedDataCache, foregroundColor, mutedForegroundColor, mutedColor, borderColor, backgroundColor]);
-
-  // Critical optimization: Tell FlatList exact item heights for instant scrolling
-  const getItemLayout = useCallback((_data: Note[] | null | undefined, index: number) => {
-    const ITEM_HEIGHT = 108; // Average height: padding(24) + title(23) + preview(40) + meta(20) + divider(1)
-    return {
-      length: ITEM_HEIGHT,
-      offset: ITEM_HEIGHT * index,
-      index,
-    };
-  }, []);
 
   // Render list header (subfolders and create note button)
   const renderListHeader = useCallback(() => {
@@ -552,17 +584,16 @@ export default function NotesList({ navigation, route, renderHeader, scrollY: pa
         </View>
       )}
 
-      <FlatList
+      <FlashList
         ref={flatListRef}
         data={filteredNotes}
         renderItem={renderNoteItem}
         keyExtractor={(item) => item.id}
-        getItemLayout={getItemLayout}
+        estimatedItemSize={108}
+        estimatedListSize={{ height: 700, width: 400 }}
         ListHeaderComponent={renderListHeader}
         ListEmptyComponent={renderEmptyComponent}
         ListFooterComponent={<View style={{ height: 100 }} />}
-        style={styles.scrollView}
-        contentContainerStyle={{ flexGrow: 1 }}
         showsVerticalScrollIndicator={false}
         onScroll={Animated.event(
           [{ nativeEvent: { contentOffset: { y: scrollY } } }],
@@ -577,11 +608,11 @@ export default function NotesList({ navigation, route, renderHeader, scrollY: pa
             colors={[theme.isDark ? '#666666' : '#000000']}
           />
         }
-        removeClippedSubviews={true}
-        maxToRenderPerBatch={15}
-        updateCellsBatchingPeriod={50}
-        initialNumToRender={15}
-        windowSize={7}
+        drawDistance={800}
+        overrideItemLayout={(layout, item) => {
+          // More accurate layout for better blank space prevention
+          layout.size = 108;
+        }}
       />
 
 
