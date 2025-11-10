@@ -1,3 +1,10 @@
+## [1.37.1](https://github.com/typelets/typelets-app/compare/v1.37.0...v1.37.1) (2025-11-09)
+
+
+### Bug Fixes
+
+* **web:** support Piston synchronous code execution ([54d2fb9](https://github.com/typelets/typelets-app/commit/54d2fb912ec016e71b536462d51b412cfb84a599))
+
 # [1.37.0](https://github.com/typelets/typelets-app/compare/v1.36.2...v1.37.0) (2025-11-09)
 
 
