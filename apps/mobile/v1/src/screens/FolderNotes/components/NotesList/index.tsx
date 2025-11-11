@@ -7,13 +7,11 @@ import { FlashList, type FlashList as FlashListType } from '@shopify/flash-list'
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import React, { useCallback,useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Animated, DeviceEventEmitter, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, Animated, DeviceEventEmitter, InteractionManager, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { type Folder, type Note, useApiService } from '@/src/services/api';
 import { useTheme } from '@/src/theme';
-import { detectNoteType } from '@/src/utils/noteTypeDetection';
-import { stripHtmlTags } from '@/src/utils/noteUtils';
 
 // Constants for FAB scroll behavior
 const FAB_SCROLL_THRESHOLD_START = 100; // Start showing FAB when scrolled past this
@@ -58,6 +56,9 @@ export default function NotesList({ navigation, route, renderHeader, scrollY: pa
   const { folderId, viewType, searchQuery } = route?.params || {};
 
   const [refreshing, setRefreshing] = useState(false);
+  const [deletingNoteId, setDeletingNoteId] = useState<string | null>(null);
+  const [archivingNoteId, setArchivingNoteId] = useState<string | null>(null);
+  const [closeSwipeables, setCloseSwipeables] = useState(0);
 
   // Performance tracking
   const screenFocusTime = useRef<number>(0);
@@ -203,6 +204,11 @@ export default function NotesList({ navigation, route, renderHeader, scrollY: pa
       if (flatListRef.current) {
         flatListRef.current.scrollToOffset({ offset: 0, animated: false });
       }
+
+      // Cleanup function - close all swipeables when navigating away
+      return () => {
+        setCloseSwipeables(prev => prev + 1);
+      };
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [folderId, viewType, searchQuery])
   );
@@ -225,7 +231,18 @@ export default function NotesList({ navigation, route, renderHeader, scrollY: pa
   const onRefresh = async () => {
     try {
       setRefreshing(true);
+
+      // Save current scroll position before refresh
+      const currentOffset = scrollY._value || 0;
+
       await loadNotes(true);
+
+      // Restore scroll position after a small delay to let FlashList settle
+      if (currentOffset > 0) {
+        setTimeout(() => {
+          flatListRef.current?.scrollToOffset({ offset: currentOffset, animated: false });
+        }, 50);
+      }
     } finally {
       setRefreshing(false);
     }
@@ -476,40 +493,71 @@ export default function NotesList({ navigation, route, renderHeader, scrollY: pa
   }, [api, notes, setNotes, loadNotes]);
 
   // Handle delete note (move to trash)
-  const handleDeleteNote = useCallback(async (noteId: string) => {
-    try {
-      // Update note as deleted FIRST
-      await api.updateNote(noteId, { deleted: true });
+  const handleDeleteNote = useCallback((noteId: string) => {
+    // Fire haptic feedback immediately
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
-      // Emit event - the event listener will handle removing from UI
-      DeviceEventEmitter.emit('noteDeleted', noteId);
-    } catch (error) {
-      console.error('Failed to delete note:', error);
-      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      Alert.alert('Error', 'Failed to delete note. Please try again.');
-    }
+    // Set deleting state IMMEDIATELY to show spinner
+    setDeletingNoteId(noteId);
+
+    // Run API call after interactions complete (non-blocking)
+    InteractionManager.runAfterInteractions(async () => {
+      try {
+        // Update note as deleted
+        await api.updateNote(noteId, { deleted: true });
+
+        // Success haptic feedback
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+
+        // Keep spinner visible briefly before removing note
+        await new Promise(resolve => setTimeout(resolve, 200));
+
+        // Emit event - the event listener will handle removing from UI
+        DeviceEventEmitter.emit('noteDeleted', noteId);
+      } catch (error) {
+        console.error('Failed to delete note:', error);
+        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+        Alert.alert('Error', 'Failed to delete note. Please try again.');
+      } finally {
+        setDeletingNoteId(null);
+      }
+    });
   }, [api]);
 
   // Handle archive note
-  const handleArchiveNote = useCallback(async (noteId: string) => {
-    try {
-      // Update note as archived FIRST
-      await api.updateNote(noteId, { archived: true });
+  const handleArchiveNote = useCallback((noteId: string) => {
+    // Fire haptic feedback immediately
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
-      // Success haptic feedback
-      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    // Set archiving state IMMEDIATELY to show spinner
+    setArchivingNoteId(noteId);
 
-      // Remove from current view immediately (archived notes don't show in folder/all views)
-      setNotes(prevNotes => prevNotes.filter(n => n.id !== noteId));
-      lastOptimisticUpdateRef.current = Date.now();
+    // Run API call after interactions complete (non-blocking)
+    InteractionManager.runAfterInteractions(async () => {
+      try {
+        // Update note as archived
+        await api.updateNote(noteId, { archived: true });
 
-      // Emit event for other listeners
-      DeviceEventEmitter.emit('noteUpdated', { id: noteId, archived: true });
-    } catch (error) {
-      console.error('Failed to archive note:', error);
-      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      Alert.alert('Error', 'Failed to archive note. Please try again.');
-    }
+        // Success haptic feedback
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+
+        // Keep spinner visible briefly before removing note
+        await new Promise(resolve => setTimeout(resolve, 200));
+
+        // Remove from current view immediately (archived notes don't show in folder/all views)
+        setNotes(prevNotes => prevNotes.filter(n => n.id !== noteId));
+        lastOptimisticUpdateRef.current = Date.now();
+
+        // Emit event for other listeners
+        DeviceEventEmitter.emit('noteUpdated', { id: noteId, archived: true });
+      } catch (error) {
+        console.error('Failed to archive note:', error);
+        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+        Alert.alert('Error', 'Failed to archive note. Please try again.');
+      } finally {
+        setArchivingNoteId(null);
+      }
+    });
   }, [api, setNotes]);
 
   // Render individual note item
@@ -532,9 +580,12 @@ export default function NotesList({ navigation, route, renderHeader, scrollY: pa
         mutedColor={mutedColor}
         borderColor={borderColor}
         backgroundColor={backgroundColor}
+        isDeleting={deletingNoteId === note.id}
+        isArchiving={archivingNoteId === note.id}
+        closeSwipeables={closeSwipeables}
       />
     );
-  }, [filteredNotes.length, folderId, handleNotePress, handleNoteLongPress, handleDeleteNote, handleArchiveNote, folderPathsMap, foldersMap, skeletonOpacity, notesEnhancedDataCache, foregroundColor, mutedForegroundColor, mutedColor, borderColor, backgroundColor]);
+  }, [filteredNotes.length, folderId, handleNotePress, handleNoteLongPress, handleDeleteNote, handleArchiveNote, folderPathsMap, foldersMap, skeletonOpacity, notesEnhancedDataCache, foregroundColor, mutedForegroundColor, mutedColor, borderColor, backgroundColor, deletingNoteId, archivingNoteId, closeSwipeables]);
 
   // Render list header (subfolders and create note button)
   const renderListHeader = useCallback(() => {
@@ -607,14 +658,15 @@ export default function NotesList({ navigation, route, renderHeader, scrollY: pa
             onRefresh={onRefresh}
             tintColor={theme.isDark ? '#666666' : '#000000'}
             colors={[theme.isDark ? '#666666' : '#000000']}
+            progressViewOffset={insets.top}
           />
         }
         drawDistance={2000}
-        getItemType={(item) => {
+        getItemType={() => {
           // Help FlashList recycle items better
           return 'note';
         }}
-        overrideItemLayout={(layout, item) => {
+        overrideItemLayout={(layout) => {
           // Fixed layout for better scrolling performance
           // Padding: 12*2=24, Header: 23+8, Preview: 40+6, Meta: 20, Divider: 1
           layout.size = 112;

@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Code2, Network } from 'lucide-react-native';
 import React, { useMemo, useRef } from 'react';
-import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import Reanimated, { useAnimatedStyle } from 'react-native-reanimated';
 
@@ -29,6 +29,9 @@ interface NoteListItemProps {
   mutedColor: string;
   borderColor: string;
   backgroundColor: string;
+  isDeleting?: boolean;
+  isArchiving?: boolean;
+  closeSwipeables?: number; // Increment this to close all swipeables
 }
 
 const NoteListItemComponent: React.FC<NoteListItemProps> = ({
@@ -48,8 +51,18 @@ const NoteListItemComponent: React.FC<NoteListItemProps> = ({
   mutedColor,
   borderColor,
   backgroundColor,
+  isDeleting = false,
+  isArchiving = false,
+  closeSwipeables = 0,
 }) => {
   const swipeableRef = useRef<Swipeable>(null);
+
+  // Close swipeable when closeSwipeables prop changes
+  React.useEffect(() => {
+    if (closeSwipeables > 0) {
+      swipeableRef.current?.close();
+    }
+  }, [closeSwipeables]);
 
   // Detect note type from content with memoization for performance
   // MUST be called before any conditional returns (React hooks rules)
@@ -127,11 +140,17 @@ const NoteListItemComponent: React.FC<NoteListItemProps> = ({
     return (
       <Reanimated.View style={[styles.deleteAction, styleAnimation]}>
         <Reanimated.View style={[styles.swipeActionContent, iconOpacity]}>
-          <Ionicons name="trash-outline" size={24} color="#fff" />
+          {isDeleting ? (
+            <ActivityIndicator size="small" color="#fff" />
+          ) : (
+            <Ionicons name="trash-outline" size={24} color="#fff" />
+          )}
         </Reanimated.View>
-        <Reanimated.View style={[styles.swipeActionContent, textOpacity]}>
-          <Text style={styles.swipeActionText}>Delete</Text>
-        </Reanimated.View>
+        {!isDeleting && (
+          <Reanimated.View style={[styles.swipeActionContent, textOpacity]}>
+            <Text style={styles.swipeActionText}>Delete</Text>
+          </Reanimated.View>
+        )}
       </Reanimated.View>
     );
   };
@@ -172,11 +191,17 @@ const NoteListItemComponent: React.FC<NoteListItemProps> = ({
     return (
       <Reanimated.View style={[styles.archiveAction, styleAnimation]}>
         <Reanimated.View style={[styles.swipeActionContent, iconOpacity]}>
-          <Ionicons name="archive-outline" size={24} color="#fff" />
+          {isArchiving ? (
+            <ActivityIndicator size="small" color="#fff" />
+          ) : (
+            <Ionicons name="archive-outline" size={24} color="#fff" />
+          )}
         </Reanimated.View>
-        <Reanimated.View style={[styles.swipeActionContent, textOpacity]}>
-          <Text style={styles.swipeActionText}>Archive</Text>
-        </Reanimated.View>
+        {!isArchiving && (
+          <Reanimated.View style={[styles.swipeActionContent, textOpacity]}>
+            <Text style={styles.swipeActionText}>Archive</Text>
+          </Reanimated.View>
+        )}
       </Reanimated.View>
     );
   };
@@ -198,12 +223,10 @@ const NoteListItemComponent: React.FC<NoteListItemProps> = ({
           // direction 'right' = swiping right = archive (left actions opening)
           if (direction === 'right' && canArchive) {
             onArchive?.(note.id);
-            // Close swipeable after action
-            setTimeout(() => swipeableRef.current?.close(), 300);
+            // Don't close swipeable - let the spinner stay visible until note is removed
           } else if (direction === 'left') {
             onDelete?.(note.id);
-            // Close swipeable after action
-            setTimeout(() => swipeableRef.current?.close(), 300);
+            // Don't close swipeable - let the spinner stay visible until note is removed
           }
         }}
       >
@@ -264,6 +287,7 @@ const NoteListItemComponent: React.FC<NoteListItemProps> = ({
         </View>
       </Pressable>
       </Swipeable>
+
       {!isLastItem && <View style={[styles.noteListDivider, { backgroundColor: borderColor }]} />}
     </View>
   );
@@ -334,8 +358,7 @@ const styles = StyleSheet.create({
     fontWeight: '400',
   },
   noteListDivider: {
-    // @ts-ignore - StyleSheet.hairlineWidth is intentionally used for height (ultra-thin divider)
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // StyleSheet.hairlineWidth is intentionally used for height (ultra-thin divider)
     height: StyleSheet.hairlineWidth,
     marginHorizontal: 16,
     marginVertical: 0,
