@@ -1,3 +1,10 @@
+## [1.37.3](https://github.com/typelets/typelets-app/compare/v1.37.2...v1.37.3) (2025-11-10)
+
+
+### Bug Fixes
+
+* **mobile:** implement fast mode with smart caching and instant navigation ([d6e3834](https://github.com/typelets/typelets-app/commit/d6e383483c12eb49311f2026305af146cfd558a3))
+
 ## [1.37.2](https://github.com/typelets/typelets-app/compare/v1.37.1...v1.37.2) (2025-11-10)
 
 
