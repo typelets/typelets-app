@@ -12,6 +12,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { type Folder, type Note, useApiService } from '@/src/services/api';
 import { useTheme } from '@/src/theme';
+import { stripHtmlTags } from '@/src/utils/noteUtils';
 
 // Constants for FAB scroll behavior
 const FAB_SCROLL_THRESHOLD_START = 100; // Start showing FAB when scrolled past this
