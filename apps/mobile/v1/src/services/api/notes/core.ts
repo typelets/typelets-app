@@ -5,25 +5,24 @@
 
 import * as SQLite from 'expo-sqlite';
 
-import { getDatabase } from '../../lib/database';
-import { logger } from '../../lib/logger';
-import { getCacheDecryptedContentPreference } from '../../lib/preferences';
-import { fileService, type PickedFile } from '../fileService';
-import { isOnline } from '../network/networkManager';
-import { queueMutation } from '../sync/syncManager';
-import { apiCache, CACHE_KEYS, CACHE_TTL } from './cache';
-import { AuthTokenGetter, createHttpClient, NotModifiedError } from './client';
+import { getDatabase } from '../../../lib/database';
+import { logger } from '../../../lib/logger';
+import { fileService, type PickedFile } from '../../fileService';
+import { isOnline } from '../../network/networkManager';
+import { queueMutation } from '../../sync/syncManager';
+import { apiCache, CACHE_KEYS, CACHE_TTL } from '../cache';
+import { AuthTokenGetter, createHttpClient, NotModifiedError } from '../client';
 import {
   getCachedNotes,
   getCacheMetadata,
   invalidateCache,
   setCacheMetadata,
   storeCachedNotes,
-} from './databaseCache';
-import { clearEncryptionCache,decryptNote, decryptNotes, encryptNoteForApi } from './encryption';
-import { EmptyTrashResponse, FileAttachment, FolderCounts, Note, NoteCounts,NoteQueryParams, NotesResponse } from './types';
-import { handleApiError } from './utils/errors';
-import { createPaginationParams,fetchAllPages } from './utils/pagination';
+} from '../databaseCache';
+import { clearEncryptionCache,decryptNote, decryptNotes, encryptNoteForApi } from '../encryption';
+import { EmptyTrashResponse, FileAttachment, FolderCounts, Note, NoteCounts,NoteQueryParams, NotesResponse } from '../types';
+import { handleApiError } from '../utils/errors';
+import { createPaginationParams,fetchAllPages } from '../utils/pagination';
 
 export function createNotesApi(getToken: AuthTokenGetter, getUserId: () => string | undefined) {
   const { makeRequest, makeConditionalRequest } = createHttpClient(getToken);
@@ -427,10 +426,9 @@ export function createNotesApi(getToken: AuthTokenGetter, getUserId: () => strin
                 }
               }
 
-              // Check if user wants decrypted content cached for instant loading
-              const cacheDecrypted = await getCacheDecryptedContentPreference();
-
-              if (cacheDecrypted && userId) {
+              // Always cache decrypted content for instant loading and to prevent
+              // overwriting individual note updates (create/update) that stored decrypted content
+              if (userId) {
                 // Decrypt notes before caching (for instant loading next time)
                 const decryptedNotes = await decryptNotes(allNotes, userId);
                 await storeCachedNotes(decryptedNotes, { storeDecrypted: true });
@@ -439,11 +437,11 @@ export function createNotesApi(getToken: AuthTokenGetter, getUserId: () => strin
                   console.log(`[API] 🔄 Background refresh completed - ${decryptedNotes.length} notes cached (DECRYPTED)`);
                 }
               } else {
-                // Store encrypted only
+                // No userId - store encrypted only (shouldn't happen in normal flow)
                 await storeCachedNotes(allNotes, { storeDecrypted: false });
 
                 if (__DEV__) {
-                  console.log(`[API] 🔄 Background refresh completed - ${allNotes.length} notes cached (encrypted)`);
+                  console.log(`[API] 🔄 Background refresh completed - ${allNotes.length} notes cached (encrypted - no userId)`);
                 }
               }
             } catch (error) {
@@ -500,10 +498,8 @@ export function createNotesApi(getToken: AuthTokenGetter, getUserId: () => strin
           console.log(`[API] Fetched ${allNotes.length} total notes from server (first load)`);
         }
 
-        // Check if user wants decrypted content cached for instant loading
-        const cacheDecrypted = await getCacheDecryptedContentPreference();
-
-        if (cacheDecrypted && userId) {
+        // Always cache decrypted content for instant loading
+        if (userId) {
           // Decrypt ALL notes before caching (for instant loading next time)
           const decryptedNotes = await decryptNotes(allNotes, userId);
           await storeCachedNotes(decryptedNotes, { storeDecrypted: true });
@@ -522,11 +518,11 @@ export function createNotesApi(getToken: AuthTokenGetter, getUserId: () => strin
           // Return decrypted and filtered notes
           return filteredNotes;
         } else {
-          // Store encrypted only
+          // No userId - store encrypted only (shouldn't happen in normal flow)
           await storeCachedNotes(allNotes, { storeDecrypted: false });
 
           if (__DEV__) {
-            console.log(`[API] Stored ${allNotes.length} notes to cache (encrypted only)`);
+            console.log(`[API] Stored ${allNotes.length} notes to cache (encrypted only - no userId)`);
           }
 
           // Filter notes locally to match requested view
@@ -733,6 +729,20 @@ export function createNotesApi(getToken: AuthTokenGetter, getUserId: () => strin
         // Decrypt and return the created note
         const decryptedNote = await decryptNote(createdNote, userId);
 
+        // CRITICAL FIX: Store new note in local SQLite cache
+        // Without this, the cache is missing the new note and it won't appear until refresh
+        // The background refresh in getNotes() will naturally update AsyncStorage cache
+        try {
+          const { storeCachedNotes } = await import('../databaseCache');
+          await storeCachedNotes([decryptedNote], { storeDecrypted: true });
+          if (__DEV__) {
+            console.log(`[API] ✅ Stored new note ${createdNote.id} in local SQLite cache`);
+          }
+        } catch (cacheError) {
+          // Don't fail the creation if cache write fails, just log it
+          console.warn('[API] Failed to store new note in local cache:', cacheError);
+        }
+
         // Invalidate counts cache
         invalidateCountsCache();
 
@@ -908,6 +918,39 @@ export function createNotesApi(getToken: AuthTokenGetter, getUserId: () => strin
 
         // Decrypt and return the updated note
         const decryptedNote = await decryptNote(updatedNote, userId);
+
+        // CRITICAL FIX: Update local SQLite cache to keep it in sync
+        // Without this, the cache becomes stale and deleted notes reappear
+        try {
+          const { storeCachedNotes } = await import('../databaseCache');
+          await storeCachedNotes([decryptedNote], { storeDecrypted: true });
+          if (__DEV__) {
+            console.log(`[API] ✅ Updated local SQLite cache for note ${noteId} after online update`);
+          }
+        } catch (cacheError) {
+          // Don't fail the update if cache write fails, just log it
+          console.warn('[API] Failed to update local SQLite cache after online update:', cacheError);
+        }
+
+        // ADDITIONAL FIX: Clear AsyncStorage preview caches for affected views
+        // This ensures the UI layer cache (useNotesLoader) also refreshes
+        // Only clear when changing note location/status (deleted, archived, folder moved)
+        if (updates.deleted || updates.archived || updates.folderId !== undefined) {
+          try {
+            const AsyncStorage = await import('@react-native-async-storage/async-storage').then(m => m.default);
+            const allKeys = await AsyncStorage.getAllKeys();
+            const noteCacheKeys = allKeys.filter(key => key.startsWith('notes-cache-v2-'));
+            if (noteCacheKeys.length > 0) {
+              await AsyncStorage.multiRemove(noteCacheKeys);
+              if (__DEV__) {
+                console.log(`[API] ✅ Cleared ${noteCacheKeys.length} AsyncStorage preview cache(s) after note update`);
+              }
+            }
+          } catch (asyncStorageError) {
+            // Don't fail if AsyncStorage clear fails
+            console.warn('[API] Failed to clear AsyncStorage cache after online update:', asyncStorageError);
+          }
+        }
 
         // Invalidate counts cache (in case starred/archived status changed)
         invalidateCountsCache();

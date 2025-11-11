@@ -302,7 +302,16 @@ export function useNotesLoader({
       const cacheAge = Date.now() - cacheTimestampRef.current;
       const cacheIsFresh = cacheLoadedRef.current && cacheAge < 30000; // 30 seconds
 
-      if (cacheIsFresh && cachedNotesRef.current.length > 0) {
+      // CRITICAL: Verify cache count matches API result count
+      // If counts differ, fresh data is available (new note created, note deleted, etc.)
+      // In this case, skip ultra-fast mode and use the fresh API data
+      const cacheCountMatches = cachedNotesRef.current.length === sortedNotes.length;
+
+      if (!cacheCountMatches && cacheIsFresh) {
+        console.log(`[PERF ⚡⚡⚡] SKIPPING ULTRA FAST MODE: Cache count mismatch (cached: ${cachedNotesRef.current.length}, API: ${sortedNotes.length}) - using fresh data`);
+      }
+
+      if (cacheIsFresh && cachedNotesRef.current.length > 0 && cacheCountMatches) {
         console.log(`[PERF ⚡⚡⚡] ULTRA FAST MODE: Cache is ${(cacheAge / 1000).toFixed(1)}s old - SKIPPING ALL DECRYPTION!`);
         console.log(`[PERF ⚡⚡⚡] Using ${cachedNotesRef.current.length} cached notes directly - INSTANT LOAD!`);
 

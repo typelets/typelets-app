@@ -286,7 +286,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 6,
+    marginBottom: 8,
   },
   noteListTitle: {
     fontSize: 17,
@@ -315,14 +315,14 @@ const styles = StyleSheet.create({
   },
   noteListPreview: {
     fontSize: 15,
-    lineHeight: 20,
-    marginBottom: 4,
+    lineHeight: 22,
+    marginBottom: 6,
   },
   noteListFolderInfo: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    marginTop: 4,
+    marginTop: 6,
   },
   noteListFolderDot: {
     width: 8,
@@ -338,6 +338,7 @@ const styles = StyleSheet.create({
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     height: StyleSheet.hairlineWidth,
     marginHorizontal: 16,
+    marginVertical: 0,
   },
   deleteAction: {
     backgroundColor: '#ef4444',

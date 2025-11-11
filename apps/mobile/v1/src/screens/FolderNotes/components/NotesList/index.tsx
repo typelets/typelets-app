@@ -1,9 +1,9 @@
-import { Ionicons } from '@expo/vector-icons';
 import { useUser } from '@clerk/clerk-expo';
+import { Ionicons } from '@expo/vector-icons';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
-import { FlashList } from '@shopify/flash-list';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
+import { FlashList, type FlashList as FlashListType } from '@shopify/flash-list';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import React, { useCallback,useEffect, useMemo, useRef, useState } from 'react';
@@ -97,7 +97,7 @@ export default function NotesList({ navigation, route, renderHeader, scrollY: pa
   const createFolderSheetRef = useRef<BottomSheetModal>(null);
   const filterSortSheetRef = useRef<BottomSheetModal>(null);
   const noteActionsSheetRef = useRef<NoteActionsSheetRef>(null);
-  const flatListRef = useRef<FlashList<Note>>(null);
+  const flatListRef = useRef<FlashListType<Note>>(null);
 
   // Scroll tracking for animated divider (use parent's scrollY if provided)
   const localScrollY = useRef(new Animated.Value(0)).current;
@@ -592,10 +592,9 @@ export default function NotesList({ navigation, route, renderHeader, scrollY: pa
         data={filteredNotes}
         renderItem={renderNoteItem}
         keyExtractor={(item) => item.id}
-        estimatedItemSize={108}
         ListHeaderComponent={renderListHeader}
         ListEmptyComponent={renderEmptyComponent}
-        ListFooterComponent={<View style={{ height: 100 }} />}
+        ListFooterComponent={<View style={{ height: 120 }} />}
         showsVerticalScrollIndicator={false}
         onScroll={Animated.event(
           [{ nativeEvent: { contentOffset: { y: scrollY } } }],
@@ -616,8 +615,9 @@ export default function NotesList({ navigation, route, renderHeader, scrollY: pa
           return 'note';
         }}
         overrideItemLayout={(layout, item) => {
-          // Fixed layout for all items
-          layout.size = 108;
+          // Fixed layout for better scrolling performance
+          // Padding: 12*2=24, Header: 23+8, Preview: 40+6, Meta: 20, Divider: 1
+          layout.size = 112;
         }}
       />
 
