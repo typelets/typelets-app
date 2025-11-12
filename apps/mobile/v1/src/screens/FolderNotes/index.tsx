@@ -307,9 +307,9 @@ export default function FolderNotesScreen({ folderId, folderName, viewType }: Fo
 
               <Text style={[styles.headerTitle, { color: theme.colors.foreground }]} numberOfLines={1} ellipsizeMode="head">{title}</Text>
 
-              <View style={[styles.headerActionsGroup, { backgroundColor: theme.colors.muted, borderColor: theme.colors.border }]}>
+              <View style={styles.headerActions}>
                 <TouchableOpacity
-                  style={styles.iconButton}
+                  style={[styles.iconButton, { backgroundColor: theme.colors.muted }]}
                   onPress={() => breadcrumbSheetRef.current?.present()}
                 >
                   <Ionicons
@@ -319,10 +319,8 @@ export default function FolderNotesScreen({ folderId, folderName, viewType }: Fo
                   />
                 </TouchableOpacity>
 
-                <View style={[styles.buttonDivider, { backgroundColor: theme.colors.border }]} />
-
                 <TouchableOpacity
-                  style={styles.iconButton}
+                  style={[styles.iconButton, { backgroundColor: theme.colors.muted }]}
                   onPress={() => {
                     if (isSearchVisible) {
                       setIsSearchVisible(false);
@@ -342,7 +340,7 @@ export default function FolderNotesScreen({ folderId, folderName, viewType }: Fo
                 {/* Show settings button only for regular folders (not Quick Action views) */}
                 {!viewType && folderId && (
                   <TouchableOpacity
-                    style={styles.iconButton}
+                    style={[styles.iconButton, { backgroundColor: theme.colors.muted }]}
                     onPress={openFolderSettings}
                   >
                     <Ionicons name="settings-outline" size={20} color={theme.colors.mutedForeground} />
@@ -351,7 +349,7 @@ export default function FolderNotesScreen({ folderId, folderName, viewType }: Fo
 
                 {/* Avatar - navigates to settings */}
                 <TouchableOpacity
-                  style={styles.iconButton}
+                  style={[styles.iconButton, { backgroundColor: theme.colors.muted }]}
                   onPress={() => router.push('/settings')}
                 >
                   <UserRound size={20} color={theme.colors.mutedForeground} />
@@ -554,10 +552,10 @@ export default function FolderNotesScreen({ folderId, folderName, viewType }: Fo
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.deleteButton, { backgroundColor: '#ffffff' }]}
+              style={[styles.updateButton, { backgroundColor: theme.colors.destructive }]}
               onPress={handleDeleteFolder}
             >
-              <Text style={[styles.deleteButtonText, { color: theme.colors.destructive }]}>
+              <Text style={[styles.updateButtonText, { color: theme.colors.destructiveForeground }]}>
                 Delete Folder
               </Text>
             </TouchableOpacity>
@@ -595,23 +593,17 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
-  headerActionsGroup: {
+  headerActions: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: ACTION_BUTTON.BORDER_RADIUS,
-    borderWidth: StyleSheet.hairlineWidth,
-    overflow: 'hidden',
+    gap: 12,
   },
   iconButton: {
     width: 34,
     height: 34,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 2,
-  },
-  buttonDivider: {
-    width: StyleSheet.hairlineWidth,
-    height: 34,
+    borderRadius: 17,
   },
   searchBar: {
     paddingHorizontal: 16,
@@ -712,16 +704,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   updateButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  deleteButton: {
-    width: '100%',
-    padding: 14,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  deleteButtonText: {
     fontSize: 16,
     fontWeight: '600',
   },
