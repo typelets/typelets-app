@@ -1,3 +1,10 @@
+## [1.37.10](https://github.com/typelets/typelets-app/compare/v1.37.9...v1.37.10) (2025-11-12)
+
+
+### Bug Fixes
+
+* **mobile:** optimize folder navigation and improve cache status clarity ([bc60320](https://github.com/typelets/typelets-app/commit/bc60320d2fe683e68682898e50b49bda2fe79d7b))
+
 ## [1.37.9](https://github.com/typelets/typelets-app/compare/v1.37.8...v1.37.9) (2025-11-12)
 
 
