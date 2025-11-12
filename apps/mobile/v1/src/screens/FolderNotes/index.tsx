@@ -351,6 +351,7 @@ export default function FolderNotesScreen({ folderId, folderName, viewType }: Fo
                 <TouchableOpacity
                   style={[styles.iconButton, { backgroundColor: theme.colors.muted }]}
                   onPress={() => router.push('/settings')}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                 >
                   <UserRound size={20} color={theme.colors.mutedForeground} />
                 </TouchableOpacity>

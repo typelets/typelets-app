@@ -110,7 +110,7 @@ export default function NotesList({ navigation, route, renderHeader, scrollY: pa
   // Show FAB when scrolled past the header
   const fabOpacity = scrollY.interpolate({
     inputRange: [FAB_SCROLL_THRESHOLD_START, FAB_SCROLL_THRESHOLD_END],
-    outputRange: [0, 0.8],
+    outputRange: [0, 1],
     extrapolate: 'clamp',
   });
 
@@ -709,7 +709,7 @@ export default function NotesList({ navigation, route, renderHeader, scrollY: pa
           style={[
             styles.fab,
             {
-              backgroundColor: theme.colors.primary,
+              backgroundColor: theme.colors.muted,
               bottom: insets.bottom + 20,
               right: 20,
               opacity: fabOpacity,
@@ -720,9 +720,9 @@ export default function NotesList({ navigation, route, renderHeader, scrollY: pa
           <Pressable
             style={styles.fabButton}
             onPress={() => navigation?.navigate('CreateNote', { folderId: route?.params?.folderId })}
-            android_ripple={{ color: 'rgba(255, 255, 255, 0.3)', radius: 20 }}
+            android_ripple={{ color: 'rgba(0, 0, 0, 0.1)', radius: 20 }}
           >
-            <Ionicons name="add" size={20} color={theme.colors.primaryForeground} />
+            <Ionicons name="add" size={20} color={theme.colors.mutedForeground} />
           </Pressable>
         </Animated.View>
       )}
