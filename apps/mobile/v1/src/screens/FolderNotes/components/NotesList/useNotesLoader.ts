@@ -194,9 +194,18 @@ export function useNotesLoader({
         console.log(`[CACHE] ✅ Cache loading complete, proceeding with loadNotes`);
       }
 
-      // Only show loading state if we don't have notes already AND not refreshing AND cache not loaded
-      // When refreshing, the RefreshControl shows its own spinner, so we don't need the loading overlay
-      if (!isRefresh && notes.length === 0 && !cacheLoadedRef.current) {
+      // Check if we have very fresh cache (< 5 seconds old) - if so, show it IMMEDIATELY
+      // For slightly older cache, wait for API to verify no changes
+      const cacheAge = Date.now() - cacheTimestampRef.current;
+      const cacheIsVeryFresh = cacheLoadedRef.current && cacheAge < 5000; // 5 seconds
+
+      if (cacheIsVeryFresh && cachedNotesRef.current.length > 0 && !isRefresh) {
+        console.log(`[PERF ⚡⚡⚡] INSTANT LOAD: Cache is ${(cacheAge / 1000).toFixed(1)}s old - showing immediately!`);
+        setNotes(cachedNotesRef.current);
+        setLoading(false);
+        // Continue to fetch updates in background below
+      } else if (!isRefresh && notes.length === 0 && !cacheLoadedRef.current) {
+        // Only show loading state if we don't have notes already AND not refreshing AND cache not loaded
         setLoading(true);
       } else if (!isRefresh && (notes.length > 0 || cacheLoadedRef.current)) {
         // We have notes already or cache is loaded - just refresh silently in background
@@ -298,8 +307,7 @@ export function useNotesLoader({
         setLoading(false);
       }
 
-      // Check if cache is very recent (< 30 seconds) - if so, SKIP decryption entirely!
-      const cacheAge = Date.now() - cacheTimestampRef.current;
+      // Reuse cacheAge from above - check if cache is still recent (< 30 seconds) for ultra-fast mode
       const cacheIsFresh = cacheLoadedRef.current && cacheAge < 30000; // 30 seconds
 
       // CRITICAL: Verify cache count matches API result count

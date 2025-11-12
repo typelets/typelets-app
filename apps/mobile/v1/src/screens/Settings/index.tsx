@@ -283,7 +283,7 @@ export default function SettingsScreen({ onLogout }: Props) {
         },
         {
           title: 'Encrypted Cache',
-          subtitle: cacheDecrypted ? 'Cache decrypted' : 'Cache encrypted',
+          subtitle: cacheDecrypted ? 'Caching decrypted content' : 'Caching encrypted content',
           icon: 'flash-outline',
           onPress: () => cachePreferenceSheetRef.current?.present(),
         },
@@ -329,7 +329,7 @@ export default function SettingsScreen({ onLogout }: Props) {
         },
         {
           title: 'Cache Status',
-          subtitle: `${cacheStats.noteCount} notes, ${cacheStats.folderCount} folders • ${cacheStats.cacheSizeMB} MB • ${cacheStats.hasDecryptedContent ? 'Decrypted' : 'Encrypted'}`,
+          subtitle: `${cacheStats.noteCount} notes, ${cacheStats.folderCount} folders • ${cacheStats.cacheSizeMB} MB • ${cacheDecrypted ? 'Decrypted' : 'Encrypted'}`,
           icon: 'server-outline',
           onPress: undefined,
         },
