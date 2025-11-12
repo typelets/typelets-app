@@ -1,3 +1,10 @@
+## [1.37.6](https://github.com/typelets/typelets-app/compare/v1.37.5...v1.37.6) (2025-11-11)
+
+
+### Bug Fixes
+
+* **mobile:** resolve cache sync issues, modularize notes API, and optimize swipe actions ([88ea129](https://github.com/typelets/typelets-app/commit/88ea129db963355afa5c846500d289a642831362))
+
 ## [1.37.5](https://github.com/typelets/typelets-app/compare/v1.37.4...v1.37.5) (2025-11-11)
 
 
