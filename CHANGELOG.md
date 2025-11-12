@@ -1,3 +1,10 @@
+## [1.37.9](https://github.com/typelets/typelets-app/compare/v1.37.8...v1.37.9) (2025-11-12)
+
+
+### Bug Fixes
+
+* **mobile:** improve FAB and offline indicator positioning ([3b58c5d](https://github.com/typelets/typelets-app/commit/3b58c5d4914614ca7a4cd4fc3cd49975eb8d5d49))
+
 ## [1.37.8](https://github.com/typelets/typelets-app/compare/v1.37.7...v1.37.8) (2025-11-12)
 
 
