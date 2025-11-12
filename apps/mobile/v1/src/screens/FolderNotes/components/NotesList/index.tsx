@@ -1,3 +1,7 @@
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { ActivityIndicator, Alert, Animated, DeviceEventEmitter, InteractionManager, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
 import { useUser } from '@clerk/clerk-expo';
 import { Ionicons } from '@expo/vector-icons';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
@@ -6,18 +10,10 @@ import { useFocusEffect } from '@react-navigation/native';
 import { FlashList, type FlashList as FlashListType } from '@shopify/flash-list';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
-import React, { useCallback,useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Animated, DeviceEventEmitter, InteractionManager, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { type Folder, type Note, useApiService } from '@/src/services/api';
 import { useTheme } from '@/src/theme';
 import { stripHtmlTags } from '@/src/utils/noteUtils';
-
-// Constants for FAB scroll behavior
-const FAB_SCROLL_THRESHOLD_START = 100; // Start showing FAB when scrolled past this
-const FAB_SCROLL_THRESHOLD_END = 140;   // Fully visible at this scroll position
-const FAB_ANIMATION_DISTANCE = 20;      // Distance to slide up during animation
 
 import { CreateFolderSheet } from './CreateFolderSheet';
 import { EmptyState } from './EmptyState';
@@ -29,6 +25,11 @@ import { SubfoldersList } from './SubfoldersList';
 import { useFolderPaths } from './useFolderPaths';
 import { useNotesFiltering } from './useNotesFiltering';
 import { useNotesLoader } from './useNotesLoader';
+
+// Constants for FAB scroll behavior
+const FAB_SCROLL_THRESHOLD_START = 280; // Start showing FAB when scrolled past this
+const FAB_SCROLL_THRESHOLD_END = 320;   // Fully visible at this scroll position
+const FAB_ANIMATION_DISTANCE = 20;      // Distance to slide up during animation
 
 interface RouteParams {
   folderId?: string;
@@ -109,7 +110,7 @@ export default function NotesList({ navigation, route, renderHeader, scrollY: pa
   // Show FAB when scrolled past the header
   const fabOpacity = scrollY.interpolate({
     inputRange: [FAB_SCROLL_THRESHOLD_START, FAB_SCROLL_THRESHOLD_END],
-    outputRange: [0, 1],
+    outputRange: [0, 0.8],
     extrapolate: 'clamp',
   });
 
@@ -227,7 +228,7 @@ export default function NotesList({ navigation, route, renderHeader, scrollY: pa
 
   const handleFolderCreated = useCallback((folder: Folder & { noteCount: number }) => {
     setSubfolders(prev => [...prev, folder]);
-  }, []);
+  }, [setSubfolders]);
 
   const onRefresh = async () => {
     try {
@@ -249,7 +250,7 @@ export default function NotesList({ navigation, route, renderHeader, scrollY: pa
     }
   };
 
-  const handleEmptyTrash = async () => {
+  const handleEmptyTrash = useCallback(async () => {
     const deletedNotes = notes.filter(note => note.deleted);
 
     Alert.alert(
@@ -303,7 +304,7 @@ export default function NotesList({ navigation, route, renderHeader, scrollY: pa
         },
       ]
     );
-  };
+  }, [notes, setNotes, api, router]);
 
   // Lazy cache for note previews and dates (only calculate when rendered)
   // DON'T clear this cache - let it persist across updates
@@ -646,7 +647,6 @@ export default function NotesList({ navigation, route, renderHeader, scrollY: pa
         keyExtractor={(item) => item.id}
         ListHeaderComponent={renderListHeader}
         ListEmptyComponent={renderEmptyComponent}
-        ListFooterComponent={<View style={{ height: 120 }} />}
         showsVerticalScrollIndicator={false}
         onScroll={Animated.event(
           [{ nativeEvent: { contentOffset: { y: scrollY } } }],
@@ -753,7 +753,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     width: 40,
     height: 40,
-    borderRadius: 6,
+    borderRadius: 20,
     elevation: 4,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -763,7 +763,7 @@ const styles = StyleSheet.create({
   fabButton: {
     width: 40,
     height: 40,
-    borderRadius: 6,
+    borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
   },

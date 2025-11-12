@@ -299,7 +299,7 @@ export default function FolderNotesScreen({ folderId, folderName, viewType }: Fo
           <View style={[styles.headerContainer, { backgroundColor: theme.colors.background, borderBottomColor: theme.colors.border }]}>
             <View style={styles.header}>
               <TouchableOpacity
-                style={styles.iconButton}
+                style={[styles.iconButton, { backgroundColor: theme.colors.muted }]}
                 onPress={() => router.back()}
               >
                 <Ionicons name="chevron-back" size={20} color={theme.colors.mutedForeground} style={{ marginLeft: -2 }} />
