@@ -2,14 +2,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { BottomSheetBackdrop, BottomSheetModal, BottomSheetScrollView, BottomSheetTextInput,BottomSheetView } from '@gorhom/bottom-sheet';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
-import { House } from 'lucide-react-native';
+import { House, UserRound } from 'lucide-react-native';
 import { useCallback,useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Animated, Keyboard, Pressable,StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { OfflineIndicator } from '@/src/components/OfflineIndicator';
 import { Input } from '@/src/components/ui/Input';
-import { FOLDER_COLORS } from '@/src/constants/ui';
+import { ACTION_BUTTON, FOLDER_COLORS } from '@/src/constants/ui';
 import { type Folder,useApiService } from '@/src/services/api';
 import { useTheme } from '@/src/theme';
 
@@ -45,9 +45,6 @@ export default function FolderNotesScreen({ folderId, folderName, viewType }: Fo
   const [editFolderName, setEditFolderName] = useState('');
   const [editFolderColor, setEditFolderColor] = useState('#3b82f6');
   const [isUpdatingFolder, setIsUpdatingFolder] = useState(false);
-
-  // Dropdown menu state
-  const [showSettingsDropdown, setShowSettingsDropdown] = useState(false);
 
   // Bottom sheet refs
   const breadcrumbSheetRef = useRef<BottomSheetModal>(null);
@@ -297,10 +294,6 @@ export default function FolderNotesScreen({ folderId, folderName, viewType }: Fo
 
   return (
     <>
-      <Pressable
-        style={{ flex: 1 }}
-        onPress={() => showSettingsDropdown && setShowSettingsDropdown(false)}
-      >
         <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]} edges={['top', 'left', 'right']}>
 
           <View style={[styles.headerContainer, { backgroundColor: theme.colors.background, borderBottomColor: theme.colors.border }]}>
@@ -314,17 +307,19 @@ export default function FolderNotesScreen({ folderId, folderName, viewType }: Fo
 
               <Text style={[styles.headerTitle, { color: theme.colors.foreground }]} numberOfLines={1} ellipsizeMode="head">{title}</Text>
 
-              <View style={styles.headerActions}>
+              <View style={[styles.headerActionsGroup, { backgroundColor: theme.colors.muted, borderColor: theme.colors.border }]}>
                 <TouchableOpacity
                   style={styles.iconButton}
                   onPress={() => breadcrumbSheetRef.current?.present()}
                 >
                   <Ionicons
-                    name="menu-outline"
+                    name="reorder-three-outline"
                     size={20}
                     color={theme.colors.mutedForeground}
                   />
                 </TouchableOpacity>
+
+                <View style={[styles.buttonDivider, { backgroundColor: theme.colors.border }]} />
 
                 <TouchableOpacity
                   style={styles.iconButton}
@@ -344,45 +339,23 @@ export default function FolderNotesScreen({ folderId, folderName, viewType }: Fo
                   />
                 </TouchableOpacity>
 
-                <View>
+                {/* Show settings button only for regular folders (not Quick Action views) */}
+                {!viewType && folderId && (
                   <TouchableOpacity
                     style={styles.iconButton}
-                    onPress={() => setShowSettingsDropdown(!showSettingsDropdown)}
+                    onPress={openFolderSettings}
                   >
                     <Ionicons name="settings-outline" size={20} color={theme.colors.mutedForeground} />
                   </TouchableOpacity>
+                )}
 
-                  {showSettingsDropdown && (
-                    <View style={[styles.dropdownMenu, { backgroundColor: theme.colors.card, borderColor: theme.colors.border }]}>
-                      {folderId && !viewType && (
-                        <TouchableOpacity
-                          style={styles.dropdownItem}
-                          onPress={() => {
-                            setShowSettingsDropdown(false);
-                            openFolderSettings();
-                          }}
-                        >
-                          <Ionicons name="folder-outline" size={18} color={theme.colors.foreground} />
-                          <Text style={[styles.dropdownItemText, { color: theme.colors.foreground }]}>
-                            Folder Settings
-                          </Text>
-                        </TouchableOpacity>
-                      )}
-                      <TouchableOpacity
-                        style={styles.dropdownItem}
-                        onPress={() => {
-                          setShowSettingsDropdown(false);
-                          router.push('/settings');
-                        }}
-                      >
-                        <Ionicons name="settings-outline" size={18} color={theme.colors.foreground} />
-                        <Text style={[styles.dropdownItemText, { color: theme.colors.foreground }]}>
-                          App Settings
-                        </Text>
-                      </TouchableOpacity>
-                    </View>
-                  )}
-                </View>
+                {/* Avatar - navigates to settings */}
+                <TouchableOpacity
+                  style={styles.iconButton}
+                  onPress={() => router.push('/settings')}
+                >
+                  <UserRound size={20} color={theme.colors.mutedForeground} />
+                </TouchableOpacity>
               </View>
             </View>
 
@@ -414,7 +387,6 @@ export default function FolderNotesScreen({ folderId, folderName, viewType }: Fo
         {/* Offline Indicator - Floating Button */}
         <OfflineIndicator />
       </SafeAreaView>
-      </Pressable>
 
       {/* Breadcrumb Navigation Menu - Bottom Sheet */}
       <BottomSheetModal
@@ -623,17 +595,23 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
-  headerActions: {
+  headerActionsGroup: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    borderRadius: ACTION_BUTTON.BORDER_RADIUS,
+    borderWidth: StyleSheet.hairlineWidth,
+    overflow: 'hidden',
   },
   iconButton: {
     width: 34,
     height: 34,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 17,
+    paddingHorizontal: 2,
+  },
+  buttonDivider: {
+    width: StyleSheet.hairlineWidth,
+    height: 34,
   },
   searchBar: {
     paddingHorizontal: 16,
@@ -746,27 +724,6 @@ const styles = StyleSheet.create({
   deleteButtonText: {
     fontSize: 16,
     fontWeight: '600',
-  },
-  // Dropdown styles
-  dropdownMenu: {
-    position: 'absolute',
-    top: 40,
-    right: 0,
-    minWidth: 180,
-    borderRadius: 8,
-    borderWidth: 1,
-    zIndex: 1001,
-    padding: 2,
-  },
-  dropdownItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 12,
-    gap: 12,
-  },
-  dropdownItemText: {
-    fontSize: 15,
-    fontWeight: '500',
   },
   iconCircle: {
     width: 28,
