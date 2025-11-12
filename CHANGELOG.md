@@ -1,3 +1,10 @@
+## [1.37.7](https://github.com/typelets/typelets-app/compare/v1.37.6...v1.37.7) (2025-11-12)
+
+
+### Bug Fixes
+
+* **mobile:** improve folder notes header button styling and consistency ([bdd5184](https://github.com/typelets/typelets-app/commit/bdd5184e875e55739e1c8cfb481bd8bdecf6856f))
+
 ## [1.37.6](https://github.com/typelets/typelets-app/compare/v1.37.5...v1.37.6) (2025-11-11)
 
 
