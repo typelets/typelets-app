@@ -1,3 +1,10 @@
+## [1.37.8](https://github.com/typelets/typelets-app/compare/v1.37.7...v1.37.8) (2025-11-12)
+
+
+### Bug Fixes
+
+* **mobile:** improve folder notes UI consistency and FAB behavior ([d64dba5](https://github.com/typelets/typelets-app/commit/d64dba5c79b0beb900f069a188c3ff8fa87a1fab))
+
 ## [1.37.7](https://github.com/typelets/typelets-app/compare/v1.37.6...v1.37.7) (2025-11-12)
 
 
