@@ -1,3 +1,10 @@
+## [1.37.12](https://github.com/typelets/typelets-app/compare/v1.37.11...v1.37.12) (2025-11-13)
+
+
+### Bug Fixes
+
+* **mobile:** streamline themes and improve UI polish ([3194a85](https://github.com/typelets/typelets-app/commit/3194a855890f986d3fd8e5e3c7f55ff54d7f4cc0))
+
 ## [1.37.11](https://github.com/typelets/typelets-app/compare/v1.37.10...v1.37.11) (2025-11-13)
 
 
