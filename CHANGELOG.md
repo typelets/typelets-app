@@ -1,3 +1,10 @@
+## [1.37.11](https://github.com/typelets/typelets-app/compare/v1.37.10...v1.37.11) (2025-11-13)
+
+
+### Bug Fixes
+
+* **mobile:** improve avatar button touch responsiveness ([21d5778](https://github.com/typelets/typelets-app/commit/21d577847cb5e5facf847ba0cc1744066378e294))
+
 ## [1.37.10](https://github.com/typelets/typelets-app/compare/v1.37.9...v1.37.10) (2025-11-12)
 
 
