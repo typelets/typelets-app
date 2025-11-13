@@ -57,6 +57,7 @@ export function UsageBottomSheet({ sheetRef, snapPoints }: UsageBottomSheetProps
         {...props}
         disappearsOnIndex={-1}
         appearsOnIndex={0}
+        opacity={0.3}
       />
     ),
     []

@@ -50,6 +50,7 @@ export const NoteActionsSheet = forwardRef<NoteActionsSheetRef, NoteActionsSheet
           {...props}
           disappearsOnIndex={-1}
           appearsOnIndex={0}
+          opacity={0.3}
         />
       ),
       []

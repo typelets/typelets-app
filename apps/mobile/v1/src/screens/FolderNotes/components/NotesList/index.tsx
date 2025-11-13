@@ -10,6 +10,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { FlashList, type FlashList as FlashListType } from '@shopify/flash-list';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
+import { SquarePen } from 'lucide-react-native';
 
 import { type Folder, type Note, useApiService } from '@/src/services/api';
 import { useTheme } from '@/src/theme';
@@ -27,8 +28,6 @@ import { useNotesFiltering } from './useNotesFiltering';
 import { useNotesLoader } from './useNotesLoader';
 
 // Constants for FAB scroll behavior
-const FAB_SCROLL_THRESHOLD_START = 280; // Start showing FAB when scrolled past this
-const FAB_SCROLL_THRESHOLD_END = 320;   // Fully visible at this scroll position
 const FAB_ANIMATION_DISTANCE = 20;      // Distance to slide up during animation
 
 interface RouteParams {
@@ -101,24 +100,62 @@ export default function NotesList({ navigation, route, renderHeader, scrollY: pa
   const filterSortSheetRef = useRef<BottomSheetModal>(null);
   const noteActionsSheetRef = useRef<NoteActionsSheetRef>(null);
   const flatListRef = useRef<FlashListType<Note>>(null);
+  const createNoteButtonRef = useRef<View>(null);
 
   // Scroll tracking for animated divider (use parent's scrollY if provided)
   const localScrollY = useRef(new Animated.Value(0)).current;
   const scrollY = parentScrollY || localScrollY;
 
-  // Calculate FAB visibility based on scroll position
-  // Show FAB when scrolled past the header
-  const fabOpacity = scrollY.interpolate({
-    inputRange: [FAB_SCROLL_THRESHOLD_START, FAB_SCROLL_THRESHOLD_END],
-    outputRange: [0, 1],
-    extrapolate: 'clamp',
-  });
+  // Track if create note button is off screen
+  const [createNoteButtonY, setCreateNoteButtonY] = useState(0);
+  const [isCreateNoteButtonOffScreen, setIsCreateNoteButtonOffScreen] = useState(false);
 
-  const fabTranslateY = scrollY.interpolate({
-    inputRange: [FAB_SCROLL_THRESHOLD_START, FAB_SCROLL_THRESHOLD_END],
-    outputRange: [FAB_ANIMATION_DISTANCE, 0],
-    extrapolate: 'clamp',
-  });
+  // Calculate FAB visibility based on whether Create Note button is off screen
+  const fabOpacity = useRef(new Animated.Value(0)).current;
+  const fabTranslateY = useRef(new Animated.Value(FAB_ANIMATION_DISTANCE)).current;
+
+  // Update FAB visibility when button goes off screen
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fabOpacity, {
+        toValue: isCreateNoteButtonOffScreen ? 1 : 0,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+      Animated.timing(fabTranslateY, {
+        toValue: isCreateNoteButtonOffScreen ? 0 : FAB_ANIMATION_DISTANCE,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [isCreateNoteButtonOffScreen]);
+
+  // Measure create note button position on mount and layout changes
+  useEffect(() => {
+    if (createNoteButtonRef.current) {
+      createNoteButtonRef.current.measureInWindow((x, y, width, height) => {
+        setCreateNoteButtonY(y + height);
+      });
+    }
+  }, [notes.length, subfolders.length]);
+
+  // Check if button is off screen based on scroll position
+  useEffect(() => {
+    const listenerId = scrollY.addListener(({ value }) => {
+      if (createNoteButtonY > 0) {
+        // Button is off screen when its bottom position is above the top of the screen
+        // Add a small buffer (50px) to trigger slightly before it's completely gone
+        const isOffScreen = value > createNoteButtonY - 100;
+        if (isOffScreen !== isCreateNoteButtonOffScreen) {
+          setIsCreateNoteButtonOffScreen(isOffScreen);
+        }
+      }
+    });
+
+    return () => {
+      scrollY.removeListener(listenerId);
+    };
+  }, [scrollY, createNoteButtonY, isCreateNoteButtonOffScreen]);
 
   // Track last optimistic update to prevent immediate reload from overwriting it
   const lastOptimisticUpdateRef = useRef<number>(0);
@@ -620,6 +657,7 @@ export default function NotesList({ navigation, route, renderHeader, scrollY: pa
           onFilterPress={() => filterSortSheetRef.current?.present()}
           onCreateNotePress={() => navigation?.navigate('CreateNote', { folderId: route?.params?.folderId })}
           onEmptyTrashPress={handleEmptyTrash}
+          createNoteButtonRef={createNoteButtonRef}
         />
       </>
     );
@@ -722,7 +760,7 @@ export default function NotesList({ navigation, route, renderHeader, scrollY: pa
             onPress={() => navigation?.navigate('CreateNote', { folderId: route?.params?.folderId })}
             android_ripple={{ color: 'rgba(255, 255, 255, 0.3)', radius: 20 }}
           >
-            <Ionicons name="add" size={20} color={theme.colors.primaryForeground} />
+            <SquarePen size={20} color={theme.colors.primaryForeground} />
           </Pressable>
         </Animated.View>
       )}

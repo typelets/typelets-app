@@ -14,6 +14,7 @@ interface NotesHeaderProps {
   onFilterPress: () => void;
   onCreateNotePress: () => void;
   onEmptyTrashPress: () => void;
+  createNoteButtonRef?: React.RefObject<View>;
 }
 
 export const NotesHeader: React.FC<NotesHeaderProps> = ({
@@ -25,6 +26,7 @@ export const NotesHeader: React.FC<NotesHeaderProps> = ({
   onFilterPress,
   onCreateNotePress,
   onEmptyTrashPress,
+  createNoteButtonRef,
 }) => {
   const theme = useTheme();
 
@@ -68,7 +70,7 @@ export const NotesHeader: React.FC<NotesHeaderProps> = ({
           </View>
         )
       ) : (
-        <View style={styles.buttonWrapper}>
+        <View style={styles.buttonWrapper} ref={createNoteButtonRef} collapsable={false}>
           <Pressable
             style={[styles.createNoteButton, { backgroundColor: theme.isDark ? theme.colors.card : theme.colors.secondary, borderColor: theme.colors.border, flexDirection: 'row', alignItems: 'center' }]}
             onPress={onCreateNotePress}

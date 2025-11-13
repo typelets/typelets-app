@@ -90,6 +90,7 @@ export default function HomeScreen() {
         {...props}
         disappearsOnIndex={-1}
         appearsOnIndex={0}
+        opacity={0.3}
       />
     ),
     []

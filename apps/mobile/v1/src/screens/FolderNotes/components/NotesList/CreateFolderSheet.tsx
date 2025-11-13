@@ -30,6 +30,7 @@ export const CreateFolderSheet = forwardRef<BottomSheetModal, CreateFolderSheetP
           {...props}
           disappearsOnIndex={-1}
           appearsOnIndex={0}
+          opacity={0.3}
         />
       ),
       []

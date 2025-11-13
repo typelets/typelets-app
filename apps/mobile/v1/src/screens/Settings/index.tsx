@@ -77,16 +77,20 @@ export default function SettingsScreen({ onLogout }: Props) {
   const usageSnapPoints = useMemo(() => ['50%'], []);
   const cachePreferenceSnapPoints = useMemo(() => ['45%'], []);
 
-  // Backdrop component
+  // Backdrop component with theme-aware styling
   const renderBackdrop = useCallback(
     (props: BottomSheetBackdropProps) => (
       <BottomSheetBackdrop
         {...props}
         disappearsOnIndex={-1}
         appearsOnIndex={0}
+        opacity={0.3}
+        style={{
+          backgroundColor: theme.isDark ? '#000000' : '#000000',
+        }}
       />
     ),
-    []
+    [theme.isDark]
   );
 
 

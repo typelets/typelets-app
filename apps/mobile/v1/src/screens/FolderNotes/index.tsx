@@ -64,6 +64,7 @@ export default function FolderNotesScreen({ folderId, folderName, viewType }: Fo
         {...props}
         disappearsOnIndex={-1}
         appearsOnIndex={0}
+        opacity={0.3}
       />
     ),
     []

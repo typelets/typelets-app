@@ -38,7 +38,7 @@ export const FilterSortSheet = forwardRef<BottomSheetModal, FilterSortSheetProps
           {...props}
           disappearsOnIndex={-1}
           appearsOnIndex={0}
-          opacity={0.5}
+          opacity={0.3}
           pressBehavior="close"
         />
       ),
