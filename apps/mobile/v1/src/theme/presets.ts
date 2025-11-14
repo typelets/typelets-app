@@ -115,7 +115,7 @@ export const DARK_THEME_PRESETS: Record<DarkThemePreset, ThemePreset> = {
     name: 'Dark Gray',
     description: 'Dark gray theme',
     colors: {
-      background: '#1a1a1a',
+      background: '#181818',
       foreground: '#fcfcfc',
       card: '#252525',
       cardForeground: '#fcfcfc',
