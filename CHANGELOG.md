@@ -1,3 +1,10 @@
+## [1.37.13](https://github.com/typelets/typelets-app/compare/v1.37.12...v1.37.13) (2025-11-14)
+
+
+### Bug Fixes
+
+* **mobile:** darken Dark Gray theme background ([59a5059](https://github.com/typelets/typelets-app/commit/59a5059f56dcb0671d8afff44c456b68d5bb8a6f))
+
 ## [1.37.12](https://github.com/typelets/typelets-app/compare/v1.37.11...v1.37.12) (2025-11-13)
 
 
