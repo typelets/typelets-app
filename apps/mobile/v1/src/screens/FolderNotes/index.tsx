@@ -1,11 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
 import { BottomSheetBackdrop, BottomSheetModal, BottomSheetScrollView, BottomSheetTextInput,BottomSheetView } from '@gorhom/bottom-sheet';
+import { GlassView } from 'expo-glass-effect';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import { House, UserRound } from 'lucide-react-native';
 import { useCallback,useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Animated, Keyboard, Pressable,StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { OfflineIndicator } from '@/src/components/OfflineIndicator';
 import { Input } from '@/src/components/ui/Input';
@@ -35,6 +36,7 @@ export default function FolderNotesScreen({ folderId, folderName, viewType }: Fo
   const router = useRouter();
   const theme = useTheme();
   const api = useApiService();
+  const insets = useSafeAreaInsets();
   const [breadcrumbs, setBreadcrumbs] = useState<string[]>([]);
   const [breadcrumbFolders, setBreadcrumbFolders] = useState<Folder[]>([]);
   const [allFolders, setAllFolders] = useState<Folder[]>([]);
@@ -295,9 +297,13 @@ export default function FolderNotesScreen({ folderId, folderName, viewType }: Fo
 
   return (
     <>
-        <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]} edges={['top', 'left', 'right']}>
+        <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]} edges={['left', 'right']}>
 
-          <View style={[styles.headerContainer, { backgroundColor: theme.colors.background, borderBottomColor: theme.colors.border }]}>
+          <GlassView
+            glassStyle="tint"
+            tintColor={theme.colors.background}
+            style={[styles.headerContainer, { paddingTop: insets.top }]}
+          >
             <View style={styles.header}>
               <TouchableOpacity
                 style={[styles.iconButton, { backgroundColor: theme.colors.muted }]}
@@ -379,10 +385,10 @@ export default function FolderNotesScreen({ folderId, folderName, viewType }: Fo
             )}
 
             <Animated.View style={[styles.headerDivider, { backgroundColor: theme.colors.border, opacity: dividerOpacity }]} />
-          </View>
+          </GlassView>
 
         {/* Notes content */}
-        <View style={[styles.content, { backgroundColor: theme.colors.background, borderColor: theme.colors.border }]}>
+        <View style={[styles.content, { backgroundColor: theme.colors.background, borderColor: theme.colors.border, paddingTop: insets.top + 60 }]}>
           <NotesList navigation={navigation} route={route} scrollY={scrollY} />
         </View>
 
@@ -575,6 +581,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   headerContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 10,
   },
   header: {
     flexDirection: 'row',
