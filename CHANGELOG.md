@@ -1,3 +1,10 @@
+## [1.38.1](https://github.com/typelets/typelets-app/compare/v1.38.0...v1.38.1) (2025-11-15)
+
+
+### Bug Fixes
+
+* **mobile:** add blue active state to EditNote and ViewNote toggle buttons ([12d714c](https://github.com/typelets/typelets-app/commit/12d714cd49e458717cff38c18d5c73d2e82f2065))
+
 # [1.38.0](https://github.com/typelets/typelets-app/compare/v1.37.13...v1.38.0) (2025-11-15)
 
 
