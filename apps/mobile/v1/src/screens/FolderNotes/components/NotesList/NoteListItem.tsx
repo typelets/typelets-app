@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { GlassView } from 'expo-glass-effect';
 import { Code2, Network } from 'lucide-react-native';
 import React, { useMemo, useRef } from 'react';
 import { ActivityIndicator, Animated, Pressable, StyleSheet, Text, View } from 'react-native';

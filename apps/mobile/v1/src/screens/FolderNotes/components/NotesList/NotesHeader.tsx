@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { GlassView } from 'expo-glass-effect';
 import React from 'react';
 import { Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
@@ -37,49 +38,51 @@ export const NotesHeader: React.FC<NotesHeaderProps> = ({
           NOTES ({String(filteredNotesCount || 0)})
           {filteredNotesCount !== totalNotesCount && ` (${totalNotesCount} total)`}
         </Text>
-        <TouchableOpacity
-          style={[
-            styles.viewModeButton,
-            { backgroundColor: theme.colors.muted },
-            hasActiveFilters && styles.viewModeButtonActive
-          ]}
-          onPress={onFilterPress}
-          activeOpacity={0.7}
-        >
-          <Ionicons
-            name={hasActiveFilters ? "funnel" : "funnel-outline"}
-            size={16}
-            color={hasActiveFilters ? theme.colors.primary : theme.colors.mutedForeground}
-          />
-        </TouchableOpacity>
+        <GlassView glassEffectStyle="regular" style={styles.viewModeButtonGlass}>
+          <TouchableOpacity
+            style={styles.viewModeButton}
+            onPress={onFilterPress}
+            activeOpacity={0.7}
+          >
+            <Ionicons
+              name={hasActiveFilters ? "funnel" : "funnel-outline"}
+              size={16}
+              color={hasActiveFilters ? theme.colors.primary : theme.colors.foreground}
+            />
+          </TouchableOpacity>
+        </GlassView>
       </View>
 
       {/* Create Note Button / Empty Trash Button - Full width to match note list */}
       {viewType === 'trash' ? (
         filteredNotesCount > 0 && (
           <View style={styles.buttonWrapper}>
-            <Pressable
-              style={[styles.createNoteButton, { backgroundColor: theme.isDark ? theme.colors.card : theme.colors.secondary, borderColor: theme.colors.border, flexDirection: 'row', alignItems: 'center' }]}
-              onPress={onEmptyTrashPress}
-            >
-              <Ionicons name="trash" size={16} color={theme.colors.foreground} style={{ marginRight: 12 }} />
-              <Text style={[styles.buttonText, { color: theme.colors.foreground }]}>
-                Empty Trash
-              </Text>
-            </Pressable>
+            <GlassView glassEffectStyle="regular" style={styles.createNoteButtonGlass}>
+              <Pressable
+                style={styles.createNoteButton}
+                onPress={onEmptyTrashPress}
+              >
+                <Ionicons name="trash" size={16} color={theme.colors.foreground} style={{ marginRight: 12 }} />
+                <Text style={[styles.buttonText, { color: theme.colors.foreground }]}>
+                  Empty Trash
+                </Text>
+              </Pressable>
+            </GlassView>
           </View>
         )
       ) : (
         <View style={styles.buttonWrapper} ref={createNoteButtonRef} collapsable={false}>
-          <Pressable
-            style={[styles.createNoteButton, { backgroundColor: theme.isDark ? theme.colors.card : theme.colors.secondary, borderColor: theme.colors.border, flexDirection: 'row', alignItems: 'center' }]}
-            onPress={onCreateNotePress}
-          >
-            <Ionicons name="add" size={16} color={theme.colors.primary} style={{ marginRight: 12 }} />
-            <Text style={[styles.buttonText, { color: theme.colors.foreground }]}>
-              Create Note
-            </Text>
-          </Pressable>
+          <GlassView glassEffectStyle="regular" style={styles.createNoteButtonGlass}>
+            <Pressable
+              style={styles.createNoteButton}
+              onPress={onCreateNotePress}
+            >
+              <Ionicons name="add" size={16} color={theme.colors.primary} style={{ marginRight: 12 }} />
+              <Text style={[styles.buttonText, { color: theme.colors.foreground }]}>
+                Create Note
+              </Text>
+            </Pressable>
+          </GlassView>
         </View>
       )}
     </View>
@@ -102,26 +105,36 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     letterSpacing: 0.8,
   },
+  viewModeButtonGlass: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    overflow: 'hidden',
+    backgroundColor: 'rgba(255, 255, 255, 0.01)',
+  },
   viewModeButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 6,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  viewModeButtonActive: {
-    backgroundColor: 'rgba(59, 130, 246, 0.1)',
   },
   buttonWrapper: {
     paddingHorizontal: 16,
     marginBottom: NOTE_CARD.SPACING,
   },
+  createNoteButtonGlass: {
+    borderRadius: NOTE_CARD.BORDER_RADIUS,
+    overflow: 'hidden',
+    backgroundColor: 'rgba(255, 255, 255, 0.01)',
+  },
   createNoteButton: {
     borderRadius: NOTE_CARD.BORDER_RADIUS,
-    borderWidth: 1,
     paddingVertical: 12,
     paddingLeft: 12,
     paddingRight: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   buttonText: {
     fontSize: 15,

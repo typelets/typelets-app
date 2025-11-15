@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { GlassView } from 'expo-glass-effect';
 import React from 'react';
 import { Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
@@ -40,36 +41,32 @@ export const SubfoldersList: React.FC<SubfoldersListProps> = ({
           FOLDERS ({String(subfolders?.length || 0)})
         </Text>
         <View style={styles.viewModeToggle}>
-          <TouchableOpacity
-            style={[
-              styles.viewModeButton,
-              { backgroundColor: theme.colors.muted },
-              viewMode === 'list' && styles.viewModeButtonActive
-            ]}
-            onPress={() => handleViewModeChange('list')}
-            activeOpacity={0.7}
-          >
-            <Ionicons
-              name="list"
-              size={16}
-              color={viewMode === 'list' ? theme.colors.primary : theme.colors.mutedForeground}
-            />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[
-              styles.viewModeButton,
-              { backgroundColor: theme.colors.muted },
-              viewMode === 'grid' && styles.viewModeButtonActive
-            ]}
-            onPress={() => handleViewModeChange('grid')}
-            activeOpacity={0.7}
-          >
-            <Ionicons
-              name="grid"
-              size={16}
-              color={viewMode === 'grid' ? theme.colors.primary : theme.colors.mutedForeground}
-            />
-          </TouchableOpacity>
+          <GlassView glassEffectStyle="regular" style={styles.viewModeButtonGlass}>
+            <TouchableOpacity
+              style={styles.viewModeButton}
+              onPress={() => handleViewModeChange('list')}
+              activeOpacity={0.7}
+            >
+              <Ionicons
+                name="list"
+                size={16}
+                color={viewMode === 'list' ? theme.colors.primary : theme.colors.foreground}
+              />
+            </TouchableOpacity>
+          </GlassView>
+          <GlassView glassEffectStyle="regular" style={styles.viewModeButtonGlass}>
+            <TouchableOpacity
+              style={styles.viewModeButton}
+              onPress={() => handleViewModeChange('grid')}
+              activeOpacity={0.7}
+            >
+              <Ionicons
+                name="grid"
+                size={16}
+                color={viewMode === 'grid' ? theme.colors.primary : theme.colors.foreground}
+              />
+            </TouchableOpacity>
+          </GlassView>
         </View>
       </View>
 
@@ -141,17 +138,21 @@ const styles = StyleSheet.create({
   },
   viewModeToggle: {
     flexDirection: 'row',
-    gap: 4,
+    gap: 12,
+  },
+  viewModeButtonGlass: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    overflow: 'hidden',
+    backgroundColor: 'rgba(255, 255, 255, 0.01)',
   },
   viewModeButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 6,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  viewModeButtonActive: {
-    backgroundColor: 'rgba(59, 130, 246, 0.1)',
   },
   subfoldersList: {
     paddingHorizontal: 16,

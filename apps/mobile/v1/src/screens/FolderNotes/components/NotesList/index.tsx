@@ -8,6 +8,7 @@ import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
 import { FlashList, type FlashList as FlashListType } from '@shopify/flash-list';
+import { GlassView } from 'expo-glass-effect';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import { SquarePen } from 'lucide-react-native';
@@ -46,9 +47,10 @@ interface Props {
   };
   renderHeader?: () => React.ReactNode;
   scrollY?: Animated.Value;
+  contentInsetTop?: number;
 }
 
-export default function NotesList({ navigation, route, renderHeader, scrollY: parentScrollY }: Props) {
+export default function NotesList({ navigation, route, renderHeader, scrollY: parentScrollY, contentInsetTop }: Props) {
   const theme = useTheme();
   const { user } = useUser();
   const api = useApiService();
@@ -686,6 +688,7 @@ export default function NotesList({ navigation, route, renderHeader, scrollY: pa
         ListHeaderComponent={renderListHeader}
         ListEmptyComponent={renderEmptyComponent}
         showsVerticalScrollIndicator={false}
+        contentContainerStyle={contentInsetTop ? { paddingTop: contentInsetTop } : undefined}
         onScroll={Animated.event(
           [{ nativeEvent: { contentOffset: { y: scrollY } } }],
           { useNativeDriver: false }
@@ -747,7 +750,6 @@ export default function NotesList({ navigation, route, renderHeader, scrollY: pa
           style={[
             styles.fab,
             {
-              backgroundColor: theme.colors.primary,
               bottom: insets.bottom + 20,
               right: 20,
               opacity: fabOpacity,
@@ -755,13 +757,15 @@ export default function NotesList({ navigation, route, renderHeader, scrollY: pa
             }
           ]}
         >
-          <Pressable
-            style={styles.fabButton}
-            onPress={() => navigation?.navigate('CreateNote', { folderId: route?.params?.folderId })}
-            android_ripple={{ color: 'rgba(255, 255, 255, 0.3)', radius: 20 }}
-          >
-            <SquarePen size={20} color={theme.colors.primaryForeground} />
-          </Pressable>
+          <GlassView glassEffectStyle="regular" style={styles.fabGlass}>
+            <Pressable
+              style={styles.fabButton}
+              onPress={() => navigation?.navigate('CreateNote', { folderId: route?.params?.folderId })}
+              android_ripple={{ color: 'rgba(255, 255, 255, 0.3)', radius: 28 }}
+            >
+              <SquarePen size={20} color={theme.colors.foreground} />
+            </Pressable>
+          </GlassView>
         </Animated.View>
       )}
     </View>
@@ -789,19 +793,23 @@ const styles = StyleSheet.create({
   },
   fab: {
     position: 'absolute',
-    width: 40,
-    height: 40,
-    borderRadius: 20,
     elevation: 4,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
   },
+  fabGlass: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    overflow: 'hidden',
+    backgroundColor: 'rgba(255, 255, 255, 0.01)',
+  },
   fabButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     justifyContent: 'center',
     alignItems: 'center',
   },

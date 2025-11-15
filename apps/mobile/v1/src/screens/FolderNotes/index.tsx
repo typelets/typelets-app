@@ -1,7 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import { BottomSheetBackdrop, BottomSheetModal, BottomSheetScrollView, BottomSheetTextInput,BottomSheetView } from '@gorhom/bottom-sheet';
-import { GlassView } from 'expo-glass-effect';
+import { GlassView, isLiquidGlassAvailable } from 'expo-glass-effect';
 import * as Haptics from 'expo-haptics';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { House, UserRound } from 'lucide-react-native';
 import { useCallback,useEffect, useMemo, useRef, useState } from 'react';
@@ -37,6 +38,11 @@ export default function FolderNotesScreen({ folderId, folderName, viewType }: Fo
   const theme = useTheme();
   const api = useApiService();
   const insets = useSafeAreaInsets();
+
+  // Check if liquid glass is available
+  useEffect(() => {
+    console.log('🔍 Liquid Glass Available:', isLiquidGlassAvailable());
+  }, []);
   const [breadcrumbs, setBreadcrumbs] = useState<string[]>([]);
   const [breadcrumbFolders, setBreadcrumbFolders] = useState<Folder[]>([]);
   const [allFolders, setAllFolders] = useState<Folder[]>([]);
@@ -288,82 +294,116 @@ export default function FolderNotesScreen({ folderId, folderName, viewType }: Fo
   // Get the title using breadcrumbs
   const title = formatBreadcrumbs(breadcrumbs);
 
-  // Animated divider opacity using interpolate
-  const dividerOpacity = scrollY.interpolate({
-    inputRange: [0, 20],
-    outputRange: [0, 1],
-    extrapolate: 'clamp'
-  });
-
   return (
     <>
         <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]} edges={['left', 'right']}>
 
-          <GlassView
-            glassStyle="tint"
-            tintColor={theme.colors.background}
-            style={[styles.headerContainer, { paddingTop: insets.top }]}
-          >
-            <View style={styles.header}>
-              <TouchableOpacity
-                style={[styles.iconButton, { backgroundColor: theme.colors.muted }]}
-                onPress={() => router.back()}
-              >
-                <Ionicons name="chevron-back" size={20} color={theme.colors.mutedForeground} style={{ marginLeft: -2 }} />
-              </TouchableOpacity>
+          <View style={[
+            styles.headerContainer,
+            {
+              paddingTop: insets.top,
+              paddingBottom: 35,
+            }
+          ]}>
+            {/* Gradient background - opaque only at title, smooth fade starts early so buttons are transparent */}
+            <LinearGradient
+              colors={[
+                theme.isDark ? 'rgba(10, 10, 10, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+                theme.isDark ? 'rgba(10, 10, 10, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+                theme.isDark ? 'rgba(10, 10, 10, 0.88)' : 'rgba(255, 255, 255, 0.88)',
+                theme.isDark ? 'rgba(10, 10, 10, 0.80)' : 'rgba(255, 255, 255, 0.80)',
+                theme.isDark ? 'rgba(10, 10, 10, 0.68)' : 'rgba(255, 255, 255, 0.68)',
+                theme.isDark ? 'rgba(10, 10, 10, 0.52)' : 'rgba(255, 255, 255, 0.52)',
+                theme.isDark ? 'rgba(10, 10, 10, 0.36)' : 'rgba(255, 255, 255, 0.36)',
+                theme.isDark ? 'rgba(10, 10, 10, 0.22)' : 'rgba(255, 255, 255, 0.22)',
+                theme.isDark ? 'rgba(10, 10, 10, 0.12)' : 'rgba(255, 255, 255, 0.12)',
+                theme.isDark ? 'rgba(10, 10, 10, 0.05)' : 'rgba(255, 255, 255, 0.05)',
+                'rgba(0, 0, 0, 0)',
+              ]}
+              locations={[0, 0.35, 0.45, 0.53, 0.60, 0.66, 0.72, 0.77, 0.82, 0.90, 1]}
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+              }}
+            />
 
-              <Text style={[styles.headerTitle, { color: theme.colors.foreground }]} numberOfLines={1} ellipsizeMode="head">{title}</Text>
+            <View style={styles.header}>
+              <GlassView glassEffectStyle="regular" style={styles.glassButton}>
+                <TouchableOpacity
+                  style={styles.iconButton}
+                  onPress={() => router.back()}
+                >
+                  <Ionicons name="chevron-back" size={20} color={theme.colors.foreground} style={{ marginLeft: -2 }} />
+                </TouchableOpacity>
+              </GlassView>
+
+              <GlassView glassEffectStyle="regular" style={[styles.glassButton, { flex: 1, marginHorizontal: 12 }]}>
+                <View style={styles.titleContainer}>
+                  <Text style={[styles.titleText, { color: theme.colors.foreground }]} numberOfLines={1} ellipsizeMode="head">{title}</Text>
+                </View>
+              </GlassView>
 
               <View style={styles.headerActions}>
-                <TouchableOpacity
-                  style={[styles.iconButton, { backgroundColor: theme.colors.muted }]}
-                  onPress={() => breadcrumbSheetRef.current?.present()}
-                >
-                  <Ionicons
-                    name="reorder-three-outline"
-                    size={20}
-                    color={theme.colors.mutedForeground}
-                  />
-                </TouchableOpacity>
+                <GlassView glassEffectStyle="regular" style={styles.glassButton}>
+                  <TouchableOpacity
+                    style={styles.iconButton}
+                    onPress={() => breadcrumbSheetRef.current?.present()}
+                  >
+                    <Ionicons
+                      name="reorder-three-outline"
+                      size={20}
+                      color={theme.colors.foreground}
+                    />
+                  </TouchableOpacity>
+                </GlassView>
 
-                <TouchableOpacity
-                  style={[styles.iconButton, { backgroundColor: theme.colors.muted }]}
-                  onPress={() => {
-                    if (isSearchVisible) {
-                      setIsSearchVisible(false);
-                      setSearchQuery('');
-                    } else {
-                      setIsSearchVisible(true);
-                    }
-                  }}
-                >
-                  <Ionicons
-                    name={isSearchVisible ? "close" : "search"}
-                    size={20}
-                    color={theme.colors.mutedForeground}
-                  />
-                </TouchableOpacity>
+                <GlassView glassEffectStyle="regular" style={styles.glassButton}>
+                  <TouchableOpacity
+                    style={styles.iconButton}
+                    onPress={() => {
+                      if (isSearchVisible) {
+                        setIsSearchVisible(false);
+                        setSearchQuery('');
+                      } else {
+                        setIsSearchVisible(true);
+                      }
+                    }}
+                  >
+                    <Ionicons
+                      name={isSearchVisible ? "close" : "search"}
+                      size={20}
+                      color={theme.colors.foreground}
+                    />
+                  </TouchableOpacity>
+                </GlassView>
 
                 {/* Show settings button only for regular folders (not Quick Action views) */}
                 {!viewType && folderId && (
-                  <TouchableOpacity
-                    style={[styles.iconButton, { backgroundColor: theme.colors.muted }]}
-                    onPress={openFolderSettings}
-                  >
-                    <Ionicons name="settings-outline" size={20} color={theme.colors.mutedForeground} />
-                  </TouchableOpacity>
+                  <GlassView glassEffectStyle="regular" style={styles.glassButton}>
+                    <TouchableOpacity
+                      style={styles.iconButton}
+                      onPress={openFolderSettings}
+                    >
+                      <Ionicons name="settings-outline" size={20} color={theme.colors.foreground} />
+                    </TouchableOpacity>
+                  </GlassView>
                 )}
 
                 {/* Avatar - navigates to settings */}
-                <TouchableOpacity
-                  style={[styles.iconButton, { backgroundColor: theme.colors.muted }]}
-                  onPress={() => router.push('/settings')}
-                  hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-                >
-                  <View pointerEvents="none">
-                    <UserRound size={20} color={theme.colors.mutedForeground} />
-                  </View>
-                </TouchableOpacity>
+                <GlassView glassEffectStyle="regular" style={styles.glassButton}>
+                  <TouchableOpacity
+                    style={styles.iconButton}
+                    onPress={() => router.push('/settings')}
+                    hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                  >
+                    <View pointerEvents="none">
+                      <UserRound size={20} color={theme.colors.foreground} />
+                    </View>
+                  </TouchableOpacity>
+                </GlassView>
               </View>
             </View>
 
@@ -383,13 +423,11 @@ export default function FolderNotesScreen({ folderId, folderName, viewType }: Fo
                 />
               </View>
             )}
-
-            <Animated.View style={[styles.headerDivider, { backgroundColor: theme.colors.border, opacity: dividerOpacity }]} />
-          </GlassView>
+          </View>
 
         {/* Notes content */}
-        <View style={[styles.content, { backgroundColor: theme.colors.background, borderColor: theme.colors.border, paddingTop: insets.top + 60 }]}>
-          <NotesList navigation={navigation} route={route} scrollY={scrollY} />
+        <View style={[styles.content, { backgroundColor: theme.colors.background, borderColor: theme.colors.border }]}>
+          <NotesList navigation={navigation} route={route} scrollY={scrollY} contentInsetTop={insets.top + 58} />
         </View>
 
         {/* Offline Indicator - Floating Button */}
@@ -613,12 +651,27 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
   },
+  glassButton: {
+    borderRadius: 19,
+    overflow: 'hidden',
+    backgroundColor: 'rgba(255, 255, 255, 0.02)', // Subtle backdrop for better icon visibility
+  },
   iconButton: {
-    width: 34,
-    height: 34,
+    width: 38,
+    height: 38,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 17,
+  },
+  titleContainer: {
+    height: 38,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 14,
+  },
+  titleText: {
+    fontSize: 16,
+    fontWeight: '600',
+    textAlign: 'center',
   },
   searchBar: {
     paddingHorizontal: 16,
@@ -728,9 +781,5 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  headerDivider: {
-    // @ts-ignore - StyleSheet.hairlineWidth is intentionally used for height (ultra-thin divider)
-    height: StyleSheet.hairlineWidth,
   },
 });
