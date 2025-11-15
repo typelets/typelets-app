@@ -5,6 +5,8 @@ import { Check } from 'lucide-react-native';
 import React from 'react';
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
+import { GLASS_BUTTON } from '@/src/constants/ui';
+
 interface EditorHeaderProps {
   isEditing: boolean;
   noteData: unknown;
@@ -103,7 +105,7 @@ export function EditorHeader({
           {onToggleHeader && (
             <GlassView glassEffectStyle="regular" style={styles.glassButton}>
               <TouchableOpacity
-                style={styles.iconButton}
+                style={[styles.iconButton, showHeader && styles.iconButtonActive]}
                 onPress={onToggleHeader}
                 hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
               >
@@ -121,7 +123,7 @@ export function EditorHeader({
           {onToggleToolbar && (
             <GlassView glassEffectStyle="regular" style={styles.glassButton}>
               <TouchableOpacity
-                style={styles.iconButton}
+                style={[styles.iconButton, showToolbar && styles.iconButtonActive]}
                 onPress={onToggleToolbar}
                 hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
               >
@@ -139,7 +141,7 @@ export function EditorHeader({
           {onToggleAttachments && (
             <GlassView glassEffectStyle="regular" style={styles.glassButton}>
               <TouchableOpacity
-                style={styles.iconButton}
+                style={[styles.iconButton, showAttachments && styles.iconButtonActive]}
                 onPress={onToggleAttachments}
                 hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
               >
@@ -250,6 +252,9 @@ const styles = StyleSheet.create({
     height: 38,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  iconButtonActive: {
+    backgroundColor: GLASS_BUTTON.ACTIVE_BACKGROUND,
   },
   headerActions: {
     flexDirection: 'row',

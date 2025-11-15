@@ -4,6 +4,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { Animated, StyleSheet, Text,TouchableOpacity, View } from 'react-native';
 
+import { GLASS_BUTTON } from '@/src/constants/ui';
+
 interface ViewHeaderProps {
   isStarred: boolean;
   isHidden: boolean;
@@ -104,7 +106,7 @@ export function ViewHeader({
             {attachmentsCount > 0 && (
               <GlassView glassEffectStyle="regular" style={styles.glassButton}>
                 <TouchableOpacity
-                  style={styles.iconButton}
+                  style={[styles.iconButton, showAttachments && styles.iconButtonActive]}
                   onPress={onToggleAttachments}
                 >
                   <View style={styles.attachmentButtonContent}>
@@ -217,6 +219,9 @@ const styles = StyleSheet.create({
     height: 38,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  iconButtonActive: {
+    backgroundColor: GLASS_BUTTON.ACTIVE_BACKGROUND,
   },
   titleButton: {
     height: 38,
