@@ -37,3 +37,10 @@ export const FOLDER_COLORS = [
   '#06b6d4', '#3b82f6', '#8b5cf6', '#ec4899',
   '#6b7280', '#78716c', '#1f2937', '#374151'
 ] as const;
+
+export const GLASS_BUTTON = {
+  ACTIVE_BACKGROUND: 'rgba(59, 130, 246, 0.4)',
+  BORDER_RADIUS: 8,
+  SIZE: 32,
+  GAP: 8,
+} as const;

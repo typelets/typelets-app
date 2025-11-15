@@ -4,7 +4,7 @@ import { GlassView } from 'expo-glass-effect';
 import React from 'react';
 import { Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-import { FOLDER_CARD } from '@/src/constants/ui';
+import { FOLDER_CARD, GLASS_BUTTON } from '@/src/constants/ui';
 import type { Folder } from '@/src/services/api';
 import { useTheme } from '@/src/theme';
 
@@ -43,9 +43,11 @@ export const SubfoldersList: React.FC<SubfoldersListProps> = ({
         <View style={styles.viewModeToggle}>
           <GlassView glassEffectStyle="regular" style={styles.viewModeButtonGlass}>
             <TouchableOpacity
-              style={styles.viewModeButton}
+              style={[
+                styles.viewModeButton,
+                viewMode === 'list' && styles.viewModeButtonActive
+              ]}
               onPress={() => handleViewModeChange('list')}
-              activeOpacity={0.7}
             >
               <Ionicons
                 name="list"
@@ -56,9 +58,11 @@ export const SubfoldersList: React.FC<SubfoldersListProps> = ({
           </GlassView>
           <GlassView glassEffectStyle="regular" style={styles.viewModeButtonGlass}>
             <TouchableOpacity
-              style={styles.viewModeButton}
+              style={[
+                styles.viewModeButton,
+                viewMode === 'grid' && styles.viewModeButtonActive
+              ]}
               onPress={() => handleViewModeChange('grid')}
-              activeOpacity={0.7}
             >
               <Ionicons
                 name="grid"
@@ -138,21 +142,21 @@ const styles = StyleSheet.create({
   },
   viewModeToggle: {
     flexDirection: 'row',
-    gap: 12,
+    gap: GLASS_BUTTON.GAP,
   },
   viewModeButtonGlass: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
+    borderRadius: GLASS_BUTTON.BORDER_RADIUS,
     overflow: 'hidden',
     backgroundColor: 'rgba(255, 255, 255, 0.01)',
   },
   viewModeButton: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
+    width: GLASS_BUTTON.SIZE,
+    height: GLASS_BUTTON.SIZE,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  viewModeButtonActive: {
+    backgroundColor: GLASS_BUTTON.ACTIVE_BACKGROUND,
   },
   subfoldersList: {
     paddingHorizontal: 16,

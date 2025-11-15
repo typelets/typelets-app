@@ -3,13 +3,15 @@ import { BottomSheetBackdrop, BottomSheetBackdropProps,BottomSheetModal, BottomS
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useIsFocused } from '@react-navigation/native';
 import * as Haptics from 'expo-haptics';
+import { GlassView } from 'expo-glass-effect';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useCallback,useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Animated, Keyboard, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { OfflineIndicator } from '../../components/OfflineIndicator';
-import { ACTION_BUTTON, FOLDER_CARD, FOLDER_COLORS } from '../../constants/ui';
+import { ACTION_BUTTON, FOLDER_CARD, FOLDER_COLORS, GLASS_BUTTON } from '../../constants/ui';
 import { useNetworkStatus } from '../../hooks/useNetworkStatus';
 import { type Folder, type FolderCounts,useApiService } from '../../services/api';
 import { useTheme } from '../../theme';
@@ -51,6 +53,7 @@ export default function HomeScreen() {
   const api = useApiService();
   const router = useRouter();
   const { isConnected, isInternetReachable } = useNetworkStatus();
+  const insets = useSafeAreaInsets();
   const [allFolders, setAllFolders] = useState<Folder[]>([]);
   const [loading, setLoading] = useState(true);
   const [showLoading, setShowLoading] = useState(false);
@@ -79,6 +82,19 @@ export default function HomeScreen() {
 
   // Scroll tracking for animated divider
   const scrollY = useRef(new Animated.Value(0)).current;
+
+  // Animate greeting section based on scroll
+  const greetingTranslateY = scrollY.interpolate({
+    inputRange: [0, 50],
+    outputRange: [0, -30],
+    extrapolate: 'clamp',
+  });
+
+  const greetingOpacity = scrollY.interpolate({
+    inputRange: [0, 50],
+    outputRange: [1, 0],
+    extrapolate: 'clamp',
+  });
 
   // Snap points
   const snapPoints = useMemo(() => ['55%'], []);
@@ -282,8 +298,10 @@ export default function HomeScreen() {
     }
   };
 
+  const headerHeight = (insets.top || 0) + 110; // Header + greeting section height
+
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]} edges={['left', 'right']}>
       {showLoading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={theme.colors.primary} />
@@ -291,7 +309,7 @@ export default function HomeScreen() {
       ) : (
         <ScrollView
           style={styles.scrollView}
-          contentContainerStyle={styles.scrollViewContent}
+          contentContainerStyle={[styles.scrollViewContent, { paddingTop: headerHeight }]}
           showsVerticalScrollIndicator={false}
           onScroll={Animated.event(
             [{ nativeEvent: { contentOffset: { y: scrollY } } }],
@@ -309,37 +327,20 @@ export default function HomeScreen() {
         >
           {!loading && (
           <>
-            {/* Header with Greeting and Avatar */}
-            <View style={styles.headerSection}>
-              <View style={styles.greetingSection}>
-                <Text style={[styles.greeting, { color: theme.colors.foreground }]}>
-                  Good {getTimeOfDay()}
-                </Text>
-                <Text style={[styles.subgreeting, { color: theme.colors.mutedForeground }]}>
-                  What would you like to work on today?
-                </Text>
-              </View>
-              <TouchableOpacity
-                style={styles.avatarButton}
-                onPress={() => router.push('/settings')}
-              >
-                <View style={[styles.avatar, { backgroundColor: theme.colors.muted }]}>
-                  <Ionicons name="person" size={20} color={theme.colors.mutedForeground} />
-                </View>
-              </TouchableOpacity>
-            </View>
 
             {/* Quick Actions */}
             <View style={styles.quickActionsSection}>
-              <TouchableOpacity
-                style={[styles.newNoteAction, { backgroundColor: theme.isDark ? theme.colors.card : theme.colors.secondary, borderColor: theme.colors.border }]}
-                onPress={() => router.push('/edit-note')}
-              >
-                <View style={styles.actionIcon}>
-                  <Ionicons name="add" size={16} color={theme.colors.primary} />
-                </View>
-                <Text style={[styles.actionText, { color: theme.colors.foreground }]}>Start writing</Text>
-              </TouchableOpacity>
+              <GlassView glassEffectStyle="regular" style={styles.glassActionButton}>
+                <TouchableOpacity
+                  style={styles.newNoteAction}
+                  onPress={() => router.push('/edit-note')}
+                >
+                  <View style={styles.actionIcon}>
+                    <Ionicons name="add" size={16} color={theme.colors.primary} />
+                  </View>
+                  <Text style={[styles.actionText, { color: theme.colors.foreground }]}>Start writing</Text>
+                </TouchableOpacity>
+              </GlassView>
             </View>
 
             {/* Special Views Section */}
@@ -349,30 +350,31 @@ export default function HomeScreen() {
               </Text>
               <View style={styles.specialViewsList}>
                 {SPECIAL_VIEWS.map((view) => (
-                  <TouchableOpacity
-                    key={view.id}
-                    style={[styles.specialViewItem, { backgroundColor: theme.colors.card, borderColor: theme.colors.border }]}
-                    onPress={() => {
-                      router.push({
-                        pathname: '/folder-notes',
-                        params: { viewType: view.id }
-                      });
-                    }}
-                  >
-                    <View style={styles.specialViewContent}>
-                      <View style={styles.specialViewIcon}>
-                        <Ionicons name={view.icon} size={16} color={theme.colors.foreground} />
+                  <GlassView key={view.id} glassEffectStyle="regular" style={styles.glassSpecialViewItem}>
+                    <TouchableOpacity
+                      style={styles.specialViewItem}
+                      onPress={() => {
+                        router.push({
+                          pathname: '/folder-notes',
+                          params: { viewType: view.id }
+                        });
+                      }}
+                    >
+                      <View style={styles.specialViewContent}>
+                        <View style={styles.specialViewIcon}>
+                          <Ionicons name={view.icon} size={16} color={theme.colors.foreground} />
+                        </View>
+                        <Text style={[styles.specialViewLabel, { color: theme.colors.foreground }]}>
+                          {view.label}
+                        </Text>
                       </View>
-                      <Text style={[styles.specialViewLabel, { color: theme.colors.foreground }]}>
-                        {view.label}
-                      </Text>
-                    </View>
-                    <View style={[styles.countBadge, { backgroundColor: theme.colors.muted }]}>
-                      <Text style={[styles.countText, { color: theme.colors.mutedForeground }]}>
-                        {counts[view.id as keyof typeof counts] || 0}
-                      </Text>
-                    </View>
-                  </TouchableOpacity>
+                      <View style={[styles.countBadge, { backgroundColor: theme.colors.muted }]}>
+                        <Text style={[styles.countText, { color: theme.colors.mutedForeground }]}>
+                          {counts[view.id as keyof typeof counts] || 0}
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                  </GlassView>
                 ))}
               </View>
             </View>
@@ -384,66 +386,73 @@ export default function HomeScreen() {
                   FOLDERS
                 </Text>
                 <View style={styles.viewModeToggle}>
-                  <TouchableOpacity
-                    style={[
-                      styles.viewModeButton,
-                      { backgroundColor: theme.colors.muted },
-                      viewMode === 'list' && styles.viewModeButtonActive
-                    ]}
-                    onPress={async () => {
-                      setViewMode('list');
-                      try {
-                        await AsyncStorage.setItem('viewMode', 'list');
-                      } catch (error) {
-                        if (__DEV__) console.error('Failed to save view mode:', error);
-                      }
-                    }}
-                  >
-                    <Ionicons
-                      name="list"
-                      size={16}
-                      color={viewMode === 'list' ? theme.colors.primary : theme.colors.mutedForeground}
-                    />
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[
-                      styles.viewModeButton,
-                      { backgroundColor: theme.colors.muted },
-                      viewMode === 'grid' && styles.viewModeButtonActive
-                    ]}
-                    onPress={async () => {
-                      setViewMode('grid');
-                      try {
-                        await AsyncStorage.setItem('viewMode', 'grid');
-                      } catch (error) {
-                        if (__DEV__) console.error('Failed to save view mode:', error);
-                      }
-                    }}
-                  >
-                    <Ionicons
-                      name="grid"
-                      size={16}
-                      color={viewMode === 'grid' ? theme.colors.primary : theme.colors.mutedForeground}
-                    />
-                  </TouchableOpacity>
+                  <GlassView glassEffectStyle="regular" style={styles.glassViewModeButton}>
+                    <TouchableOpacity
+                      style={[
+                        styles.viewModeButton,
+                        viewMode === 'list' && styles.viewModeButtonActive
+                      ]}
+                      onPress={async () => {
+                        setViewMode('list');
+                        try {
+                          await AsyncStorage.setItem('viewMode', 'list');
+                        } catch (error) {
+                          if (__DEV__) console.error('Failed to save view mode:', error);
+                        }
+                      }}
+                    >
+                      <Ionicons
+                        name="list"
+                        size={16}
+                        color={viewMode === 'list' ? theme.colors.primary : theme.colors.foreground}
+                      />
+                    </TouchableOpacity>
+                  </GlassView>
+                  <GlassView glassEffectStyle="regular" style={styles.glassViewModeButton}>
+                    <TouchableOpacity
+                      style={[
+                        styles.viewModeButton,
+                        viewMode === 'grid' && styles.viewModeButtonActive
+                      ]}
+                      onPress={async () => {
+                        setViewMode('grid');
+                        try {
+                          await AsyncStorage.setItem('viewMode', 'grid');
+                        } catch (error) {
+                          if (__DEV__) console.error('Failed to save view mode:', error);
+                        }
+                      }}
+                    >
+                      <Ionicons
+                        name="grid"
+                        size={16}
+                        color={viewMode === 'grid' ? theme.colors.primary : theme.colors.foreground}
+                      />
+                    </TouchableOpacity>
+                  </GlassView>
                 </View>
               </View>
               <View style={viewMode === 'grid' ? styles.foldersGrid : styles.foldersList}>
                 {/* Create Folder Button */}
-                <TouchableOpacity
-                  style={[
-                    viewMode === 'grid' ? styles.folderItemGrid : styles.folderItem,
-                    { backgroundColor: theme.isDark ? theme.colors.card : theme.colors.secondary, borderColor: theme.colors.border }
-                  ]}
-                  onPress={() => createFolderSheetRef.current?.present()}
+                <GlassView
+                  glassEffectStyle="regular"
+                  style={viewMode === 'grid' ? styles.glassCreateFolderGrid : styles.glassCreateFolderList}
                 >
-                  <View style={viewMode === 'grid' ? styles.folderContentGrid : styles.folderContent}>
-                    <Ionicons name="add" size={viewMode === 'grid' ? 24 : 16} color={theme.colors.primary} style={{ marginRight: viewMode === 'grid' ? 0 : 12, marginBottom: viewMode === 'grid' ? 8 : 0 }} />
-                    <Text style={[styles.folderName, { color: theme.colors.foreground }]}>
-                      Create Folder
-                    </Text>
-                  </View>
-                </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[
+                      viewMode === 'grid' ? styles.createFolderButtonGrid : styles.createFolderButtonList,
+                      { borderColor: theme.colors.border }
+                    ]}
+                    onPress={() => createFolderSheetRef.current?.present()}
+                  >
+                    <View style={viewMode === 'grid' ? styles.folderContentGrid : styles.folderContent}>
+                      <Ionicons name="add" size={viewMode === 'grid' ? 24 : 16} color={theme.colors.primary} style={{ marginRight: viewMode === 'grid' ? 0 : 12, marginBottom: viewMode === 'grid' ? 8 : 0 }} />
+                      <Text style={[styles.folderName, { color: theme.colors.foreground }]}>
+                        Create Folder
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                </GlassView>
 
                 {allFolders.map((folder) => (
                   <TouchableOpacity
@@ -486,6 +495,55 @@ export default function HomeScreen() {
         </ScrollView>
       )}
 
+      {/* Floating Header */}
+      {!showLoading && (
+        <View style={[styles.floatingHeader, { paddingTop: insets.top || 0 }]}>
+          <LinearGradient
+            colors={[
+              theme.isDark ? 'rgba(10, 10, 10, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+              theme.isDark ? 'rgba(10, 10, 10, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+              theme.isDark ? 'rgba(10, 10, 10, 0.88)' : 'rgba(255, 255, 255, 0.88)',
+              theme.isDark ? 'rgba(10, 10, 10, 0.80)' : 'rgba(255, 255, 255, 0.80)',
+              theme.isDark ? 'rgba(10, 10, 10, 0.68)' : 'rgba(255, 255, 255, 0.68)',
+              theme.isDark ? 'rgba(10, 10, 10, 0.52)' : 'rgba(255, 255, 255, 0.52)',
+              theme.isDark ? 'rgba(10, 10, 10, 0.36)' : 'rgba(255, 255, 255, 0.36)',
+              theme.isDark ? 'rgba(10, 10, 10, 0.22)' : 'rgba(255, 255, 255, 0.22)',
+              theme.isDark ? 'rgba(10, 10, 10, 0.12)' : 'rgba(255, 255, 255, 0.12)',
+              theme.isDark ? 'rgba(10, 10, 10, 0.05)' : 'rgba(255, 255, 255, 0.05)',
+              'rgba(0, 0, 0, 0)',
+            ]}
+            locations={[0, 0.35, 0.45, 0.53, 0.60, 0.66, 0.72, 0.77, 0.82, 0.87, 1]}
+            style={styles.headerGradient}
+          />
+          <View style={styles.headerSection}>
+            <Animated.View
+              style={[
+                styles.greetingSection,
+                {
+                  transform: [{ translateY: greetingTranslateY }],
+                  opacity: greetingOpacity,
+                }
+              ]}
+            >
+              <Text style={[styles.greeting, { color: theme.colors.foreground }]}>
+                Good {getTimeOfDay()}
+              </Text>
+              <Text style={[styles.subgreeting, { color: theme.colors.mutedForeground }]}>
+                What would you like to work on today?
+              </Text>
+            </Animated.View>
+            <GlassView glassEffectStyle="regular" style={styles.glassAvatar}>
+              <TouchableOpacity
+                style={styles.avatarButton}
+                onPress={() => router.push('/settings')}
+              >
+                <Ionicons name="person" size={20} color={theme.colors.foreground} />
+              </TouchableOpacity>
+            </GlassView>
+          </View>
+        </View>
+      )}
+
       {/* Offline Indicator - Floating Button */}
       <OfflineIndicator />
 
@@ -503,12 +561,14 @@ export default function HomeScreen() {
         <BottomSheetView style={{ paddingBottom: 32 }}>
           <View style={styles.modalHeader}>
             <Text style={[styles.modalTitle, { color: theme.colors.foreground }]}>Create Folder</Text>
-            <TouchableOpacity
-              style={[styles.iconButton, { backgroundColor: theme.colors.muted }]}
-              onPress={() => createFolderSheetRef.current?.dismiss()}
-            >
-              <Ionicons name="close" size={20} color={theme.colors.mutedForeground} />
-            </TouchableOpacity>
+            <GlassView glassEffectStyle="regular" style={styles.glassIconButton}>
+              <TouchableOpacity
+                style={styles.iconButton}
+                onPress={() => createFolderSheetRef.current?.dismiss()}
+              >
+                <Ionicons name="close" size={20} color={theme.colors.foreground} />
+              </TouchableOpacity>
+            </GlassView>
           </View>
           <View style={[styles.divider, { backgroundColor: theme.colors.border }]} />
 
@@ -581,14 +641,29 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollViewContent: {
-    paddingTop: 16,
+    paddingBottom: 16,
+  },
+  floatingHeader: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 100,
+    paddingBottom: 35,
+  },
+  headerGradient: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
   },
   headerSection: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     justifyContent: 'space-between',
-    marginBottom: 32,
     paddingHorizontal: 16,
+    paddingTop: 16,
   },
   greetingSection: {
     flex: 1,
@@ -602,13 +677,14 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 22,
   },
-  avatarButton: {
-    padding: 4,
+  glassAvatar: {
+    borderRadius: 19,
+    overflow: 'hidden',
+    backgroundColor: 'rgba(255, 255, 255, 0.01)',
   },
-  avatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+  avatarButton: {
+    width: 38,
+    height: 38,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -616,14 +692,17 @@ const styles = StyleSheet.create({
     marginBottom: 40,
     paddingHorizontal: 16,
   },
+  glassActionButton: {
+    borderRadius: ACTION_BUTTON.BORDER_RADIUS,
+    overflow: 'hidden',
+    backgroundColor: 'rgba(255, 255, 255, 0.01)',
+  },
   newNoteAction: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 12,
     paddingLeft: 12,
     paddingRight: 12,
-    borderRadius: ACTION_BUTTON.BORDER_RADIUS,
-    borderWidth: 1,
   },
   actionIcon: {
     marginRight: ACTION_BUTTON.ICON_SPACING,
@@ -651,21 +730,30 @@ const styles = StyleSheet.create({
   },
   viewModeToggle: {
     flexDirection: 'row',
-    gap: 4,
+    gap: GLASS_BUTTON.GAP,
+  },
+  glassViewModeButton: {
+    borderRadius: GLASS_BUTTON.BORDER_RADIUS,
+    overflow: 'hidden',
+    backgroundColor: 'rgba(255, 255, 255, 0.01)',
   },
   viewModeButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 6,
+    width: GLASS_BUTTON.SIZE,
+    height: GLASS_BUTTON.SIZE,
     alignItems: 'center',
     justifyContent: 'center',
   },
   viewModeButtonActive: {
-    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+    backgroundColor: GLASS_BUTTON.ACTIVE_BACKGROUND,
   },
   specialViewsList: {
     gap: FOLDER_CARD.SPACING,
     paddingHorizontal: 16,
+  },
+  glassSpecialViewItem: {
+    borderRadius: FOLDER_CARD.BORDER_RADIUS,
+    overflow: 'hidden',
+    backgroundColor: 'rgba(255, 255, 255, 0.01)',
   },
   specialViewItem: {
     flexDirection: 'row',
@@ -674,8 +762,6 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingLeft: 12,
     paddingRight: 12,
-    borderRadius: FOLDER_CARD.BORDER_RADIUS,
-    borderWidth: 1,
   },
   specialViewContent: {
     flexDirection: 'row',
@@ -710,6 +796,30 @@ const styles = StyleSheet.create({
     gap: 12,
     paddingHorizontal: 16,
   },
+  glassCreateFolderList: {
+    borderRadius: FOLDER_CARD.BORDER_RADIUS,
+    overflow: 'hidden',
+    backgroundColor: 'rgba(255, 255, 255, 0.01)',
+  },
+  glassCreateFolderGrid: {
+    width: '48%',
+    borderRadius: FOLDER_CARD.BORDER_RADIUS,
+    overflow: 'hidden',
+    backgroundColor: 'rgba(255, 255, 255, 0.01)',
+  },
+  createFolderButtonList: {
+    width: '100%',
+    paddingVertical: 12,
+    paddingLeft: 12,
+    paddingRight: 12,
+    borderWidth: 1,
+  },
+  createFolderButtonGrid: {
+    width: '100%',
+    padding: 16,
+    minHeight: 100,
+    borderWidth: 1,
+  },
   folderItem: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -723,9 +833,9 @@ const styles = StyleSheet.create({
   folderItemGrid: {
     width: '48%',
     padding: 16,
-    borderRadius: FOLDER_CARD.BORDER_RADIUS,
-    borderWidth: 1,
     minHeight: 100,
+    borderWidth: 1,
+    borderRadius: FOLDER_CARD.BORDER_RADIUS,
   },
   folderContent: {
     flexDirection: 'row',
@@ -791,10 +901,14 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
   },
+  glassIconButton: {
+    borderRadius: 19,
+    overflow: 'hidden',
+    backgroundColor: 'rgba(255, 255, 255, 0.01)',
+  },
   iconButton: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
+    width: 38,
+    height: 38,
     alignItems: 'center',
     justifyContent: 'center',
   },

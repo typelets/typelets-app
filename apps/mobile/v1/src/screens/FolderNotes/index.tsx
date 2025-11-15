@@ -304,7 +304,7 @@ export default function FolderNotesScreen({ folderId, folderName, viewType }: Fo
               paddingTop: insets.top,
               paddingBottom: 35,
             }
-          ]}>
+          ]} pointerEvents="box-none">
             {/* Gradient background - opaque only at title, smooth fade starts early so buttons are transparent */}
             <LinearGradient
               colors={[
@@ -321,6 +321,7 @@ export default function FolderNotesScreen({ folderId, folderName, viewType }: Fo
                 'rgba(0, 0, 0, 0)',
               ]}
               locations={[0, 0.35, 0.45, 0.53, 0.60, 0.66, 0.72, 0.77, 0.82, 0.90, 1]}
+              pointerEvents="none"
               style={{
                 position: 'absolute',
                 top: 0,

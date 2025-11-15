@@ -3,7 +3,7 @@ import { GlassView } from 'expo-glass-effect';
 import React from 'react';
 import { Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-import { NOTE_CARD } from '@/src/constants/ui';
+import { NOTE_CARD, GLASS_BUTTON } from '@/src/constants/ui';
 import { useTheme } from '@/src/theme';
 
 interface NotesHeaderProps {
@@ -38,9 +38,9 @@ export const NotesHeader: React.FC<NotesHeaderProps> = ({
           NOTES ({String(filteredNotesCount || 0)})
           {filteredNotesCount !== totalNotesCount && ` (${totalNotesCount} total)`}
         </Text>
-        <GlassView glassEffectStyle="regular" style={styles.viewModeButtonGlass}>
+        <GlassView glassEffectStyle="regular" style={styles.squareButtonGlass}>
           <TouchableOpacity
-            style={styles.viewModeButton}
+            style={styles.squareButton}
             onPress={onFilterPress}
             activeOpacity={0.7}
           >
@@ -105,17 +105,14 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     letterSpacing: 0.8,
   },
-  viewModeButtonGlass: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
+  squareButtonGlass: {
+    borderRadius: GLASS_BUTTON.BORDER_RADIUS,
     overflow: 'hidden',
     backgroundColor: 'rgba(255, 255, 255, 0.01)',
   },
-  viewModeButton: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
+  squareButton: {
+    width: GLASS_BUTTON.SIZE,
+    height: GLASS_BUTTON.SIZE,
     alignItems: 'center',
     justifyContent: 'center',
   },
