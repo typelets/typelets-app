@@ -1,5 +1,4 @@
 import { useAuth, useUser } from '@clerk/clerk-expo';
-import { Stack } from 'expo-router';
 
 import { clearUserEncryptionData } from '@/src/lib/encryption';
 import SettingsScreen from '@/src/screens/Settings';
@@ -41,10 +40,5 @@ export default function SettingsPage() {
     }
   };
 
-  return (
-    <>
-      <Stack.Screen options={{ headerShown: false }} />
-      <SettingsScreen onLogout={handleLogout} />
-    </>
-  );
+  return <SettingsScreen onLogout={handleLogout} />;
 }

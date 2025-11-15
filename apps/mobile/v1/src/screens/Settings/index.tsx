@@ -2,10 +2,12 @@ import { useUser } from '@clerk/clerk-expo';
 import { Ionicons } from '@expo/vector-icons';
 import { BottomSheetBackdrop, BottomSheetBackdropProps,BottomSheetModal, BottomSheetScrollView, BottomSheetView } from '@gorhom/bottom-sheet';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { GlassView } from 'expo-glass-effect';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect,useMemo, useRef, useState } from 'react';
 import { Alert, Animated,Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { UsageBottomSheet } from '../../components/settings/UsageBottomSheet';
 import { Card } from '../../components/ui';
@@ -40,6 +42,7 @@ export default function SettingsScreen({ onLogout }: Props) {
   const theme = useTheme();
   const { user } = useUser();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
 
   // Bottom sheet refs
   const themeModeSheetRef = useRef<BottomSheetModal>(null);
@@ -419,33 +422,11 @@ export default function SettingsScreen({ onLogout }: Props) {
     },
   ];
 
-  // Animated divider opacity using interpolate
-  const dividerOpacity = scrollY.interpolate({
-    inputRange: [0, 20],
-    outputRange: [0, 1],
-    extrapolate: 'clamp'
-  });
-
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]} edges={['top', 'left', 'right']}>
-      {/* Header with back button */}
-      <View>
-        <View style={styles.headerBar}>
-          <TouchableOpacity
-            style={[styles.iconButton, { backgroundColor: theme.colors.muted }]}
-            onPress={() => router.back()}
-          >
-            <Ionicons name="chevron-back" size={20} color={theme.colors.mutedForeground} style={{ marginLeft: -2 }} />
-          </TouchableOpacity>
-          <Text style={[styles.headerTitle, { color: theme.colors.foreground }]}>Settings</Text>
-          <View style={styles.headerSpacer} />
-        </View>
-        <Animated.View style={[styles.headerDivider, { backgroundColor: theme.colors.border, opacity: dividerOpacity }]} />
-      </View>
-
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]} edges={['left', 'right']}>
       <ScrollView
         style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[styles.scrollContent, { paddingTop: (insets.top || 0) + 58 }]}
         showsVerticalScrollIndicator={false}
         onScroll={Animated.event(
           [{ nativeEvent: { contentOffset: { y: scrollY } } }],
@@ -522,6 +503,43 @@ export default function SettingsScreen({ onLogout }: Props) {
 
         </View>
       </ScrollView>
+
+      {/* Floating Header with back button */}
+      <View style={[styles.headerWrapper, { paddingTop: insets.top }]}>
+        <LinearGradient
+          colors={[
+            theme.isDark ? 'rgba(10, 10, 10, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+            theme.isDark ? 'rgba(10, 10, 10, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+            theme.isDark ? 'rgba(10, 10, 10, 0.88)' : 'rgba(255, 255, 255, 0.88)',
+            theme.isDark ? 'rgba(10, 10, 10, 0.80)' : 'rgba(255, 255, 255, 0.80)',
+            theme.isDark ? 'rgba(10, 10, 10, 0.68)' : 'rgba(255, 255, 255, 0.68)',
+            theme.isDark ? 'rgba(10, 10, 10, 0.52)' : 'rgba(255, 255, 255, 0.52)',
+            theme.isDark ? 'rgba(10, 10, 10, 0.36)' : 'rgba(255, 255, 255, 0.36)',
+            theme.isDark ? 'rgba(10, 10, 10, 0.22)' : 'rgba(255, 255, 255, 0.22)',
+            theme.isDark ? 'rgba(10, 10, 10, 0.12)' : 'rgba(255, 255, 255, 0.12)',
+            theme.isDark ? 'rgba(10, 10, 10, 0.05)' : 'rgba(255, 255, 255, 0.05)',
+            'rgba(0, 0, 0, 0)',
+          ]}
+          locations={[0, 0.35, 0.45, 0.53, 0.60, 0.66, 0.72, 0.77, 0.82, 0.87, 1]}
+          style={styles.gradient}
+        />
+        <View style={styles.headerBar}>
+          <GlassView glassEffectStyle="regular" style={styles.glassButton}>
+            <TouchableOpacity
+              style={styles.headerButton}
+              onPress={() => router.back()}
+            >
+              <Ionicons name="chevron-back" size={20} color={theme.colors.foreground} style={{ marginLeft: -2 }} />
+            </TouchableOpacity>
+          </GlassView>
+          <GlassView glassEffectStyle="regular" style={styles.glassTitleButton}>
+            <View style={styles.titleButton}>
+              <Text style={[styles.headerTitle, { color: theme.colors.foreground }]}>Settings</Text>
+            </View>
+          </GlassView>
+          <View style={styles.headerSpacer} />
+        </View>
+      </View>
 
       {/* Theme Mode Selection Bottom Sheet */}
       <BottomSheetModal
@@ -1037,6 +1055,45 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  headerWrapper: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 100,
+    paddingBottom: 35,
+  },
+  gradient: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+  },
+  glassButton: {
+    borderRadius: 19,
+    overflow: 'hidden',
+    backgroundColor: 'rgba(255, 255, 255, 0.01)',
+  },
+  glassTitleButton: {
+    flex: 1,
+    borderRadius: 19,
+    overflow: 'hidden',
+    backgroundColor: 'rgba(255, 255, 255, 0.01)',
+    marginHorizontal: 12,
+  },
+  headerButton: {
+    width: 38,
+    height: 38,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  titleButton: {
+    height: 38,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 16,
+  },
   headerBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1046,19 +1103,12 @@ const styles = StyleSheet.create({
     minHeight: 44,
   },
   headerTitle: {
-    flex: 1,
-    marginLeft: 12,
-    textAlign: 'left',
+    textAlign: 'center',
     fontSize: 16,
     fontWeight: '600',
   },
   headerSpacer: {
-    width: 34,
-  },
-  headerDivider: {
-    // @ts-ignore - StyleSheet.hairlineWidth is intentionally used for height (ultra-thin divider)
-     
-    height: StyleSheet.hairlineWidth,
+    width: 38,
   },
   scrollView: {
     flex: 1,

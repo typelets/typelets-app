@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect,useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback,useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Animated, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useNetworkStatus } from '../../hooks/useNetworkStatus';
 import { useViewNote } from '../../hooks/useViewNote';
@@ -20,6 +20,7 @@ export default function ViewNoteScreen() {
   const api = useApiService();
   const { isConnected, isInternetReachable } = useNetworkStatus();
   const isOnline = isConnected && (isInternetReachable ?? false);
+  const insets = useSafeAreaInsets();
 
   // Log screen mount
   useEffect(() => {
@@ -171,29 +172,11 @@ export default function ViewNoteScreen() {
   }
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]} edges={['top', 'left', 'right']}>
-      <View style={[styles.headerContainer, { backgroundColor: theme.colors.background }]}>
-        <ViewHeader
-          isStarred={note.starred}
-          isHidden={note.hidden}
-          title={note.title}
-          scrollY={scrollY}
-          attachmentsCount={attachments.length}
-          showAttachments={showAttachments}
-          isOffline={!isOnline}
-          isTempNote={(noteId as string).startsWith('temp_')}
-          onBack={() => router.back()}
-          onToggleStar={handleToggleStar}
-          onToggleHidden={handleToggleHidden}
-          onToggleAttachments={() => setShowAttachments(!showAttachments)}
-          onEdit={handleEdit}
-          theme={theme}
-        />
-      </View>
-
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]} edges={['left', 'right']}>
       <Animated.ScrollView
         ref={scrollViewRef}
         style={{ flex: 1 }}
+        contentContainerStyle={{ paddingTop: (insets.top || 0) + 58 }}
         showsVerticalScrollIndicator={false}
         scrollEnabled={note.type !== 'diagram'}
         onScroll={Animated.event(
@@ -258,8 +241,6 @@ export default function ViewNoteScreen() {
           </View>
         )}
 
-        <View style={[styles.divider, { backgroundColor: theme.colors.border }]} />
-
         <NoteContent
           note={note}
           htmlContent={htmlContent}
@@ -269,6 +250,25 @@ export default function ViewNoteScreen() {
           theme={theme}
         />
       </Animated.ScrollView>
+
+      {/* Floating Header */}
+      <ViewHeader
+        isStarred={note.isStarred}
+        isHidden={note.isHidden}
+        title={note.title}
+        scrollY={scrollY}
+        attachmentsCount={attachments.length}
+        showAttachments={showAttachments}
+        isOffline={!isOnline}
+        isTempNote={(noteId as string).startsWith('temp_')}
+        insets={insets}
+        onBack={() => router.back()}
+        onToggleStar={handleToggleStar}
+        onToggleHidden={handleToggleHidden}
+        onToggleAttachments={() => setShowAttachments(!showAttachments)}
+        onEdit={handleEdit}
+        theme={theme}
+      />
     </SafeAreaView>
   );
 }
@@ -276,8 +276,6 @@ export default function ViewNoteScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  headerContainer: {
   },
   loadingContainer: {
     flex: 1,
@@ -300,12 +298,6 @@ const styles = StyleSheet.create({
   },
   noteMetadata: {
     fontSize: 12,
-  },
-  divider: {
-    // @ts-ignore - StyleSheet.hairlineWidth is intentionally used for height (ultra-thin divider)
-    height: StyleSheet.hairlineWidth,
-    marginHorizontal: 0,
-    marginBottom: 2,
   },
   attachmentsContainer: {
     borderBottomWidth: StyleSheet.hairlineWidth,

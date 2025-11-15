@@ -1,4 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
+import { GlassView } from 'expo-glass-effect';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Check } from 'lucide-react-native';
 import React from 'react';
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -30,9 +32,12 @@ interface EditorHeaderProps {
       muted: string;
       mutedForeground: string;
       border: string;
+      foreground: string;
     };
+    isDark: boolean;
   };
 }
+
 export function EditorHeader({
   isEditing,
   isSaving,
@@ -53,137 +58,179 @@ export function EditorHeader({
   theme,
 }: EditorHeaderProps) {
   return (
-    <View style={styles.header}>
-      <TouchableOpacity
-        style={[styles.headerButton, { backgroundColor: theme.colors.muted }]}
-        onPress={onBack}
-        hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-      >
-        <Ionicons name="chevron-back" size={20} color={theme.colors.mutedForeground} style={{ marginLeft: -2 }} />
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        style={{ flex: 1 }}
-        onPress={() => {
-          if (onDismissKeyboard) {
-            onDismissKeyboard();
-          }
-        }}
-        activeOpacity={1}
-      >
-        <View style={{ flex: 1 }} />
-      </TouchableOpacity>
-
-      <View style={styles.headerActions}>
-        {onToggleHeader && (
+    <View style={styles.headerWrapper}>
+      <LinearGradient
+        colors={[
+          theme.isDark ? 'rgba(10, 10, 10, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+          theme.isDark ? 'rgba(10, 10, 10, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+          theme.isDark ? 'rgba(10, 10, 10, 0.88)' : 'rgba(255, 255, 255, 0.88)',
+          theme.isDark ? 'rgba(10, 10, 10, 0.80)' : 'rgba(255, 255, 255, 0.80)',
+          theme.isDark ? 'rgba(10, 10, 10, 0.68)' : 'rgba(255, 255, 255, 0.68)',
+          theme.isDark ? 'rgba(10, 10, 10, 0.52)' : 'rgba(255, 255, 255, 0.52)',
+          theme.isDark ? 'rgba(10, 10, 10, 0.36)' : 'rgba(255, 255, 255, 0.36)',
+          theme.isDark ? 'rgba(10, 10, 10, 0.22)' : 'rgba(255, 255, 255, 0.22)',
+          theme.isDark ? 'rgba(10, 10, 10, 0.12)' : 'rgba(255, 255, 255, 0.12)',
+          theme.isDark ? 'rgba(10, 10, 10, 0.05)' : 'rgba(255, 255, 255, 0.05)',
+          'rgba(0, 0, 0, 0)',
+        ]}
+        locations={[0, 0.35, 0.45, 0.53, 0.60, 0.66, 0.72, 0.77, 0.82, 0.87, 1]}
+        style={styles.gradient}
+      />
+      <View style={styles.header}>
+        <GlassView glassEffectStyle="regular" style={styles.glassButton}>
           <TouchableOpacity
-            style={[styles.actionButton, { backgroundColor: showHeader ? 'rgba(59, 130, 246, 0.15)' : theme.colors.muted }]}
-            onPress={onToggleHeader}
+            style={styles.iconButton}
+            onPress={onBack}
             hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
           >
-            <View pointerEvents="none">
-              <Ionicons
-                name={showHeader ? "contract" : "expand"}
-                size={20}
-                color={showHeader ? "#3b82f6" : theme.colors.mutedForeground}
-              />
-            </View>
+            <Ionicons name="chevron-back" size={20} color={theme.colors.foreground} style={{ marginLeft: -2 }} />
           </TouchableOpacity>
-        )}
-
-        {onToggleToolbar && (
-          <TouchableOpacity
-            style={[styles.actionButton, { backgroundColor: showToolbar ? 'rgba(59, 130, 246, 0.15)' : theme.colors.muted }]}
-            onPress={onToggleToolbar}
-            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-          >
-            <View pointerEvents="none">
-              <Ionicons
-                name="text-outline"
-                size={20}
-                color={showToolbar ? "#3b82f6" : theme.colors.mutedForeground}
-              />
-            </View>
-          </TouchableOpacity>
-        )}
-
-        {onToggleAttachments && (
-          <TouchableOpacity
-            style={[styles.actionButton, { backgroundColor: showAttachments ? 'rgba(59, 130, 246, 0.15)' : theme.colors.muted }]}
-            onPress={onToggleAttachments}
-            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-          >
-            <View style={styles.attachmentButtonContent} pointerEvents="none">
-              <View style={{ transform: [{ rotate: '45deg' }] }} pointerEvents="none">
-                <Ionicons
-                  name="attach-outline"
-                  size={20}
-                  color={showAttachments ? "#3b82f6" : theme.colors.mutedForeground}
-                />
-              </View>
-              {attachmentsCount > 0 && (
-                <View style={[styles.attachmentBadge, { backgroundColor: showAttachments ? "#3b82f6" : theme.colors.mutedForeground }]} pointerEvents="none">
-                  <Text style={[styles.attachmentBadgeText, { color: showAttachments ? '#ffffff' : theme.colors.muted }]}>
-                    {attachmentsCount > 9 ? '9+' : attachmentsCount}
-                  </Text>
-                </View>
-              )}
-            </View>
-          </TouchableOpacity>
-        )}
-
-        {onTestEditor && isEditing && (
-          <TouchableOpacity
-            style={[styles.actionButton, { backgroundColor: '#10b981' }]}
-            onPress={onTestEditor}
-            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-          >
-            <Ionicons name="flask-outline" size={20} color="#ffffff" />
-          </TouchableOpacity>
-        )}
-
-        {isEditing && (
-          <TouchableOpacity
-            style={[styles.actionButton, { backgroundColor: theme.colors.muted, opacity: (isOffline && !isTempNote) ? 0.4 : 1 }]}
-            onPress={onDelete}
-            disabled={isOffline && !isTempNote}
-            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-          >
-            <Ionicons name="trash" size={20} color={theme.colors.mutedForeground} />
-          </TouchableOpacity>
-        )}
+        </GlassView>
 
         <TouchableOpacity
-          style={[
-            styles.actionButton,
-            {
-              backgroundColor: theme.colors.muted,
-              opacity: isSaving || (isOffline && isEditing && !isTempNote) ? 0.4 : 1
-            }
-          ]}
+          style={{ flex: 1 }}
           onPress={() => {
-            if (!isSaving && !(isOffline && isEditing && !isTempNote)) {
-              onSave();
+            if (onDismissKeyboard) {
+              onDismissKeyboard();
             }
           }}
-          disabled={isOffline && isEditing && !isTempNote}
-          activeOpacity={isSaving || (isOffline && isEditing && !isTempNote) ? 1 : 0.2}
-          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+          activeOpacity={1}
         >
-          <View pointerEvents="none">
-            {isSaving ? (
-              <ActivityIndicator size="small" color={theme.colors.mutedForeground} />
-            ) : (
-              <Check size={20} color={theme.colors.mutedForeground} strokeWidth={2.5} />
-            )}
-          </View>
+          <View style={{ flex: 1 }} />
         </TouchableOpacity>
+
+        <View style={styles.headerActions}>
+          {onToggleHeader && (
+            <GlassView glassEffectStyle="regular" style={styles.glassButton}>
+              <TouchableOpacity
+                style={styles.iconButton}
+                onPress={onToggleHeader}
+                hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+              >
+                <View pointerEvents="none">
+                  <Ionicons
+                    name={showHeader ? "contract" : "expand"}
+                    size={20}
+                    color={showHeader ? theme.colors.primary : theme.colors.foreground}
+                  />
+                </View>
+              </TouchableOpacity>
+            </GlassView>
+          )}
+
+          {onToggleToolbar && (
+            <GlassView glassEffectStyle="regular" style={styles.glassButton}>
+              <TouchableOpacity
+                style={styles.iconButton}
+                onPress={onToggleToolbar}
+                hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+              >
+                <View pointerEvents="none">
+                  <Ionicons
+                    name="text-outline"
+                    size={20}
+                    color={showToolbar ? theme.colors.primary : theme.colors.foreground}
+                  />
+                </View>
+              </TouchableOpacity>
+            </GlassView>
+          )}
+
+          {onToggleAttachments && (
+            <GlassView glassEffectStyle="regular" style={styles.glassButton}>
+              <TouchableOpacity
+                style={styles.iconButton}
+                onPress={onToggleAttachments}
+                hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+              >
+                <View style={styles.attachmentButtonContent} pointerEvents="none">
+                  <View style={{ transform: [{ rotate: '45deg' }] }} pointerEvents="none">
+                    <Ionicons
+                      name="attach-outline"
+                      size={20}
+                      color={showAttachments ? theme.colors.primary : theme.colors.foreground}
+                    />
+                  </View>
+                  {attachmentsCount > 0 && (
+                    <View style={[styles.attachmentBadge, { backgroundColor: showAttachments ? theme.colors.primary : theme.colors.mutedForeground }]} pointerEvents="none">
+                      <Text style={[styles.attachmentBadgeText, { color: '#ffffff' }]}>
+                        {attachmentsCount > 9 ? '9+' : attachmentsCount}
+                      </Text>
+                    </View>
+                  )}
+                </View>
+              </TouchableOpacity>
+            </GlassView>
+          )}
+
+          {onTestEditor && isEditing && (
+            <GlassView glassEffectStyle="regular" style={styles.glassButton}>
+              <TouchableOpacity
+                style={styles.iconButton}
+                onPress={onTestEditor}
+                hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+              >
+                <Ionicons name="flask-outline" size={20} color="#10b981" />
+              </TouchableOpacity>
+            </GlassView>
+          )}
+
+          {isEditing && (
+            <GlassView glassEffectStyle="regular" style={styles.glassButton}>
+              <TouchableOpacity
+                style={[styles.iconButton, { opacity: (isOffline && !isTempNote) ? 0.4 : 1 }]}
+                onPress={onDelete}
+                disabled={isOffline && !isTempNote}
+                hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+              >
+                <Ionicons name="trash" size={20} color={theme.colors.foreground} />
+              </TouchableOpacity>
+            </GlassView>
+          )}
+
+          <GlassView glassEffectStyle="regular" style={styles.glassButton}>
+            <TouchableOpacity
+              style={[
+                styles.iconButton,
+                {
+                  opacity: isSaving || (isOffline && isEditing && !isTempNote) ? 0.4 : 1
+                }
+              ]}
+              onPress={() => {
+                if (!isSaving && !(isOffline && isEditing && !isTempNote)) {
+                  onSave();
+                }
+              }}
+              disabled={isOffline && isEditing && !isTempNote}
+              activeOpacity={isSaving || (isOffline && isEditing && !isTempNote) ? 1 : 0.2}
+              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            >
+              <View pointerEvents="none">
+                {isSaving ? (
+                  <ActivityIndicator size="small" color={theme.colors.foreground} />
+                ) : (
+                  <Check size={20} color={theme.colors.foreground} strokeWidth={2.5} />
+                )}
+              </View>
+            </TouchableOpacity>
+          </GlassView>
+        </View>
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  headerWrapper: {
+    position: 'relative',
+  },
+  gradient: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -193,12 +240,16 @@ const styles = StyleSheet.create({
     paddingBottom: 8,
     minHeight: 44,
   },
-  headerButton: {
-    width: 34,
-    height: 34,
+  glassButton: {
+    borderRadius: 19,
+    overflow: 'hidden',
+    backgroundColor: 'rgba(255, 255, 255, 0.01)',
+  },
+  iconButton: {
+    width: 38,
+    height: 38,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 17,
   },
   headerActions: {
     flexDirection: 'row',

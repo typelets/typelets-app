@@ -110,30 +110,30 @@ function NavigationContent() {
                     animation: 'slide_from_right',
                   }}
                 >
-              <Stack.Screen
-                name="index"
-                options={{ contentStyle: { backgroundColor: theme.colors.background } }}
-              />
-              <Stack.Screen
-                name="folder-notes"
-                options={{ contentStyle: { backgroundColor: theme.colors.background } }}
-              />
-              <Stack.Screen
-                name="view-note"
-                options={{ contentStyle: { backgroundColor: theme.colors.background } }}
-              />
-              <Stack.Screen
-                name="edit-note"
-                options={{
-                  contentStyle: { backgroundColor: theme.colors.background },
-                  animation: 'fade',
-                  animationDuration: 150,
-                }}
-              />
-              <Stack.Screen
-                name="settings"
-                options={{ contentStyle: { backgroundColor: theme.colors.background } }}
-              />
+                  <Stack.Screen
+                    name="index"
+                    options={{ contentStyle: { backgroundColor: theme.colors.background } }}
+                  />
+                  <Stack.Screen
+                    name="folder-notes"
+                    options={{ contentStyle: { backgroundColor: theme.colors.background } }}
+                  />
+                  <Stack.Screen
+                    name="view-note"
+                    options={{ contentStyle: { backgroundColor: theme.colors.background } }}
+                  />
+                  <Stack.Screen
+                    name="edit-note"
+                    options={{
+                      contentStyle: { backgroundColor: theme.colors.background },
+                      animation: 'fade',
+                      animationDuration: 150,
+                    }}
+                  />
+                  <Stack.Screen
+                    name="settings"
+                    options={{ contentStyle: { backgroundColor: theme.colors.background } }}
+                  />
                 </Stack>
               </AppWrapper>
             </ErrorBoundary>
