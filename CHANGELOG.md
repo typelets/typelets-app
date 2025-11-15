@@ -1,3 +1,11 @@
+# [1.38.0](https://github.com/typelets/typelets-app/compare/v1.37.13...v1.38.0) (2025-11-15)
+
+
+### Features
+
+* **mobile:** implement iOS 26 liquid glass navigation in FolderNotes screen ([05bad89](https://github.com/typelets/typelets-app/commit/05bad8970840c7be26cf40e81d4b618366559976))
+* **mobile:** standardize square glass buttons with stronger blue active state ([2532e89](https://github.com/typelets/typelets-app/commit/2532e8912c1e2cb20daeb7146d688468437bf861))
+
 ## [1.37.13](https://github.com/typelets/typelets-app/compare/v1.37.12...v1.37.13) (2025-11-14)
 
 
