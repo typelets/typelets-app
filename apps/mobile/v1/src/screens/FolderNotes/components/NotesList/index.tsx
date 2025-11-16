@@ -757,7 +757,7 @@ export default function NotesList({ navigation, route, renderHeader, scrollY: pa
             }
           ]}
         >
-          <GlassView glassEffectStyle="regular" style={styles.fabGlass}>
+          <GlassView glassEffectStyle="regular" style={[styles.fabGlass, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]}>
             <Pressable
               style={styles.fabButton}
               onPress={() => navigation?.navigate('CreateNote', { folderId: route?.params?.folderId })}
@@ -804,7 +804,7 @@ const styles = StyleSheet.create({
     height: 56,
     borderRadius: 28,
     overflow: 'hidden',
-    backgroundColor: 'rgba(255, 255, 255, 0.01)',
+    backgroundColor: 'rgba(0, 0, 0, 0.01)',
   },
   fabButton: {
     width: 56,

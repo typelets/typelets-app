@@ -439,14 +439,15 @@ export default function HomeScreen() {
                     glassEffectStyle="regular"
                     style={[
                       styles.glassCreateFolderGrid,
-                      { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }
+                      {
+                        backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)',
+                        borderWidth: 1,
+                        borderColor: theme.colors.border
+                      }
                     ]}
                   >
                     <TouchableOpacity
-                      style={[
-                        styles.createFolderButtonGrid,
-                        { borderColor: theme.colors.border }
-                      ]}
+                      style={styles.createFolderButtonGrid}
                       onPress={() => createFolderSheetRef.current?.present()}
                     >
                       <View style={styles.folderContentGrid}>
@@ -721,6 +722,7 @@ const styles = StyleSheet.create({
   glassAvatar: {
     borderRadius: 19,
     overflow: 'hidden',
+    backgroundColor: 'rgba(0, 0, 0, 0.01)',
   },
   avatarButton: {
     width: 38,
@@ -735,6 +737,7 @@ const styles = StyleSheet.create({
   glassActionButton: {
     borderRadius: ACTION_BUTTON.BORDER_RADIUS,
     overflow: 'hidden',
+    backgroundColor: 'rgba(0, 0, 0, 0.01)',
   },
   newNoteAction: {
     flexDirection: 'row',
@@ -774,6 +777,7 @@ const styles = StyleSheet.create({
   glassViewModeButton: {
     borderRadius: GLASS_BUTTON.BORDER_RADIUS,
     overflow: 'hidden',
+    backgroundColor: 'rgba(0, 0, 0, 0.01)',
   },
   viewModeButton: {
     width: GLASS_BUTTON.SIZE,
@@ -791,6 +795,7 @@ const styles = StyleSheet.create({
   glassSpecialViewItem: {
     borderRadius: FOLDER_CARD.BORDER_RADIUS,
     overflow: 'hidden',
+    backgroundColor: 'rgba(0, 0, 0, 0.01)',
   },
   specialViewItem: {
     flexDirection: 'row',
@@ -836,15 +841,18 @@ const styles = StyleSheet.create({
   glassFolderItem: {
     borderRadius: FOLDER_CARD.BORDER_RADIUS,
     overflow: 'hidden',
+    backgroundColor: 'rgba(0, 0, 0, 0.01)',
   },
   glassCreateFolderList: {
     borderRadius: FOLDER_CARD.BORDER_RADIUS,
     overflow: 'hidden',
+    backgroundColor: 'rgba(0, 0, 0, 0.01)',
   },
   glassCreateFolderGrid: {
     width: '48%',
     borderRadius: FOLDER_CARD.BORDER_RADIUS,
     overflow: 'hidden',
+    backgroundColor: 'rgba(0, 0, 0, 0.01)',
   },
   createFolderButtonList: {
     paddingVertical: 12,
@@ -855,7 +863,6 @@ const styles = StyleSheet.create({
     width: '100%',
     padding: 16,
     minHeight: 100,
-    borderWidth: 1,
   },
   folderItem: {
     flexDirection: 'row',
@@ -939,6 +946,7 @@ const styles = StyleSheet.create({
   glassIconButton: {
     borderRadius: 19,
     overflow: 'hidden',
+    backgroundColor: 'rgba(0, 0, 0, 0.01)',
   },
   iconButton: {
     width: 38,

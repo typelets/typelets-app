@@ -63,23 +63,23 @@ export function ViewHeader({
       <View style={[styles.headerWrapper, { paddingTop: insets?.top || 0 }]}>
         <LinearGradient
           colors={[
-            theme.isDark ? 'rgba(10, 10, 10, 0.95)' : 'rgba(255, 255, 255, 0.95)',
-            theme.isDark ? 'rgba(10, 10, 10, 0.95)' : 'rgba(255, 255, 255, 0.95)',
-            theme.isDark ? 'rgba(10, 10, 10, 0.88)' : 'rgba(255, 255, 255, 0.88)',
-            theme.isDark ? 'rgba(10, 10, 10, 0.80)' : 'rgba(255, 255, 255, 0.80)',
-            theme.isDark ? 'rgba(10, 10, 10, 0.68)' : 'rgba(255, 255, 255, 0.68)',
-            theme.isDark ? 'rgba(10, 10, 10, 0.52)' : 'rgba(255, 255, 255, 0.52)',
-            theme.isDark ? 'rgba(10, 10, 10, 0.36)' : 'rgba(255, 255, 255, 0.36)',
-            theme.isDark ? 'rgba(10, 10, 10, 0.22)' : 'rgba(255, 255, 255, 0.22)',
-            theme.isDark ? 'rgba(10, 10, 10, 0.12)' : 'rgba(255, 255, 255, 0.12)',
-            theme.isDark ? 'rgba(10, 10, 10, 0.05)' : 'rgba(255, 255, 255, 0.05)',
-            'rgba(0, 0, 0, 0)',
+            theme.isDark ? 'rgba(10, 10, 10, 0.95)' : 'rgba(250, 250, 250, 0.95)',
+            theme.isDark ? 'rgba(10, 10, 10, 0.95)' : 'rgba(250, 250, 250, 0.95)',
+            theme.isDark ? 'rgba(10, 10, 10, 0.88)' : 'rgba(250, 250, 250, 0.88)',
+            theme.isDark ? 'rgba(10, 10, 10, 0.80)' : 'rgba(250, 250, 250, 0.80)',
+            theme.isDark ? 'rgba(10, 10, 10, 0.68)' : 'rgba(250, 250, 250, 0.68)',
+            theme.isDark ? 'rgba(10, 10, 10, 0.52)' : 'rgba(250, 250, 250, 0.52)',
+            theme.isDark ? 'rgba(10, 10, 10, 0.36)' : 'rgba(250, 250, 250, 0.36)',
+            theme.isDark ? 'rgba(10, 10, 10, 0.22)' : 'rgba(250, 250, 250, 0.22)',
+            theme.isDark ? 'rgba(10, 10, 10, 0.12)' : 'rgba(250, 250, 250, 0.12)',
+            theme.isDark ? 'rgba(10, 10, 10, 0.05)' : 'rgba(250, 250, 250, 0.05)',
+            theme.isDark ? 'rgba(0, 0, 0, 0)' : 'rgba(250, 250, 250, 0)',
           ]}
           locations={[0, 0.35, 0.45, 0.53, 0.60, 0.66, 0.72, 0.77, 0.82, 0.87, 1]}
           style={styles.gradient}
         />
         <View style={styles.header}>
-          <GlassView glassEffectStyle="regular" style={styles.glassButton}>
+          <GlassView glassEffectStyle="regular" style={[styles.glassButton, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]}>
             <TouchableOpacity
               style={styles.headerButton}
               onPress={onBack}
@@ -89,7 +89,7 @@ export function ViewHeader({
           </GlassView>
 
           <Animated.View style={[styles.glassTitleButton, { opacity: titleOpacity }]}>
-            <GlassView glassEffectStyle="regular" style={{ flex: 1, borderRadius: 19, overflow: 'hidden', backgroundColor: 'rgba(255, 255, 255, 0.01)' }}>
+            <GlassView glassEffectStyle="regular" style={{ flex: 1, borderRadius: 19, overflow: 'hidden', backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }}>
               <View style={styles.titleButton}>
                 <Text
                   style={[styles.headerTitle, { color: theme.colors.foreground }]}
@@ -104,7 +104,7 @@ export function ViewHeader({
 
           <View style={styles.headerActions}>
             {attachmentsCount > 0 && (
-              <GlassView glassEffectStyle="regular" style={styles.glassButton}>
+              <GlassView glassEffectStyle="regular" style={[styles.glassButton, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]}>
                 <TouchableOpacity
                   style={[styles.iconButton, showAttachments && styles.iconButtonActive]}
                   onPress={onToggleAttachments}
@@ -129,7 +129,7 @@ export function ViewHeader({
               </GlassView>
             )}
 
-            <GlassView glassEffectStyle="regular" style={styles.glassButton}>
+            <GlassView glassEffectStyle="regular" style={[styles.glassButton, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]}>
               <TouchableOpacity
                 style={styles.iconButton}
                 onPress={onToggleStar}
@@ -142,7 +142,7 @@ export function ViewHeader({
               </TouchableOpacity>
             </GlassView>
 
-            <GlassView glassEffectStyle="regular" style={styles.glassButton}>
+            <GlassView glassEffectStyle="regular" style={[styles.glassButton, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]}>
               <TouchableOpacity
                 style={styles.iconButton}
                 onPress={onToggleHidden}
@@ -155,7 +155,7 @@ export function ViewHeader({
               </TouchableOpacity>
             </GlassView>
 
-            <GlassView glassEffectStyle="regular" style={styles.glassButton}>
+            <GlassView glassEffectStyle="regular" style={[styles.glassButton, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]}>
               <TouchableOpacity
                 style={[styles.iconButton, { opacity: (isOffline && !isTempNote) ? 0.4 : 1 }]}
                 onPress={onEdit}
@@ -199,13 +199,13 @@ const styles = StyleSheet.create({
   glassButton: {
     borderRadius: 19,
     overflow: 'hidden',
-    backgroundColor: 'rgba(255, 255, 255, 0.01)',
+    backgroundColor: 'rgba(0, 0, 0, 0.01)',
   },
   glassTitleButton: {
     flex: 1,
     borderRadius: 19,
     overflow: 'hidden',
-    backgroundColor: 'rgba(255, 255, 255, 0.01)',
+    backgroundColor: 'rgba(0, 0, 0, 0.01)',
     marginHorizontal: 12,
   },
   headerButton: {

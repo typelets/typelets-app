@@ -22,7 +22,7 @@ import Constants from 'expo-constants';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
-import { Platform, View } from 'react-native';
+import { Appearance, Platform, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { AppWrapper } from '@/src/components/AppWrapper';
@@ -73,6 +73,14 @@ const clerkPublishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY || '';
 
 function NavigationContent() {
   const theme = useTheme();
+
+  // Force iOS appearance mode to match app theme (not system theme)
+  // This ensures native components like GlassView use the correct appearance
+  useEffect(() => {
+    if (Platform.OS === 'ios') {
+      Appearance.setColorScheme(theme.isDark ? 'dark' : 'light');
+    }
+  }, [theme.isDark]);
 
   const customLightTheme = {
     ...DefaultTheme,

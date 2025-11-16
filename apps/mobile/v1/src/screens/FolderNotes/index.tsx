@@ -308,17 +308,17 @@ export default function FolderNotesScreen({ folderId, folderName, viewType }: Fo
             {/* Gradient background - opaque only at title, smooth fade starts early so buttons are transparent */}
             <LinearGradient
               colors={[
-                theme.isDark ? 'rgba(10, 10, 10, 0.95)' : 'rgba(255, 255, 255, 0.95)',
-                theme.isDark ? 'rgba(10, 10, 10, 0.95)' : 'rgba(255, 255, 255, 0.95)',
-                theme.isDark ? 'rgba(10, 10, 10, 0.88)' : 'rgba(255, 255, 255, 0.88)',
-                theme.isDark ? 'rgba(10, 10, 10, 0.80)' : 'rgba(255, 255, 255, 0.80)',
-                theme.isDark ? 'rgba(10, 10, 10, 0.68)' : 'rgba(255, 255, 255, 0.68)',
-                theme.isDark ? 'rgba(10, 10, 10, 0.52)' : 'rgba(255, 255, 255, 0.52)',
-                theme.isDark ? 'rgba(10, 10, 10, 0.36)' : 'rgba(255, 255, 255, 0.36)',
-                theme.isDark ? 'rgba(10, 10, 10, 0.22)' : 'rgba(255, 255, 255, 0.22)',
-                theme.isDark ? 'rgba(10, 10, 10, 0.12)' : 'rgba(255, 255, 255, 0.12)',
-                theme.isDark ? 'rgba(10, 10, 10, 0.05)' : 'rgba(255, 255, 255, 0.05)',
-                'rgba(0, 0, 0, 0)',
+                theme.isDark ? 'rgba(10, 10, 10, 0.95)' : 'rgba(250, 250, 250, 0.95)',
+                theme.isDark ? 'rgba(10, 10, 10, 0.95)' : 'rgba(250, 250, 250, 0.95)',
+                theme.isDark ? 'rgba(10, 10, 10, 0.88)' : 'rgba(250, 250, 250, 0.88)',
+                theme.isDark ? 'rgba(10, 10, 10, 0.80)' : 'rgba(250, 250, 250, 0.80)',
+                theme.isDark ? 'rgba(10, 10, 10, 0.68)' : 'rgba(250, 250, 250, 0.68)',
+                theme.isDark ? 'rgba(10, 10, 10, 0.52)' : 'rgba(250, 250, 250, 0.52)',
+                theme.isDark ? 'rgba(10, 10, 10, 0.36)' : 'rgba(250, 250, 250, 0.36)',
+                theme.isDark ? 'rgba(10, 10, 10, 0.22)' : 'rgba(250, 250, 250, 0.22)',
+                theme.isDark ? 'rgba(10, 10, 10, 0.12)' : 'rgba(250, 250, 250, 0.12)',
+                theme.isDark ? 'rgba(10, 10, 10, 0.05)' : 'rgba(250, 250, 250, 0.05)',
+                theme.isDark ? 'rgba(0, 0, 0, 0)' : 'rgba(250, 250, 250, 0)',
               ]}
               locations={[0, 0.35, 0.45, 0.53, 0.60, 0.66, 0.72, 0.77, 0.82, 0.90, 1]}
               pointerEvents="none"
@@ -332,7 +332,7 @@ export default function FolderNotesScreen({ folderId, folderName, viewType }: Fo
             />
 
             <View style={styles.header}>
-              <GlassView glassEffectStyle="regular" style={styles.glassButton}>
+              <GlassView glassEffectStyle="regular" style={[styles.glassButton, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]}>
                 <TouchableOpacity
                   style={styles.iconButton}
                   onPress={() => router.back()}
@@ -341,14 +341,14 @@ export default function FolderNotesScreen({ folderId, folderName, viewType }: Fo
                 </TouchableOpacity>
               </GlassView>
 
-              <GlassView glassEffectStyle="regular" style={[styles.glassButton, { flex: 1, marginHorizontal: 12 }]}>
+              <GlassView glassEffectStyle="regular" style={[styles.glassButton, { flex: 1, marginHorizontal: 12, backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]}>
                 <View style={styles.titleContainer}>
                   <Text style={[styles.titleText, { color: theme.colors.foreground }]} numberOfLines={1} ellipsizeMode="head">{title}</Text>
                 </View>
               </GlassView>
 
               <View style={styles.headerActions}>
-                <GlassView glassEffectStyle="regular" style={styles.glassButton}>
+                <GlassView glassEffectStyle="regular" style={[styles.glassButton, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]}>
                   <TouchableOpacity
                     style={styles.iconButton}
                     onPress={() => breadcrumbSheetRef.current?.present()}
@@ -361,7 +361,7 @@ export default function FolderNotesScreen({ folderId, folderName, viewType }: Fo
                   </TouchableOpacity>
                 </GlassView>
 
-                <GlassView glassEffectStyle="regular" style={styles.glassButton}>
+                <GlassView glassEffectStyle="regular" style={[styles.glassButton, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]}>
                   <TouchableOpacity
                     style={styles.iconButton}
                     onPress={() => {
@@ -383,7 +383,7 @@ export default function FolderNotesScreen({ folderId, folderName, viewType }: Fo
 
                 {/* Show settings button only for regular folders (not Quick Action views) */}
                 {!viewType && folderId && (
-                  <GlassView glassEffectStyle="regular" style={styles.glassButton}>
+                  <GlassView glassEffectStyle="regular" style={[styles.glassButton, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]}>
                     <TouchableOpacity
                       style={styles.iconButton}
                       onPress={openFolderSettings}
@@ -394,7 +394,7 @@ export default function FolderNotesScreen({ folderId, folderName, viewType }: Fo
                 )}
 
                 {/* Avatar - navigates to settings */}
-                <GlassView glassEffectStyle="regular" style={styles.glassButton}>
+                <GlassView glassEffectStyle="regular" style={[styles.glassButton, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]}>
                   <TouchableOpacity
                     style={styles.iconButton}
                     onPress={() => router.push('/settings')}
@@ -655,7 +655,7 @@ const styles = StyleSheet.create({
   glassButton: {
     borderRadius: 19,
     overflow: 'hidden',
-    backgroundColor: 'rgba(255, 255, 255, 0.02)', // Subtle backdrop for better icon visibility
+    backgroundColor: 'rgba(0, 0, 0, 0.01)',
   },
   iconButton: {
     width: 38,

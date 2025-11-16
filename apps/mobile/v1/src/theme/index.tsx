@@ -127,8 +127,9 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [themeMode, setThemeModeState] = useState<ThemeMode>('system');
   const [lightTheme, setLightThemeState] = useState<LightThemePreset>('default');
   const [darkTheme, setDarkThemeState] = useState<DarkThemePreset>('trueBlack');
-  const [isDark, setIsDark] = useState(systemColorScheme === 'dark');
+  const [isDark, setIsDark] = useState(false); // Default to light to prevent flash
   const [isLoaded, setIsLoaded] = useState(false);
+  const skipNextIsDarkUpdateRef = React.useRef(true); // Skip first effect run to prevent redundant update
 
   // Load saved preferences on mount
   useEffect(() => {
@@ -140,14 +141,29 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           AsyncStorage.getItem('darkTheme'),
         ]);
 
+        let loadedMode = themeMode;
         if (savedMode) {
-          setThemeModeState(savedMode as ThemeMode);
+          loadedMode = savedMode as ThemeMode;
+          setThemeModeState(loadedMode);
         }
         if (savedLightTheme && LIGHT_THEME_PRESETS[savedLightTheme as LightThemePreset]) {
           setLightThemeState(savedLightTheme as LightThemePreset);
         }
         if (savedDarkTheme && DARK_THEME_PRESETS[savedDarkTheme as DarkThemePreset]) {
           setDarkThemeState(savedDarkTheme as DarkThemePreset);
+        }
+
+        // Calculate correct isDark value based on loaded theme mode BEFORE rendering
+        switch (loadedMode) {
+          case 'light':
+            setIsDark(false);
+            break;
+          case 'dark':
+            setIsDark(true);
+            break;
+          case 'system':
+            setIsDark(systemColorScheme === 'dark');
+            break;
         }
       } catch (error) {
         if (__DEV__) console.error('Failed to load theme preferences:', error);
@@ -157,10 +173,19 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     };
 
     loadPreferences();
-  }, []);
+  }, [systemColorScheme]);
 
   // Update isDark when system color scheme or theme mode changes
+  // Skip first run after initial load to prevent redundant update
   useEffect(() => {
+    if (!isLoaded) return;
+
+    // Skip the first run after preferences are loaded (isDark was already set correctly)
+    if (skipNextIsDarkUpdateRef.current) {
+      skipNextIsDarkUpdateRef.current = false;
+      return;
+    }
+
     switch (themeMode) {
       case 'light':
         setIsDark(false);
@@ -172,7 +197,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         setIsDark(systemColorScheme === 'dark');
         break;
     }
-  }, [themeMode, systemColorScheme]);
+  }, [themeMode, systemColorScheme, isLoaded]);
 
   // Persist theme mode changes
   const setThemeMode = async (mode: ThemeMode) => {
