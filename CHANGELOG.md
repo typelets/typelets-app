@@ -1,3 +1,10 @@
+## [1.38.4](https://github.com/typelets/typelets-app/compare/v1.38.3...v1.38.4) (2025-11-16)
+
+
+### Bug Fixes
+
+* **mobile:** add liquid glass close buttons to all bottom sheets and fix appearance flicker ([cce4b05](https://github.com/typelets/typelets-app/commit/cce4b05abfb83e358384013831b3fa156c535f8b))
+
 ## [1.38.3](https://github.com/typelets/typelets-app/compare/v1.38.2...v1.38.3) (2025-11-16)
 
 
