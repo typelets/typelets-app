@@ -1,3 +1,10 @@
+## [1.38.2](https://github.com/typelets/typelets-app/compare/v1.38.1...v1.38.2) (2025-11-16)
+
+
+### Bug Fixes
+
+* **mobile:** prevent glass button flicker on theme mismatch ([4756367](https://github.com/typelets/typelets-app/commit/47563670151ab387fbc81aaf87b27cadec07a407))
+
 ## [1.38.1](https://github.com/typelets/typelets-app/compare/v1.38.0...v1.38.1) (2025-11-15)
 
 
