@@ -1,3 +1,10 @@
+## [1.38.3](https://github.com/typelets/typelets-app/compare/v1.38.2...v1.38.3) (2025-11-16)
+
+
+### Bug Fixes
+
+* **mobile:** eliminate glass button flicker by forcing iOS appearance mode ([7fecc55](https://github.com/typelets/typelets-app/commit/7fecc55aa0a43e079afeb7812d6aaa44f8055ce4))
+
 ## [1.38.2](https://github.com/typelets/typelets-app/compare/v1.38.1...v1.38.2) (2025-11-16)
 
 
