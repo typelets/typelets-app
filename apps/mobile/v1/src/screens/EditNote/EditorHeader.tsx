@@ -79,7 +79,7 @@ export function EditorHeader({
         style={styles.gradient}
       />
       <View style={styles.header}>
-        <GlassView glassEffectStyle="regular" style={styles.glassButton}>
+        <GlassView glassEffectStyle="regular" style={[styles.glassButton, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]}>
           <TouchableOpacity
             style={styles.iconButton}
             onPress={onBack}
@@ -103,7 +103,7 @@ export function EditorHeader({
 
         <View style={styles.headerActions}>
           {onToggleHeader && (
-            <GlassView glassEffectStyle="regular" style={styles.glassButton}>
+            <GlassView glassEffectStyle="regular" style={[styles.glassButton, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]}>
               <TouchableOpacity
                 style={[styles.iconButton, showHeader && styles.iconButtonActive]}
                 onPress={onToggleHeader}
@@ -121,7 +121,7 @@ export function EditorHeader({
           )}
 
           {onToggleToolbar && (
-            <GlassView glassEffectStyle="regular" style={styles.glassButton}>
+            <GlassView glassEffectStyle="regular" style={[styles.glassButton, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]}>
               <TouchableOpacity
                 style={[styles.iconButton, showToolbar && styles.iconButtonActive]}
                 onPress={onToggleToolbar}
@@ -139,7 +139,7 @@ export function EditorHeader({
           )}
 
           {onToggleAttachments && (
-            <GlassView glassEffectStyle="regular" style={styles.glassButton}>
+            <GlassView glassEffectStyle="regular" style={[styles.glassButton, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]}>
               <TouchableOpacity
                 style={[styles.iconButton, showAttachments && styles.iconButtonActive]}
                 onPress={onToggleAttachments}
@@ -166,7 +166,7 @@ export function EditorHeader({
           )}
 
           {onTestEditor && isEditing && (
-            <GlassView glassEffectStyle="regular" style={styles.glassButton}>
+            <GlassView glassEffectStyle="regular" style={[styles.glassButton, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]}>
               <TouchableOpacity
                 style={styles.iconButton}
                 onPress={onTestEditor}
@@ -178,7 +178,7 @@ export function EditorHeader({
           )}
 
           {isEditing && (
-            <GlassView glassEffectStyle="regular" style={styles.glassButton}>
+            <GlassView glassEffectStyle="regular" style={[styles.glassButton, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]}>
               <TouchableOpacity
                 style={[styles.iconButton, { opacity: (isOffline && !isTempNote) ? 0.4 : 1 }]}
                 onPress={onDelete}
@@ -190,7 +190,7 @@ export function EditorHeader({
             </GlassView>
           )}
 
-          <GlassView glassEffectStyle="regular" style={styles.glassButton}>
+          <GlassView glassEffectStyle="regular" style={[styles.glassButton, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]}>
             <TouchableOpacity
               style={[
                 styles.iconButton,
@@ -245,7 +245,6 @@ const styles = StyleSheet.create({
   glassButton: {
     borderRadius: 19,
     overflow: 'hidden',
-    backgroundColor: 'rgba(255, 255, 255, 0.01)',
   },
   iconButton: {
     width: 38,

@@ -41,7 +41,7 @@ export const SubfoldersList: React.FC<SubfoldersListProps> = ({
           FOLDERS ({String(subfolders?.length || 0)})
         </Text>
         <View style={styles.viewModeToggle}>
-          <GlassView glassEffectStyle="regular" style={styles.viewModeButtonGlass}>
+          <GlassView glassEffectStyle="regular" style={[styles.viewModeButtonGlass, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]}>
             <TouchableOpacity
               style={[
                 styles.viewModeButton,
@@ -56,7 +56,7 @@ export const SubfoldersList: React.FC<SubfoldersListProps> = ({
               />
             </TouchableOpacity>
           </GlassView>
-          <GlassView glassEffectStyle="regular" style={styles.viewModeButtonGlass}>
+          <GlassView glassEffectStyle="regular" style={[styles.viewModeButtonGlass, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]}>
             <TouchableOpacity
               style={[
                 styles.viewModeButton,
@@ -147,7 +147,6 @@ const styles = StyleSheet.create({
   viewModeButtonGlass: {
     borderRadius: GLASS_BUTTON.BORDER_RADIUS,
     overflow: 'hidden',
-    backgroundColor: 'rgba(255, 255, 255, 0.01)',
   },
   viewModeButton: {
     width: GLASS_BUTTON.SIZE,

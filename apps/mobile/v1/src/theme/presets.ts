@@ -39,7 +39,7 @@ export const LIGHT_THEME_PRESETS: Record<LightThemePreset, ThemePreset> = {
     name: 'Default',
     description: 'Classic clean white',
     colors: {
-      background: '#ffffff',
+      background: '#fafafa',
       foreground: '#25262b',
       card: '#ffffff',
       cardForeground: '#25262b',

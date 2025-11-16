@@ -330,7 +330,7 @@ export default function HomeScreen() {
 
             {/* Quick Actions */}
             <View style={styles.quickActionsSection}>
-              <GlassView glassEffectStyle="regular" style={styles.glassActionButton}>
+              <GlassView glassEffectStyle="regular" style={[styles.glassActionButton, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]}>
                 <TouchableOpacity
                   style={styles.newNoteAction}
                   onPress={() => router.push('/edit-note')}
@@ -350,7 +350,7 @@ export default function HomeScreen() {
               </Text>
               <View style={styles.specialViewsList}>
                 {SPECIAL_VIEWS.map((view) => (
-                  <GlassView key={view.id} glassEffectStyle="regular" style={styles.glassSpecialViewItem}>
+                  <GlassView key={view.id} glassEffectStyle="regular" style={[styles.glassSpecialViewItem, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]}>
                     <TouchableOpacity
                       style={styles.specialViewItem}
                       onPress={() => {
@@ -386,7 +386,7 @@ export default function HomeScreen() {
                   FOLDERS
                 </Text>
                 <View style={styles.viewModeToggle}>
-                  <GlassView glassEffectStyle="regular" style={styles.glassViewModeButton}>
+                  <GlassView glassEffectStyle="regular" style={[styles.glassViewModeButton, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]}>
                     <TouchableOpacity
                       style={[
                         styles.viewModeButton,
@@ -408,7 +408,7 @@ export default function HomeScreen() {
                       />
                     </TouchableOpacity>
                   </GlassView>
-                  <GlassView glassEffectStyle="regular" style={styles.glassViewModeButton}>
+                  <GlassView glassEffectStyle="regular" style={[styles.glassViewModeButton, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]}>
                     <TouchableOpacity
                       style={[
                         styles.viewModeButton,
@@ -434,59 +434,100 @@ export default function HomeScreen() {
               </View>
               <View style={viewMode === 'grid' ? styles.foldersGrid : styles.foldersList}>
                 {/* Create Folder Button */}
-                <GlassView
-                  glassEffectStyle="regular"
-                  style={viewMode === 'grid' ? styles.glassCreateFolderGrid : styles.glassCreateFolderList}
-                >
-                  <TouchableOpacity
+                {viewMode === 'grid' ? (
+                  <GlassView
+                    glassEffectStyle="regular"
                     style={[
-                      viewMode === 'grid' ? styles.createFolderButtonGrid : styles.createFolderButtonList,
-                      { borderColor: theme.colors.border }
+                      styles.glassCreateFolderGrid,
+                      { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }
                     ]}
-                    onPress={() => createFolderSheetRef.current?.present()}
                   >
-                    <View style={viewMode === 'grid' ? styles.folderContentGrid : styles.folderContent}>
-                      <Ionicons name="add" size={viewMode === 'grid' ? 24 : 16} color={theme.colors.primary} style={{ marginRight: viewMode === 'grid' ? 0 : 12, marginBottom: viewMode === 'grid' ? 8 : 0 }} />
-                      <Text style={[styles.folderName, { color: theme.colors.foreground }]}>
-                        Create Folder
-                      </Text>
-                    </View>
-                  </TouchableOpacity>
-                </GlassView>
-
-                {allFolders.map((folder) => (
-                  <TouchableOpacity
-                    key={folder.id}
-                    style={[
-                      viewMode === 'grid' ? styles.folderItemGrid : styles.folderItem,
-                      {
-                        backgroundColor: viewMode === 'grid' ? folder.color || '#000000' : theme.colors.card,
-                        borderColor: theme.colors.border
-                      }
-                    ]}
-                    onPress={() => {
-                      router.push({
-                        pathname: '/folder-notes',
-                        params: { folderId: folder.id, folderName: folder.name }
-                      });
-                    }}
-                  >
-                    <View style={viewMode === 'grid' ? styles.folderContentGrid : styles.folderContent}>
-                      {viewMode === 'list' && (
-                        <View style={[styles.folderColorDot, { backgroundColor: folder.color || '#000000' }]} />
-                      )}
-                      <Text style={[styles.folderName, { color: viewMode === 'grid' ? '#ffffff' : theme.colors.foreground }]} numberOfLines={1}>
-                        {folder.name}
-                      </Text>
-                    </View>
-                    {viewMode === 'list' && (
-                      <View style={[styles.countBadge, { backgroundColor: theme.colors.muted }]}>
-                        <Text style={[styles.countText, { color: theme.colors.mutedForeground }]}>
-                          {folder.noteCount || 0}
+                    <TouchableOpacity
+                      style={[
+                        styles.createFolderButtonGrid,
+                        { borderColor: theme.colors.border }
+                      ]}
+                      onPress={() => createFolderSheetRef.current?.present()}
+                    >
+                      <View style={styles.folderContentGrid}>
+                        <Ionicons name="add" size={24} color={theme.colors.primary} style={{ marginBottom: 8 }} />
+                        <Text style={[styles.folderName, { color: theme.colors.foreground }]}>
+                          Create Folder
                         </Text>
                       </View>
-                    )}
-                  </TouchableOpacity>
+                    </TouchableOpacity>
+                  </GlassView>
+                ) : (
+                  <GlassView
+                    glassEffectStyle="regular"
+                    style={[
+                      styles.glassCreateFolderList,
+                      { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }
+                    ]}
+                  >
+                    <TouchableOpacity
+                      style={styles.createFolderButtonList}
+                      onPress={() => createFolderSheetRef.current?.present()}
+                    >
+                      <View style={styles.folderContent}>
+                        <Ionicons name="add" size={16} color={theme.colors.primary} style={{ marginRight: 12 }} />
+                        <Text style={[styles.folderName, { color: theme.colors.foreground }]}>
+                          Create Folder
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                  </GlassView>
+                )}
+
+                {allFolders.map((folder) => (
+                  viewMode === 'grid' ? (
+                    <TouchableOpacity
+                      key={folder.id}
+                      style={[
+                        styles.folderItemGrid,
+                        {
+                          backgroundColor: folder.color || '#000000',
+                          borderColor: theme.colors.border
+                        }
+                      ]}
+                      onPress={() => {
+                        router.push({
+                          pathname: '/folder-notes',
+                          params: { folderId: folder.id, folderName: folder.name }
+                        });
+                      }}
+                    >
+                      <View style={styles.folderContentGrid}>
+                        <Text style={[styles.folderName, { color: '#ffffff' }]} numberOfLines={1}>
+                          {folder.name}
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                  ) : (
+                    <GlassView key={folder.id} glassEffectStyle="regular" style={[styles.glassFolderItem, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]}>
+                      <TouchableOpacity
+                        style={styles.folderItem}
+                        onPress={() => {
+                          router.push({
+                            pathname: '/folder-notes',
+                            params: { folderId: folder.id, folderName: folder.name }
+                          });
+                        }}
+                      >
+                        <View style={styles.folderContent}>
+                          <View style={[styles.folderColorDot, { backgroundColor: folder.color || '#000000' }]} />
+                          <Text style={[styles.folderName, { color: theme.colors.foreground }]} numberOfLines={1}>
+                            {folder.name}
+                          </Text>
+                        </View>
+                        <View style={[styles.countBadge, { backgroundColor: theme.colors.muted }]}>
+                          <Text style={[styles.countText, { color: theme.colors.mutedForeground }]}>
+                            {folder.noteCount || 0}
+                          </Text>
+                        </View>
+                      </TouchableOpacity>
+                    </GlassView>
+                  )
                 ))}
               </View>
             </View>
@@ -500,17 +541,17 @@ export default function HomeScreen() {
         <View style={[styles.floatingHeader, { paddingTop: insets.top || 0 }]}>
           <LinearGradient
             colors={[
-              theme.isDark ? 'rgba(10, 10, 10, 0.95)' : 'rgba(255, 255, 255, 0.95)',
-              theme.isDark ? 'rgba(10, 10, 10, 0.95)' : 'rgba(255, 255, 255, 0.95)',
-              theme.isDark ? 'rgba(10, 10, 10, 0.88)' : 'rgba(255, 255, 255, 0.88)',
-              theme.isDark ? 'rgba(10, 10, 10, 0.80)' : 'rgba(255, 255, 255, 0.80)',
-              theme.isDark ? 'rgba(10, 10, 10, 0.68)' : 'rgba(255, 255, 255, 0.68)',
-              theme.isDark ? 'rgba(10, 10, 10, 0.52)' : 'rgba(255, 255, 255, 0.52)',
-              theme.isDark ? 'rgba(10, 10, 10, 0.36)' : 'rgba(255, 255, 255, 0.36)',
-              theme.isDark ? 'rgba(10, 10, 10, 0.22)' : 'rgba(255, 255, 255, 0.22)',
-              theme.isDark ? 'rgba(10, 10, 10, 0.12)' : 'rgba(255, 255, 255, 0.12)',
-              theme.isDark ? 'rgba(10, 10, 10, 0.05)' : 'rgba(255, 255, 255, 0.05)',
-              'rgba(0, 0, 0, 0)',
+              theme.isDark ? 'rgba(10, 10, 10, 0.95)' : 'rgba(250, 250, 250, 0.95)',
+              theme.isDark ? 'rgba(10, 10, 10, 0.95)' : 'rgba(250, 250, 250, 0.95)',
+              theme.isDark ? 'rgba(10, 10, 10, 0.88)' : 'rgba(250, 250, 250, 0.88)',
+              theme.isDark ? 'rgba(10, 10, 10, 0.80)' : 'rgba(250, 250, 250, 0.80)',
+              theme.isDark ? 'rgba(10, 10, 10, 0.68)' : 'rgba(250, 250, 250, 0.68)',
+              theme.isDark ? 'rgba(10, 10, 10, 0.52)' : 'rgba(250, 250, 250, 0.52)',
+              theme.isDark ? 'rgba(10, 10, 10, 0.36)' : 'rgba(250, 250, 250, 0.36)',
+              theme.isDark ? 'rgba(10, 10, 10, 0.22)' : 'rgba(250, 250, 250, 0.22)',
+              theme.isDark ? 'rgba(10, 10, 10, 0.12)' : 'rgba(250, 250, 250, 0.12)',
+              theme.isDark ? 'rgba(10, 10, 10, 0.05)' : 'rgba(250, 250, 250, 0.05)',
+              theme.isDark ? 'rgba(0, 0, 0, 0)' : 'rgba(250, 250, 250, 0)',
             ]}
             locations={[0, 0.35, 0.45, 0.53, 0.60, 0.66, 0.72, 0.77, 0.82, 0.87, 1]}
             style={styles.headerGradient}
@@ -532,7 +573,7 @@ export default function HomeScreen() {
                 What would you like to work on today?
               </Text>
             </Animated.View>
-            <GlassView glassEffectStyle="regular" style={styles.glassAvatar}>
+            <GlassView glassEffectStyle="regular" style={[styles.glassAvatar, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]}>
               <TouchableOpacity
                 style={styles.avatarButton}
                 onPress={() => router.push('/settings')}
@@ -561,7 +602,7 @@ export default function HomeScreen() {
         <BottomSheetView style={{ paddingBottom: 32 }}>
           <View style={styles.modalHeader}>
             <Text style={[styles.modalTitle, { color: theme.colors.foreground }]}>Create Folder</Text>
-            <GlassView glassEffectStyle="regular" style={styles.glassIconButton}>
+            <GlassView glassEffectStyle="regular" style={[styles.glassIconButton, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]}>
               <TouchableOpacity
                 style={styles.iconButton}
                 onPress={() => createFolderSheetRef.current?.dismiss()}
@@ -680,7 +721,6 @@ const styles = StyleSheet.create({
   glassAvatar: {
     borderRadius: 19,
     overflow: 'hidden',
-    backgroundColor: 'rgba(255, 255, 255, 0.01)',
   },
   avatarButton: {
     width: 38,
@@ -695,7 +735,6 @@ const styles = StyleSheet.create({
   glassActionButton: {
     borderRadius: ACTION_BUTTON.BORDER_RADIUS,
     overflow: 'hidden',
-    backgroundColor: 'rgba(255, 255, 255, 0.01)',
   },
   newNoteAction: {
     flexDirection: 'row',
@@ -735,7 +774,6 @@ const styles = StyleSheet.create({
   glassViewModeButton: {
     borderRadius: GLASS_BUTTON.BORDER_RADIUS,
     overflow: 'hidden',
-    backgroundColor: 'rgba(255, 255, 255, 0.01)',
   },
   viewModeButton: {
     width: GLASS_BUTTON.SIZE,
@@ -753,7 +791,6 @@ const styles = StyleSheet.create({
   glassSpecialViewItem: {
     borderRadius: FOLDER_CARD.BORDER_RADIUS,
     overflow: 'hidden',
-    backgroundColor: 'rgba(255, 255, 255, 0.01)',
   },
   specialViewItem: {
     flexDirection: 'row',
@@ -796,23 +833,23 @@ const styles = StyleSheet.create({
     gap: 12,
     paddingHorizontal: 16,
   },
+  glassFolderItem: {
+    borderRadius: FOLDER_CARD.BORDER_RADIUS,
+    overflow: 'hidden',
+  },
   glassCreateFolderList: {
     borderRadius: FOLDER_CARD.BORDER_RADIUS,
     overflow: 'hidden',
-    backgroundColor: 'rgba(255, 255, 255, 0.01)',
   },
   glassCreateFolderGrid: {
     width: '48%',
     borderRadius: FOLDER_CARD.BORDER_RADIUS,
     overflow: 'hidden',
-    backgroundColor: 'rgba(255, 255, 255, 0.01)',
   },
   createFolderButtonList: {
-    width: '100%',
     paddingVertical: 12,
     paddingLeft: 12,
     paddingRight: 12,
-    borderWidth: 1,
   },
   createFolderButtonGrid: {
     width: '100%',
@@ -827,8 +864,6 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingLeft: 12,
     paddingRight: 12,
-    borderRadius: FOLDER_CARD.BORDER_RADIUS,
-    borderWidth: 1,
   },
   folderItemGrid: {
     width: '48%',
@@ -904,7 +939,6 @@ const styles = StyleSheet.create({
   glassIconButton: {
     borderRadius: 19,
     overflow: 'hidden',
-    backgroundColor: 'rgba(255, 255, 255, 0.01)',
   },
   iconButton: {
     width: 38,

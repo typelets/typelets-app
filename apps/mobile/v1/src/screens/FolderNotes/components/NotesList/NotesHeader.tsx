@@ -38,7 +38,7 @@ export const NotesHeader: React.FC<NotesHeaderProps> = ({
           NOTES ({String(filteredNotesCount || 0)})
           {filteredNotesCount !== totalNotesCount && ` (${totalNotesCount} total)`}
         </Text>
-        <GlassView glassEffectStyle="regular" style={styles.squareButtonGlass}>
+        <GlassView glassEffectStyle="regular" style={[styles.squareButtonGlass, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]}>
           <TouchableOpacity
             style={styles.squareButton}
             onPress={onFilterPress}
@@ -57,7 +57,7 @@ export const NotesHeader: React.FC<NotesHeaderProps> = ({
       {viewType === 'trash' ? (
         filteredNotesCount > 0 && (
           <View style={styles.buttonWrapper}>
-            <GlassView glassEffectStyle="regular" style={styles.createNoteButtonGlass}>
+            <GlassView glassEffectStyle="regular" style={[styles.createNoteButtonGlass, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]}>
               <Pressable
                 style={styles.createNoteButton}
                 onPress={onEmptyTrashPress}
@@ -72,7 +72,7 @@ export const NotesHeader: React.FC<NotesHeaderProps> = ({
         )
       ) : (
         <View style={styles.buttonWrapper} ref={createNoteButtonRef} collapsable={false}>
-          <GlassView glassEffectStyle="regular" style={styles.createNoteButtonGlass}>
+          <GlassView glassEffectStyle="regular" style={[styles.createNoteButtonGlass, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]}>
             <Pressable
               style={styles.createNoteButton}
               onPress={onCreateNotePress}
@@ -108,7 +108,6 @@ const styles = StyleSheet.create({
   squareButtonGlass: {
     borderRadius: GLASS_BUTTON.BORDER_RADIUS,
     overflow: 'hidden',
-    backgroundColor: 'rgba(255, 255, 255, 0.01)',
   },
   squareButton: {
     width: GLASS_BUTTON.SIZE,
@@ -123,7 +122,6 @@ const styles = StyleSheet.create({
   createNoteButtonGlass: {
     borderRadius: NOTE_CARD.BORDER_RADIUS,
     overflow: 'hidden',
-    backgroundColor: 'rgba(255, 255, 255, 0.01)',
   },
   createNoteButton: {
     borderRadius: NOTE_CARD.BORDER_RADIUS,
