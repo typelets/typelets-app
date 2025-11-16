@@ -5,6 +5,7 @@ import {
   BottomSheetModal,
   BottomSheetScrollView,
 } from '@gorhom/bottom-sheet';
+import { GlassView } from 'expo-glass-effect';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity,View } from 'react-native';
 
@@ -88,12 +89,14 @@ export function UsageBottomSheet({ sheetRef, snapPoints }: UsageBottomSheetProps
           <Text style={[styles.bottomSheetTitle, { color: theme.colors.foreground }]}>
             Usage & Limits
           </Text>
-          <TouchableOpacity
-            style={[styles.iconButton, { backgroundColor: theme.colors.muted }]}
-            onPress={() => sheetRef.current?.dismiss()}
-          >
-            <Ionicons name="close" size={20} color={theme.colors.mutedForeground} />
-          </TouchableOpacity>
+          <GlassView glassEffectStyle="regular" style={[styles.glassButton, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]}>
+            <TouchableOpacity
+              style={styles.iconButton}
+              onPress={() => sheetRef.current?.dismiss()}
+            >
+              <Ionicons name="close" size={20} color={theme.colors.foreground} />
+            </TouchableOpacity>
+          </GlassView>
         </View>
         <View style={[styles.divider, { backgroundColor: theme.colors.border }]} />
 
@@ -209,10 +212,14 @@ const createStyles = (theme: any) =>
       fontSize: 20,
       fontWeight: '600',
     },
+    glassButton: {
+      borderRadius: 17,
+      overflow: 'hidden',
+      backgroundColor: 'rgba(0, 0, 0, 0.01)',
+    },
     iconButton: {
       width: 34,
       height: 34,
-      borderRadius: 17,
       alignItems: 'center',
       justifyContent: 'center',
     },

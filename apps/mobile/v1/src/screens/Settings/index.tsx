@@ -557,12 +557,14 @@ export default function SettingsScreen({ onLogout }: Props) {
             <Text style={[styles.bottomSheetTitle, { color: theme.colors.foreground }]}>
               Theme Mode
             </Text>
-            <TouchableOpacity
-              style={[styles.iconButton, { backgroundColor: theme.colors.muted }]}
-              onPress={() => themeModeSheetRef.current?.dismiss()}
-            >
-              <Ionicons name="close" size={20} color={theme.colors.mutedForeground} />
-            </TouchableOpacity>
+            <GlassView glassEffectStyle="regular" style={[styles.glassButton, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]}>
+              <TouchableOpacity
+                style={styles.iconButton}
+                onPress={() => themeModeSheetRef.current?.dismiss()}
+              >
+                <Ionicons name="close" size={20} color={theme.colors.foreground} />
+              </TouchableOpacity>
+            </GlassView>
           </View>
           <View style={[styles.divider, { backgroundColor: theme.colors.border }]} />
           <View style={[styles.bottomSheetContent, { paddingTop: 16 }]}>
@@ -615,12 +617,14 @@ export default function SettingsScreen({ onLogout }: Props) {
             <Text style={[styles.bottomSheetTitle, { color: theme.colors.foreground }]}>
               Encrypted Cache
             </Text>
-            <TouchableOpacity
-              style={[styles.iconButton, { backgroundColor: theme.colors.muted }]}
-              onPress={() => cachePreferenceSheetRef.current?.dismiss()}
-            >
-              <Ionicons name="close" size={20} color={theme.colors.mutedForeground} />
-            </TouchableOpacity>
+            <GlassView glassEffectStyle="regular" style={[styles.glassButton, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]}>
+              <TouchableOpacity
+                style={styles.iconButton}
+                onPress={() => cachePreferenceSheetRef.current?.dismiss()}
+              >
+                <Ionicons name="close" size={20} color={theme.colors.foreground} />
+              </TouchableOpacity>
+            </GlassView>
           </View>
           <View style={[styles.divider, { backgroundColor: theme.colors.border }]} />
           <View style={[styles.bottomSheetContent, { paddingTop: 16 }]}>
@@ -702,12 +706,14 @@ export default function SettingsScreen({ onLogout }: Props) {
             <Text style={[styles.bottomSheetTitle, { color: theme.colors.foreground }]}>
               Theme Colors
             </Text>
-            <TouchableOpacity
-              style={[styles.iconButton, { backgroundColor: theme.colors.muted }]}
-              onPress={() => themeColorSheetRef.current?.dismiss()}
-            >
-              <Ionicons name="close" size={20} color={theme.colors.mutedForeground} />
-            </TouchableOpacity>
+            <GlassView glassEffectStyle="regular" style={[styles.glassButton, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]}>
+              <TouchableOpacity
+                style={styles.iconButton}
+                onPress={() => themeColorSheetRef.current?.dismiss()}
+              >
+                <Ionicons name="close" size={20} color={theme.colors.foreground} />
+              </TouchableOpacity>
+            </GlassView>
           </View>
           <View style={[styles.divider, { backgroundColor: theme.colors.border }]} />
 
@@ -817,12 +823,14 @@ export default function SettingsScreen({ onLogout }: Props) {
             <Text style={[styles.bottomSheetTitle, { color: theme.colors.foreground }]}>
               Security & Privacy
             </Text>
-            <TouchableOpacity
-              style={[styles.iconButton, { backgroundColor: theme.colors.muted }]}
-              onPress={() => securitySheetRef.current?.dismiss()}
-            >
-              <Ionicons name="close" size={20} color={theme.colors.mutedForeground} />
-            </TouchableOpacity>
+            <GlassView glassEffectStyle="regular" style={[styles.glassButton, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]}>
+              <TouchableOpacity
+                style={styles.iconButton}
+                onPress={() => securitySheetRef.current?.dismiss()}
+              >
+                <Ionicons name="close" size={20} color={theme.colors.foreground} />
+              </TouchableOpacity>
+            </GlassView>
           </View>
 
           <View style={[styles.divider, { backgroundColor: theme.colors.border }]} />
@@ -909,12 +917,14 @@ export default function SettingsScreen({ onLogout }: Props) {
             <Text style={[styles.bottomSheetTitle, { color: theme.colors.foreground }]}>
               View Mode
             </Text>
-            <TouchableOpacity
-              style={[styles.iconButton, { backgroundColor: theme.colors.muted }]}
-              onPress={() => viewModeSheetRef.current?.dismiss()}
-            >
-              <Ionicons name="close" size={20} color={theme.colors.mutedForeground} />
-            </TouchableOpacity>
+            <GlassView glassEffectStyle="regular" style={[styles.glassButton, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]}>
+              <TouchableOpacity
+                style={styles.iconButton}
+                onPress={() => viewModeSheetRef.current?.dismiss()}
+              >
+                <Ionicons name="close" size={20} color={theme.colors.foreground} />
+              </TouchableOpacity>
+            </GlassView>
           </View>
           <View style={[styles.divider, { backgroundColor: theme.colors.border }]} />
           <View style={[styles.bottomSheetContent, { paddingTop: 16 }]}>
@@ -965,12 +975,14 @@ export default function SettingsScreen({ onLogout }: Props) {
             <Text style={[styles.bottomSheetTitle, { color: theme.colors.foreground }]}>
               Delete Account
             </Text>
-            <TouchableOpacity
-              style={[styles.iconButton, { backgroundColor: theme.colors.muted }]}
-              onPress={() => deleteAccountSheetRef.current?.dismiss()}
-            >
-              <Ionicons name="close" size={20} color={theme.colors.mutedForeground} />
-            </TouchableOpacity>
+            <GlassView glassEffectStyle="regular" style={[styles.glassButton, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]}>
+              <TouchableOpacity
+                style={styles.iconButton}
+                onPress={() => deleteAccountSheetRef.current?.dismiss()}
+              >
+                <Ionicons name="close" size={20} color={theme.colors.foreground} />
+              </TouchableOpacity>
+            </GlassView>
           </View>
 
           <View style={[styles.divider, { backgroundColor: theme.colors.border }]} />
@@ -1214,10 +1226,14 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '600',
   },
+  glassButton: {
+    borderRadius: 17,
+    overflow: 'hidden',
+    backgroundColor: 'rgba(0, 0, 0, 0.01)',
+  },
   iconButton: {
     width: 34,
     height: 34,
-    borderRadius: 17,
     alignItems: 'center',
     justifyContent: 'center',
   },

@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { BottomSheetBackdrop, BottomSheetBackdropProps, BottomSheetModal, BottomSheetTextInput, BottomSheetView } from '@gorhom/bottom-sheet';
 import * as Haptics from 'expo-haptics';
+import { GlassView } from 'expo-glass-effect';
 import React, { forwardRef, useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, Keyboard, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
@@ -93,12 +94,14 @@ export const CreateFolderSheet = forwardRef<BottomSheetModal, CreateFolderSheetP
         <BottomSheetView style={{ paddingBottom: 32 }}>
           <View style={styles.bottomSheetHeader}>
             <Text style={[styles.bottomSheetTitle, { color: theme.colors.foreground }]}>Create Folder</Text>
-            <TouchableOpacity
-              style={[styles.iconButton, { backgroundColor: theme.colors.muted }]}
-              onPress={() => (ref as React.RefObject<BottomSheetModal>).current?.dismiss()}
-            >
-              <Ionicons name="close" size={20} color={theme.colors.mutedForeground} />
-            </TouchableOpacity>
+            <GlassView glassEffectStyle="regular" style={[styles.glassButton, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]}>
+              <TouchableOpacity
+                style={styles.iconButton}
+                onPress={() => (ref as React.RefObject<BottomSheetModal>).current?.dismiss()}
+              >
+                <Ionicons name="close" size={20} color={theme.colors.foreground} />
+              </TouchableOpacity>
+            </GlassView>
           </View>
           <View style={[styles.divider, { backgroundColor: theme.colors.border }]} />
 
@@ -169,10 +172,14 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
   },
+  glassButton: {
+    borderRadius: 17,
+    overflow: 'hidden',
+    backgroundColor: 'rgba(0, 0, 0, 0.01)',
+  },
   iconButton: {
     width: 34,
     height: 34,
-    borderRadius: 17,
     alignItems: 'center',
     justifyContent: 'center',
   },

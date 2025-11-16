@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { BottomSheetBackdrop, BottomSheetBackdropProps, BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
+import { GlassView } from 'expo-glass-effect';
 import React, { forwardRef, useCallback, useMemo } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
@@ -58,12 +59,14 @@ export const FilterSortSheet = forwardRef<BottomSheetModal, FilterSortSheetProps
         <BottomSheetView style={{ paddingBottom: 32 }}>
           <View style={styles.bottomSheetHeader}>
             <Text style={[styles.bottomSheetTitle, { color: theme.colors.foreground }]}>Filter & Sort</Text>
-            <TouchableOpacity
-              style={[styles.iconButton, { backgroundColor: theme.colors.muted }]}
-              onPress={() => (ref as React.RefObject<BottomSheetModal>).current?.dismiss()}
-            >
-              <Ionicons name="close" size={20} color={theme.colors.mutedForeground} />
-            </TouchableOpacity>
+            <GlassView glassEffectStyle="regular" style={[styles.glassButton, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]}>
+              <TouchableOpacity
+                style={styles.iconButton}
+                onPress={() => (ref as React.RefObject<BottomSheetModal>).current?.dismiss()}
+              >
+                <Ionicons name="close" size={20} color={theme.colors.foreground} />
+              </TouchableOpacity>
+            </GlassView>
           </View>
           <View style={[styles.divider, { backgroundColor: theme.colors.border }]} />
 
@@ -215,10 +218,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 16,
   },
+  glassButton: {
+    borderRadius: 16,
+    overflow: 'hidden',
+    backgroundColor: 'rgba(0, 0, 0, 0.01)',
+  },
   iconButton: {
     width: 32,
     height: 32,
-    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
   },

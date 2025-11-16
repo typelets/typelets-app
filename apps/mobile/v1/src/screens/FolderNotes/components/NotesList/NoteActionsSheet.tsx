@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { BottomSheetBackdrop, BottomSheetBackdropProps, BottomSheetModal, BottomSheetScrollView, BottomSheetView } from '@gorhom/bottom-sheet';
 import * as Haptics from 'expo-haptics';
+import { GlassView } from 'expo-glass-effect';
 import React, { forwardRef, JSX, useCallback, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -144,18 +145,20 @@ export const NoteActionsSheet = forwardRef<NoteActionsSheetRef, NoteActionsSheet
             <Text style={[styles.bottomSheetTitle, { color: theme.colors.foreground }]}>
               {showFolderPicker ? 'Move to Folder' : 'Note Actions'}
             </Text>
-            <TouchableOpacity
-              style={[styles.iconButton, { backgroundColor: theme.colors.muted }]}
-              onPress={() => {
-                if (showFolderPicker) {
-                  setShowFolderPicker(false);
-                } else {
-                  bottomSheetRef.current?.dismiss();
-                }
-              }}
-            >
-              <Ionicons name={showFolderPicker ? "arrow-back" : "close"} size={20} color={theme.colors.mutedForeground} />
-            </TouchableOpacity>
+            <GlassView glassEffectStyle="regular" style={[styles.glassButton, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]}>
+              <TouchableOpacity
+                style={styles.iconButton}
+                onPress={() => {
+                  if (showFolderPicker) {
+                    setShowFolderPicker(false);
+                  } else {
+                    bottomSheetRef.current?.dismiss();
+                  }
+                }}
+              >
+                <Ionicons name={showFolderPicker ? "arrow-back" : "close"} size={20} color={theme.colors.foreground} />
+              </TouchableOpacity>
+            </GlassView>
           </View>
           <View style={[styles.divider, { backgroundColor: theme.colors.border }]} />
 
@@ -279,10 +282,14 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
   },
+  glassButton: {
+    borderRadius: 17,
+    overflow: 'hidden',
+    backgroundColor: 'rgba(0, 0, 0, 0.01)',
+  },
   iconButton: {
     width: 34,
     height: 34,
-    borderRadius: 17,
     alignItems: 'center',
     justifyContent: 'center',
   },
