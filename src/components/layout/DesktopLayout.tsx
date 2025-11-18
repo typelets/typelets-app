@@ -19,6 +19,7 @@ interface DesktopLayoutProps {
   activeTabId: string | null;
   onTabClick: (tabId: string) => void;
   onTabClose: (tabId: string) => void;
+  onCloseAll?: () => void;
 }
 
 export function DesktopLayout({
@@ -31,6 +32,7 @@ export function DesktopLayout({
   activeTabId,
   onTabClick,
   onTabClose,
+  onCloseAll,
 }: DesktopLayoutProps) {
   // Keyboard shortcuts for tab management
   useEffect(() => {
@@ -78,6 +80,7 @@ export function DesktopLayout({
           activeTabId={activeTabId}
           onTabClick={onTabClick}
           onTabClose={onTabClose}
+          onCloseAll={onCloseAll}
         />
         <main className="flex-1 overflow-hidden">
           <Index {...editorProps} />

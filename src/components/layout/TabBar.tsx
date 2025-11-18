@@ -4,6 +4,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useRef, useState, useEffect } from 'react';
@@ -21,6 +22,7 @@ interface TabBarProps {
   activeTabId: string | null;
   onTabClick: (tabId: string) => void;
   onTabClose: (tabId: string) => void;
+  onCloseAll?: () => void;
 }
 
 const TabIcon = ({ type }: { type: Tab['type'] }) => {
@@ -34,7 +36,7 @@ const TabIcon = ({ type }: { type: Tab['type'] }) => {
   }
 };
 
-export function TabBar({ tabs, activeTabId, onTabClick, onTabClose }: TabBarProps) {
+export function TabBar({ tabs, activeTabId, onTabClick, onTabClose, onCloseAll }: TabBarProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const tabRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const [showOverflow, setShowOverflow] = useState(false);
@@ -116,9 +118,9 @@ export function TabBar({ tabs, activeTabId, onTabClick, onTabClose }: TabBarProp
                   {tab.title || 'Untitled'}
                 </span>
                 <Button
-                  variant="secondary"
+                  variant="outline"
                   size="sm"
-                  className="h-5 w-5 p-0 ml-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="h-5 w-5 p-0 ml-1 opacity-0 group-hover:opacity-100 transition-opacity shadow-none"
                   onClick={(e) => {
                     e.stopPropagation();
                     onTabClose(tab.id);
@@ -160,9 +162,9 @@ export function TabBar({ tabs, activeTabId, onTabClick, onTabClose }: TabBarProp
                       </span>
                     </div>
                     <Button
-                      variant="secondary"
+                      variant="outline"
                       size="sm"
-                      className="h-5 w-5 p-0 ml-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="h-5 w-5 p-0 ml-2 opacity-0 group-hover:opacity-100 transition-opacity shadow-none"
                       onClick={(e) => {
                         e.stopPropagation();
                         onTabClose(tab.id);
@@ -172,6 +174,18 @@ export function TabBar({ tabs, activeTabId, onTabClick, onTabClose }: TabBarProp
                     </Button>
                   </DropdownMenuItem>
                 ))}
+                {onCloseAll && tabs.length > 0 && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={onCloseAll}
+                      className="text-muted-foreground"
+                    >
+                      <X className="h-4 w-4 mr-2" />
+                      Close All Tabs
+                    </DropdownMenuItem>
+                  </>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>

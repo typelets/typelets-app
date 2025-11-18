@@ -310,13 +310,6 @@ export function useNotes() {
       });
 
       setNotes(notesWithFolders);
-
-      setSelectedNote((prev) => {
-        if (prev === null && notesWithFolders.length > 0) {
-          return notesWithFolders[0];
-        }
-        return prev;
-      });
     } catch (error) {
       secureLogger.error('Data loading failed', error);
       if (error instanceof Error && error.message.includes('decrypt')) {
@@ -427,20 +420,6 @@ export function useNotes() {
   //   }
   // }, [selectedNote?.id, webSocket.isAuthenticated, webSocket]);
 
-  // Auto-select a note when selectedNote becomes null and there are available notes
-  useEffect(() => {
-    if (!selectedNote && filteredNotes.length > 0) {
-      // Don't auto-select notes that are in trash unless explicitly viewing trash
-      const firstNonTrashedNote = filteredNotes.find(note => !note.deleted);
-      if (firstNonTrashedNote) {
-        setSelectedNote(firstNonTrashedNote);
-      } else if (currentView === 'trash') {
-        // Only select trash notes if we're explicitly viewing trash
-        setSelectedNote(filteredNotes[0]);
-      }
-    }
-  }, [selectedNote, filteredNotes, currentView]);
-
   // Refetch notes when switching folders to check for new notes from other devices/users
   useEffect(() => {
     // Skip the initial mount to avoid duplicate fetches
@@ -522,8 +501,7 @@ export function useNotes() {
     await restNotesOperations.deleteNote(noteId);
 
     if (selectedNote?.id === noteId) {
-      const remainingNotes = filteredNotes.filter((note) => note.id !== noteId);
-      setSelectedNote(remainingNotes.length > 0 ? remainingNotes[0] : null);
+      setSelectedNote(null);
     }
   };
 
@@ -531,8 +509,7 @@ export function useNotes() {
     await restNotesOperations.archiveNote(noteId);
 
     if (selectedNote?.id === noteId) {
-      const remainingNotes = filteredNotes.filter((note) => note.id !== noteId);
-      setSelectedNote(remainingNotes.length > 0 ? remainingNotes[0] : null);
+      setSelectedNote(null);
     }
   };
 
@@ -610,8 +587,7 @@ export function useNotes() {
     restNotesOperations.permanentlyDeleteNote(noteId);
 
     if (selectedNote?.id === noteId) {
-      const remainingNotes = filteredNotes.filter((note) => note.id !== noteId);
-      setSelectedNote(remainingNotes.length > 0 ? remainingNotes[0] : null);
+      setSelectedNote(null);
     }
   };
 

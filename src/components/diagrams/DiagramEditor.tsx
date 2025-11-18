@@ -210,6 +210,8 @@ export default function DiagramEditor({
       startOnLoad: false,
       theme: isDark ? 'dark' : 'default',
       securityLevel: 'loose',
+      suppressErrorRendering: true,
+      logLevel: 'fatal',
     });
   }, [isDark]);
 
@@ -227,6 +229,8 @@ export default function DiagramEditor({
           startOnLoad: false,
           theme: isDark ? 'dark' : 'default',
           securityLevel: 'loose',
+          suppressErrorRendering: true,
+          logLevel: 'fatal',
         });
 
         // Generate unique ID for this diagram
@@ -240,7 +244,7 @@ export default function DiagramEditor({
         setError(null);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to render diagram');
-        console.error('Mermaid render error:', err);
+        // Silently catch errors - don't log to console
       }
     };
 
@@ -559,6 +563,8 @@ export default function DiagramEditor({
           startOnLoad: false,
           theme: 'default', // Force light theme for print
           securityLevel: 'loose',
+          suppressErrorRendering: true,
+          logLevel: 'fatal',
         });
 
         // Generate unique ID for print diagram
@@ -584,9 +590,11 @@ export default function DiagramEditor({
           startOnLoad: false,
           theme: 'dark',
           securityLevel: 'loose',
+          suppressErrorRendering: true,
+          logLevel: 'fatal',
         });
-      } catch (error) {
-        console.error('Failed to render light mode for print:', error);
+      } catch {
+        // Silently catch errors
         window.print(); // Fallback to regular print
       }
     } else {

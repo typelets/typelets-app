@@ -235,6 +235,33 @@ export default function MainLayout() {
     }
   }, [openTabs, activeTabId, notes, setSelectedNote]);
 
+  const handleCloseAllTabs = useCallback(() => {
+    // Close all tabs and clear selection
+    setOpenTabs([]);
+    setActiveTabId(null);
+    setSelectedNote(null);
+  }, [setSelectedNote]);
+
+  const handleDeleteNote = useCallback(async (noteId: string) => {
+    // Find and close the tab for this note
+    const tabToClose = openTabs.find(t => t.noteId === noteId);
+    if (tabToClose) {
+      handleTabClose(tabToClose.id);
+    }
+    // Delete the note
+    await deleteNote(noteId);
+  }, [openTabs, handleTabClose, deleteNote]);
+
+  const handleArchiveNote = useCallback(async (noteId: string) => {
+    // Find and close the tab for this note
+    const tabToClose = openTabs.find(t => t.noteId === noteId);
+    if (tabToClose) {
+      handleTabClose(tabToClose.id);
+    }
+    // Archive the note
+    await archiveNote(noteId);
+  }, [openTabs, handleTabClose, archiveNote]);
+
   const handleDirtyChange = useCallback((isDirty: boolean) => {
     if (!selectedNote) return;
 
@@ -356,6 +383,7 @@ export default function MainLayout() {
     onCreateCode: handleCreateCode,
     onToggleFolderPanel: handleToggleFolderPanel,
     onEmptyTrash: handleEmptyTrash,
+    onRefresh: refetch,
     creatingNote,
   };
 
@@ -363,8 +391,8 @@ export default function MainLayout() {
     note: selectedNote,
     folders,
     onUpdateNote: updateNote,
-    onDeleteNote: deleteNote,
-    onArchiveNote: archiveNote,
+    onDeleteNote: handleDeleteNote,
+    onArchiveNote: handleArchiveNote,
     onToggleStar: toggleStar,
     starringStar,
     onHideNote: hideNote,
@@ -437,6 +465,7 @@ export default function MainLayout() {
       activeTabId={activeTabId}
       onTabClick={handleTabClick}
       onTabClose={handleTabClose}
+      onCloseAll={handleCloseAllTabs}
     />
   );
 }

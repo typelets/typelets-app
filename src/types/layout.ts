@@ -45,6 +45,7 @@ export interface FilesPanelProps {
   onCreateCode?: (templateData?: { language: string; code: string }) => void;
   onToggleFolderPanel: () => void;
   onEmptyTrash: () => Promise<void>;
+  onRefresh?: () => Promise<void>;
   creatingNote?: boolean;
   isMobile?: boolean;
   onClose?: () => void;

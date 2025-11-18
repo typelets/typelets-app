@@ -8,6 +8,7 @@ import {
   ChevronDown,
   Network,
   Code2,
+  RefreshCw,
 } from 'lucide-react';
 import NotesList from '@/components/notes/NotesPanel/NotesList.tsx';
 import { Button } from '@/components/ui/button.tsx';
@@ -57,6 +58,7 @@ interface FilesPanelProps {
   onCreateCode?: (templateData?: { language: string; code: string }) => void;
   onToggleFolderPanel: () => void;
   onEmptyTrash?: () => Promise<void>;
+  onRefresh?: () => Promise<void>;
   creatingNote?: boolean;
   isMobile?: boolean;
   onClose?: () => void;
@@ -77,6 +79,7 @@ export default function FilesPanel({
   onCreateCode,
   onToggleFolderPanel,
   onEmptyTrash,
+  onRefresh,
   creatingNote = false,
   isMobile = false,
   onClose,
@@ -93,6 +96,8 @@ export default function FilesPanel({
     showDiagramsOnly: false,
     showCodeOnly: false,
   });
+
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const sortNotes = (notes: Note[], config: SortConfig): Note[] => {
     return [...notes].sort((a, b) => {
@@ -203,6 +208,17 @@ export default function FilesPanel({
     }
   };
 
+  const handleRefresh = async () => {
+    if (!onRefresh || isRefreshing) return;
+
+    setIsRefreshing(true);
+    try {
+      await onRefresh();
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
   const isTrashView = currentView === 'trash';
 
   const getEmptyMessage = () => {
@@ -269,6 +285,18 @@ export default function FilesPanel({
 
         <div className="flex shrink-0 items-center gap-2">
           <ButtonGroup>
+            {onRefresh && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleRefresh}
+                disabled={isRefreshing}
+                className={`shadow-none flex items-center justify-center ${isMobile ? 'h-9 w-9 touch-manipulation p-0' : ''}`}
+                title="Refresh notes from server"
+              >
+                <RefreshCw className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'} ${isRefreshing ? 'animate-spin' : ''}`} />
+              </Button>
+            )}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
