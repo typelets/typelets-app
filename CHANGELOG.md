@@ -1,3 +1,10 @@
+## [1.38.5](https://github.com/typelets/typelets-app/compare/v1.38.4...v1.38.5) (2025-11-18)
+
+
+### Bug Fixes
+
+* **mobile:** improve tab management and UI polish ([ab9f08e](https://github.com/typelets/typelets-app/commit/ab9f08ec49e2753b05fbe082579a2a8184471471))
+
 ## [1.38.4](https://github.com/typelets/typelets-app/compare/v1.38.3...v1.38.4) (2025-11-16)
 
 
