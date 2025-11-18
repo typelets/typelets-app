@@ -1,3 +1,10 @@
+## [1.38.6](https://github.com/typelets/typelets-app/compare/v1.38.5...v1.38.6) (2025-11-18)
+
+
+### Bug Fixes
+
+* update GitHub workflows to use Node 22 from .nvmrc ([ddd15ff](https://github.com/typelets/typelets-app/commit/ddd15ff1c1fd93827702bfb6afef01a216b7eb5e))
+
 ## [1.38.5](https://github.com/typelets/typelets-app/compare/v1.38.4...v1.38.5) (2025-11-18)
 
 
