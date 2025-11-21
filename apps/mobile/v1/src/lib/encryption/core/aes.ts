@@ -13,20 +13,22 @@ let createCipheriv: any = null;
 let createDecipheriv: any = null;
 let QuickCryptoBuffer: any = null;
 
-// Try to get Buffer from global scope (polyfilled by react-native-quick-crypto)
-try {
-  // @ts-ignore - Buffer should be global after react-native-quick-crypto is loaded
-  QuickCryptoBuffer = global.Buffer || Buffer;
-} catch (e) {
-  // Buffer not available globally
-}
-
 try {
   const quickCrypto = require('react-native-quick-crypto');
 
   // Get the cipher functions
   createCipheriv = quickCrypto.createCipheriv;
   createDecipheriv = quickCrypto.createDecipheriv;
+
+  // Get Buffer from @craftzdog/react-native-buffer (same source as react-native-quick-crypto uses)
+  try {
+    const { Buffer: RNBuffer } = require('@craftzdog/react-native-buffer');
+    QuickCryptoBuffer = RNBuffer;
+  } catch (e) {
+    // Fallback to global Buffer if available
+    // @ts-ignore
+    QuickCryptoBuffer = global.Buffer;
+  }
 
   if (createCipheriv && createDecipheriv && QuickCryptoBuffer) {
     console.log('[Encryption] Native AES-GCM available - will use fast implementation');

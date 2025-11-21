@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Animated, DeviceEventEmitter, InteractionManager, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Alert, Animated, DeviceEventEmitter, InteractionManager, Pressable, RefreshControl, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useUser } from '@clerk/clerk-expo';
@@ -757,26 +757,22 @@ export default function NotesList({ navigation, route, renderHeader, scrollY: pa
 
       {/* Floating Action Button - Only visible when Create Note button scrolls off screen */}
       {viewType !== 'trash' && isCreateNoteButtonOffScreen && (
-        <Animated.View
+        <Pressable
           style={[
             styles.fab,
             {
               bottom: insets.bottom + 20,
               right: 20,
-              transform: [{ translateY: fabTranslateY }],
             }
           ]}
+          onPress={() => navigation?.navigate('CreateNote', { folderId: route?.params?.folderId })}
         >
-          <GlassView glassEffectStyle="regular" style={[styles.fabGlass, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]}>
-            <Pressable
-              style={styles.fabButton}
-              onPress={() => navigation?.navigate('CreateNote', { folderId: route?.params?.folderId })}
-              android_ripple={{ color: 'rgba(255, 255, 255, 0.3)', radius: 28 }}
-            >
+          <GlassView glassEffectStyle="regular" style={styles.fabGlass} pointerEvents="none">
+            <View style={[styles.fabButton, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]}>
               <SquarePen size={20} color={theme.colors.foreground} />
-            </Pressable>
+            </View>
           </GlassView>
-        </Animated.View>
+        </Pressable>
       )}
     </View>
   );
@@ -803,7 +799,11 @@ const styles = StyleSheet.create({
   },
   fab: {
     position: 'absolute',
-    elevation: 4,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    zIndex: 999,
+    elevation: 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
@@ -814,13 +814,11 @@ const styles = StyleSheet.create({
     height: 56,
     borderRadius: 28,
     overflow: 'hidden',
-    backgroundColor: 'rgba(0, 0, 0, 0.01)',
   },
   fabButton: {
     width: 56,
     height: 56,
-    borderRadius: 28,
-    justifyContent: 'center',
     alignItems: 'center',
+    justifyContent: 'center',
   },
 });

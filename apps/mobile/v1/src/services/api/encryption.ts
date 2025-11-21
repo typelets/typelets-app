@@ -49,7 +49,14 @@ export async function decryptNote(note: Note, userId: string): Promise<Note> {
 
 // Yield to main thread to prevent UI blocking
 const yieldToMain = (): Promise<void> => {
-  return new Promise(resolve => setTimeout(resolve, 0));
+  return new Promise(resolve => {
+    // Use requestAnimationFrame for smoother UI, fallback to setTimeout
+    if (typeof requestAnimationFrame !== 'undefined') {
+      requestAnimationFrame(() => setTimeout(resolve, 0));
+    } else {
+      setTimeout(resolve, 0);
+    }
+  });
 };
 
 /**
@@ -66,32 +73,27 @@ export async function decryptNotes(
   const decryptStart = performance.now();
   console.log(`[PERF] Starting decryption of ${notes.length} notes...`);
 
-  const BATCH_SIZE = 10; // Process 10 notes at a time
+  const BATCH_SIZE = 3; // Process 3 notes at a time for better UI responsiveness
   const result: Note[] = [];
 
   try {
-    // Process notes in batches to prevent UI blocking
-    for (let i = 0; i < notes.length; i += BATCH_SIZE) {
-      const batch = notes.slice(i, i + BATCH_SIZE);
+    // Process notes one at a time with yields for maximum UI responsiveness
+    for (let i = 0; i < notes.length; i++) {
+      const note = notes[i];
 
-      const decryptedBatch = await Promise.all(
-        batch.map(async (note) => {
-          try {
-            return await decryptNote(note, userId);
-          } catch {
-            return {
-              ...note,
-              title: note.title || '[Encrypted - Unable to decrypt]',
-              content: note.content || '[This note could not be decrypted]',
-            };
-          }
-        })
-      );
+      try {
+        const decrypted = await decryptNote(note, userId);
+        result.push(decrypted);
+      } catch {
+        result.push({
+          ...note,
+          title: note.title || '[Encrypted - Unable to decrypt]',
+          content: note.content || '[This note could not be decrypted]',
+        });
+      }
 
-      result.push(...decryptedBatch);
-
-      // Yield to main thread between batches to keep UI responsive
-      if (i + BATCH_SIZE < notes.length) {
+      // Yield to main thread every 3 notes to keep UI responsive
+      if ((i + 1) % BATCH_SIZE === 0 && i + 1 < notes.length) {
         await yieldToMain();
       }
     }
