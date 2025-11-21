@@ -7,7 +7,7 @@ import { GlassView } from 'expo-glass-effect';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useCallback,useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Animated, Keyboard, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Animated, Image, Keyboard, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { OfflineIndicator } from '../../components/OfflineIndicator';
@@ -43,9 +43,9 @@ const SPECIAL_VIEWS = [
 // Helper function for time-based greeting
 function getTimeOfDay(): string {
   const hour = new Date().getHours();
-  if (hour < 12) return 'morning';
-  if (hour < 17) return 'afternoon';
-  return 'evening';
+  if (hour < 12) return 'Morning';
+  if (hour < 17) return 'Afternoon';
+  return 'Evening';
 }
 
 export default function HomeScreen() {
@@ -58,6 +58,7 @@ export default function HomeScreen() {
   const [loading, setLoading] = useState(true);
   const [showLoading, setShowLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [showRefreshing, setShowRefreshing] = useState(false);
   const [counts, setCounts] = useState({
     all: 0,
     starred: 0,
@@ -80,21 +81,8 @@ export default function HomeScreen() {
   // Bottom sheet ref
   const createFolderSheetRef = useRef<BottomSheetModal>(null);
 
-  // Scroll tracking for animated divider
+  // Scroll tracking
   const scrollY = useRef(new Animated.Value(0)).current;
-
-  // Animate greeting section based on scroll
-  const greetingTranslateY = scrollY.interpolate({
-    inputRange: [0, 50],
-    outputRange: [0, -30],
-    extrapolate: 'clamp',
-  });
-
-  const greetingOpacity = scrollY.interpolate({
-    inputRange: [0, 50],
-    outputRange: [1, 0],
-    extrapolate: 'clamp',
-  });
 
   // Snap points
   const snapPoints = useMemo(() => ['55%'], []);
@@ -258,6 +246,17 @@ export default function HomeScreen() {
     return () => clearTimeout(timer);
   }, [loading]);
 
+  // Delay showing refresh spinner by 1 second to avoid flash
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout>;
+    if (refreshing) {
+      timer = setTimeout(() => setShowRefreshing(true), 1000);
+    } else {
+      setShowRefreshing(false);
+    }
+    return () => clearTimeout(timer);
+  }, [refreshing]);
+
   const onRefresh = async () => {
     try {
       setRefreshing(true);
@@ -298,7 +297,7 @@ export default function HomeScreen() {
     }
   };
 
-  const headerHeight = (insets.top || 0) + 110; // Header + greeting section height
+  const headerHeight = (insets.top || 0) + 58; // Header buttons only
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]} edges={['left', 'right']}>
@@ -327,6 +326,15 @@ export default function HomeScreen() {
         >
           {!loading && (
           <>
+            {/* Greeting Section */}
+            <View style={styles.greetingInContent}>
+              <Text style={[styles.greeting, { color: theme.colors.foreground }]}>
+                Good {getTimeOfDay()}
+              </Text>
+              <Text style={[styles.subgreeting, { color: theme.colors.mutedForeground }]}>
+                What would you like to work on today?
+              </Text>
+            </View>
 
             {/* Quick Actions */}
             <View style={styles.quickActionsSection}>
@@ -558,22 +566,33 @@ export default function HomeScreen() {
             style={styles.headerGradient}
           />
           <View style={styles.headerSection}>
-            <Animated.View
-              style={[
-                styles.greetingSection,
-                {
-                  transform: [{ translateY: greetingTranslateY }],
-                  opacity: greetingOpacity,
-                }
-              ]}
-            >
-              <Text style={[styles.greeting, { color: theme.colors.foreground }]}>
-                Good {getTimeOfDay()}
-              </Text>
-              <Text style={[styles.subgreeting, { color: theme.colors.mutedForeground }]}>
-                What would you like to work on today?
-              </Text>
-            </Animated.View>
+            <View style={styles.headerLogoContainer}>
+              <GlassView glassEffectStyle="regular" style={[styles.glassLogo, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]}>
+                <TouchableOpacity style={styles.logoButton} onPress={onRefresh}>
+                  <Image
+                    source={require('../../../assets/images/icon.png')}
+                    style={styles.logoImage}
+                  />
+                </TouchableOpacity>
+              </GlassView>
+            </View>
+            <View style={styles.headerTitleContainer}>
+              <GlassView glassEffectStyle="regular" style={[styles.glassHeaderTitle, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]}>
+                <View style={styles.headerTitleButton}>
+                  <Text style={[styles.headerTitleText, { color: theme.colors.foreground }]} numberOfLines={1}>
+                    Home
+                  </Text>
+                </View>
+              </GlassView>
+            </View>
+            <GlassView glassEffectStyle="regular" style={[styles.glassAvatar, { marginRight: 12, backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]}>
+              <TouchableOpacity
+                style={styles.avatarButton}
+                onPress={() => router.push('/folder-notes?viewType=all')}
+              >
+                <Ionicons name="search" size={20} color={theme.colors.foreground} />
+              </TouchableOpacity>
+            </GlassView>
             <GlassView glassEffectStyle="regular" style={[styles.glassAvatar, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]}>
               <TouchableOpacity
                 style={styles.avatarButton}
@@ -587,7 +606,7 @@ export default function HomeScreen() {
       )}
 
       {/* Refresh indicator - rendered after header so it appears on top */}
-      {refreshing && (
+      {showRefreshing && (
         <View style={styles.refreshIndicator}>
           <ActivityIndicator size="large" color={theme.isDark ? '#ffffff' : '#000000'} />
         </View>
@@ -702,7 +721,7 @@ const styles = StyleSheet.create({
   },
   refreshIndicator: {
     position: 'absolute',
-    top: 120,
+    top: 70,
     left: 0,
     right: 0,
     alignItems: 'center',
@@ -717,13 +736,56 @@ const styles = StyleSheet.create({
   },
   headerSection: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingTop: 16,
+    paddingTop: 4,
+    paddingBottom: 12,
+    minHeight: 44,
   },
-  greetingSection: {
+  headerLogoContainer: {
+    marginRight: 12,
+  },
+  glassLogo: {
+    borderRadius: 19,
+    overflow: 'hidden',
+    backgroundColor: 'rgba(0, 0, 0, 0.01)',
+  },
+  logoButton: {
+    width: 38,
+    height: 38,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  logoImage: {
+    width: 46,
+    height: 46,
+    borderRadius: 10,
+  },
+  headerTitleContainer: {
     flex: 1,
+    marginRight: 12,
+  },
+  glassHeaderTitle: {
+    borderRadius: 19,
+    overflow: 'hidden',
+    backgroundColor: 'rgba(0, 0, 0, 0.01)',
+  },
+  headerTitleButton: {
+    height: 38,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 16,
+  },
+  headerTitleText: {
+    fontSize: 17,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  greetingInContent: {
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 24,
   },
   greeting: {
     fontSize: 28,

@@ -203,9 +203,6 @@ const styles = StyleSheet.create({
   },
   glassTitleButton: {
     flex: 1,
-    borderRadius: 19,
-    overflow: 'hidden',
-    backgroundColor: 'rgba(0, 0, 0, 0.01)',
     marginHorizontal: 12,
   },
   headerButton: {
