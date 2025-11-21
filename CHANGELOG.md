@@ -1,3 +1,10 @@
+## [1.39.2](https://github.com/typelets/typelets-app/compare/v1.39.1...v1.39.2) (2025-11-21)
+
+
+### Bug Fixes
+
+* **mobile:** improve GlassView compatibility and decryption performance ([18fe2b0](https://github.com/typelets/typelets-app/commit/18fe2b0aeb9692871c8c6f4493180fe64429fe9a))
+
 ## [1.39.1](https://github.com/typelets/typelets-app/compare/v1.39.0...v1.39.1) (2025-11-21)
 
 
