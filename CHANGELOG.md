@@ -1,3 +1,10 @@
+## [1.39.1](https://github.com/typelets/typelets-app/compare/v1.39.0...v1.39.1) (2025-11-21)
+
+
+### Bug Fixes
+
+* **mobile:** redesign home screen header with logo and search ([0ca9615](https://github.com/typelets/typelets-app/commit/0ca96151b24cca8b2ecdb07eb4e697499a5a7a20))
+
 # [1.39.0](https://github.com/typelets/typelets-app/compare/v1.38.7...v1.39.0) (2025-11-21)
 
 
