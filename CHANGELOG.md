@@ -1,3 +1,10 @@
+## [1.39.3](https://github.com/typelets/typelets-app/compare/v1.39.2...v1.39.3) (2025-11-21)
+
+
+### Bug Fixes
+
+* **mobile:** improve encryption performance and fix FAB touch handling ([1c5317b](https://github.com/typelets/typelets-app/commit/1c5317b07d4f37e0e421fd34f5972fd7d8b0e09a))
+
 ## [1.39.2](https://github.com/typelets/typelets-app/compare/v1.39.1...v1.39.2) (2025-11-21)
 
 
