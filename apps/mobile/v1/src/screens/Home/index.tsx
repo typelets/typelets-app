@@ -570,7 +570,7 @@ export default function HomeScreen() {
               <GlassView glassEffectStyle="regular" style={[styles.glassLogo, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]}>
                 <TouchableOpacity style={styles.logoButton} onPress={onRefresh}>
                   <Image
-                    source={require('../../../assets/images/icon.png')}
+                    source={require('../../../assets/images/typelets-logo.png')}
                     style={styles.logoImage}
                   />
                 </TouchableOpacity>
@@ -758,9 +758,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   logoImage: {
-    width: 46,
-    height: 46,
-    borderRadius: 10,
+    width: 28,
+    height: 28,
   },
   headerTitleContainer: {
     flex: 1,
