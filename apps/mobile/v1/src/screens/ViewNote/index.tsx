@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect,useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback,useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Animated, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Animated, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useNetworkStatus } from '../../hooks/useNetworkStatus';
@@ -34,7 +34,8 @@ export default function ViewNoteScreen() {
   const [loadingAttachments, setLoadingAttachments] = useState(false);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
-  const { note, loading, htmlContent, handleEdit: handleEditInternal, handleToggleStar, handleToggleHidden } = useViewNote(noteId as string);
+  const { note, loading, htmlContent, handleEdit: handleEditInternal, handleToggleStar, handleToggleHidden, refresh } = useViewNote(noteId as string);
+  const [refreshing, setRefreshing] = useState(false);
 
   // Wrap handleEdit with offline check (allow editing temp notes created offline)
   const handleEdit = () => {
@@ -147,6 +148,18 @@ export default function ViewNoteScreen() {
     }, [scrollY, noteId])
   );
 
+  const handleRefresh = async () => {
+    try {
+      setRefreshing(true);
+      await Promise.all([
+        refresh(),
+        isOnline ? loadAttachments() : Promise.resolve(),
+      ]);
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
   if (loading) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
@@ -184,6 +197,14 @@ export default function ViewNoteScreen() {
           { useNativeDriver: false }
         )}
         scrollEventThrottle={16}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            tintColor={theme.isDark ? '#666666' : '#999999'}
+            colors={[theme.isDark ? '#666666' : '#999999']}
+          />
+        }
       >
         <View style={styles.titleContainer}>
           <Text style={[styles.noteTitle, { color: theme.colors.foreground }]}>
@@ -269,6 +290,13 @@ export default function ViewNoteScreen() {
         onEdit={handleEdit}
         theme={theme}
       />
+
+      {/* Refresh indicator - rendered after header so it appears on top */}
+      {refreshing && (
+        <View style={[styles.refreshIndicator, { top: (insets.top || 0) + 70 }]}>
+          <ActivityIndicator size="large" color={theme.isDark ? '#ffffff' : '#000000'} />
+        </View>
+      )}
     </SafeAreaView>
   );
 }
@@ -276,6 +304,13 @@ export default function ViewNoteScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  refreshIndicator: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    zIndex: 200,
   },
   loadingContainer: {
     flex: 1,

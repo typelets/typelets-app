@@ -129,7 +129,6 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [darkTheme, setDarkThemeState] = useState<DarkThemePreset>('trueBlack');
   const [isDark, setIsDark] = useState(false); // Default to light to prevent flash
   const [isLoaded, setIsLoaded] = useState(false);
-  const skipNextIsDarkUpdateRef = React.useRef(true); // Skip first effect run to prevent redundant update
 
   // Load saved preferences on mount
   useEffect(() => {
@@ -176,15 +175,8 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, [systemColorScheme]);
 
   // Update isDark when system color scheme or theme mode changes
-  // Skip first run after initial load to prevent redundant update
   useEffect(() => {
     if (!isLoaded) return;
-
-    // Skip the first run after preferences are loaded (isDark was already set correctly)
-    if (skipNextIsDarkUpdateRef.current) {
-      skipNextIsDarkUpdateRef.current = false;
-      return;
-    }
 
     switch (themeMode) {
       case 'light':

@@ -74,13 +74,16 @@ const clerkPublishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY || '';
 function NavigationContent() {
   const theme = useTheme();
 
-  // Force iOS appearance mode to match app theme (not system theme)
-  // This ensures native components like GlassView use the correct appearance
+  // Sync iOS appearance with app theme (for native components like GlassView)
   useEffect(() => {
     if (Platform.OS === 'ios') {
-      Appearance.setColorScheme(theme.isDark ? 'dark' : 'light');
+      if (theme.themeMode === 'system') {
+        Appearance.setColorScheme(null);
+      } else {
+        Appearance.setColorScheme(theme.isDark ? 'dark' : 'light');
+      }
     }
-  }, [theme.isDark]);
+  }, [theme.isDark, theme.themeMode]);
 
   const customLightTheme = {
     ...DefaultTheme,

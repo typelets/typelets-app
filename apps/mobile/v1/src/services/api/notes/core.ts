@@ -480,61 +480,78 @@ export function createNotesApi(getToken: AuthTokenGetter, getUserId: () => strin
         }
 
         if (__DEV__) {
-          console.log('[API] No cache available - fetching ALL notes from server to populate cache');
+          console.log('[API] No cache available - fetching notes for current view first (fast initial load)');
         }
 
-        // IMPORTANT: On first load, fetch ALL notes without filters to fully populate cache
-        // This ensures cache has all notes regardless of which view user opens first
-        const allNotes = await fetchAllPages<NotesResponse, Note>(
+        // OPTIMIZED: Fetch only notes for current view first (fast initial response)
+        // Then backfill the rest of the cache in background
+        const currentViewNotes = await fetchAllPages<NotesResponse, Note>(
           async (page) => {
-            // Fetch without filters to get ALL notes
-            const searchParams = createPaginationParams(page, {} as Record<string, string | boolean | undefined>);
+            // Fetch WITH filters for current view only
+            const searchParams = createPaginationParams(page, params as Record<string, string | boolean | undefined>);
             return await makeRequest<NotesResponse>(`/notes?${searchParams.toString()}`);
           },
           (response) => response.notes || []
         );
 
         if (__DEV__) {
-          console.log(`[API] Fetched ${allNotes.length} total notes from server (first load)`);
+          console.log(`[API] Fetched ${currentViewNotes.length} notes for current view (first load)`);
         }
 
-        // Always cache decrypted content for instant loading
+        // Decrypt and cache only the notes for current view (fast!)
+        let resultNotes: Note[] = [];
         if (userId) {
-          // Decrypt ALL notes before caching (for instant loading next time)
-          const decryptedNotes = await decryptNotes(allNotes, userId);
+          const decryptedNotes = await decryptNotes(currentViewNotes, userId);
           await storeCachedNotes(decryptedNotes, { storeDecrypted: true });
 
           if (__DEV__) {
             console.log(`[API] Stored ${decryptedNotes.length} notes to cache (DECRYPTED)`);
           }
 
-          // Filter decrypted notes locally to match requested view
-          const filteredNotes = filterNotesLocally(decryptedNotes, params);
-
-          if (__DEV__) {
-            console.log(`[API] Returning ${filteredNotes.length} filtered notes for current view (first load, cached DECRYPTED)`);
-          }
-
-          // Return decrypted and filtered notes
-          return filteredNotes;
+          resultNotes = decryptedNotes;
         } else {
-          // No userId - store encrypted only (shouldn't happen in normal flow)
-          await storeCachedNotes(allNotes, { storeDecrypted: false });
-
-          if (__DEV__) {
-            console.log(`[API] Stored ${allNotes.length} notes to cache (encrypted only - no userId)`);
-          }
-
-          // Filter notes locally to match requested view
-          const filteredNotes = filterNotesLocally(allNotes, params);
-
-          if (__DEV__) {
-            console.log(`[API] Returning ${filteredNotes.length} filtered notes for current view (first load, cached encrypted)`);
-          }
-
-          // Return filtered notes (still encrypted) - lazy decryption happens in UI layer
-          return filteredNotes;
+          await storeCachedNotes(currentViewNotes, { storeDecrypted: false });
+          resultNotes = currentViewNotes;
         }
+
+        // BACKGROUND: Fetch and cache ALL remaining notes for other views
+        // This runs after returning results to user (non-blocking)
+        const backfillCache = async () => {
+          try {
+            if (__DEV__) {
+              console.log('[API] 🔄 Background: Fetching all notes to populate cache...');
+            }
+
+            const allNotes = await fetchAllPages<NotesResponse, Note>(
+              async (page) => {
+                // Fetch without filters to get ALL notes
+                const searchParams = createPaginationParams(page, {} as Record<string, string | boolean | undefined>);
+                return await makeRequest<NotesResponse>(`/notes?${searchParams.toString()}`);
+              },
+              (response) => response.notes || []
+            );
+
+            if (userId && allNotes.length > 0) {
+              const decryptedAll = await decryptNotes(allNotes, userId);
+              await storeCachedNotes(decryptedAll, { storeDecrypted: true });
+
+              if (__DEV__) {
+                console.log(`[API] 🔄 Background: Cached ${decryptedAll.length} total notes (DECRYPTED)`);
+              }
+            }
+          } catch (error) {
+            // Silently fail background cache population
+            if (__DEV__) {
+              console.log('[API] Background cache population failed:', error);
+            }
+          }
+        };
+
+        // Start background cache population (don't await)
+        backfillCache();
+
+        // Return current view notes immediately
+        return resultNotes;
       } catch (error) {
         // Handle 304 Not Modified - shouldn't happen on first load but just in case
         if (error instanceof NotModifiedError) {

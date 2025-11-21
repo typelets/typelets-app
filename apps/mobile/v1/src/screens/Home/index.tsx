@@ -586,6 +586,13 @@ export default function HomeScreen() {
         </View>
       )}
 
+      {/* Refresh indicator - rendered after header so it appears on top */}
+      {refreshing && (
+        <View style={styles.refreshIndicator}>
+          <ActivityIndicator size="large" color={theme.isDark ? '#ffffff' : '#000000'} />
+        </View>
+      )}
+
       {/* Offline Indicator - Floating Button */}
       <OfflineIndicator />
 
@@ -692,6 +699,14 @@ const styles = StyleSheet.create({
     right: 0,
     zIndex: 100,
     paddingBottom: 35,
+  },
+  refreshIndicator: {
+    position: 'absolute',
+    top: 120,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    zIndex: 200,
   },
   headerGradient: {
     position: 'absolute',

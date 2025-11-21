@@ -62,6 +62,7 @@ export default function NotesList({ navigation, route, renderHeader, scrollY: pa
   const [deletingNoteId, setDeletingNoteId] = useState<string | null>(null);
   const [archivingNoteId, setArchivingNoteId] = useState<string | null>(null);
   const [closeSwipeables, setCloseSwipeables] = useState(0);
+  const [showLoading, setShowLoading] = useState(false);
 
   // Performance tracking
   const screenFocusTime = useRef<number>(0);
@@ -93,6 +94,17 @@ export default function NotesList({ navigation, route, renderHeader, scrollY: pa
     screenFocusTime.current = performance.now();
     console.log(`[PERF OPTIMIZED] Screen focused - starting timer`);
   }, []);
+
+  // Delay showing spinner by 500ms to avoid flash for fast loads
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout>;
+    if (loading && notes.length === 0) {
+      timer = setTimeout(() => setShowLoading(true), 500);
+    } else {
+      setShowLoading(false);
+    }
+    return () => clearTimeout(timer);
+  }, [loading, notes.length]);
 
   // View mode state
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
@@ -673,8 +685,7 @@ export default function NotesList({ navigation, route, renderHeader, scrollY: pa
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      {/* Show loading spinner on initial load */}
-      {loading && notes.length === 0 && (
+      {showLoading && (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={theme.colors.primary} />
         </View>
