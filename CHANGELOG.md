@@ -1,3 +1,10 @@
+## [1.38.7](https://github.com/typelets/typelets-app/compare/v1.38.6...v1.38.7) (2025-11-21)
+
+
+### Bug Fixes
+
+* **mobile:** improve UX for theme, loading, and folder navigation ([5d5c0b3](https://github.com/typelets/typelets-app/commit/5d5c0b3813a36b3a1cd8f74187952000c97a1c6b))
+
 ## [1.38.6](https://github.com/typelets/typelets-app/compare/v1.38.5...v1.38.6) (2025-11-18)
 
 
