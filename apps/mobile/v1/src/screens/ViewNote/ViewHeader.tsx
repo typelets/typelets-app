@@ -88,8 +88,8 @@ export function ViewHeader({
             </TouchableOpacity>
           </GlassView>
 
-          <Animated.View style={[styles.glassTitleButton, { opacity: titleOpacity }]}>
-            <GlassView glassEffectStyle="regular" style={{ flex: 1, borderRadius: 19, overflow: 'hidden', backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }}>
+          <View style={styles.glassTitleButton}>
+            <GlassView glassEffectStyle="regular" style={{ flex: 1, borderRadius: 19, overflow: 'hidden' }}>
               <View style={styles.titleButton}>
                 <Text
                   style={[styles.headerTitle, { color: theme.colors.foreground }]}
@@ -100,7 +100,7 @@ export function ViewHeader({
                 </Text>
               </View>
             </GlassView>
-          </Animated.View>
+          </View>
 
           <View style={styles.headerActions}>
             {attachmentsCount > 0 && (

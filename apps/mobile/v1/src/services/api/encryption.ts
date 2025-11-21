@@ -47,8 +47,13 @@ export async function decryptNote(note: Note, userId: string): Promise<Note> {
   }
 }
 
+// Yield to main thread to prevent UI blocking
+const yieldToMain = (): Promise<void> => {
+  return new Promise(resolve => setTimeout(resolve, 0));
+};
+
 /**
- * Decrypts an array of notes
+ * Decrypts an array of notes in batches to prevent UI blocking
  */
 export async function decryptNotes(
   notes: Note[],
@@ -61,22 +66,35 @@ export async function decryptNotes(
   const decryptStart = performance.now();
   console.log(`[PERF] Starting decryption of ${notes.length} notes...`);
 
+  const BATCH_SIZE = 10; // Process 10 notes at a time
+  const result: Note[] = [];
+
   try {
-    // Decrypt notes individually to handle failures gracefully
-    const result = await Promise.all(
-      notes.map(async (note) => {
-        try {
-          return await decryptNote(note, userId);
-        } catch {
-          // Return note with fallback content if decryption fails
-          return {
-            ...note,
-            title: note.title || '[Encrypted - Unable to decrypt]',
-            content: note.content || '[This note could not be decrypted]',
-          };
-        }
-      })
-    );
+    // Process notes in batches to prevent UI blocking
+    for (let i = 0; i < notes.length; i += BATCH_SIZE) {
+      const batch = notes.slice(i, i + BATCH_SIZE);
+
+      const decryptedBatch = await Promise.all(
+        batch.map(async (note) => {
+          try {
+            return await decryptNote(note, userId);
+          } catch {
+            return {
+              ...note,
+              title: note.title || '[Encrypted - Unable to decrypt]',
+              content: note.content || '[This note could not be decrypted]',
+            };
+          }
+        })
+      );
+
+      result.push(...decryptedBatch);
+
+      // Yield to main thread between batches to keep UI responsive
+      if (i + BATCH_SIZE < notes.length) {
+        await yieldToMain();
+      }
+    }
 
     const decryptEnd = performance.now();
     console.log(`[PERF] Decryption completed in ${(decryptEnd - decryptStart).toFixed(2)}ms for ${notes.length} notes`);
@@ -86,7 +104,7 @@ export async function decryptNotes(
     if (__DEV__) {
       console.error('Error during note decryption batch:', error);
     }
-    return notes; // Return original notes if batch decryption fails
+    return notes;
   }
 }
 

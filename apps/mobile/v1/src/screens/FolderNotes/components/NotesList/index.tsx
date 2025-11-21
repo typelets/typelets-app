@@ -756,14 +756,13 @@ export default function NotesList({ navigation, route, renderHeader, scrollY: pa
       />
 
       {/* Floating Action Button - Only visible when Create Note button scrolls off screen */}
-      {viewType !== 'trash' && (
+      {viewType !== 'trash' && isCreateNoteButtonOffScreen && (
         <Animated.View
           style={[
             styles.fab,
             {
               bottom: insets.bottom + 20,
               right: 20,
-              opacity: fabOpacity,
               transform: [{ translateY: fabTranslateY }],
             }
           ]}
