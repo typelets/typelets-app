@@ -595,6 +595,12 @@ const getSystemTheme = (): Theme => {
   return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 };
 
+// Safely extract text from HTML using DOM (immune to nested tag attacks)
+const stripHtmlTags = (html: string): string => {
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  return doc.body.textContent || '';
+};
+
 export default function PublicNotePage() {
   const [note, setNote] = useState<ApiPublicNote | null>(null);
   const [loading, setLoading] = useState(true);
@@ -669,7 +675,7 @@ export default function PublicNotePage() {
     content = content.replace(headingRegex, (_match, tag, attrs, text) => {
       const level = parseInt(tag.charAt(1));
       const id = `heading-${headingIndex}`;
-      const plainText = text.replace(/<[^>]*>/g, ''); // Strip HTML tags from heading text
+      const plainText = stripHtmlTags(text);
       headings.push({ level, text: plainText, id });
       headingIndex++;
       return `<${tag}${attrs} id="${id}">${text}</${tag}>`;
@@ -755,7 +761,7 @@ export default function PublicNotePage() {
 
     // Set meta description
     const description = note.content
-      ? note.content.replace(/<[^>]*>/g, '').slice(0, 160).trim() + '...'
+      ? stripHtmlTags(note.content).slice(0, 160).trim() + '...'
       : 'A note shared via Typelets';
 
     let metaDescription = document.querySelector('meta[name="description"]');
