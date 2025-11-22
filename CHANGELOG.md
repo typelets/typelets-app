@@ -1,3 +1,10 @@
+## [1.40.1](https://github.com/typelets/typelets-app/compare/v1.40.0...v1.40.1) (2025-11-22)
+
+
+### Bug Fixes
+
+* **editor:** open linked notes in new tab instead of replacing current ([4292262](https://github.com/typelets/typelets-app/commit/4292262d5d51005181ae1b2f302b408adc3493a2))
+
 # [1.40.0](https://github.com/typelets/typelets-app/compare/v1.39.3...v1.40.0) (2025-11-22)
 
 
