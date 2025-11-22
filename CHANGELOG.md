@@ -1,3 +1,10 @@
+# [1.40.0](https://github.com/typelets/typelets-app/compare/v1.39.3...v1.40.0) (2025-11-22)
+
+
+### Features
+
+* **editor:** add note linking and backlinks ([96deb3a](https://github.com/typelets/typelets-app/commit/96deb3a43002f5aa0b62a6fdb12dcc21e24f5828))
+
 ## [1.39.3](https://github.com/typelets/typelets-app/compare/v1.39.2...v1.39.3) (2025-11-21)
 
 
