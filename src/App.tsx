@@ -19,6 +19,7 @@ import { codeExecutionService } from '@/services/codeExecutionService';
 import { clearUserEncryptionData } from '@/lib/encryption';
 import { MonacoThemeProvider } from '@/contexts/MonacoThemeContext';
 import MainApp from '@/pages/MainApp';
+import PublicNotePage from '@/pages/PublicNotePage';
 
 function AppContent() {
   const { getToken, isSignedIn } = useAuth();
@@ -46,6 +47,7 @@ function AppContent() {
 
   const isSignInPage = window.location.pathname === '/sign-in';
   const isSignUpPage = window.location.pathname === '/sign-up';
+  const isPublicNotePage = window.location.pathname.startsWith('/p/');
 
   // Check if user wants to force web version
   const urlParams = new URLSearchParams(window.location.search);
@@ -58,8 +60,13 @@ function AppContent() {
     localStorage.setItem('forceWebVersion', 'true');
   }
 
-  if (isMobileDevice && !isSignedIn && !forceWeb) {
+  if (isMobileDevice && !isSignedIn && !forceWeb && !isPublicNotePage) {
     return <MobileAppDownload />;
+  }
+
+  // Public note pages don't require authentication
+  if (isPublicNotePage) {
+    return <PublicNotePage />;
   }
 
   if (isSignInPage) {

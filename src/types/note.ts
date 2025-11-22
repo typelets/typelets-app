@@ -26,6 +26,24 @@ export interface Note {
   attachments?: FileAttachment[];
   attachmentCount?: number; // Number of file attachments (from API)
   isNew?: boolean; // Client-side flag to show "NEW" badge
+  // Public note fields
+  isPublished?: boolean;
+  publicSlug?: string | null;
+  publishedAt?: Date | null;
+  publicUpdatedAt?: Date | null;
+}
+
+export interface PublicNote {
+  id: string;
+  slug: string;
+  noteId: string;
+  userId: string;
+  title: string;
+  content: string; // Plaintext HTML (not encrypted)
+  type?: 'note' | 'diagram' | 'code';
+  authorName?: string;
+  publishedAt: Date;
+  updatedAt: Date;
 }
 
 export interface Folder {
@@ -43,7 +61,7 @@ export interface Folder {
   noteCount?: number;
 }
 
-export type ViewMode = 'all' | 'starred' | 'archived' | 'trash' | 'hidden';
+export type ViewMode = 'all' | 'starred' | 'archived' | 'trash' | 'hidden' | 'public';
 
 export interface NotesState {
   notes: Note[];

@@ -54,6 +54,7 @@ export default function MainLayout() {
     archivedCount,
     trashedCount,
     hiddenCount,
+    publicCount,
     expandedFolders,
     updateFolder,
     createNote,
@@ -68,6 +69,8 @@ export default function MainLayout() {
     hideNote,
     hidingNote,
     unhideNote,
+    publishNote,
+    unpublishNote,
     toggleFolderExpansion,
     reorderFolders,
     setSelectedNote,
@@ -189,6 +192,7 @@ export default function MainLayout() {
           title: note.title || 'Untitled',
           type: note.type || 'note',
           isDirty: false,
+          isPublished: note.isPublished,
         };
         setOpenTabs(prev => [...prev, newTab]);
         setActiveTabId(newTab.id);
@@ -207,12 +211,13 @@ export default function MainLayout() {
     const tab = openTabs.find(t => t.id === tabId);
     if (tab) {
       setActiveTabId(tabId);
-      const note = notes.find(n => n.id === tab.noteId);
+      // Use allNotes to find notes that might be outside current view/folder
+      const note = allNotes.find(n => n.id === tab.noteId);
       if (note) {
         setSelectedNote(note);
       }
     }
-  }, [openTabs, notes, setSelectedNote]);
+  }, [openTabs, allNotes, setSelectedNote]);
 
   const handleTabClose = useCallback((tabId: string) => {
     // No warning needed - autosave handles saving changes
@@ -225,7 +230,8 @@ export default function MainLayout() {
       const newActiveTab = newTabs[tabIndex - 1] || newTabs[0];
       if (newActiveTab) {
         setActiveTabId(newActiveTab.id);
-        const note = notes.find(n => n.id === newActiveTab.noteId);
+        // Use allNotes to find notes that might be outside current view/folder
+        const note = allNotes.find(n => n.id === newActiveTab.noteId);
         if (note) {
           setSelectedNote(note);
         }
@@ -234,7 +240,7 @@ export default function MainLayout() {
         setSelectedNote(null);
       }
     }
-  }, [openTabs, activeTabId, notes, setSelectedNote]);
+  }, [openTabs, activeTabId, allNotes, setSelectedNote]);
 
   const handleCloseAllTabs = useCallback(() => {
     // Close all tabs and clear selection
@@ -273,14 +279,14 @@ export default function MainLayout() {
     );
   }, [selectedNote]);
 
-  // Update tab title when note title changes
+  // Update tab properties when note changes
   useEffect(() => {
     if (!selectedNote?.id) return;
 
     setOpenTabs(tabs =>
       tabs.map(tab =>
         tab.noteId === selectedNote.id
-          ? { ...tab, title: selectedNote.title || 'Untitled', type: selectedNote.type || 'note' }
+          ? { ...tab, title: selectedNote.title || 'Untitled', type: selectedNote.type || 'note', isPublished: selectedNote.isPublished }
           : tab
       )
     );
@@ -353,6 +359,7 @@ export default function MainLayout() {
     archivedCount,
     trashedCount,
     hiddenCount,
+    publicCount,
     expandedFolders,
     onUpdateFolder: async (id, name, color) => {
       await updateFolder(id, { name, color });
@@ -402,6 +409,8 @@ export default function MainLayout() {
     onUnhideNote: unhideNote,
     onRefreshNote: handleRefreshNote,
     onSelectNote: handleSelectNote, // For navigating to linked notes (opens in new tab)
+    onPublishNote: publishNote,
+    onUnpublishNote: unpublishNote,
     userId,
     isNotesPanelOpen: filesPanelOpen,
     onToggleNotesPanel: handleToggleNotesPanel,

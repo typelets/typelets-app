@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth, useUser } from '@clerk/clerk-react';
-import { api, type ApiNote, type ApiFolder } from '@/lib/api/api.ts';
+import { api, type ApiNote, type ApiFolder, type ApiPublicNote } from '@/lib/api/api.ts';
 import { fileService } from '@/services/fileService';
 import {
   clearEncryptionKeys,
@@ -21,6 +21,11 @@ const convertApiNote = (apiNote: ApiNote): Note => ({
   createdAt: new Date(apiNote.createdAt),
   updatedAt: new Date(apiNote.updatedAt),
   hiddenAt: apiNote.hiddenAt ? new Date(apiNote.hiddenAt) : null,
+  // Public note fields
+  isPublished: apiNote.isPublished ?? false,
+  publicSlug: apiNote.publicSlug ?? null,
+  publishedAt: apiNote.publishedAt ? new Date(apiNote.publishedAt) : null,
+  publicUpdatedAt: apiNote.publicUpdatedAt ? new Date(apiNote.publicUpdatedAt) : null,
 });
 
 const convertApiFolder = (apiFolder: ApiFolder): Folder => ({
@@ -369,6 +374,7 @@ export function useNotes() {
     archivedCount,
     trashedCount,
     hiddenCount,
+    publicCount,
   } = useNotesFiltering({
     notes,
     folders,
@@ -493,8 +499,22 @@ export function useNotes() {
   const updateNote = useCallback(
     async (noteId: string, updates: Partial<Note>) => {
       await restNotesOperations.updateNote(noteId, updates);
+
+      // Auto-sync public note if published and content/title changed
+      if (updates.title !== undefined || updates.content !== undefined) {
+        const note = notes.find(n => n.id === noteId);
+        if (note?.isPublished && note?.publicSlug) {
+          // Sync in background without blocking the save
+          void api.updatePublicNote(note.publicSlug, {
+            title: updates.title ?? note.title,
+            content: updates.content ?? note.content,
+          }).catch(error => {
+            secureLogger.warn('Failed to sync public note', { noteId, error });
+          });
+        }
+      }
     },
-    [restNotesOperations]
+    [restNotesOperations, notes]
   );
 
   const deleteNote = async (noteId: string) => {
@@ -595,6 +615,144 @@ export function useNotes() {
     await restNotesOperations.moveNoteToFolder(noteId, folderId);
   };
 
+  // ===== Public Notes Functions =====
+
+  const publishNote = useCallback(async (
+    noteId: string,
+    authorName?: string
+  ): Promise<ApiPublicNote | null> => {
+    // Find the note to publish
+    const note = notes.find(n => n.id === noteId);
+    if (!note) {
+      setError('Note not found');
+      return null;
+    }
+
+    try {
+      // Publish the note (content is already decrypted in memory)
+      const publicNote = await api.publishNote({
+        noteId: note.id,
+        title: note.title,
+        content: note.content,
+        type: note.type,
+        authorName,
+      });
+
+      // Update local state with publish info using functional updates
+      setNotes(prev => prev.map(n => {
+        if (n.id === noteId) {
+          return {
+            ...n,
+            isPublished: true,
+            publicSlug: publicNote.slug,
+            publishedAt: new Date(publicNote.publishedAt),
+            publicUpdatedAt: new Date(publicNote.updatedAt),
+          };
+        }
+        return n;
+      }));
+
+      setSelectedNote(prev => {
+        if (prev?.id === noteId) {
+          return {
+            ...prev,
+            isPublished: true,
+            publicSlug: publicNote.slug,
+            publishedAt: new Date(publicNote.publishedAt),
+            publicUpdatedAt: new Date(publicNote.updatedAt),
+          };
+        }
+        return prev;
+      });
+
+      return publicNote;
+    } catch (error) {
+      secureLogger.error('Failed to publish note', error);
+      setError('Failed to publish note');
+      return null;
+    }
+  }, [notes, setNotes, setSelectedNote, setError]);
+
+  const unpublishNote = useCallback(async (noteId: string): Promise<boolean> => {
+    // Find the note to unpublish (for getting the publicSlug)
+    const note = notes.find(n => n.id === noteId);
+    if (!note || !note.publicSlug) {
+      setError('Note not found or not published');
+      return false;
+    }
+
+    try {
+      await api.unpublishNote(note.publicSlug);
+
+      // Update local state using functional updates to ensure fresh state
+      setNotes(prev => prev.map(n => {
+        if (n.id === noteId) {
+          return {
+            ...n,
+            isPublished: false,
+            publicSlug: null,
+            publishedAt: null,
+            publicUpdatedAt: null,
+          };
+        }
+        return n;
+      }));
+
+      // Update selectedNote if it's the one being unpublished
+      setSelectedNote(prev => {
+        if (prev?.id === noteId) {
+          return {
+            ...prev,
+            isPublished: false,
+            publicSlug: null,
+            publishedAt: null,
+            publicUpdatedAt: null,
+          };
+        }
+        return prev;
+      });
+
+      return true;
+    } catch (error) {
+      secureLogger.error('Failed to unpublish note', error);
+      setError('Failed to unpublish note');
+      return false;
+    }
+  }, [notes, setNotes, setSelectedNote, setError]);
+
+  const syncPublicNote = useCallback(async (noteId: string): Promise<boolean> => {
+    // Find the note to sync
+    const note = notes.find(n => n.id === noteId);
+    if (!note || !note.publicSlug || !note.isPublished) {
+      return false; // Not published, nothing to sync
+    }
+
+    try {
+      const publicNote = await api.updatePublicNote(note.publicSlug, {
+        title: note.title,
+        content: note.content,
+      });
+
+      // Update local state with new sync time
+      const updatedNote: Note = {
+        ...note,
+        publicUpdatedAt: new Date(publicNote.updatedAt),
+      };
+
+      setNotes(prev => prev.map(n => n.id === noteId ? updatedNote : n));
+
+      if (selectedNote?.id === noteId) {
+        setSelectedNote(updatedNote);
+      }
+
+      return true;
+    } catch (error) {
+      secureLogger.error('Failed to sync public note', error);
+      // Don't set error state for background sync failures
+      return false;
+    }
+  }, [notes, selectedNote, setNotes, setSelectedNote]);
+
   return {
     notes: filteredNotes,
     allNotes: notes, // Unfiltered notes for note linking feature
@@ -612,6 +770,7 @@ export function useNotes() {
     archivedCount,
     trashedCount,
     hiddenCount,
+    publicCount,
     createNote: notesOpsCreateNote,
     creatingNote,
     createFolder,
@@ -630,6 +789,9 @@ export function useNotes() {
     permanentlyDeleteNote,
     moveNoteToFolder,
     toggleFolderExpansion,
+    publishNote,
+    unpublishNote,
+    syncPublicNote,
     setSelectedNote,
     setSelectedFolder,
     setCurrentView,

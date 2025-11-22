@@ -1,4 +1,4 @@
-import { X, Network, Code2, ChevronDown } from 'lucide-react';
+import { X, Network, Code2, ChevronDown, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -15,6 +15,7 @@ export interface Tab {
   title: string;
   type: 'note' | 'diagram' | 'code';
   isDirty: boolean;
+  isPublished?: boolean;
 }
 
 interface TabBarProps {
@@ -25,15 +26,32 @@ interface TabBarProps {
   onCloseAll?: () => void;
 }
 
-const TabIcon = ({ type }: { type: Tab['type'] }) => {
-  switch (type) {
-    case 'code':
-      return <Code2 className="h-3.5 w-3.5 text-green-500" />;
-    case 'diagram':
-      return <Network className="h-3.5 w-3.5 text-cyan-500" />;
-    default:
-      return null;
+const TabIcon = ({ type, isPublished }: { type: Tab['type']; isPublished?: boolean }) => {
+  const typeIcon = (() => {
+    switch (type) {
+      case 'code':
+        return <Code2 className="h-3.5 w-3.5 text-green-500" />;
+      case 'diagram':
+        return <Network className="h-3.5 w-3.5 text-cyan-500" />;
+      default:
+        return null;
+    }
+  })();
+
+  if (isPublished && typeIcon) {
+    return (
+      <div className="flex items-center gap-1">
+        {typeIcon}
+        <Globe className="h-3 w-3 text-emerald-500" />
+      </div>
+    );
   }
+
+  if (isPublished) {
+    return <Globe className="h-3.5 w-3.5 text-emerald-500" />;
+  }
+
+  return typeIcon;
 };
 
 export function TabBar({ tabs, activeTabId, onTabClick, onTabClose, onCloseAll }: TabBarProps) {
@@ -109,7 +127,7 @@ export function TabBar({ tabs, activeTabId, onTabClick, onTabClose, onCloseAll }
                 `}
                 onClick={() => onTabClick(tab.id)}
               >
-                <TabIcon type={tab.type} />
+                <TabIcon type={tab.type} isPublished={tab.isPublished} />
                 <span
                   className={`text-sm truncate max-w-[150px] ${
                     isActive ? 'font-medium' : 'font-normal'
@@ -156,7 +174,7 @@ export function TabBar({ tabs, activeTabId, onTabClick, onTabClose, onCloseAll }
                     <div
                       className="flex items-center gap-2 flex-1 min-w-0 cursor-pointer"
                     >
-                      <TabIcon type={tab.type} />
+                      <TabIcon type={tab.type} isPublished={tab.isPublished} />
                       <span className="truncate flex-1">
                         {tab.title || 'Untitled'}
                       </span>

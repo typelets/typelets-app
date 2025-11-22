@@ -37,10 +37,11 @@ interface SortConfig {
 
 interface FilterConfig {
   showAttachmentsOnly: boolean;
-  showStarredOnly: boolean;
-  showHiddenOnly: boolean;
-  showDiagramsOnly: boolean;
   showCodeOnly: boolean;
+  showDiagramsOnly: boolean;
+  showHiddenOnly: boolean;
+  showPublicOnly: boolean;
+  showStarredOnly: boolean;
 }
 
 interface FilesPanelProps {
@@ -91,10 +92,11 @@ export default function FilesPanel({
 
   const [filterConfig, setFilterConfig] = useState<FilterConfig>({
     showAttachmentsOnly: false,
-    showStarredOnly: false,
-    showHiddenOnly: false,
-    showDiagramsOnly: false,
     showCodeOnly: false,
+    showDiagramsOnly: false,
+    showHiddenOnly: false,
+    showPublicOnly: false,
+    showStarredOnly: false,
   });
 
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -139,12 +141,13 @@ export default function FilesPanel({
       // A note is included if it passes ALL active filters (AND logic)
       // Exclude if any active filter condition fails
       const excludeByAttachments = config.showAttachmentsOnly && !hasAttachments;
-      const excludeByStarred = config.showStarredOnly && !note.starred;
-      const excludeByHidden = config.showHiddenOnly && !note.hidden;
-      const excludeByDiagrams = config.showDiagramsOnly && note.type !== 'diagram';
       const excludeByCode = config.showCodeOnly && note.type !== 'code';
+      const excludeByDiagrams = config.showDiagramsOnly && note.type !== 'diagram';
+      const excludeByHidden = config.showHiddenOnly && !note.hidden;
+      const excludeByPublic = config.showPublicOnly && !note.isPublished;
+      const excludeByStarred = config.showStarredOnly && !note.starred;
 
-      return !(excludeByAttachments || excludeByStarred || excludeByHidden || excludeByDiagrams || excludeByCode);
+      return !(excludeByAttachments || excludeByCode || excludeByDiagrams || excludeByHidden || excludeByPublic || excludeByStarred);
     });
   };
 
@@ -166,12 +169,12 @@ export default function FilesPanel({
 
   const getFilterLabel = () => {
     const activeFilters = [];
-    if (filterConfig.showAttachmentsOnly)
-      activeFilters.push('With Attachments');
-    if (filterConfig.showStarredOnly) activeFilters.push('Starred');
-    if (filterConfig.showHiddenOnly) activeFilters.push('Hidden');
-    if (filterConfig.showDiagramsOnly) activeFilters.push('Diagrams');
+    if (filterConfig.showAttachmentsOnly) activeFilters.push('Attachments');
     if (filterConfig.showCodeOnly) activeFilters.push('Code');
+    if (filterConfig.showDiagramsOnly) activeFilters.push('Diagrams');
+    if (filterConfig.showHiddenOnly) activeFilters.push('Hidden');
+    if (filterConfig.showPublicOnly) activeFilters.push('Public');
+    if (filterConfig.showStarredOnly) activeFilters.push('Starred');
 
     if (activeFilters.length === 0) return `Sort: ${getSortLabel()}`;
     return `Filter: ${activeFilters.join(', ')} | Sort: ${getSortLabel()}`;
@@ -179,10 +182,11 @@ export default function FilesPanel({
 
   const hasActiveFilters =
     filterConfig.showAttachmentsOnly ||
-    filterConfig.showStarredOnly ||
-    filterConfig.showHiddenOnly ||
+    filterConfig.showCodeOnly ||
     filterConfig.showDiagramsOnly ||
-    filterConfig.showCodeOnly;
+    filterConfig.showHiddenOnly ||
+    filterConfig.showPublicOnly ||
+    filterConfig.showStarredOnly;
 
   const getPanelTitle = () => {
     if (selectedFolder) {
@@ -196,6 +200,8 @@ export default function FilesPanel({
         return 'Archived Notes';
       case 'trash':
         return 'Trash';
+      case 'public':
+        return 'Public Notes';
       default:
         return 'All Notes';
     }
@@ -234,6 +240,8 @@ export default function FilesPanel({
         return 'No starred notes';
       case 'archived':
         return 'No archived notes';
+      case 'public':
+        return 'No public notes';
       default:
         return 'No notes yet';
     }
@@ -333,23 +341,12 @@ export default function FilesPanel({
                 onClick={() =>
                   setFilterConfig((prev) => ({
                     ...prev,
-                    showStarredOnly: !prev.showStarredOnly,
+                    showCodeOnly: !prev.showCodeOnly,
                   }))
                 }
-                className={`${filterConfig.showStarredOnly ? 'bg-accent' : ''} mb-1`}
+                className={`${filterConfig.showCodeOnly ? 'bg-accent' : ''} mb-1`}
               >
-                {filterConfig.showStarredOnly ? '✓' : '○'} Starred
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() =>
-                  setFilterConfig((prev) => ({
-                    ...prev,
-                    showHiddenOnly: !prev.showHiddenOnly,
-                  }))
-                }
-                className={`${filterConfig.showHiddenOnly ? 'bg-accent' : ''} mb-1`}
-              >
-                {filterConfig.showHiddenOnly ? '✓' : '○'} Hidden
+                {filterConfig.showCodeOnly ? '✓' : '○'} Code
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() =>
@@ -366,27 +363,46 @@ export default function FilesPanel({
                 onClick={() =>
                   setFilterConfig((prev) => ({
                     ...prev,
-                    showCodeOnly: !prev.showCodeOnly,
+                    showHiddenOnly: !prev.showHiddenOnly,
                   }))
                 }
-                className={`${filterConfig.showCodeOnly ? 'bg-accent' : ''} mb-1`}
+                className={`${filterConfig.showHiddenOnly ? 'bg-accent' : ''} mb-1`}
               >
-                {filterConfig.showCodeOnly ? '✓' : '○'} Code
+                {filterConfig.showHiddenOnly ? '✓' : '○'} Hidden
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() =>
+                  setFilterConfig((prev) => ({
+                    ...prev,
+                    showPublicOnly: !prev.showPublicOnly,
+                  }))
+                }
+                className={`${filterConfig.showPublicOnly ? 'bg-accent' : ''} mb-1`}
+              >
+                {filterConfig.showPublicOnly ? '✓' : '○'} Public
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() =>
+                  setFilterConfig((prev) => ({
+                    ...prev,
+                    showStarredOnly: !prev.showStarredOnly,
+                  }))
+                }
+                className={`${filterConfig.showStarredOnly ? 'bg-accent' : ''} mb-1`}
+              >
+                {filterConfig.showStarredOnly ? '✓' : '○'} Starred
               </DropdownMenuItem>
 
-              {(filterConfig.showAttachmentsOnly ||
-                filterConfig.showStarredOnly ||
-                filterConfig.showHiddenOnly ||
-                filterConfig.showDiagramsOnly ||
-                filterConfig.showCodeOnly) && (
+              {hasActiveFilters && (
                 <DropdownMenuItem
                   onClick={() =>
                     setFilterConfig({
                       showAttachmentsOnly: false,
-                      showStarredOnly: false,
-                      showHiddenOnly: false,
-                      showDiagramsOnly: false,
                       showCodeOnly: false,
+                      showDiagramsOnly: false,
+                      showHiddenOnly: false,
+                      showPublicOnly: false,
+                      showStarredOnly: false,
                     })
                   }
                   className="text-muted-foreground mb-1"
