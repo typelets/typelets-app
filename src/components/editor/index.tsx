@@ -12,6 +12,7 @@ import {
   PanelRightClose,
   PanelRightOpen,
   RefreshCw,
+  Globe,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ButtonGroup } from '@/components/ui/button-group';
@@ -39,6 +40,7 @@ import { editorStyles } from './config/editor-styles';
 import { EmptyState } from '@/components/editor/Editor/EmptyState';
 import { Toolbar } from '@/components/editor/Editor/Toolbar';
 import MoveNoteModal from '@/components/editor/modals/MoveNoteModal';
+import PublishNoteModal from '@/components/editor/modals/PublishNoteModal';
 import FileUpload from '@/components/editor/FileUpload';
 import { StatusBar } from '@/components/editor/Editor/StatusBar';
 import { useEditorState } from '@/components/editor/hooks/useEditorState';
@@ -101,6 +103,8 @@ interface NoteEditorProps {
   onUnhideNote: (noteId: string) => void;
   onRefreshNote?: (noteId: string) => void;
   onSelectNote?: (note: Note) => void; // Navigate to a linked note
+  onPublishNote?: (noteId: string, authorName?: string) => Promise<unknown>;
+  onUnpublishNote?: (noteId: string) => Promise<boolean>;
   userId?: string;
   isNotesPanelOpen?: boolean;
   onToggleNotesPanel?: () => void;
@@ -128,6 +132,8 @@ export default function Index({
   onUnhideNote,
   onRefreshNote,
   onSelectNote,
+  onPublishNote,
+  onUnpublishNote,
   userId = 'current-user',
   isNotesPanelOpen,
   onToggleNotesPanel,
@@ -140,6 +146,7 @@ export default function Index({
   onWsDisconnect,
 }: NoteEditorProps) {
   const [isMoveModalOpen, setIsMoveModalOpen] = useState(false);
+  const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
   const [showAttachments, setShowAttachments] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -1084,6 +1091,12 @@ export default function Index({
                       <Printer className="mr-2 h-4 w-4" />
                       Print
                     </DropdownMenuItem>
+                    {onPublishNote && onUnpublishNote && (
+                      <DropdownMenuItem onClick={() => setIsPublishModalOpen(true)}>
+                        <Globe className="mr-2 h-4 w-4" />
+                        {note.isPublished ? 'Manage' : 'Publish'}
+                      </DropdownMenuItem>
+                    )}
                     <DropdownMenuItem onClick={() => onArchiveNote(note.id)}>
                       <Archive className="mr-2 h-4 w-4" />
                       Archive
@@ -1202,6 +1215,16 @@ export default function Index({
             folders={folders || []}
             currentFolderId={note.folderId}
             noteTitle={note.title}
+          />
+        )}
+
+        {note && onPublishNote && onUnpublishNote && (
+          <PublishNoteModal
+            isOpen={isPublishModalOpen}
+            onClose={() => setIsPublishModalOpen(false)}
+            note={note}
+            onPublish={onPublishNote}
+            onUnpublish={onUnpublishNote}
           />
         )}
       </div>

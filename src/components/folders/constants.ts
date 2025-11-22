@@ -1,4 +1,4 @@
-import { FileText, Star, Archive, Trash2 } from 'lucide-react';
+import { FileText, Star, Archive, Trash2, Globe } from 'lucide-react';
 
 import type { ViewMode } from '@/types/note';
 
@@ -27,6 +27,11 @@ export const SPECIAL_VIEWS = [
     id: 'starred' as ViewMode,
     label: 'Starred',
     icon: Star,
+  },
+  {
+    id: 'public' as ViewMode,
+    label: 'Public',
+    icon: Globe,
   },
   {
     id: 'archived' as ViewMode,

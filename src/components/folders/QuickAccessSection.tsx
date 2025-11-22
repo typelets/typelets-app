@@ -12,6 +12,7 @@ interface QuickAccessSectionProps {
   archivedCount: number;
   trashedCount: number;
   hiddenCount: number;
+  publicCount: number;
   onViewChange: (view: ViewMode) => void;
   onFolderSelect: (folder: Folder | null) => void;
 }
@@ -24,6 +25,7 @@ export default function QuickAccessSection({
   archivedCount,
   trashedCount,
   hiddenCount,
+  publicCount,
   onViewChange,
   onFolderSelect,
 }: QuickAccessSectionProps) {
@@ -34,8 +36,9 @@ export default function QuickAccessSection({
       archived: archivedCount,
       trash: trashedCount,
       hidden: hiddenCount,
+      public: publicCount,
     }),
-    [notesCount, starredCount, archivedCount, trashedCount, hiddenCount]
+    [notesCount, starredCount, archivedCount, trashedCount, hiddenCount, publicCount]
   );
 
   const handleViewSelect = (view: ViewMode) => {

@@ -88,6 +88,19 @@ Available on iOS and Android with the same powerful features and encryption.
 - 🌐 **Cross-platform** - Responsive web app that works seamlessly on desktop, tablet, and mobile
 - 🖨️ **Print support** - Clean printing with proper formatting
 
+### 🌐 Public Notes (Sharing)
+- 🔗 **Shareable links** - Publish any note with a unique, unguessable URL
+- 👤 **Optional author attribution** - Add your name or publish anonymously
+- 🎨 **Full formatting preserved** - Rich text, code blocks, images, and diagrams render beautifully
+- 📑 **Table of contents** - Collapsible TOC for easy navigation
+- 🌙 **Theme toggle** - Readers can switch between light and dark mode
+- 📱 **Mobile-friendly** - Responsive design for all screen sizes
+- 🔄 **Auto-sync** - Changes to your note automatically update the public version
+- ❌ **Instant unpublish** - Remove public access at any time (hard delete)
+- 🛡️ **Security hardened** - DOMPurify sanitization, rate limiting, no internal IDs exposed
+
+> ⚠️ **Important:** Publishing a note bypasses end-to-end encryption. An unencrypted copy is stored on our servers and anyone with the link can view it. Use this feature only for content you intend to share publicly.
+
 ### ⚡ Executable Code Blocks
 
 ![Execute Code Demo](https://github.com/typelets/typelets-app/blob/main/assets/execute-code-demo.gif)

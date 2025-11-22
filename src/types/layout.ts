@@ -11,6 +11,7 @@ export interface FolderPanelProps {
   archivedCount: number;
   trashedCount: number;
   hiddenCount: number;
+  publicCount: number;
   expandedFolders: Set<string>;
   onUpdateFolder: (
     folderId: string,
@@ -65,6 +66,8 @@ export interface EditorProps {
   onUnhideNote: (noteId: string) => Promise<void>;
   onRefreshNote?: (noteId: string) => Promise<void>;
   onSelectNote?: (note: Note) => void; // Navigate to a linked note
+  onPublishNote?: (noteId: string, authorName?: string) => Promise<unknown>;
+  onUnpublishNote?: (noteId: string) => Promise<boolean>;
   userId?: string;
   isNotesPanelOpen?: boolean;
   onToggleNotesPanel?: () => void;

@@ -39,6 +39,11 @@ export interface ApiNote {
   updatedAt: string;
   attachmentCount?: number;
   type?: 'note' | 'diagram';
+  // Public note fields (from JOIN with public_notes table)
+  isPublished?: boolean;
+  publicSlug?: string | null;
+  publishedAt?: string | null;
+  publicUpdatedAt?: string | null;
 }
 
 export interface ApiFolder {
@@ -67,6 +72,19 @@ export interface ApiUserUsage {
     usagePercent: number;
     isOverLimit: boolean;
   };
+}
+
+export interface ApiPublicNote {
+  id: string;
+  slug: string;
+  noteId: string;
+  userId: string;
+  title: string;
+  content: string; // Plaintext HTML (not encrypted)
+  type?: 'note' | 'diagram' | 'code';
+  authorName?: string;
+  publishedAt: string;
+  updatedAt: string;
 }
 
 export interface ApiUser {
@@ -639,6 +657,73 @@ class ClerkEncryptedApiService {
         method: 'DELETE',
       }
     );
+  }
+
+  // ===== Public Notes API =====
+  // These methods handle unencrypted public versions of notes
+
+  /**
+   * Publish a note - creates a public, unencrypted copy
+   * The client must decrypt the note first and send plaintext content
+   */
+  async publishNote(data: {
+    noteId: string;
+    title: string;
+    content: string;
+    type?: 'note' | 'diagram' | 'code';
+    authorName?: string;
+  }): Promise<ApiPublicNote> {
+    return this.request<ApiPublicNote>('/public-notes', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  /**
+   * Update a published note's content
+   * Called automatically when the original note is saved
+   */
+  async updatePublicNote(
+    slug: string,
+    updates: {
+      title?: string;
+      content?: string;
+      authorName?: string;
+    }
+  ): Promise<ApiPublicNote> {
+    return this.request<ApiPublicNote>(`/public-notes/${slug}`, {
+      method: 'PUT',
+      body: JSON.stringify(updates),
+    });
+  }
+
+  /**
+   * Unpublish a note - removes the public copy
+   */
+  async unpublishNote(slug: string): Promise<{ message: string }> {
+    return this.request<{ message: string }>(`/public-notes/${slug}`, {
+      method: 'DELETE',
+    });
+  }
+
+  /**
+   * Get a public note by slug (no auth required on backend)
+   * This is used for the public viewer page
+   */
+  async getPublicNote(slug: string): Promise<ApiPublicNote> {
+    return this.request<ApiPublicNote>(`/public-notes/${slug}`);
+  }
+
+  /**
+   * Check if a note is published and get its public info
+   */
+  async getPublicNoteByNoteId(noteId: string): Promise<ApiPublicNote | null> {
+    try {
+      return await this.request<ApiPublicNote>(`/public-notes/note/${noteId}`);
+    } catch {
+      // Note is not published
+      return null;
+    }
   }
 }
 

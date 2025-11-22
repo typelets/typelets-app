@@ -51,6 +51,8 @@ export function useNotesFiltering({
           return note.deleted;
         case 'hidden':
           return note.hidden && !note.deleted;
+        case 'public':
+          return note.isPublished && !note.deleted && !note.archived;
         default:
           return !note.deleted && !note.archived;
       }
@@ -64,6 +66,7 @@ export function useNotesFiltering({
         if (!note.deleted && !note.archived) {
           acc.notesCount++;
           if (note.starred) acc.starredCount++;
+          if (note.isPublished) acc.publicCount++;
         }
         if (note.archived && !note.deleted) acc.archivedCount++;
         if (note.deleted) acc.trashedCount++;
@@ -76,6 +79,7 @@ export function useNotesFiltering({
         archivedCount: 0,
         trashedCount: 0,
         hiddenCount: 0,
+        publicCount: 0,
       }
     );
   }, [notes]);
