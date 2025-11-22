@@ -1,3 +1,16 @@
+# [1.41.0](https://github.com/typelets/typelets-app/compare/v1.40.1...v1.41.0) (2025-11-22)
+
+
+### Bug Fixes
+
+* type errors for publishedAt dates and unused match param ([49a803c](https://github.com/typelets/typelets-app/commit/49a803ca8250753bbe8894d8a48ec6d8934022c6))
+* type errors for publishedAt dates and unused match param ([2174546](https://github.com/typelets/typelets-app/commit/2174546e8ad2e9524fcedbe5db54b42f208297fa))
+
+
+### Features
+
+* add public notes sharing with security hardening ([97d0b62](https://github.com/typelets/typelets-app/commit/97d0b62d094fffa6707b7911558859de1ea0b857))
+
 ## [1.40.1](https://github.com/typelets/typelets-app/compare/v1.40.0...v1.40.1) (2025-11-22)
 
 
