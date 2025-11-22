@@ -11,6 +11,7 @@ import { TextStyle } from '@tiptap/extension-text-style';
 import { TableOfContents } from '../extensions/TableOfContents';
 import { ResizableImage } from '../extensions/ResizableImage';
 import { ExecutableCodeBlock } from '../extensions/ExecutableCodeBlock';
+import { NoteLink } from '../extensions/NoteLink';
 import { StarterKit } from '@tiptap/starter-kit';
 import bash from 'highlight.js/lib/languages/bash';
 import cpp from 'highlight.js/lib/languages/cpp';
@@ -44,7 +45,11 @@ lowlight.register('php', php);
 lowlight.register('sql', sql);
 lowlight.register('markdown', markdown);
 
-export function createEditorExtensions() {
+export interface EditorExtensionsOptions {
+  onNoteLinkClick?: (noteId: string) => void;
+}
+
+export function createEditorExtensions(options: EditorExtensionsOptions = {}) {
   return [
     StarterKit.configure({
       heading: {
@@ -56,6 +61,10 @@ export function createEditorExtensions() {
       // Disable built-in extensions we're adding separately
       link: false,
       underline: false,
+    }),
+    NoteLink.configure({
+      HTMLAttributes: {},
+      onNoteLinkClick: options.onNoteLinkClick,
     }),
     ExecutableCodeBlock.configure({
       defaultLanguage: 'javascript',

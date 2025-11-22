@@ -43,6 +43,7 @@ export default function MainLayout() {
 
   const {
     notes,
+    allNotes,
     folders,
     selectedNote,
     selectedFolder,
@@ -389,6 +390,7 @@ export default function MainLayout() {
 
   const editorProps: EditorProps = {
     note: selectedNote,
+    notes: allNotes, // All notes for note linking (not filtered by view/search)
     folders,
     onUpdateNote: updateNote,
     onDeleteNote: handleDeleteNote,
@@ -399,6 +401,7 @@ export default function MainLayout() {
     hidingNote,
     onUnhideNote: unhideNote,
     onRefreshNote: handleRefreshNote,
+    onSelectNote: setSelectedNote, // For navigating to linked notes
     userId,
     isNotesPanelOpen: filesPanelOpen,
     onToggleNotesPanel: handleToggleNotesPanel,

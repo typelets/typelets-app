@@ -53,6 +53,7 @@ export interface FilesPanelProps {
 
 export interface EditorProps {
   note: Note | null;
+  notes?: Note[]; // All notes for note linking feature
   folders?: Folder[];
   onUpdateNote: (noteId: string, updates: Partial<Note>) => Promise<void>;
   onDeleteNote: (noteId: string) => Promise<void>;
@@ -63,6 +64,7 @@ export interface EditorProps {
   hidingNote?: boolean;
   onUnhideNote: (noteId: string) => Promise<void>;
   onRefreshNote?: (noteId: string) => Promise<void>;
+  onSelectNote?: (note: Note) => void; // Navigate to a linked note
   userId?: string;
   isNotesPanelOpen?: boolean;
   onToggleNotesPanel?: () => void;
