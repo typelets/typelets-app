@@ -308,6 +308,8 @@ export default function MainLayout() {
           createdAt: new Date(apiNote.createdAt),
           updatedAt: new Date(apiNote.updatedAt),
           hiddenAt: apiNote.hiddenAt ? new Date(apiNote.hiddenAt) : null,
+          publishedAt: apiNote.publishedAt ? new Date(apiNote.publishedAt) : null,
+          publicUpdatedAt: apiNote.publicUpdatedAt ? new Date(apiNote.publicUpdatedAt) : null,
         };
 
         // Update the note in the notes list

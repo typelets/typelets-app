@@ -666,7 +666,7 @@ export default function PublicNotePage() {
     const headings: Array<{ level: number; text: string; id: string }> = [];
     let headingIndex = 0;
 
-    content = content.replace(headingRegex, (match, tag, attrs, text) => {
+    content = content.replace(headingRegex, (_match, tag, attrs, text) => {
       const level = parseInt(tag.charAt(1));
       const id = `heading-${headingIndex}`;
       const plainText = text.replace(/<[^>]*>/g, ''); // Strip HTML tags from heading text
