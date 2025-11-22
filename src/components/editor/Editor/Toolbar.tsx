@@ -18,6 +18,7 @@ import {
   CheckSquare,
   ChevronDown,
   Link,
+  Link2,
   Minus,
   Highlighter,
   FileText,
@@ -171,14 +172,29 @@ function ToolbarComponent({ editor }: ToolbarProps) {
       >
         <Code className="h-4 w-4" />
       </Button>
-      <Button
-        variant={editor.isActive('link') ? 'default' : 'ghost'}
-        size="sm"
-        onClick={setLink}
-        title="Add Link (Ctrl+K)"
-      >
-        <Link className="h-4 w-4" />
-      </Button>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant={editor.isActive('link') || editor.isActive('noteLink') ? 'default' : 'ghost'}
+            size="sm"
+            title="Links"
+            className="gap-1"
+          >
+            <Link className="h-4 w-4" />
+            <ChevronDown className="h-3 w-3" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start">
+          <DropdownMenuItem onClick={setLink}>
+            <Link className="mr-2 h-4 w-4" />
+            External Link
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => editor.chain().focus().insertContent('[[').run()}>
+            <Link2 className="mr-2 h-4 w-4" />
+            Link to Note
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
       <Button
         variant={editor.isActive('highlight') ? 'default' : 'ghost'}
         size="sm"

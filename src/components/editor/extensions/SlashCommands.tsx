@@ -21,6 +21,7 @@ import {
   Quote,
   Minus,
   Link,
+  Link2,
   Highlighter,
   FileText,
   Image,
@@ -184,6 +185,14 @@ const commands: CommandItem[] = [
       if (url) {
         editor.chain().focus().deleteRange(range).setLink({ href: url }).run();
       }
+    },
+  },
+  {
+    title: 'Link to Note',
+    icon: <Link2 className="h-4 w-4" />,
+    command: ({ editor, range }) => {
+      // Delete the slash command and insert [[ to trigger note link suggestion
+      editor.chain().focus().deleteRange(range).insertContent('[[').run();
     },
   },
   {

@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import {
   Star,
   Archive,
@@ -29,6 +29,12 @@ import tippy from 'tippy.js';
 import { createEditorExtensions } from './config/editor-config';
 import { SlashCommands } from './extensions/SlashCommandsExtension';
 import { SlashCommandsList } from './extensions/SlashCommands';
+import { NoteLinkSuggestion } from './extensions/NoteLinkSuggestion';
+import { NoteLinkSuggestionList } from './extensions/NoteLinkSuggestionList';
+import {
+  notesToSuggestionItems,
+  type NoteLinkItem,
+} from './extensions/noteLinkUtils';
 import { editorStyles } from './config/editor-styles';
 import { EmptyState } from '@/components/editor/Editor/EmptyState';
 import { Toolbar } from '@/components/editor/Editor/Toolbar';
@@ -37,6 +43,8 @@ import FileUpload from '@/components/editor/FileUpload';
 import { StatusBar } from '@/components/editor/Editor/StatusBar';
 import { useEditorState } from '@/components/editor/hooks/useEditorState';
 import { useEditorEffects } from '@/components/editor/hooks/useEditorEffects';
+import { useBacklinks, useOutgoingLinks } from '@/components/editor/hooks/useBacklinks';
+import { BacklinksPanel } from '@/components/editor/Editor/BacklinksPanel';
 import { fileService } from '@/services/fileService';
 import DiagramEditor from '@/components/diagrams/DiagramEditor';
 import CodeEditor from '@/components/code/CodeEditor';
@@ -66,8 +74,22 @@ interface SlashCommandsHandle {
   onKeyDown: (props: SuggestionKeyDownProps) => boolean;
 }
 
+interface NoteLinkSuggestionProps {
+  editor: Editor;
+  range: { from: number; to: number };
+  query: string;
+  text: string;
+  command: (item: NoteLinkItem) => void;
+  clientRect?: (() => DOMRect | null) | null;
+}
+
+interface NoteLinkSuggestionHandle {
+  onKeyDown: (props: SuggestionKeyDownProps) => boolean;
+}
+
 interface NoteEditorProps {
   note: Note | null;
+  notes?: Note[]; // All notes for note linking feature
   folders?: FolderType[];
   onUpdateNote: (noteId: string, updates: Partial<Note>) => void;
   onDeleteNote: (noteId: string) => void;
@@ -78,6 +100,7 @@ interface NoteEditorProps {
   hidingNote?: boolean;
   onUnhideNote: (noteId: string) => void;
   onRefreshNote?: (noteId: string) => void;
+  onSelectNote?: (note: Note) => void; // Navigate to a linked note
   userId?: string;
   isNotesPanelOpen?: boolean;
   onToggleNotesPanel?: () => void;
@@ -93,6 +116,7 @@ interface NoteEditorProps {
 
 export default function Index({
   note,
+  notes = [],
   folders,
   onUpdateNote,
   onDeleteNote,
@@ -103,6 +127,7 @@ export default function Index({
   hidingNote = false,
   onUnhideNote,
   onRefreshNote,
+  onSelectNote,
   userId = 'current-user',
   isNotesPanelOpen,
   onToggleNotesPanel,
@@ -144,11 +169,32 @@ export default function Index({
     resetZoom,
   } = useEditorState();
 
+  // Handle note link click - navigate to the linked note
+  const handleNoteLinkClick = useCallback(
+    (noteId: string) => {
+      const linkedNote = notes.find((n) => n.id === noteId);
+      if (linkedNote && onSelectNote) {
+        onSelectNote(linkedNote);
+      }
+    },
+    [notes, onSelectNote]
+  );
+
+  // Memoize note suggestion items
+  const noteLinkItems = useMemo(
+    () => notesToSuggestionItems(notes, note?.id),
+    [notes, note?.id]
+  );
+
+  // Backlinks and outgoing links
+  const backlinks = useBacklinks(note?.id, notes);
+  const outgoingLinks = useOutgoingLinks(note, notes);
+
   const editor = useEditor(
     {
       editable: !note?.hidden,
       extensions: [
-        ...createEditorExtensions(),
+        ...createEditorExtensions({ onNoteLinkClick: handleNoteLinkClick }),
         SlashCommands.configure({
           suggestion: {
             items: () => {
@@ -202,6 +248,104 @@ export default function Index({
                   }
 
                   return component?.onKeyDown?.(props);
+                },
+
+                onExit: () => {
+                  if (popup && !popup.state.isDestroyed) {
+                    popup.destroy();
+                  }
+                  popup = null;
+
+                  if (root) {
+                    setTimeout(() => {
+                      root?.unmount();
+                      root = null;
+                    }, 0);
+                  }
+                },
+              };
+            },
+          },
+        }),
+        NoteLinkSuggestion.configure({
+          suggestion: {
+            items: ({ query }: { query: string }) => {
+              // Filter notes based on query
+              if (!query) {
+                return noteLinkItems.slice(0, 10);
+              }
+              const lowerQuery = query.toLowerCase();
+              return noteLinkItems
+                .filter((item) =>
+                  item.noteTitle.toLowerCase().includes(lowerQuery)
+                )
+                .slice(0, 10);
+            },
+            render: () => {
+              let component: NoteLinkSuggestionHandle | null = null;
+              let popup: ReturnType<typeof tippy>[0] | null = null;
+              let root: Root | null = null;
+              let currentQuery = '';
+
+              return {
+                onStart: (props: NoteLinkSuggestionProps) => {
+                  if (!props.clientRect) {
+                    return;
+                  }
+
+                  currentQuery = props.query;
+                  const container = document.createElement('div');
+
+                  popup = tippy('body', {
+                    getReferenceClientRect: props.clientRect as () => DOMRect,
+                    appendTo: () => document.body,
+                    content: container,
+                    showOnCreate: true,
+                    interactive: true,
+                    trigger: 'manual',
+                    placement: 'bottom-start',
+                  })[0];
+
+                  root = ReactDOM.createRoot(container);
+
+                  root.render(
+                    <NoteLinkSuggestionList
+                      ref={(ref: NoteLinkSuggestionHandle | null) => {
+                        component = ref;
+                      }}
+                      items={noteLinkItems}
+                      query={currentQuery}
+                      command={props.command}
+                    />
+                  );
+                },
+
+                onUpdate: (props: NoteLinkSuggestionProps) => {
+                  currentQuery = props.query;
+                  popup?.setProps({
+                    getReferenceClientRect: props.clientRect as () => DOMRect,
+                  });
+
+                  // Re-render with updated query
+                  root?.render(
+                    <NoteLinkSuggestionList
+                      ref={(ref: NoteLinkSuggestionHandle | null) => {
+                        component = ref;
+                      }}
+                      items={noteLinkItems}
+                      query={currentQuery}
+                      command={props.command}
+                    />
+                  );
+                },
+
+                onKeyDown: (props: SuggestionKeyDownProps) => {
+                  if (props.event.key === 'Escape') {
+                    popup?.hide();
+                    return true;
+                  }
+
+                  return component?.onKeyDown?.(props) ?? false;
                 },
 
                 onExit: () => {
@@ -1022,6 +1166,13 @@ export default function Index({
             className="bg-background text-foreground h-full"
           />
         </div>
+
+        {/* Backlinks Panel */}
+        <BacklinksPanel
+          backlinks={backlinks}
+          outgoingLinks={outgoingLinks}
+          onNavigateToNote={handleNoteLinkClick}
+        />
 
         <StatusBar
           wordCount={wordCount}

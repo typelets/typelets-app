@@ -597,6 +597,7 @@ export function useNotes() {
 
   return {
     notes: filteredNotes,
+    allNotes: notes, // Unfiltered notes for note linking feature
     folders,
     selectedNote,
     selectedFolder,
