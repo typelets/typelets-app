@@ -401,7 +401,7 @@ export default function MainLayout() {
     hidingNote,
     onUnhideNote: unhideNote,
     onRefreshNote: handleRefreshNote,
-    onSelectNote: setSelectedNote, // For navigating to linked notes
+    onSelectNote: handleSelectNote, // For navigating to linked notes (opens in new tab)
     userId,
     isNotesPanelOpen: filesPanelOpen,
     onToggleNotesPanel: handleToggleNotesPanel,

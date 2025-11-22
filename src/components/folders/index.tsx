@@ -219,7 +219,7 @@ export default function FolderPanel({
           </div>
           <div className="text-muted-foreground flex items-center gap-2 text-sm">
             <span className="text-xs opacity-80">
-              Typelets v{APP_VERSION}.beta
+              Typelets v{APP_VERSION}
             </span>
           </div>
         </div>
