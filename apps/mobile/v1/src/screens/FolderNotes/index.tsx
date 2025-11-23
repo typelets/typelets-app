@@ -332,79 +332,76 @@ export default function FolderNotesScreen({ folderId, folderName, viewType }: Fo
             />
 
             <View style={styles.header}>
-              <GlassView glassEffectStyle="regular" style={[styles.glassButton, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]}>
-                <TouchableOpacity
-                  style={styles.iconButton}
-                  onPress={() => router.back()}
-                >
-                  <Ionicons name="chevron-back" size={20} color={theme.colors.foreground} style={{ marginLeft: -2 }} />
-                </TouchableOpacity>
-              </GlassView>
+              <TouchableOpacity onPress={() => router.back()}>
+                <GlassView glassEffectStyle="regular" style={[styles.glassButton, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]} pointerEvents="none">
+                  <View style={styles.iconButton}>
+                    <Ionicons name="chevron-back" size={20} color={theme.colors.foreground} style={{ marginLeft: -2 }} />
+                  </View>
+                </GlassView>
+              </TouchableOpacity>
 
-              <GlassView glassEffectStyle="regular" style={[styles.glassButton, { flex: 1, marginHorizontal: 12, backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]}>
+              <GlassView glassEffectStyle="regular" style={[styles.glassButton, { flex: 1, marginHorizontal: 12, backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]} pointerEvents="none">
                 <View style={styles.titleContainer}>
                   <Text style={[styles.titleText, { color: theme.colors.foreground }]} numberOfLines={1} ellipsizeMode="head">{title}</Text>
                 </View>
               </GlassView>
 
               <View style={styles.headerActions}>
-                <GlassView glassEffectStyle="regular" style={[styles.glassButton, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]}>
-                  <TouchableOpacity
-                    style={styles.iconButton}
-                    onPress={() => breadcrumbSheetRef.current?.present()}
-                  >
-                    <Ionicons
-                      name="reorder-three-outline"
-                      size={20}
-                      color={theme.colors.foreground}
-                    />
-                  </TouchableOpacity>
-                </GlassView>
+                <TouchableOpacity onPress={() => breadcrumbSheetRef.current?.present()}>
+                  <GlassView glassEffectStyle="regular" style={[styles.glassButton, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]} pointerEvents="none">
+                    <View style={styles.iconButton}>
+                      <Ionicons
+                        name="reorder-three-outline"
+                        size={20}
+                        color={theme.colors.foreground}
+                      />
+                    </View>
+                  </GlassView>
+                </TouchableOpacity>
 
-                <GlassView glassEffectStyle="regular" style={[styles.glassButton, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]}>
-                  <TouchableOpacity
-                    style={styles.iconButton}
-                    onPress={() => {
-                      if (isSearchVisible) {
-                        setIsSearchVisible(false);
-                        setSearchQuery('');
-                      } else {
-                        setIsSearchVisible(true);
-                      }
-                    }}
-                  >
-                    <Ionicons
-                      name={isSearchVisible ? "close" : "search"}
-                      size={20}
-                      color={theme.colors.foreground}
-                    />
-                  </TouchableOpacity>
-                </GlassView>
+                <TouchableOpacity
+                  onPress={() => {
+                    if (isSearchVisible) {
+                      setIsSearchVisible(false);
+                      setSearchQuery('');
+                    } else {
+                      setIsSearchVisible(true);
+                    }
+                  }}
+                >
+                  <GlassView glassEffectStyle="regular" style={[styles.glassButton, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]} pointerEvents="none">
+                    <View style={styles.iconButton}>
+                      <Ionicons
+                        name={isSearchVisible ? "close" : "search"}
+                        size={20}
+                        color={theme.colors.foreground}
+                      />
+                    </View>
+                  </GlassView>
+                </TouchableOpacity>
 
                 {/* Show settings button only for regular folders (not Quick Action views) */}
                 {!viewType && folderId && (
-                  <GlassView glassEffectStyle="regular" style={[styles.glassButton, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]}>
-                    <TouchableOpacity
-                      style={styles.iconButton}
-                      onPress={openFolderSettings}
-                    >
-                      <Ionicons name="settings-outline" size={20} color={theme.colors.foreground} />
-                    </TouchableOpacity>
-                  </GlassView>
+                  <TouchableOpacity onPress={openFolderSettings}>
+                    <GlassView glassEffectStyle="regular" style={[styles.glassButton, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]} pointerEvents="none">
+                      <View style={styles.iconButton}>
+                        <Ionicons name="settings-outline" size={20} color={theme.colors.foreground} />
+                      </View>
+                    </GlassView>
+                  </TouchableOpacity>
                 )}
 
                 {/* Avatar - navigates to settings */}
-                <GlassView glassEffectStyle="regular" style={[styles.glassButton, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]}>
-                  <TouchableOpacity
-                    style={styles.iconButton}
-                    onPress={() => router.push('/settings')}
-                    hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-                  >
-                    <View pointerEvents="none">
+                <TouchableOpacity
+                  onPress={() => router.push('/settings')}
+                  hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                >
+                  <GlassView glassEffectStyle="regular" style={[styles.glassButton, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]} pointerEvents="none">
+                    <View style={styles.iconButton}>
                       <UserRound size={20} color={theme.colors.foreground} />
                     </View>
-                  </TouchableOpacity>
-                </GlassView>
+                  </GlassView>
+                </TouchableOpacity>
               </View>
             </View>
 

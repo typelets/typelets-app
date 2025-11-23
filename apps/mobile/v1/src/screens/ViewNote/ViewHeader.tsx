@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { GlassView } from 'expo-glass-effect';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Globe } from 'lucide-react-native';
 import React from 'react';
 import { Animated, StyleSheet, Text,TouchableOpacity, View } from 'react-native';
 
@@ -9,6 +10,7 @@ import { GLASS_BUTTON } from '@/src/constants/ui';
 interface ViewHeaderProps {
   isStarred: boolean;
   isHidden: boolean;
+  isPublished?: boolean;
   title: string;
   scrollY: Animated.Value;
   attachmentsCount: number;
@@ -21,6 +23,7 @@ interface ViewHeaderProps {
   onToggleHidden: () => void;
   onToggleAttachments: () => void;
   onEdit: () => void;
+  onPublish: () => void;
   theme: {
     colors: {
       primary: string;
@@ -38,6 +41,7 @@ interface ViewHeaderProps {
 export function ViewHeader({
   isStarred,
   isHidden,
+  isPublished = false,
   title,
   scrollY,
   attachmentsCount,
@@ -50,6 +54,7 @@ export function ViewHeader({
   onToggleHidden,
   onToggleAttachments,
   onEdit,
+  onPublish,
   theme,
 }: ViewHeaderProps) {
   const titleOpacity = scrollY.interpolate({
@@ -79,14 +84,13 @@ export function ViewHeader({
           style={styles.gradient}
         />
         <View style={styles.header}>
-          <GlassView glassEffectStyle="regular" style={[styles.glassButton, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]}>
-            <TouchableOpacity
-              style={styles.headerButton}
-              onPress={onBack}
-            >
-              <Ionicons name="chevron-back" size={20} color={theme.colors.foreground} style={{ marginLeft: -2 }} />
-            </TouchableOpacity>
-          </GlassView>
+          <TouchableOpacity onPress={onBack}>
+            <GlassView glassEffectStyle="regular" style={[styles.glassButton, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]} pointerEvents="none">
+              <View style={styles.headerButton}>
+                <Ionicons name="chevron-back" size={20} color={theme.colors.foreground} style={{ marginLeft: -2 }} />
+              </View>
+            </GlassView>
+          </TouchableOpacity>
 
           <View style={styles.glassTitleButton}>
             <GlassView glassEffectStyle="regular" style={{ flex: 1, borderRadius: 19, overflow: 'hidden' }}>
@@ -104,66 +108,82 @@ export function ViewHeader({
 
           <View style={styles.headerActions}>
             {attachmentsCount > 0 && (
-              <GlassView glassEffectStyle="regular" style={[styles.glassButton, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]}>
-                <TouchableOpacity
-                  style={[styles.iconButton, showAttachments && styles.iconButtonActive]}
-                  onPress={onToggleAttachments}
-                >
-                  <View style={styles.attachmentButtonContent}>
-                    <View style={{ transform: [{ rotate: '45deg' }] }}>
-                      <Ionicons
-                        name="attach-outline"
-                        size={20}
-                        color={showAttachments ? theme.colors.primary : theme.colors.foreground}
-                      />
-                    </View>
-                    {attachmentsCount > 0 && (
-                      <View style={[styles.attachmentBadge, { backgroundColor: showAttachments ? theme.colors.primary : theme.colors.mutedForeground }]}>
-                        <Text style={[styles.attachmentBadgeText, { color: '#ffffff' }]}>
-                          {attachmentsCount > 9 ? '9+' : attachmentsCount}
-                        </Text>
+              <TouchableOpacity onPress={onToggleAttachments}>
+                <GlassView glassEffectStyle="regular" style={[styles.glassButton, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]} pointerEvents="none">
+                  <View style={[styles.iconButton, showAttachments && styles.iconButtonActive]}>
+                    <View style={styles.attachmentButtonContent}>
+                      <View style={{ transform: [{ rotate: '45deg' }] }}>
+                        <Ionicons
+                          name="attach-outline"
+                          size={20}
+                          color={showAttachments ? theme.colors.primary : theme.colors.foreground}
+                        />
                       </View>
-                    )}
+                      {attachmentsCount > 0 && (
+                        <View style={[styles.attachmentBadge, { backgroundColor: showAttachments ? theme.colors.primary : theme.colors.mutedForeground }]}>
+                          <Text style={[styles.attachmentBadgeText, { color: '#ffffff' }]}>
+                            {attachmentsCount > 9 ? '9+' : attachmentsCount}
+                          </Text>
+                        </View>
+                      )}
+                    </View>
                   </View>
-                </TouchableOpacity>
-              </GlassView>
+                </GlassView>
+              </TouchableOpacity>
             )}
 
-            <GlassView glassEffectStyle="regular" style={[styles.glassButton, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]}>
-              <TouchableOpacity
-                style={styles.iconButton}
-                onPress={onToggleStar}
-              >
-                <Ionicons
-                  name={isStarred ? "star" : "star-outline"}
-                  size={20}
-                  color={isStarred ? "#f59e0b" : theme.colors.foreground}
-                />
-              </TouchableOpacity>
-            </GlassView>
+            <TouchableOpacity onPress={onToggleStar}>
+              <GlassView glassEffectStyle="regular" style={[styles.glassButton, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]} pointerEvents="none">
+                <View style={styles.iconButton}>
+                  <Ionicons
+                    name={isStarred ? "star" : "star-outline"}
+                    size={20}
+                    color={isStarred ? "#f59e0b" : theme.colors.foreground}
+                  />
+                </View>
+              </GlassView>
+            </TouchableOpacity>
 
-            <GlassView glassEffectStyle="regular" style={[styles.glassButton, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]}>
-              <TouchableOpacity
-                style={styles.iconButton}
-                onPress={onToggleHidden}
-              >
-                <Ionicons
-                  name={isHidden ? "eye-off-outline" : "eye-outline"}
-                  size={20}
-                  color={theme.colors.foreground}
-                />
-              </TouchableOpacity>
-            </GlassView>
+            <TouchableOpacity onPress={onToggleHidden}>
+              <GlassView glassEffectStyle="regular" style={[styles.glassButton, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]} pointerEvents="none">
+                <View style={styles.iconButton}>
+                  <Ionicons
+                    name={isHidden ? "eye-off-outline" : "eye-outline"}
+                    size={20}
+                    color={theme.colors.foreground}
+                  />
+                </View>
+              </GlassView>
+            </TouchableOpacity>
 
-            <GlassView glassEffectStyle="regular" style={[styles.glassButton, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]}>
-              <TouchableOpacity
-                style={[styles.iconButton, { opacity: (isOffline && !isTempNote) ? 0.4 : 1 }]}
-                onPress={onEdit}
-                disabled={isOffline && !isTempNote}
-              >
-                <Ionicons name="create-outline" size={20} color={theme.colors.foreground} />
-              </TouchableOpacity>
-            </GlassView>
+            <TouchableOpacity
+              onPress={onPublish}
+              disabled={isOffline && !isTempNote}
+              style={{ opacity: (isOffline && !isTempNote) ? 0.4 : 1 }}
+              activeOpacity={0.7}
+              delayPressIn={0}
+            >
+              <GlassView glassEffectStyle="regular" style={[styles.glassButton, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]} pointerEvents="none">
+                <View style={[styles.iconButton, isPublished && styles.iconButtonActive]}>
+                  <Globe
+                    size={20}
+                    color={isPublished ? "#3b82f6" : theme.colors.foreground}
+                  />
+                </View>
+              </GlassView>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={onEdit}
+              disabled={isOffline && !isTempNote}
+              style={{ opacity: (isOffline && !isTempNote) ? 0.4 : 1 }}
+            >
+              <GlassView glassEffectStyle="regular" style={[styles.glassButton, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]} pointerEvents="none">
+                <View style={styles.iconButton}>
+                  <Ionicons name="create-outline" size={20} color={theme.colors.foreground} />
+                </View>
+              </GlassView>
+            </TouchableOpacity>
           </View>
         </View>
       </View>

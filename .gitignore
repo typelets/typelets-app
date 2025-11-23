@@ -261,7 +261,11 @@ drizzle/
 
 # Claude Code
 .claude
+
+# Environment files
 /.env
+.env
+apps/mobile/v1/.env
 
 # Windows reserved device names
 nul

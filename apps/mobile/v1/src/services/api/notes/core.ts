@@ -609,6 +609,10 @@ export function createNotesApi(getToken: AuthTokenGetter, getUserId: () => strin
             encryptedContent: row.encrypted_content || undefined,
             iv: row.iv || undefined,
             salt: row.salt || undefined,
+            isPublished: Boolean(row.is_published),
+            publicSlug: row.public_slug || null,
+            publishedAt: row.published_at || null,
+            publicUpdatedAt: row.public_updated_at || null,
           };
 
           // Decrypt if needed (note already has decrypted content from database)

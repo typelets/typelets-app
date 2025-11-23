@@ -48,6 +48,25 @@ export interface Note {
   encryptedContent?: string;
   iv?: string;
   salt?: string;
+  // Public notes fields
+  isPublished?: boolean;
+  publicSlug?: string | null;
+  publishedAt?: string | null;
+  publicUpdatedAt?: string | null;
+}
+
+// Public note API response
+export interface ApiPublicNote {
+  id: string;
+  slug: string;
+  noteId: string;
+  userId: string;
+  title: string;
+  content: string;
+  type?: 'note' | 'diagram' | 'code';
+  authorName?: string;
+  publishedAt: string;
+  updatedAt: string;
 }
 
 export interface PaginatedResponse<T> {

@@ -137,21 +137,14 @@ class FileService {
     userId: string
   ): Promise<string> {
     try {
-      console.log('[Decrypt] Deriving key...');
-
       // Derive the base64 key (mobile-compatible)
       const keyBase64 = await this.deriveKeyForFiles(userId, saltBase64);
-
-      console.log('[Decrypt] Decrypting with AES-GCM...');
 
       // Decrypt the file content using mobile encryption helpers
       const decryptedBase64 = await decryptWithAESGCM(encryptedData, keyBase64, ivBase64);
 
-      console.log('[Decrypt] Decryption successful. Result length:', decryptedBase64.length);
-
       return decryptedBase64;
     } catch (error) {
-      console.error('[Decrypt] Error:', error);
       throw new Error(`File decryption failed: ${error}`);
     }
   }

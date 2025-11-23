@@ -165,10 +165,6 @@ function AppContent() {
 }
 
 export default Sentry.wrap(function RootLayout() {
-  if (__DEV__) {
-    console.log('=== MOBILE V1 APP WITH CLERK ===');
-    console.log('Clerk key loaded:', clerkPublishableKey ? 'YES' : 'NO');
-  }
 
   // Lock orientation based on device type (phones: portrait only, tablets: all)
   useOrientationLock();

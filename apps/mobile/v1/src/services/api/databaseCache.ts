@@ -219,6 +219,10 @@ export async function getCachedNotes(filters?: {
         iv: row.iv || undefined,
         salt: row.salt || undefined,
         attachmentCount: row.attachment_count || 0,
+        isPublished: Boolean(row.is_published),
+        publicSlug: row.public_slug || null,
+        publishedAt: row.published_at || null,
+        publicUpdatedAt: row.public_updated_at || null,
       };
     });
   } catch (error) {
@@ -284,8 +288,9 @@ export async function storeCachedNotes(
             `INSERT OR REPLACE INTO notes (
               id, title, content, folder_id, user_id, starred, archived, deleted, hidden,
               created_at, updated_at, encrypted_title, encrypted_content, iv, salt,
-              is_synced, is_dirty, synced_at, attachment_count
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+              is_synced, is_dirty, synced_at, attachment_count,
+              is_published, public_slug, published_at, public_updated_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
               note.id,
               title,
@@ -306,6 +311,10 @@ export async function storeCachedNotes(
               0, // is_dirty
               now, // synced_at
               note.attachmentCount || 0, // attachment_count
+              note.isPublished ? 1 : 0, // is_published
+              note.publicSlug || null, // public_slug
+              note.publishedAt || null, // published_at
+              note.publicUpdatedAt || null, // public_updated_at
             ]
           );
         } catch (noteError) {

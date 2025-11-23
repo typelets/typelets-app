@@ -338,17 +338,16 @@ export default function HomeScreen() {
 
             {/* Quick Actions */}
             <View style={styles.quickActionsSection}>
-              <GlassView glassEffectStyle="regular" style={[styles.glassActionButton, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]}>
-                <TouchableOpacity
-                  style={styles.newNoteAction}
-                  onPress={() => router.push('/edit-note')}
-                >
-                  <View style={styles.actionIcon}>
-                    <Ionicons name="add" size={16} color={theme.colors.primary} />
+              <TouchableOpacity onPress={() => router.push('/edit-note')}>
+                <GlassView glassEffectStyle="regular" style={[styles.glassActionButton, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]} pointerEvents="none">
+                  <View style={styles.newNoteAction}>
+                    <View style={styles.actionIcon}>
+                      <Ionicons name="add" size={16} color={theme.colors.primary} />
+                    </View>
+                    <Text style={[styles.actionText, { color: theme.colors.foreground }]}>Start writing</Text>
                   </View>
-                  <Text style={[styles.actionText, { color: theme.colors.foreground }]}>Start writing</Text>
-                </TouchableOpacity>
-              </GlassView>
+                </GlassView>
+              </TouchableOpacity>
             </View>
 
             {/* Special Views Section */}
@@ -358,31 +357,33 @@ export default function HomeScreen() {
               </Text>
               <View style={styles.specialViewsList}>
                 {SPECIAL_VIEWS.map((view) => (
-                  <GlassView key={view.id} glassEffectStyle="regular" style={[styles.glassSpecialViewItem, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]}>
-                    <TouchableOpacity
-                      style={styles.specialViewItem}
-                      onPress={() => {
-                        router.push({
-                          pathname: '/folder-notes',
-                          params: { viewType: view.id }
-                        });
-                      }}
-                    >
-                      <View style={styles.specialViewContent}>
-                        <View style={styles.specialViewIcon}>
-                          <Ionicons name={view.icon} size={16} color={theme.colors.foreground} />
+                  <TouchableOpacity
+                    key={view.id}
+                    onPress={() => {
+                      router.push({
+                        pathname: '/folder-notes',
+                        params: { viewType: view.id }
+                      });
+                    }}
+                  >
+                    <GlassView glassEffectStyle="regular" style={[styles.glassSpecialViewItem, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]} pointerEvents="none">
+                      <View style={styles.specialViewItem}>
+                        <View style={styles.specialViewContent}>
+                          <View style={styles.specialViewIcon}>
+                            <Ionicons name={view.icon} size={16} color={theme.colors.foreground} />
+                          </View>
+                          <Text style={[styles.specialViewLabel, { color: theme.colors.foreground }]}>
+                            {view.label}
+                          </Text>
                         </View>
-                        <Text style={[styles.specialViewLabel, { color: theme.colors.foreground }]}>
-                          {view.label}
-                        </Text>
+                        <View style={[styles.countBadge, { backgroundColor: theme.colors.muted }]}>
+                          <Text style={[styles.countText, { color: theme.colors.mutedForeground }]}>
+                            {counts[view.id as keyof typeof counts] || 0}
+                          </Text>
+                        </View>
                       </View>
-                      <View style={[styles.countBadge, { backgroundColor: theme.colors.muted }]}>
-                        <Text style={[styles.countText, { color: theme.colors.mutedForeground }]}>
-                          {counts[view.id as keyof typeof counts] || 0}
-                        </Text>
-                      </View>
-                    </TouchableOpacity>
-                  </GlassView>
+                    </GlassView>
+                  </TouchableOpacity>
                 ))}
               </View>
             </View>
@@ -394,98 +395,100 @@ export default function HomeScreen() {
                   FOLDERS
                 </Text>
                 <View style={styles.viewModeToggle}>
-                  <GlassView glassEffectStyle="regular" style={[styles.glassViewModeButton, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]}>
-                    <TouchableOpacity
-                      style={[
+                  <TouchableOpacity
+                    onPress={async () => {
+                      setViewMode('list');
+                      try {
+                        await AsyncStorage.setItem('viewMode', 'list');
+                      } catch (error) {
+                        if (__DEV__) console.error('Failed to save view mode:', error);
+                      }
+                    }}
+                  >
+                    <GlassView glassEffectStyle="regular" style={[styles.glassViewModeButton, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]} pointerEvents="none">
+                      <View style={[
                         styles.viewModeButton,
                         viewMode === 'list' && styles.viewModeButtonActive
-                      ]}
-                      onPress={async () => {
-                        setViewMode('list');
-                        try {
-                          await AsyncStorage.setItem('viewMode', 'list');
-                        } catch (error) {
-                          if (__DEV__) console.error('Failed to save view mode:', error);
-                        }
-                      }}
-                    >
-                      <Ionicons
-                        name="list"
-                        size={16}
-                        color={viewMode === 'list' ? theme.colors.primary : theme.colors.foreground}
-                      />
-                    </TouchableOpacity>
-                  </GlassView>
-                  <GlassView glassEffectStyle="regular" style={[styles.glassViewModeButton, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]}>
-                    <TouchableOpacity
-                      style={[
+                      ]}>
+                        <Ionicons
+                          name="list"
+                          size={16}
+                          color={viewMode === 'list' ? theme.colors.primary : theme.colors.foreground}
+                        />
+                      </View>
+                    </GlassView>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={async () => {
+                      setViewMode('grid');
+                      try {
+                        await AsyncStorage.setItem('viewMode', 'grid');
+                      } catch (error) {
+                        if (__DEV__) console.error('Failed to save view mode:', error);
+                      }
+                    }}
+                  >
+                    <GlassView glassEffectStyle="regular" style={[styles.glassViewModeButton, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]} pointerEvents="none">
+                      <View style={[
                         styles.viewModeButton,
                         viewMode === 'grid' && styles.viewModeButtonActive
-                      ]}
-                      onPress={async () => {
-                        setViewMode('grid');
-                        try {
-                          await AsyncStorage.setItem('viewMode', 'grid');
-                        } catch (error) {
-                          if (__DEV__) console.error('Failed to save view mode:', error);
-                        }
-                      }}
-                    >
-                      <Ionicons
-                        name="grid"
-                        size={16}
-                        color={viewMode === 'grid' ? theme.colors.primary : theme.colors.foreground}
-                      />
-                    </TouchableOpacity>
-                  </GlassView>
+                      ]}>
+                        <Ionicons
+                          name="grid"
+                          size={16}
+                          color={viewMode === 'grid' ? theme.colors.primary : theme.colors.foreground}
+                        />
+                      </View>
+                    </GlassView>
+                  </TouchableOpacity>
                 </View>
               </View>
               <View style={viewMode === 'grid' ? styles.foldersGrid : styles.foldersList}>
                 {/* Create Folder Button */}
                 {viewMode === 'grid' ? (
-                  <GlassView
-                    glassEffectStyle="regular"
-                    style={[
-                      styles.glassCreateFolderGrid,
-                      {
-                        backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)',
-                        borderWidth: 1,
-                        borderColor: theme.colors.border
-                      }
-                    ]}
-                  >
-                    <TouchableOpacity
-                      style={styles.createFolderButtonGrid}
-                      onPress={() => createFolderSheetRef.current?.present()}
+                  <TouchableOpacity onPress={() => createFolderSheetRef.current?.present()}>
+                    <GlassView
+                      glassEffectStyle="regular"
+                      style={[
+                        styles.glassCreateFolderGrid,
+                        {
+                          backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)',
+                          borderWidth: 1,
+                          borderColor: theme.colors.border
+                        }
+                      ]}
+                      pointerEvents="none"
                     >
-                      <View style={styles.folderContentGrid}>
-                        <Ionicons name="add" size={24} color={theme.colors.primary} style={{ marginBottom: 8 }} />
-                        <Text style={[styles.folderName, { color: theme.colors.foreground }]}>
-                          Create Folder
-                        </Text>
+                      <View style={styles.createFolderButtonGrid}>
+                        <View style={styles.folderContentGrid}>
+                          <Ionicons name="add" size={24} color={theme.colors.primary} style={{ marginBottom: 8 }} />
+                          <Text style={[styles.folderName, { color: theme.colors.foreground }]}>
+                            Create Folder
+                          </Text>
+                        </View>
                       </View>
-                    </TouchableOpacity>
-                  </GlassView>
+                    </GlassView>
+                  </TouchableOpacity>
                 ) : (
-                  <GlassView
-                    glassEffectStyle="regular"
-                    style={[
-                      styles.glassCreateFolderList,
-                      { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }
-                    ]}
-                  >
-                    <TouchableOpacity
-                      style={styles.createFolderButtonList}
-                      onPress={() => createFolderSheetRef.current?.present()}
+                  <TouchableOpacity onPress={() => createFolderSheetRef.current?.present()}>
+                    <GlassView
+                      glassEffectStyle="regular"
+                      style={[
+                        styles.glassCreateFolderList,
+                        { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }
+                      ]}
+                      pointerEvents="none"
                     >
-                      <View style={styles.folderContent}>
-                        <Ionicons name="add" size={16} color={theme.colors.primary} style={{ marginRight: 12 }} />
-                        <Text style={[styles.folderName, { color: theme.colors.foreground }]}>
-                          Create Folder
-                        </Text>
+                      <View style={styles.createFolderButtonList}>
+                        <View style={styles.folderContent}>
+                          <Ionicons name="add" size={16} color={theme.colors.primary} style={{ marginRight: 12 }} />
+                          <Text style={[styles.folderName, { color: theme.colors.foreground }]}>
+                            Create Folder
+                          </Text>
+                        </View>
                       </View>
-                    </TouchableOpacity>
-                  </GlassView>
+                    </GlassView>
+                  </TouchableOpacity>
                 )}
 
                 {allFolders.map((folder) => (
@@ -513,29 +516,31 @@ export default function HomeScreen() {
                       </View>
                     </TouchableOpacity>
                   ) : (
-                    <GlassView key={folder.id} glassEffectStyle="regular" style={[styles.glassFolderItem, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]}>
-                      <TouchableOpacity
-                        style={styles.folderItem}
-                        onPress={() => {
-                          router.push({
-                            pathname: '/folder-notes',
-                            params: { folderId: folder.id, folderName: folder.name }
-                          });
-                        }}
-                      >
-                        <View style={styles.folderContent}>
-                          <View style={[styles.folderColorDot, { backgroundColor: folder.color || '#000000' }]} />
-                          <Text style={[styles.folderName, { color: theme.colors.foreground }]} numberOfLines={1}>
-                            {folder.name}
-                          </Text>
+                    <TouchableOpacity
+                      key={folder.id}
+                      onPress={() => {
+                        router.push({
+                          pathname: '/folder-notes',
+                          params: { folderId: folder.id, folderName: folder.name }
+                        });
+                      }}
+                    >
+                      <GlassView glassEffectStyle="regular" style={[styles.glassFolderItem, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]} pointerEvents="none">
+                        <View style={styles.folderItem}>
+                          <View style={styles.folderContent}>
+                            <View style={[styles.folderColorDot, { backgroundColor: folder.color || '#000000' }]} />
+                            <Text style={[styles.folderName, { color: theme.colors.foreground }]} numberOfLines={1}>
+                              {folder.name}
+                            </Text>
+                          </View>
+                          <View style={[styles.countBadge, { backgroundColor: theme.colors.muted }]}>
+                            <Text style={[styles.countText, { color: theme.colors.mutedForeground }]}>
+                              {folder.noteCount || 0}
+                            </Text>
+                          </View>
                         </View>
-                        <View style={[styles.countBadge, { backgroundColor: theme.colors.muted }]}>
-                          <Text style={[styles.countText, { color: theme.colors.mutedForeground }]}>
-                            {folder.noteCount || 0}
-                          </Text>
-                        </View>
-                      </TouchableOpacity>
-                    </GlassView>
+                      </GlassView>
+                    </TouchableOpacity>
                   )
                 ))}
               </View>
