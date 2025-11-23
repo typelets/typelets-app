@@ -608,6 +608,7 @@ export default function PublicNotePage() {
   const [theme, setTheme] = useState<Theme>(getSystemTheme);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [processedContent, setProcessedContent] = useState<string>('');
+  const [tocExpanded, setTocExpanded] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
 
   // Get slug from URL
@@ -873,18 +874,28 @@ export default function PublicNotePage() {
       if (toggleBtn) {
         e.preventDefault();
         e.stopPropagation();
-
-        const tocContainer = toggleBtn.closest('.toc-container');
-
-        if (tocContainer) {
-          tocContainer.classList.toggle('toc-collapsed');
-        }
+        setTocExpanded(prev => !prev);
       }
     };
 
     container.addEventListener('click', handleClick);
     return () => container.removeEventListener('click', handleClick);
   }, [processedContent]);
+
+  // Apply TOC expanded/collapsed state to DOM
+  useEffect(() => {
+    const container = contentRef.current;
+    if (!container) return;
+
+    const tocContainer = container.querySelector('.toc-container');
+    if (tocContainer) {
+      tocContainer.classList.toggle('toc-collapsed', !tocExpanded);
+      const toggleBtn = tocContainer.querySelector('.toc-toggle');
+      if (toggleBtn) {
+        toggleBtn.setAttribute('aria-expanded', String(tocExpanded));
+      }
+    }
+  }, [tocExpanded, processedContent]);
 
   const toggleTheme = () => {
     setTheme((current) => current === 'light' ? 'dark' : 'light');
