@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { Calendar, User, AlertCircle, Sun, Moon, ArrowUp } from 'lucide-react';
-import type { ApiPublicNote } from '@/lib/api/api';
+import type { ApiPublicNoteResponse } from '@/lib/api/api';
 import DOMPurify from 'dompurify';
 import hljs from 'highlight.js/lib/core';
 import javascript from 'highlight.js/lib/languages/javascript';
@@ -576,7 +576,7 @@ const tiptapContentStyles = `
 }
 `;
 
-async function fetchPublicNote(slug: string): Promise<ApiPublicNote> {
+async function fetchPublicNote(slug: string): Promise<ApiPublicNoteResponse> {
   const url = `${VITE_API_URL.replace(/\/$/, '')}/public-notes/${slug}`;
   const response = await fetch(url);
 
@@ -602,7 +602,7 @@ const stripHtmlTags = (html: string): string => {
 };
 
 export default function PublicNotePage() {
-  const [note, setNote] = useState<ApiPublicNote | null>(null);
+  const [note, setNote] = useState<ApiPublicNoteResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [theme, setTheme] = useState<Theme>(getSystemTheme);
@@ -731,8 +731,9 @@ export default function PublicNotePage() {
     // SECURITY: Sanitize HTML to prevent XSS attacks
     // Configure DOMPurify to allow safe HTML elements and attributes
     const sanitizedContent = DOMPurify.sanitize(content, {
-      ADD_TAGS: ['style'], // Allow inline styles from TipTap
+      ADD_TAGS: ['style'], // Allow <style> tags from TipTap
       ADD_ATTR: [
+        'style', // Allow inline styles (for text color, background color)
         'data-toc',
         'data-toc-interactive',
         'data-type',

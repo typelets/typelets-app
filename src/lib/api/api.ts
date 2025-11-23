@@ -74,6 +74,7 @@ export interface ApiUserUsage {
   };
 }
 
+// Full public note data (for authenticated owner endpoints)
 export interface ApiPublicNote {
   id: string;
   slug: string;
@@ -81,6 +82,17 @@ export interface ApiPublicNote {
   userId: string;
   title: string;
   content: string; // Plaintext HTML (not encrypted)
+  type?: 'note' | 'diagram' | 'code';
+  authorName?: string;
+  publishedAt: string;
+  updatedAt: string;
+}
+
+// Public note response for unauthenticated viewers (no sensitive IDs exposed)
+export interface ApiPublicNoteResponse {
+  slug: string;
+  title: string;
+  content: string;
   type?: 'note' | 'diagram' | 'code';
   authorName?: string;
   publishedAt: string;

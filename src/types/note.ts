@@ -33,6 +33,7 @@ export interface Note {
   publicUpdatedAt?: Date | null;
 }
 
+// Full public note data (for authenticated owner)
 export interface PublicNote {
   id: string;
   slug: string;
@@ -40,6 +41,17 @@ export interface PublicNote {
   userId: string;
   title: string;
   content: string; // Plaintext HTML (not encrypted)
+  type?: 'note' | 'diagram' | 'code';
+  authorName?: string;
+  publishedAt: Date;
+  updatedAt: Date;
+}
+
+// Public note for unauthenticated viewers (no sensitive IDs)
+export interface PublicNoteResponse {
+  slug: string;
+  title: string;
+  content: string;
   type?: 'note' | 'diagram' | 'code';
   authorName?: string;
   publishedAt: Date;
