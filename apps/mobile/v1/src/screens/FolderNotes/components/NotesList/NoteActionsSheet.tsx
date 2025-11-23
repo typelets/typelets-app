@@ -38,7 +38,12 @@ export const NoteActionsSheet = forwardRef<NoteActionsSheetRef, NoteActionsSheet
       present: (noteToShow: Note) => {
         setCurrentNote(noteToShow);
         setShowFolderPicker(false);
-        bottomSheetRef.current?.present();
+        // Force close first then present to ensure clean state
+        bottomSheetRef.current?.dismiss();
+        // Small delay to ensure dismiss completes before present
+        setTimeout(() => {
+          bottomSheetRef.current?.present();
+        }, 50);
       },
       dismiss: () => {
         bottomSheetRef.current?.dismiss();
@@ -145,20 +150,21 @@ export const NoteActionsSheet = forwardRef<NoteActionsSheetRef, NoteActionsSheet
             <Text style={[styles.bottomSheetTitle, { color: theme.colors.foreground }]}>
               {showFolderPicker ? 'Move to Folder' : 'Note Actions'}
             </Text>
-            <GlassView glassEffectStyle="regular" style={[styles.glassButton, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]}>
-              <TouchableOpacity
-                style={styles.iconButton}
-                onPress={() => {
-                  if (showFolderPicker) {
-                    setShowFolderPicker(false);
-                  } else {
-                    bottomSheetRef.current?.dismiss();
-                  }
-                }}
-              >
-                <Ionicons name={showFolderPicker ? "arrow-back" : "close"} size={20} color={theme.colors.foreground} />
-              </TouchableOpacity>
-            </GlassView>
+            <TouchableOpacity
+              onPress={() => {
+                if (showFolderPicker) {
+                  setShowFolderPicker(false);
+                } else {
+                  bottomSheetRef.current?.dismiss();
+                }
+              }}
+            >
+              <GlassView glassEffectStyle="regular" style={[styles.glassButton, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]} pointerEvents="none">
+                <View style={styles.iconButton}>
+                  <Ionicons name={showFolderPicker ? "arrow-back" : "close"} size={20} color={theme.colors.foreground} />
+                </View>
+              </GlassView>
+            </TouchableOpacity>
           </View>
           <View style={[styles.divider, { backgroundColor: theme.colors.border }]} />
 

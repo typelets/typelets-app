@@ -94,14 +94,13 @@ export const CreateFolderSheet = forwardRef<BottomSheetModal, CreateFolderSheetP
         <BottomSheetView style={{ paddingBottom: 32 }}>
           <View style={styles.bottomSheetHeader}>
             <Text style={[styles.bottomSheetTitle, { color: theme.colors.foreground }]}>Create Folder</Text>
-            <GlassView glassEffectStyle="regular" style={[styles.glassButton, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]}>
-              <TouchableOpacity
-                style={styles.iconButton}
-                onPress={() => (ref as React.RefObject<BottomSheetModal>).current?.dismiss()}
-              >
-                <Ionicons name="close" size={20} color={theme.colors.foreground} />
-              </TouchableOpacity>
-            </GlassView>
+            <TouchableOpacity onPress={() => (ref as React.RefObject<BottomSheetModal>).current?.dismiss()}>
+              <GlassView glassEffectStyle="regular" style={[styles.glassButton, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]} pointerEvents="none">
+                <View style={styles.iconButton}>
+                  <Ionicons name="close" size={20} color={theme.colors.foreground} />
+                </View>
+              </GlassView>
+            </TouchableOpacity>
           </View>
           <View style={[styles.divider, { backgroundColor: theme.colors.border }]} />
 

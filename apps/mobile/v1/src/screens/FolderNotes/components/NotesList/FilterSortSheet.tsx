@@ -12,6 +12,7 @@ export interface FilterConfig {
   showHiddenOnly: boolean;
   showCodeOnly: boolean;
   showDiagramOnly: boolean;
+  showPublicOnly: boolean;
 }
 
 export interface SortConfig {
@@ -59,14 +60,13 @@ export const FilterSortSheet = forwardRef<BottomSheetModal, FilterSortSheetProps
         <BottomSheetView style={{ paddingBottom: 32 }}>
           <View style={styles.bottomSheetHeader}>
             <Text style={[styles.bottomSheetTitle, { color: theme.colors.foreground }]}>Filter & Sort</Text>
-            <GlassView glassEffectStyle="regular" style={[styles.glassButton, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]}>
-              <TouchableOpacity
-                style={styles.iconButton}
-                onPress={() => (ref as React.RefObject<BottomSheetModal>).current?.dismiss()}
-              >
-                <Ionicons name="close" size={20} color={theme.colors.foreground} />
-              </TouchableOpacity>
-            </GlassView>
+            <TouchableOpacity onPress={() => (ref as React.RefObject<BottomSheetModal>).current?.dismiss()}>
+              <GlassView glassEffectStyle="regular" style={[styles.glassButton, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]} pointerEvents="none">
+                <View style={styles.iconButton}>
+                  <Ionicons name="close" size={20} color={theme.colors.foreground} />
+                </View>
+              </GlassView>
+            </TouchableOpacity>
           </View>
           <View style={[styles.divider, { backgroundColor: theme.colors.border }]} />
 
@@ -75,7 +75,7 @@ export const FilterSortSheet = forwardRef<BottomSheetModal, FilterSortSheetProps
               <Text style={[styles.inputLabel, { color: theme.colors.mutedForeground }]}>FILTER</Text>
               <TouchableOpacity
                 style={[styles.viewModeButton, { backgroundColor: theme.colors.muted, opacity: hasActiveFilters ? 1 : 0 }]}
-                onPress={() => setFilterConfig({ showAttachmentsOnly: false, showStarredOnly: false, showHiddenOnly: false, showCodeOnly: false, showDiagramOnly: false })}
+                onPress={() => setFilterConfig({ showAttachmentsOnly: false, showStarredOnly: false, showHiddenOnly: false, showCodeOnly: false, showDiagramOnly: false, showPublicOnly: false })}
                 activeOpacity={0.7}
                 disabled={!hasActiveFilters}
               >
@@ -141,6 +141,18 @@ export const FilterSortSheet = forwardRef<BottomSheetModal, FilterSortSheetProps
                 color={filterConfig.showDiagramOnly ? theme.colors.primary : theme.colors.mutedForeground}
               />
               <Text style={[styles.filterOptionText, { color: theme.colors.foreground }]}>Diagram</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.filterOption, { backgroundColor: filterConfig.showPublicOnly ? 'rgba(59, 130, 246, 0.1)' : 'transparent' }]}
+              onPress={() => setFilterConfig(prev => ({ ...prev, showPublicOnly: !prev.showPublicOnly }))}
+            >
+              <Ionicons
+                name={filterConfig.showPublicOnly ? "checkbox" : "square-outline"}
+                size={24}
+                color={filterConfig.showPublicOnly ? theme.colors.primary : theme.colors.mutedForeground}
+              />
+              <Text style={[styles.filterOptionText, { color: theme.colors.foreground }]}>Public</Text>
             </TouchableOpacity>
 
             <Text style={[styles.inputLabel, { color: theme.colors.mutedForeground, marginTop: 24 }]}>SORT BY</Text>

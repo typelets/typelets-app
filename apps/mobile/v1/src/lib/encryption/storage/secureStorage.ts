@@ -104,13 +104,8 @@ export async function clearUserStorageData(userId: string): Promise<void> {
   for (const key of keysToDelete) {
     try {
       await SecureStore.deleteItemAsync(key);
-      if (__DEV__) {
-        console.log(`✅ Deleted ${key}`);
-      }
     } catch (error) {
-      if (__DEV__) {
-        console.log(`❌ Failed to delete ${key}:`, error);
-      }
+      // Silently ignore deletion errors
     }
   }
 

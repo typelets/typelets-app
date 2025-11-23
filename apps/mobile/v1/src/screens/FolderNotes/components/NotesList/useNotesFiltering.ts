@@ -40,6 +40,10 @@ export function useNotesFiltering(
         const isDiagram = note.type === 'diagram' || (note.content && isDiagramContent(note.content));
         if (!isDiagram) return false;
       }
+      // Check for public filter
+      if (filterConfig.showPublicOnly && !note.isPublished) {
+        return false;
+      }
       return true;
     });
 

@@ -74,6 +74,7 @@ export default function NotesList({ navigation, route, renderHeader, scrollY: pa
     showHiddenOnly: false,
     showCodeOnly: false,
     showDiagramOnly: false,
+    showPublicOnly: false,
   });
   const [sortConfig, setSortConfig] = useState<SortConfig>({
     option: 'created',
@@ -420,7 +421,7 @@ export default function NotesList({ navigation, route, renderHeader, scrollY: pa
   }, [allFolders]);
 
   // Check if any filters are active
-  const hasActiveFilters = filterConfig.showAttachmentsOnly || filterConfig.showStarredOnly || filterConfig.showHiddenOnly || filterConfig.showCodeOnly || filterConfig.showDiagramOnly;
+  const hasActiveFilters = filterConfig.showAttachmentsOnly || filterConfig.showStarredOnly || filterConfig.showHiddenOnly || filterConfig.showCodeOnly || filterConfig.showDiagramOnly || filterConfig.showPublicOnly;
 
   // Extract theme colors as individual values to prevent object recreation
   const foregroundColor = theme.colors.foreground;

@@ -17,6 +17,7 @@ interface UseViewNoteReturn {
   handleToggleStar: () => Promise<void>;
   handleToggleHidden: () => Promise<void>;
   refresh: () => Promise<void>;
+  updateNoteLocally: (updates: Partial<Note>) => void;
 }
 
 /**
@@ -82,7 +83,14 @@ export function useViewNote(noteId: string): UseViewNoteReturn {
         attributes: { noteId: note.id, currentStarred: note.starred, newStarred: !note.starred }
       });
       const updatedNote = await api.updateNote(note.id, { starred: !note.starred });
-      setNote(updatedNote);
+      // Preserve public note fields that may not be returned by the API
+      setNote({
+        ...updatedNote,
+        isPublished: note.isPublished,
+        publicSlug: note.publicSlug,
+        publishedAt: note.publishedAt,
+        publicUpdatedAt: note.publicUpdatedAt,
+      });
       logger.info('[NOTE] Star toggled successfully', {
         attributes: { noteId: note.id, starred: updatedNote.starred }
       });
@@ -97,6 +105,16 @@ export function useViewNote(noteId: string): UseViewNoteReturn {
   const handleToggleHidden = async () => {
     if (!note) return;
 
+    // Prevent hiding public notes
+    if (note.isPublished && !note.hidden) {
+      Alert.alert(
+        'Cannot Hide Public Note',
+        'Please unpublish this note before hiding it.',
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+
     try {
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       logger.info('[NOTE] Toggling hidden', {
@@ -105,7 +123,14 @@ export function useViewNote(noteId: string): UseViewNoteReturn {
       const updatedNote = note.hidden
         ? await api.unhideNote(note.id)
         : await api.hideNote(note.id);
-      setNote(updatedNote);
+      // Preserve public note fields that may not be returned by the API
+      setNote({
+        ...updatedNote,
+        isPublished: note.isPublished,
+        publicSlug: note.publicSlug,
+        publishedAt: note.publishedAt,
+        publicUpdatedAt: note.publicUpdatedAt,
+      });
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       logger.info('[NOTE] Hidden toggled successfully', {
         attributes: { noteId: note.id, hidden: updatedNote.hidden }
@@ -124,6 +149,12 @@ export function useViewNote(noteId: string): UseViewNoteReturn {
     [note, theme.colors, theme.isDark]
   );
 
+  const updateNoteLocally = (updates: Partial<Note>) => {
+    if (note) {
+      setNote({ ...note, ...updates });
+    }
+  };
+
   return {
     note,
     loading,
@@ -132,5 +163,6 @@ export function useViewNote(noteId: string): UseViewNoteReturn {
     handleToggleStar,
     handleToggleHidden,
     refresh,
+    updateNoteLocally,
   };
 }

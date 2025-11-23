@@ -91,10 +91,6 @@ export class DecryptionCache {
     });
 
     keysToDelete.forEach((key) => this.cache.delete(key));
-
-    if (__DEV__ && keysToDelete.length > 0) {
-      console.log(`🧹 Cleared ${keysToDelete.length} cache entries for user ${userId}`);
-    }
   }
 
   /**
@@ -118,10 +114,6 @@ export class DecryptionCache {
     });
 
     expiredKeys.forEach((key) => this.cache.delete(key));
-
-    if (__DEV__ && expiredKeys.length > 0) {
-      console.log(`🧹 Cleaned ${expiredKeys.length} expired cache entries`);
-    }
   }
 
   /**

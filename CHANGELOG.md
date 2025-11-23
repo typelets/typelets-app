@@ -1,3 +1,10 @@
+# [1.42.0](https://github.com/typelets/typelets-app/compare/v1.41.0...v1.42.0) (2025-11-23)
+
+
+### Features
+
+* **mobile:** add public notes feature with publish/unpublish support ([6531831](https://github.com/typelets/typelets-app/commit/65318318720f934de0f04c3ac97093854b2e22cc))
+
 # [1.41.0](https://github.com/typelets/typelets-app/compare/v1.40.1...v1.41.0) (2025-11-22)
 
 
