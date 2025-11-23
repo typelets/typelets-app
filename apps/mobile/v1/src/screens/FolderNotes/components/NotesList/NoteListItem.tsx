@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { GlassView } from 'expo-glass-effect';
-import { Code2, Network } from 'lucide-react-native';
+import { Code2, Globe, Network } from 'lucide-react-native';
 import React, { useMemo, useRef } from 'react';
 import { ActivityIndicator, Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
@@ -252,6 +252,9 @@ const NoteListItemComponent: React.FC<NoteListItemProps> = ({
               )}
               {isCode && (
                 <Code2 size={12} color="#22c55e" style={{ marginRight: 8 }} />
+              )}
+              {note.isPublished && (
+                <Globe size={12} color="#8b5cf6" style={{ marginRight: 8 }} />
               )}
               {((note.attachments?.length ?? 0) > 0 || (note.attachmentCount ?? 0) > 0) && (
                 <View style={styles.attachmentBadge}>

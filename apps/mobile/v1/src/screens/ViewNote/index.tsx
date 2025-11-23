@@ -1,9 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
+import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { useFocusEffect,useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback,useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Animated, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { PublishNoteSheet, PublishNoteSheetRef } from '../../components/PublishNoteSheet';
 import { useNetworkStatus } from '../../hooks/useNetworkStatus';
 import { useViewNote } from '../../hooks/useViewNote';
 import { logger } from '../../lib/logger';
@@ -33,8 +35,9 @@ export default function ViewNoteScreen() {
   const [attachments, setAttachments] = useState<FileAttachment[]>([]);
   const [loadingAttachments, setLoadingAttachments] = useState(false);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  const publishSheetRef = useRef<PublishNoteSheetRef>(null);
 
-  const { note, loading, htmlContent, handleEdit: handleEditInternal, handleToggleStar, handleToggleHidden, refresh } = useViewNote(noteId as string);
+  const { note, loading, htmlContent, handleEdit: handleEditInternal, handleToggleStar, handleToggleHidden, refresh, updateNoteLocally } = useViewNote(noteId as string);
   const [refreshing, setRefreshing] = useState(false);
 
   // Wrap handleEdit with offline check (allow editing temp notes created offline)
@@ -274,8 +277,9 @@ export default function ViewNoteScreen() {
 
       {/* Floating Header */}
       <ViewHeader
-        isStarred={note.isStarred}
-        isHidden={note.isHidden}
+        isStarred={note.starred}
+        isHidden={note.hidden}
+        isPublished={note.isPublished}
         title={note.title}
         scrollY={scrollY}
         attachmentsCount={attachments.length}
@@ -288,7 +292,23 @@ export default function ViewNoteScreen() {
         onToggleHidden={handleToggleHidden}
         onToggleAttachments={() => setShowAttachments(!showAttachments)}
         onEdit={handleEdit}
+        onPublish={() => {
+          publishSheetRef.current?.present(note);
+        }}
         theme={theme}
+      />
+
+      {/* Publish Note Bottom Sheet */}
+      <PublishNoteSheet
+        ref={publishSheetRef}
+        onPublishStateChange={(noteId, isPublished, slug) => {
+          updateNoteLocally({
+            isPublished,
+            publicSlug: slug || null,
+            publishedAt: isPublished ? new Date().toISOString() : null,
+            publicUpdatedAt: isPublished ? new Date().toISOString() : null,
+          });
+        }}
       />
 
       {/* Refresh indicator - rendered after header so it appears on top */}

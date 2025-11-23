@@ -161,6 +161,27 @@ export default function EditNoteScreen() {
           attributes: { noteId: currentNoteId, title: titleToUse }
         });
 
+        // Auto-sync public note if published
+        if (noteData?.isPublished && noteData?.publicSlug) {
+          try {
+            logger.info('[NOTE] Auto-syncing public note', {
+              attributes: { noteId: currentNoteId, slug: noteData.publicSlug }
+            });
+            await api.updatePublicNote(noteData.publicSlug, {
+              title: titleToUse,
+              content: htmlContent,
+            });
+            logger.info('[NOTE] Public note synced successfully', {
+              attributes: { noteId: currentNoteId, slug: noteData.publicSlug }
+            });
+          } catch (syncError) {
+            // Log error but don't fail the save - the private note was saved successfully
+            logger.error('[NOTE] Failed to sync public note', syncError instanceof Error ? syncError : undefined, {
+              attributes: { noteId: currentNoteId, slug: noteData.publicSlug }
+            });
+          }
+        }
+
         // Emit event for optimistic UI update in notes list
         DeviceEventEmitter.emit('noteUpdated', savedNote);
       } else {

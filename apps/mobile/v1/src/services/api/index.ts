@@ -7,11 +7,13 @@ import { useAuth, useUser } from '@clerk/clerk-expo';
 
 import { createFoldersApi } from './folders';
 import { createNotesApi } from './notes';
+import { createPublicNotesApi } from './publicNotes';
 import { createUserApi } from './user';
 
 // Re-export types for convenience
 export type { PickedFile } from '../fileService';
 export type {
+  ApiPublicNote,
   ApiUser,
   ApiUserUsage,
   EmptyTrashResponse,
@@ -36,6 +38,7 @@ export const useApiService = () => {
   const notesApi = createNotesApi(getToken, getUserId);
   const foldersApi = createFoldersApi(getToken);
   const userApi = createUserApi(getToken);
+  const publicNotesApi = createPublicNotesApi(getToken);
 
   // Return combined API surface
   return {
@@ -69,5 +72,12 @@ export const useApiService = () => {
 
     // User methods
     getCurrentUser: userApi.getCurrentUser,
+
+    // Public notes methods
+    publishNote: publicNotesApi.publishNote,
+    updatePublicNote: publicNotesApi.updatePublicNote,
+    unpublishNote: publicNotesApi.unpublishNote,
+    getPublicNoteInfo: publicNotesApi.getPublicNoteInfo,
+    getPublicUrl: publicNotesApi.getPublicUrl,
   };
 };

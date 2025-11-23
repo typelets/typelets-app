@@ -13,7 +13,7 @@ import * as SQLite from 'expo-sqlite';
 let database: SQLite.SQLiteDatabase | null = null;
 
 const DB_NAME = 'typelets_mobile.db';
-const DB_VERSION = 4;
+const DB_VERSION = 5;
 
 /**
  * Migrate database schema to latest version
@@ -117,6 +117,32 @@ async function migrateDatabase(db: SQLite.SQLiteDatabase): Promise<void> {
       }
     }
 
+    if (currentVersion < 5) {
+      // Migration to v5: Add public notes columns
+      console.log('[SQLite] Running migration to v5...');
+
+      try {
+        await db.execAsync(`
+          -- Add public notes columns to notes table
+          ALTER TABLE notes ADD COLUMN is_published INTEGER DEFAULT 0;
+          ALTER TABLE notes ADD COLUMN public_slug TEXT;
+          ALTER TABLE notes ADD COLUMN published_at TEXT;
+          ALTER TABLE notes ADD COLUMN public_updated_at TEXT;
+        `);
+
+        // Clear notes cache so they get re-fetched with public notes fields
+        console.log('[SQLite] Clearing notes cache to refresh with public notes fields...');
+        await db.execAsync(`DELETE FROM notes;`);
+        await db.execAsync(`DELETE FROM cache_metadata WHERE resource_type = 'notes';`);
+        console.log('[SQLite] Notes cache cleared - will be refreshed on next load');
+
+        console.log('[SQLite] Migration to v5 completed');
+      } catch (error) {
+        console.error('[SQLite] Migration to v5 failed:', error);
+        throw error;
+      }
+    }
+
     // Update schema version
     await db.execAsync(`PRAGMA user_version = ${DB_VERSION}`);
     console.log(`[SQLite] Database migrated to v${DB_VERSION}`);
@@ -143,6 +169,32 @@ async function migrateDatabase(db: SQLite.SQLiteDatabase): Promise<void> {
     }
   } catch (error) {
     console.error('[SQLite] Failed to check/add attachment_count column:', error);
+  }
+
+  // Safety check: Ensure public notes columns exist (runs every time)
+  try {
+    const columnCheck = await db.getFirstAsync<{ count: number }>(
+      `SELECT COUNT(*) as count FROM pragma_table_info('notes') WHERE name='is_published'`
+    );
+
+    if (columnCheck && columnCheck.count === 0) {
+      console.log('[SQLite] Public notes columns missing, adding them now...');
+      await db.execAsync(`
+        ALTER TABLE notes ADD COLUMN is_published INTEGER DEFAULT 0;
+        ALTER TABLE notes ADD COLUMN public_slug TEXT;
+        ALTER TABLE notes ADD COLUMN published_at TEXT;
+        ALTER TABLE notes ADD COLUMN public_updated_at TEXT;
+      `);
+      console.log('[SQLite] Public notes columns added successfully');
+
+      // Clear notes cache so they get re-fetched with public notes fields
+      console.log('[SQLite] Clearing notes cache to refresh with public notes fields...');
+      await db.execAsync(`DELETE FROM notes;`);
+      await db.execAsync(`DELETE FROM cache_metadata WHERE resource_type = 'notes';`);
+      console.log('[SQLite] Notes cache cleared - will be refreshed on next load');
+    }
+  } catch (error) {
+    console.error('[SQLite] Failed to check/add public notes columns:', error);
   }
 }
 
@@ -190,7 +242,11 @@ export async function initializeDatabase(): Promise<SQLite.SQLiteDatabase> {
         encrypted_content TEXT,
         iv TEXT,
         salt TEXT,
-        attachment_count INTEGER DEFAULT 0
+        attachment_count INTEGER DEFAULT 0,
+        is_published INTEGER DEFAULT 0,
+        public_slug TEXT,
+        published_at TEXT,
+        public_updated_at TEXT
       );
 
       -- Folders table with cache fields
