@@ -1,3 +1,10 @@
+## [1.42.2](https://github.com/typelets/typelets-app/compare/v1.42.1...v1.42.2) (2025-11-24)
+
+
+### Bug Fixes
+
+* **mobile:** add Public notes view to Quick Access ([cb15bfa](https://github.com/typelets/typelets-app/commit/cb15bfac113d76102c23542a25fd199e9ff62665))
+
 ## [1.42.1](https://github.com/typelets/typelets-app/compare/v1.42.0...v1.42.1) (2025-11-24)
 
 
