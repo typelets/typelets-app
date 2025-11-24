@@ -1,3 +1,10 @@
+## [1.42.3](https://github.com/typelets/typelets-app/compare/v1.42.2...v1.42.3) (2025-11-24)
+
+
+### Bug Fixes
+
+* **mobile:** improve UX on auth, home, and logout flows ([352ecda](https://github.com/typelets/typelets-app/commit/352ecdaa321c82f116a3ad286df5925dcb18f43c))
+
 ## [1.42.2](https://github.com/typelets/typelets-app/compare/v1.42.1...v1.42.2) (2025-11-24)
 
 
