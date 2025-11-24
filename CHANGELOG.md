@@ -1,3 +1,10 @@
+## [1.42.1](https://github.com/typelets/typelets-app/compare/v1.42.0...v1.42.1) (2025-11-24)
+
+
+### Bug Fixes
+
+* prevent TOC from closing on scroll or click in public notes ([85e05f2](https://github.com/typelets/typelets-app/commit/85e05f2bf785fbba930e78e0a52e28eb707198e0))
+
 # [1.42.0](https://github.com/typelets/typelets-app/compare/v1.41.0...v1.42.0) (2025-11-23)
 
 
