@@ -93,6 +93,11 @@ export function createNotesApi(getToken: AuthTokenGetter, getUserId: () => strin
         if (note.deleted !== params.deleted) return false;
       }
 
+      // Filter by isPublic (published notes)
+      if (params.isPublic !== undefined) {
+        if (note.isPublished !== params.isPublic) return false;
+      }
+
       return true;
     });
   };
@@ -322,6 +327,7 @@ export function createNotesApi(getToken: AuthTokenGetter, getUserId: () => strin
           starred: params?.starred as boolean | undefined,
           archived: params?.archived as boolean | undefined,
           deleted: params?.deleted as boolean | undefined,
+          isPublic: params?.isPublic as boolean | undefined,
         };
 
         // Step 1: Try to get from local database cache

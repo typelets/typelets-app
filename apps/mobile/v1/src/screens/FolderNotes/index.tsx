@@ -21,6 +21,7 @@ function getViewTitle(viewType: string): string {
   switch (viewType) {
     case 'all': return 'All Notes';
     case 'starred': return 'Starred';
+    case 'public': return 'Public';
     case 'archived': return 'Archived';
     case 'trash': return 'Trash';
     default: return 'Notes';
@@ -30,7 +31,7 @@ function getViewTitle(viewType: string): string {
 interface FolderNotesScreenProps {
   folderId?: string;
   folderName?: string;
-  viewType?: 'all' | 'starred' | 'archived' | 'trash';
+  viewType?: 'all' | 'starred' | 'public' | 'archived' | 'trash';
 }
 
 export default function FolderNotesScreen({ folderId, folderName, viewType }: FolderNotesScreenProps) {

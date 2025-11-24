@@ -7,7 +7,7 @@ import { GlassView } from 'expo-glass-effect';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useCallback,useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Animated, Image, Keyboard, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Animated, Dimensions, Image, Keyboard, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { OfflineIndicator } from '../../components/OfflineIndicator';
@@ -15,6 +15,11 @@ import { ACTION_BUTTON, FOLDER_CARD, FOLDER_COLORS, GLASS_BUTTON } from '../../c
 import { useNetworkStatus } from '../../hooks/useNetworkStatus';
 import { type Folder, type FolderCounts,useApiService } from '../../services/api';
 import { useTheme } from '../../theme';
+
+// Calculate folder grid item width
+// Container has paddingHorizontal: 16 (32px total) and gap: 12
+const SCREEN_WIDTH = Dimensions.get('window').width;
+const FOLDER_GRID_ITEM_WIDTH = (SCREEN_WIDTH - 32 - 12) / 2;
 
 // Special views configuration matching web app
 const SPECIAL_VIEWS = [
@@ -27,6 +32,11 @@ const SPECIAL_VIEWS = [
     id: 'starred',
     label: 'Starred',
     icon: 'star' as const,
+  },
+  {
+    id: 'public',
+    label: 'Public',
+    icon: 'globe' as const,
   },
   {
     id: 'archived',
@@ -62,6 +72,7 @@ export default function HomeScreen() {
   const [counts, setCounts] = useState({
     all: 0,
     starred: 0,
+    public: 0,
     archived: 0,
     trash: 0,
   });
@@ -159,6 +170,7 @@ export default function HomeScreen() {
       const newCounts = {
         all: noteCounts.all || 0,
         starred: noteCounts.starred || 0,
+        public: noteCounts.public || 0,
         archived: noteCounts.archived || 0,
         trash: noteCounts.trash || 0,
       };
@@ -170,7 +182,7 @@ export default function HomeScreen() {
     } catch (error) {
       if (__DEV__) console.error('Failed to load folders data:', error);
       setAllFolders([]);
-      setCounts({ all: 0, starred: 0, archived: 0, trash: 0 });
+      setCounts({ all: 0, starred: 0, public: 0, archived: 0, trash: 0 });
     } finally {
       if (!isRefresh) {
         setLoading(false);
@@ -262,7 +274,7 @@ export default function HomeScreen() {
       setRefreshing(true);
       // Clear current data to force fresh load
       setAllFolders([]);
-      setCounts({ all: 0, starred: 0, archived: 0, trash: 0 });
+      setCounts({ all: 0, starred: 0, public: 0, archived: 0, trash: 0 });
       await loadFoldersData(true, true); // isRefresh=true, forceRefresh=true
     } finally {
       setRefreshing(false);
@@ -930,7 +942,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.01)',
   },
   glassCreateFolderGrid: {
-    width: '48%',
+    width: FOLDER_GRID_ITEM_WIDTH,
     borderRadius: FOLDER_CARD.BORDER_RADIUS,
     overflow: 'hidden',
     backgroundColor: 'rgba(0, 0, 0, 0.01)',
@@ -954,7 +966,7 @@ const styles = StyleSheet.create({
     paddingRight: 12,
   },
   folderItemGrid: {
-    width: '48%',
+    width: FOLDER_GRID_ITEM_WIDTH,
     padding: 16,
     minHeight: 100,
     borderWidth: 1,

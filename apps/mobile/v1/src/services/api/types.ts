@@ -109,6 +109,7 @@ export interface NoteQueryParams {
   archived?: boolean;
   deleted?: boolean;
   hidden?: boolean;
+  isPublic?: boolean;
 }
 
 export interface EmptyTrashResponse {

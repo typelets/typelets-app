@@ -10,7 +10,7 @@ interface NotesHeaderProps {
   filteredNotesCount: number;
   totalNotesCount: number;
   hasActiveFilters: boolean;
-  viewType?: 'all' | 'starred' | 'archived' | 'trash';
+  viewType?: 'all' | 'starred' | 'public' | 'archived' | 'trash';
   subfoldersCount: number;
   onFilterPress: () => void;
   onCreateNotePress: () => void;
@@ -36,7 +36,7 @@ export const NotesHeader: React.FC<NotesHeaderProps> = ({
       <View style={[styles.sectionHeader, { marginTop: subfoldersCount > 0 ? 12 : 16 }]}>
         <Text style={[styles.sectionTitle, { color: theme.colors.mutedForeground }]}>
           NOTES ({String(filteredNotesCount || 0)})
-          {filteredNotesCount !== totalNotesCount && ` (${totalNotesCount} total)`}
+          {viewType !== 'public' && filteredNotesCount !== totalNotesCount && ` (${totalNotesCount} total)`}
         </Text>
         <GlassView glassEffectStyle="regular" style={[styles.squareButtonGlass, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]}>
           <TouchableOpacity

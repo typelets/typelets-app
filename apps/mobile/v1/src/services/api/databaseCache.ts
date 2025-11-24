@@ -156,6 +156,7 @@ export async function getCachedNotes(filters?: {
   starred?: boolean;
   archived?: boolean;
   deleted?: boolean;
+  isPublic?: boolean;
 }): Promise<Note[]> {
   try {
     const db = getDatabase();
@@ -178,6 +179,10 @@ export async function getCachedNotes(filters?: {
     if (filters?.deleted !== undefined) {
       conditions.push('deleted = ?');
       params.push(filters.deleted ? 1 : 0);
+    }
+    if (filters?.isPublic !== undefined) {
+      conditions.push('is_published = ?');
+      params.push(filters.isPublic ? 1 : 0);
     }
 
     const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';

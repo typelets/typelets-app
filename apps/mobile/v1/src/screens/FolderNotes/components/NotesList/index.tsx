@@ -33,7 +33,7 @@ const FAB_ANIMATION_DISTANCE = 20;      // Distance to slide up during animation
 
 interface RouteParams {
   folderId?: string;
-  viewType?: 'all' | 'starred' | 'archived' | 'trash';
+  viewType?: 'all' | 'starred' | 'public' | 'archived' | 'trash';
   searchQuery?: string;
   folderName?: string;
 }
@@ -409,8 +409,16 @@ export default function NotesList({ navigation, route, renderHeader, scrollY: pa
     }
   }, [notes]);
 
+  // Create effective filter config - auto-enable showPublicOnly for public view
+  const effectiveFilterConfig = useMemo(() => {
+    if (viewType === 'public') {
+      return { ...filterConfig, showPublicOnly: true };
+    }
+    return filterConfig;
+  }, [filterConfig, viewType]);
+
   // Filter and sort notes (enhanced cache is populated above)
-  const filteredNotes = useNotesFiltering(notes, searchQuery, filterConfig, sortConfig);
+  const filteredNotes = useNotesFiltering(notes, searchQuery, effectiveFilterConfig, sortConfig);
 
   // Pre-calculate folder paths
   const folderPathsMap = useFolderPaths(allFolders);

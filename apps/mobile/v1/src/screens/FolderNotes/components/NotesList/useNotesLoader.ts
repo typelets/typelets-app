@@ -10,7 +10,7 @@ import type { SortConfig } from './FilterSortSheet';
 
 interface UseNotesLoaderProps {
   folderId?: string;
-  viewType?: 'all' | 'starred' | 'archived' | 'trash';
+  viewType?: 'all' | 'starred' | 'public' | 'archived' | 'trash';
   sortConfig: SortConfig;
   userId?: string;
   screenFocusTime: React.MutableRefObject<number>;
@@ -224,6 +224,11 @@ export function useNotesLoader({
       // Add view type filters
       if (viewType === 'starred') {
         queryParams.starred = true;
+      } else if (viewType === 'public') {
+        // Public view: fetch all non-deleted, non-archived notes
+        // Client-side filtering by isPublished happens in useNotesFiltering
+        queryParams.deleted = false;
+        queryParams.archived = false;
       } else if (viewType === 'archived') {
         queryParams.archived = true;
       } else if (viewType === 'trash') {
