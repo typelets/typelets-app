@@ -1,3 +1,10 @@
+## [1.42.6](https://github.com/typelets/typelets-app/compare/v1.42.5...v1.42.6) (2025-11-25)
+
+
+### Bug Fixes
+
+* **mobile:** position pull-to-refresh spinner below header on home screen ([6ab9572](https://github.com/typelets/typelets-app/commit/6ab95725495f56961faa792620195447ee6d36e4)), closes [#34](https://github.com/typelets/typelets-app/issues/34)
+
 ## [1.42.5](https://github.com/typelets/typelets-app/compare/v1.42.4...v1.42.5) (2025-11-25)
 
 
