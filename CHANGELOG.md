@@ -1,3 +1,10 @@
+## [1.42.4](https://github.com/typelets/typelets-app/compare/v1.42.3...v1.42.4) (2025-11-25)
+
+
+### Bug Fixes
+
+* **mobile:** resolve database initialization race conditions and improve migrations ([5e02112](https://github.com/typelets/typelets-app/commit/5e0211226a425dadcada48071c0a6db85806c0e7)), closes [#36](https://github.com/typelets/typelets-app/issues/36)
+
 ## [1.42.3](https://github.com/typelets/typelets-app/compare/v1.42.2...v1.42.3) (2025-11-24)
 
 
