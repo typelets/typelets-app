@@ -333,7 +333,7 @@ export default function HomeScreen() {
               onRefresh={onRefresh}
               tintColor={theme.isDark ? '#666666' : '#000000'}
               colors={[theme.isDark ? '#666666' : '#000000']}
-              progressViewOffset={60}
+              progressViewOffset={headerHeight}
             />
           }
         >
