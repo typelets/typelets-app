@@ -1,3 +1,10 @@
+## [1.42.7](https://github.com/typelets/typelets-app/compare/v1.42.6...v1.42.7) (2025-11-25)
+
+
+### Bug Fixes
+
+* **mobile:** show cached note counts instantly on app restart ([ac02e81](https://github.com/typelets/typelets-app/commit/ac02e81f4402f70f925c374ec4901285eaf21d86)), closes [#39](https://github.com/typelets/typelets-app/issues/39)
+
 ## [1.42.6](https://github.com/typelets/typelets-app/compare/v1.42.5...v1.42.6) (2025-11-25)
 
 
