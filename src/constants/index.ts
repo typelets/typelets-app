@@ -32,8 +32,8 @@ export const CLERK_CONFIG = {
 // Index Config
 export const SEO_CONFIG = {
   signedOut: {
-    title: `Sign In - ${APP_NAME}`,
-    description: `Sign in to ${APP_NAME} - your secure, encrypted notes app.`,
+    title: 'Sign In',
+    description: 'Sign in to Typelets - your secure, encrypted notes app with zero-knowledge privacy.',
     keywords: [
       'sign in',
       'login',
@@ -43,8 +43,8 @@ export const SEO_CONFIG = {
     ],
   },
   signedIn: {
-    title: `${APP_NAME} - Secure Encrypted Notes`,
-    description: `Access and manage your encrypted notes securely with ${APP_NAME}.`,
+    title: 'Secure Encrypted Notes',
+    description: 'Secure encrypted notes with zero-knowledge privacy and integrated code execution for developers. Available on iOS, Android, and Web.',
     keywords: [
       'dashboard',
       'encrypted notes',

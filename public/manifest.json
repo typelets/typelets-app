@@ -1,0 +1,19 @@
+{
+  "name": "Typelets - Secure Encrypted Notes",
+  "short_name": "Typelets",
+  "description": "Secure, encrypted notes with file attachments. Works completely offline with automatic sync. Your thoughts stay private with end-to-end encryption.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#3b82f6",
+  "orientation": "any",
+  "scope": "/",
+  "categories": ["productivity", "utilities", "business"],
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "48x48 32x32 16x16",
+      "type": "image/x-icon"
+    }
+  ]
+}
