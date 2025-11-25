@@ -1,3 +1,10 @@
+## [1.42.8](https://github.com/typelets/typelets-app/compare/v1.42.7...v1.42.8) (2025-11-25)
+
+
+### Bug Fixes
+
+* add favicon and improve SEO metadata ([fa78158](https://github.com/typelets/typelets-app/commit/fa7815833a3e7118ef2e0ad4c99d43253fc0ed6b)), closes [#38](https://github.com/typelets/typelets-app/issues/38)
+
 ## [1.42.7](https://github.com/typelets/typelets-app/compare/v1.42.6...v1.42.7) (2025-11-25)
 
 
