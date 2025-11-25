@@ -2,6 +2,7 @@ import { useUser } from '@clerk/clerk-expo';
 import { Ionicons } from '@expo/vector-icons';
 import { BottomSheetBackdrop, BottomSheetBackdropProps,BottomSheetModal, BottomSheetScrollView, BottomSheetView } from '@gorhom/bottom-sheet';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFocusEffect } from '@react-navigation/native';
 import { GlassView } from 'expo-glass-effect';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
@@ -129,12 +130,7 @@ export default function SettingsScreen({ onLogout }: Props) {
     loadCachePreference();
   }, []);
 
-  // Load cache stats
-  useEffect(() => {
-    loadCacheStats();
-  }, []);
-
-  const loadCacheStats = async () => {
+  const loadCacheStats = useCallback(async () => {
     try {
       const stats = await getCacheStats();
       setCacheStats(stats);
@@ -143,7 +139,14 @@ export default function SettingsScreen({ onLogout }: Props) {
         console.error('Failed to load cache stats:', error);
       }
     }
-  };
+  }, []);
+
+  // Load cache stats on mount and whenever screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      loadCacheStats();
+    }, [loadCacheStats])
+  );
 
   const saveViewMode = async (mode: 'list' | 'grid') => {
     try {

@@ -11,6 +11,7 @@ import * as SQLite from 'expo-sqlite';
  */
 
 let database: SQLite.SQLiteDatabase | null = null;
+let initializationPromise: Promise<SQLite.SQLiteDatabase> | null = null;
 
 const DB_NAME = 'typelets_mobile.db';
 const DB_VERSION = 5;
@@ -164,7 +165,15 @@ async function migrateDatabase(db: SQLite.SQLiteDatabase): Promise<void> {
       // Clear notes cache so they get re-fetched with attachment counts
       console.log('[SQLite] Clearing notes cache to refresh with attachment counts...');
       await db.execAsync(`DELETE FROM notes;`);
-      await db.execAsync(`DELETE FROM cache_metadata WHERE resource_type = 'notes';`);
+
+      // Only clear cache_metadata if the table exists
+      const cacheTableCheck = await db.getFirstAsync<{ count: number }>(
+        `SELECT COUNT(*) as count FROM sqlite_master WHERE type='table' AND name='cache_metadata'`
+      );
+      if (cacheTableCheck && cacheTableCheck.count > 0) {
+        await db.execAsync(`DELETE FROM cache_metadata WHERE resource_type = 'notes';`);
+      }
+
       console.log('[SQLite] Notes cache cleared - will be refreshed on next load');
     }
   } catch (error) {
@@ -190,11 +199,74 @@ async function migrateDatabase(db: SQLite.SQLiteDatabase): Promise<void> {
       // Clear notes cache so they get re-fetched with public notes fields
       console.log('[SQLite] Clearing notes cache to refresh with public notes fields...');
       await db.execAsync(`DELETE FROM notes;`);
-      await db.execAsync(`DELETE FROM cache_metadata WHERE resource_type = 'notes';`);
+
+      // Only clear cache_metadata if the table exists
+      const cacheTableCheck = await db.getFirstAsync<{ count: number }>(
+        `SELECT COUNT(*) as count FROM sqlite_master WHERE type='table' AND name='cache_metadata'`
+      );
+      if (cacheTableCheck && cacheTableCheck.count > 0) {
+        await db.execAsync(`DELETE FROM cache_metadata WHERE resource_type = 'notes';`);
+      }
+
       console.log('[SQLite] Notes cache cleared - will be refreshed on next load');
     }
   } catch (error) {
     console.error('[SQLite] Failed to check/add public notes columns:', error);
+  }
+
+  // Safety check: Ensure cache_metadata table exists (runs every time)
+  try {
+    const tableCheck = await db.getFirstAsync<{ count: number }>(
+      `SELECT COUNT(*) as count FROM sqlite_master WHERE type='table' AND name='cache_metadata'`
+    );
+
+    if (tableCheck && tableCheck.count === 0) {
+      console.log('[SQLite] cache_metadata table missing, creating it now...');
+      await db.execAsync(`
+        CREATE TABLE cache_metadata (
+          id TEXT PRIMARY KEY,
+          resource_type TEXT NOT NULL,
+          resource_id TEXT,
+          e_tag TEXT,
+          last_modified INTEGER,
+          cached_at INTEGER NOT NULL,
+          expires_at INTEGER NOT NULL
+        );
+        CREATE INDEX IF NOT EXISTS idx_cache_resource ON cache_metadata(resource_type, resource_id);
+      `);
+      console.log('[SQLite] cache_metadata table created successfully');
+    }
+  } catch (error) {
+    console.error('[SQLite] Failed to check/create cache_metadata table:', error);
+  }
+
+  // Safety check: Ensure sync_queue table exists (runs every time)
+  try {
+    const tableCheck = await db.getFirstAsync<{ count: number }>(
+      `SELECT COUNT(*) as count FROM sqlite_master WHERE type='table' AND name='sync_queue'`
+    );
+
+    if (tableCheck && tableCheck.count === 0) {
+      console.log('[SQLite] sync_queue table missing, creating it now...');
+      await db.execAsync(`
+        CREATE TABLE sync_queue (
+          id TEXT PRIMARY KEY,
+          resource_type TEXT NOT NULL,
+          resource_id TEXT NOT NULL,
+          operation TEXT NOT NULL,
+          payload TEXT NOT NULL,
+          status TEXT DEFAULT 'pending',
+          retry_count INTEGER DEFAULT 0,
+          error_message TEXT,
+          created_at INTEGER NOT NULL,
+          synced_at INTEGER
+        );
+        CREATE INDEX IF NOT EXISTS idx_sync_status ON sync_queue(status);
+      `);
+      console.log('[SQLite] sync_queue table created successfully');
+    }
+  } catch (error) {
+    console.error('[SQLite] Failed to check/create sync_queue table:', error);
   }
 }
 
@@ -207,16 +279,22 @@ export async function initializeDatabase(): Promise<SQLite.SQLiteDatabase> {
     return database;
   }
 
+  // If initialization is in progress, wait for it
+  if (initializationPromise) {
+    console.log('[SQLite] Database initialization already in progress, waiting...');
+    return initializationPromise;
+  }
+
   console.log('[SQLite] Initializing database...');
+
+  // Create initialization promise
+  initializationPromise = (async () => {
 
   try {
     // Open database
     database = await SQLite.openDatabaseAsync(DB_NAME);
 
-    // Run migrations first
-    await migrateDatabase(database);
-
-    // Create tables (if they don't exist)
+    // Create base tables FIRST (if they don't exist) - this ensures migrations can reference them
     await database.execAsync(`
       PRAGMA journal_mode = WAL;
 
@@ -304,24 +382,47 @@ export async function initializeDatabase(): Promise<SQLite.SQLiteDatabase> {
       CREATE INDEX IF NOT EXISTS idx_notes_folder_status ON notes(folder_id, deleted, archived) WHERE folder_id IS NOT NULL;
     `);
 
+    console.log('[SQLite] Base tables created');
+
+    // Now run migrations - migrations can safely reference all tables
+    await migrateDatabase(database);
+
     console.log('[SQLite] Database initialized successfully');
     return database;
   } catch (error) {
     console.error('[SQLite] Failed to initialize database:', error);
+    database = null;
+    initializationPromise = null;
     throw error;
   }
+  })();
+
+  return initializationPromise;
 }
 
 /**
  * Get the database instance
- * @throws Error if database hasn't been initialized yet
+ * Automatically initializes if not yet initialized
  */
 export function getDatabase(): SQLite.SQLiteDatabase {
-  if (!database) {
+  if (!database && !initializationPromise) {
+    // Auto-initialize if not already initializing
+    console.warn('[SQLite] Database accessed before initialization, auto-initializing...');
+    // We can't await here since this is a sync function, but we start the init
+    initializeDatabase().catch(err => {
+      console.error('[SQLite] Auto-initialization failed:', err);
+    });
     throw new Error(
-      '[SQLite] Database not initialized. Call initializeDatabase() first.'
+      '[SQLite] Database not initialized yet. Initialization started automatically.'
     );
   }
+
+  if (!database) {
+    throw new Error(
+      '[SQLite] Database initialization in progress. Please wait.'
+    );
+  }
+
   return database;
 }
 
@@ -362,6 +463,7 @@ export async function closeDatabase(): Promise<void> {
   if (database) {
     await database.closeAsync();
     database = null;
+    initializationPromise = null;
     console.log('[SQLite] Database closed');
   }
 }
