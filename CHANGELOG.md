@@ -1,3 +1,10 @@
+## [1.42.5](https://github.com/typelets/typelets-app/compare/v1.42.4...v1.42.5) (2025-11-25)
+
+
+### Bug Fixes
+
+* **mobile:** hide "Create Note" button in filtered views ([9aa44a1](https://github.com/typelets/typelets-app/commit/9aa44a1812d10c7def2e939ccc63f8ee6bddab0b)), closes [#37](https://github.com/typelets/typelets-app/issues/37)
+
 ## [1.42.4](https://github.com/typelets/typelets-app/compare/v1.42.3...v1.42.4) (2025-11-25)
 
 
