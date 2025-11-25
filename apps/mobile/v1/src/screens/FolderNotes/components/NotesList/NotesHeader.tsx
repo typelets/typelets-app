@@ -55,6 +55,7 @@ export const NotesHeader: React.FC<NotesHeaderProps> = ({
 
       {/* Create Note Button / Empty Trash Button - Full width to match note list */}
       {viewType === 'trash' ? (
+        // Show "Empty Trash" button only in trash view
         filteredNotesCount > 0 && (
           <View style={styles.buttonWrapper}>
             <GlassView glassEffectStyle="regular" style={[styles.createNoteButtonGlass, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]}>
@@ -70,7 +71,8 @@ export const NotesHeader: React.FC<NotesHeaderProps> = ({
             </GlassView>
           </View>
         )
-      ) : (
+      ) : (viewType === 'all' || !viewType) ? (
+        // Show "Create Note" button only in "All Notes" view or folder views (no viewType)
         <View style={styles.buttonWrapper} ref={createNoteButtonRef} collapsable={false}>
           <GlassView glassEffectStyle="regular" style={[styles.createNoteButtonGlass, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]}>
             <Pressable
@@ -84,7 +86,7 @@ export const NotesHeader: React.FC<NotesHeaderProps> = ({
             </Pressable>
           </GlassView>
         </View>
-      )}
+      ) : null}
     </View>
   );
 };
