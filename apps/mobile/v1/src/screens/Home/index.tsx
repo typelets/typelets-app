@@ -132,6 +132,27 @@ export default function HomeScreen() {
   const isFirstMountRef = useRef(true);
   const hasDataRef = useRef(false);
 
+  // Load cached counts from AsyncStorage on mount
+  useEffect(() => {
+    const loadCachedCounts = async () => {
+      try {
+        const cached = await AsyncStorage.getItem('cached_note_counts');
+        if (cached) {
+          const cachedCounts = JSON.parse(cached);
+          setCounts(cachedCounts);
+          if (__DEV__) {
+            console.log('[HomeScreen] Loaded cached counts:', cachedCounts);
+          }
+        }
+      } catch (error) {
+        if (__DEV__) {
+          console.error('[HomeScreen] Failed to load cached counts:', error);
+        }
+      }
+    };
+    loadCachedCounts();
+  }, []);
+
   // Load folders data
   const loadFoldersData = useCallback(async (isRefresh = false, forceRefresh = false) => {
     try {
@@ -176,6 +197,18 @@ export default function HomeScreen() {
       };
 
       setCounts(newCounts);
+
+      // Cache counts in AsyncStorage for instant display on next app start
+      try {
+        await AsyncStorage.setItem('cached_note_counts', JSON.stringify(newCounts));
+        if (__DEV__) {
+          console.log('[HomeScreen] Cached note counts saved');
+        }
+      } catch (error) {
+        if (__DEV__) {
+          console.error('[HomeScreen] Failed to cache counts:', error);
+        }
+      }
 
       // Mark that we have data now (prevents loading state on refocus)
       hasDataRef.current = true;
