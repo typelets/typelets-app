@@ -1,3 +1,10 @@
+## [1.42.9](https://github.com/typelets/typelets-app/compare/v1.42.8...v1.42.9) (2025-11-26)
+
+
+### Bug Fixes
+
+* TOC state now persists correctly on public notes ([406ca0f](https://github.com/typelets/typelets-app/commit/406ca0f71a5ba14a6708f97c45428638e18b2d68)), closes [#35](https://github.com/typelets/typelets-app/issues/35)
+
 ## [1.42.8](https://github.com/typelets/typelets-app/compare/v1.42.7...v1.42.8) (2025-11-25)
 
 
