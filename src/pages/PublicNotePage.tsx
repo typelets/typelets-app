@@ -614,9 +614,27 @@ export default function PublicNotePage() {
   // Get slug from URL
   const slug = window.location.pathname.split('/p/')[1];
 
+  // Initialize theme on mount
+  useEffect(() => {
+    // Check if theme class is already set by index.html script
+    const hasLight = document.documentElement.classList.contains('light');
+    const hasDark = document.documentElement.classList.contains('dark');
+
+    if (hasLight || hasDark) {
+      // Use existing theme from index.html
+      setTheme(hasDark ? 'dark' : 'light');
+    } else {
+      // No theme set, use system theme
+      setTheme(getSystemTheme());
+    }
+  }, []);
+
   // Apply theme to document
   useEffect(() => {
-    document.documentElement.classList.toggle('dark', theme === 'dark');
+    // Remove both classes first to avoid conflicts
+    document.documentElement.classList.remove('dark', 'light');
+    // Add the current theme class
+    document.documentElement.classList.add(theme);
   }, [theme]);
 
   // Show/hide scroll to top button based on scroll position
