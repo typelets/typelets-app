@@ -706,10 +706,10 @@ export default function PublicNotePage() {
           `;
         }).join('');
 
-        // Default to collapsed state
+        // Use current tocExpanded state
         tocHtml = `
-          <div class="toc-container toc-collapsed" data-toc-interactive>
-            <button class="toc-header toc-toggle" type="button" aria-expanded="false">
+          <div class="toc-container ${tocExpanded ? '' : 'toc-collapsed'}" data-toc-interactive>
+            <button class="toc-header toc-toggle" type="button" aria-expanded="${tocExpanded}">
               <div class="toc-header-left">
                 <svg class="toc-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <polyline points="9 18 15 12 9 6"></polyline>
@@ -748,7 +748,7 @@ export default function PublicNotePage() {
     });
 
     setProcessedContent(sanitizedContent);
-  }, [note?.content]);
+  }, [note?.content, tocExpanded]);
 
   // SEO: Update document title and meta tags
   useEffect(() => {
