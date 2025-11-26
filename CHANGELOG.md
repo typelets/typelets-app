@@ -1,3 +1,10 @@
+## [1.42.10](https://github.com/typelets/typelets-app/compare/v1.42.9...v1.42.10) (2025-11-26)
+
+
+### Bug Fixes
+
+* theme toggle now detects system theme and works on first click ([2a3ffd8](https://github.com/typelets/typelets-app/commit/2a3ffd8d93f57ea8f159dee70d5f6afa4c0565f0)), closes [#42](https://github.com/typelets/typelets-app/issues/42)
+
 ## [1.42.9](https://github.com/typelets/typelets-app/compare/v1.42.8...v1.42.9) (2025-11-26)
 
 
