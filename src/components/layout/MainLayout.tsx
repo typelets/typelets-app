@@ -34,12 +34,18 @@ export default function MainLayout() {
   const [activeTabId, setActiveTabId] = useState<string | null>(null);
 
   // Sync responsive panel states with local states for desktop
+  /* eslint-disable react-hooks/set-state-in-effect -- Sync external state to local state */
   useEffect(() => {
     if (!isMobile) {
-      setFolderSidebarOpen(responsiveFolderPanel.isOpen);
-      setFilesPanelOpen(responsiveNotesPanel.isOpen);
+      if (folderSidebarOpen !== responsiveFolderPanel.isOpen) {
+        setFolderSidebarOpen(responsiveFolderPanel.isOpen);
+      }
+      if (filesPanelOpen !== responsiveNotesPanel.isOpen) {
+        setFilesPanelOpen(responsiveNotesPanel.isOpen);
+      }
     }
-  }, [isMobile, responsiveFolderPanel.isOpen, responsiveNotesPanel.isOpen]);
+  }, [isMobile, responsiveFolderPanel.isOpen, responsiveNotesPanel.isOpen, folderSidebarOpen, filesPanelOpen]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const {
     notes,
@@ -280,17 +286,19 @@ export default function MainLayout() {
   }, [selectedNote]);
 
   // Update tab properties when note changes
+  /* eslint-disable react-hooks/set-state-in-effect -- Sync note properties to tab state */
   useEffect(() => {
-    if (!selectedNote?.id) return;
-
-    setOpenTabs(tabs =>
-      tabs.map(tab =>
-        tab.noteId === selectedNote.id
-          ? { ...tab, title: selectedNote.title || 'Untitled', type: selectedNote.type || 'note', isPublished: selectedNote.isPublished }
-          : tab
-      )
-    );
-  }, [selectedNote]);
+    if (selectedNote?.id) {
+      setOpenTabs(tabs =>
+        tabs.map(tab =>
+          tab.noteId === selectedNote.id
+            ? { ...tab, title: selectedNote.title || 'Untitled', type: selectedNote.type || 'note', isPublished: selectedNote.isPublished }
+            : tab
+        )
+      );
+    }
+  }, [selectedNote?.id, selectedNote?.title, selectedNote?.type, selectedNote?.isPublished]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const handlePasswordChange = useCallback(() => {
     setSelectedNote(null);

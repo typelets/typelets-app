@@ -95,6 +95,22 @@ function stripHtmlTags(html: string): string {
   return html.replace(/</g, '').replace(/>/g, '').trim();
 }
 
+function extractFirstImage(html: string): string | null {
+  // Extract the first image src from HTML content
+  // Matches both <img src="..."> and <img ... src="...">
+  const imgRegex = /<img[^>]+src=["']([^"']+)["'][^>]*>/i;
+  const match = html.match(imgRegex);
+  if (match && match[1]) {
+    const src = match[1];
+    // Skip base64 data URIs as they're too large for og:image
+    if (src.startsWith('data:')) {
+      return null;
+    }
+    return src;
+  }
+  return null;
+}
+
 function formatDate(dateString: string): string {
   try {
     return new Intl.DateTimeFormat('en-US', {
@@ -115,6 +131,12 @@ function generateHTML(note: PublicNote, origin: string): string {
     ? escapeHtml(stripHtmlTags(note.content).slice(0, 160).trim()) + '...'
     : 'A note shared via Typelets';
   const noteUrl = `${origin}/p/${note.slug}`;
+
+  // Extract first image from content, or use default OG image
+  const contentImage = note.content ? extractFirstImage(note.content) : null;
+  const ogImage = contentImage || `${origin}/og-image.png`;
+  // Use summary_large_image if we have an image, otherwise summary
+  const twitterCardType = contentImage ? 'summary_large_image' : 'summary';
 
   // Process content: strip sensitive data attributes
   let processedContent = note.content || '';
@@ -140,15 +162,19 @@ function generateHTML(note: PublicNote, origin: string): string {
   <meta property="og:description" content="${description}" />
   <meta property="og:url" content="${noteUrl}" />
   <meta property="og:site_name" content="Typelets" />
+  <meta property="og:image" content="${ogImage}" />
+  <meta property="og:image:alt" content="${escapeHtml(note.title || 'Typelets Note')}" />
   ${note.authorName ? `<meta property="article:author" content="${escapeHtml(note.authorName)}" />` : ''}
   <meta property="article:published_time" content="${note.publishedAt}" />
   <meta property="article:modified_time" content="${note.updatedAt}" />
 
   <!-- Twitter Card -->
-  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:card" content="${twitterCardType}" />
   <meta name="twitter:title" content="${title}" />
   <meta name="twitter:description" content="${description}" />
   <meta name="twitter:site" content="@typelets" />
+  <meta name="twitter:image" content="${ogImage}" />
+  <meta name="twitter:image:alt" content="${escapeHtml(note.title || 'Typelets Note')}" />
 
   <!-- Favicons -->
   <link rel="icon" type="image/x-icon" href="/favicon.ico" />
@@ -193,6 +219,7 @@ function generateHTML(note: PublicNote, origin: string): string {
     "headline": "${escapeHtml(note.title || 'Untitled Note')}",
     "description": "${description}",
     "url": "${noteUrl}",
+    "image": "${ogImage}",
     "datePublished": "${note.publishedAt}",
     "dateModified": "${note.updatedAt}",
     ${note.authorName ? `"author": { "@type": "Person", "name": "${escapeHtml(note.authorName)}" },` : ''}

@@ -59,10 +59,12 @@ export const NoteLinkSuggestionList = forwardRef<
     );
   }, [filteredItems.length]);
 
-  // Reset selection when items change
+  // Reset selection when filtered items change
+  /* eslint-disable react-hooks/set-state-in-effect -- Legitimate reset on data change */
   useEffect(() => {
     setSelectedIndex(0);
   }, [filteredItems]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   useImperativeHandle(
     ref,

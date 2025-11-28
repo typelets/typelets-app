@@ -1,7 +1,7 @@
 import { Node, mergeAttributes } from '@tiptap/core';
 import { ReactNodeViewRenderer } from '@tiptap/react';
 import { NodeViewWrapper } from '@tiptap/react';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { X, Maximize2 } from 'lucide-react';
 
 const ImageComponent = (props: {
@@ -19,15 +19,16 @@ const ImageComponent = (props: {
   const { node, deleteNode, updateAttributes } = props;
   const [showControls, setShowControls] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
+  const [width, setWidth] = useState(node.attrs.width || 'auto');
   const imageRef = useRef<HTMLImageElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const initialWidth = node.attrs.width || 'auto';
-  const [width, setWidth] = useState(initialWidth);
-
+  // Sync width with node attrs
+  /* eslint-disable react-hooks/set-state-in-effect -- Sync external prop to local state */
   useEffect(() => {
     setWidth(node.attrs.width || 'auto');
   }, [node.attrs.width]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const handleResize = (e: React.MouseEvent) => {
     e.preventDefault();

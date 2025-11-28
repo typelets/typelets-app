@@ -77,7 +77,7 @@ function NoteCard({
     }
 
     return text || 'No additional text';
-  }, [note?.content, note?.hidden]);
+  }, [note]);
 
   const folder = useMemo(() => {
     // First check if note has embedded folder data
@@ -88,7 +88,7 @@ function NoteCard({
     // Fallback to looking up in folders array
     if (!note?.folderId || !folders || folders.length === 0) return null;
     return folders.find((f) => f.id === note.folderId) || null;
-  }, [note?.folder, note?.folderId, folders]);
+  }, [note, folders]);
 
   const hasExecutableCode = useMemo(() => {
     if (!note?.content) return false;
@@ -99,7 +99,7 @@ function NoteCard({
       note.content.includes('class="executable-code-block"') ||
       note.content.includes('executableCodeBlock')
     );
-  }, [note?.content]);
+  }, [note]);
 
   if (!note) {
     return null;

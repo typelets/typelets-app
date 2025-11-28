@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { X, Smartphone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useMobilePlatform } from '@/hooks/useIsMobile';
@@ -10,15 +10,11 @@ const BANNER_DISMISSED_KEY = 'typelets_mobile_banner_dismissed';
 
 export function MobileAppBanner() {
   const platform = useMobilePlatform();
-  const [isDismissed, setIsDismissed] = useState(true);
-
-  useEffect(() => {
-    // Check if banner was previously dismissed
+  // Initialize state based on localStorage to avoid setState in effect
+  const [isDismissed, setIsDismissed] = useState(() => {
     const dismissed = localStorage.getItem(BANNER_DISMISSED_KEY);
-    if (!dismissed && platform) {
-      setIsDismissed(false);
-    }
-  }, [platform]);
+    return !!dismissed || !platform;
+  });
 
   const handleDismiss = () => {
     setIsDismissed(true);
