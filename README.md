@@ -98,8 +98,11 @@ Available on iOS and Android with the same powerful features and encryption.
 - 🔄 **Auto-sync** - Changes to your note automatically update the public version
 - ❌ **Instant unpublish** - Remove public access at any time (hard delete)
 - 🛡️ **Security hardened** - DOMPurify sanitization, rate limiting, no internal IDs exposed
+- 🔍 **SEO optimized** - Server-side rendering for search engine indexing and social previews
 
 > ⚠️ **Important:** Publishing a note bypasses end-to-end encryption. An unencrypted copy is stored on our servers and anyone with the link can view it. Use this feature only for content you intend to share publicly.
+
+> 💡 **Optional:** For improved SEO on public notes, you can deploy the SSR worker. See [`worker/README.md`](./worker/README.md) for setup instructions.
 
 ### ⚡ Executable Code Blocks
 
@@ -418,6 +421,9 @@ typelets/
 │   │   └── encryption/ # Client-side encryption
 │   ├── types/          # TypeScript definitions
 │   └── App.tsx         # Main App component
+├── worker/             # Cloudflare Worker for SSR (optional)
+│   ├── src/            # Worker source code
+│   └── README.md       # SSR setup instructions
 ├── public/             # Static assets
 ├── nginx.conf.template # Nginx configuration
 ├── vite.config.ts      # Vite configuration with proxy

@@ -1,0 +1,14 @@
+name = "typelets-public-notes-ssr"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+
+[vars]
+# Your backend API URL
+API_URL = "https://your-api-domain.com/api"
+ENVIRONMENT = "production"
+
+# Routes - intercept /p/* paths
+# Configure this in your Cloudflare dashboard or uncomment:
+# [[routes]]
+# pattern = "app.typelets.com/p/*"
+# zone_name = "typelets.com"
