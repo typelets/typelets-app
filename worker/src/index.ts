@@ -90,9 +90,9 @@ function escapeHtml(text: string): string {
 }
 
 function stripHtmlTags(html: string): string {
-  // Remove all < and > characters to prevent incomplete tag stripping
-  // This is safe since we only use this for plain text extraction (meta descriptions)
-  return html.replace(/<[^>]*>/g, '').replace(/[<>]/g, '').trim();
+  // Remove all < and > characters individually to extract plain text
+  // Used only for meta description generation, not for HTML rendering
+  return html.replace(/</g, '').replace(/>/g, '').trim();
 }
 
 function formatDate(dateString: string): string {
