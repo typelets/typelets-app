@@ -1,3 +1,10 @@
+# [1.44.0](https://github.com/typelets/typelets-app/compare/v1.43.0...v1.44.0) (2025-11-29)
+
+
+### Features
+
+* add Twitter/OG image support for public notes ([bd4560f](https://github.com/typelets/typelets-app/commit/bd4560f1892b34c7c77be2a87c4445ca29c1aab7))
+
 # [1.43.0](https://github.com/typelets/typelets-app/compare/v1.42.10...v1.43.0) (2025-11-29)
 
 
