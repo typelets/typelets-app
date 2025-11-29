@@ -1,3 +1,18 @@
+# [1.43.0](https://github.com/typelets/typelets-app/compare/v1.42.10...v1.43.0) (2025-11-29)
+
+
+### Bug Fixes
+
+* add permissions to CI workflow ([bd8da04](https://github.com/typelets/typelets-app/commit/bd8da046e0e756b22c1770ec3d0885e8c6c75c0c))
+* add pnpm-lock and pnpm-workspace files ([80c86f0](https://github.com/typelets/typelets-app/commit/80c86f04ef4a9aedcc140c4411bc528c7119d09d))
+* improve HTML tag stripping to prevent injection ([ec327cb](https://github.com/typelets/typelets-app/commit/ec327cba1abafa75755bbb6d47d218001a9253d1))
+* improve HTML tag stripping to prevent injection ([f7ff3cb](https://github.com/typelets/typelets-app/commit/f7ff3cb252c04c934f5aa1cc462e88cbd85b7ccf))
+
+
+### Features
+
+* add SSR worker for public notes SEO ([68e2581](https://github.com/typelets/typelets-app/commit/68e25810bb99b484ea1d7059c97fc252d217b6a6)), closes [#47](https://github.com/typelets/typelets-app/issues/47)
+
 ## [1.42.10](https://github.com/typelets/typelets-app/compare/v1.42.9...v1.42.10) (2025-11-26)
 
 
