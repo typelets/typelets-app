@@ -135,7 +135,7 @@ function generateHTML(note: PublicNote, origin: string): string {
   // Extract first image from content, or use default OG image
   const contentImage = note.content ? extractFirstImage(note.content) : null;
   const ogImage = contentImage || `${origin}/og-image.png`;
-  // Use summary_large_image if we have an image, otherwise summary
+  // Use summary_large_image if note has an image, otherwise summary (square) for logo fallback
   const twitterCardType = contentImage ? 'summary_large_image' : 'summary';
 
   // Process content: strip sensitive data attributes
