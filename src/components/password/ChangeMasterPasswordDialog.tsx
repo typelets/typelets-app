@@ -25,6 +25,8 @@ export function ChangeMasterPasswordDialog({
   const [isChanging, setIsChanging] = useState(false);
   const newPasswordRef = useRef<HTMLInputElement>(null);
 
+  // Reset form state when dialog opens
+  /* eslint-disable react-hooks/set-state-in-effect -- Legitimate form reset on dialog open */
   useEffect(() => {
     if (open) {
       setNewPassword('');
@@ -38,6 +40,7 @@ export function ChangeMasterPasswordDialog({
       }, 100);
     }
   }, [open]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const handleChange = async () => {
     if (!user?.id || isChanging) return;

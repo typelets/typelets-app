@@ -1,6 +1,5 @@
 import {
   useState,
-  useEffect,
   useImperativeHandle,
   forwardRef,
   useCallback,
@@ -276,10 +275,6 @@ export const SlashCommandsList = forwardRef<
   const downHandler = useCallback(() => {
     setSelectedIndex((selectedIndex + 1) % commands.length);
   }, [selectedIndex]);
-
-  useEffect(() => {
-    setSelectedIndex(0);
-  }, []);
 
   useImperativeHandle(
     ref,

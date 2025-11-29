@@ -4,7 +4,7 @@ compatibility_date = "2024-01-01"
 
 [vars]
 # Your backend API URL
-API_URL = "https://your-api-domain.com/api"
+API_URL = "https://api.typelets.com/api"
 ENVIRONMENT = "production"
 
 # Routes - intercept /p/* paths

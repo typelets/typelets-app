@@ -151,6 +151,7 @@ export function useEditorEffects({
 
       const editorElement = editor.view.dom as HTMLElement;
 
+      /* eslint-disable react-hooks/immutability -- Modifying DOM element style, not React state */
       if (zoomLevel === 100) {
         // At 100%, use the original font size
         editorElement.style.fontSize = baseFontSize;
@@ -161,6 +162,7 @@ export function useEditorEffects({
         const newSize = baseSize * scaleFactor;
         editorElement.style.fontSize = `${newSize}px`;
       }
+      /* eslint-enable react-hooks/immutability */
     } catch {
       // Silently ignore zoom level application errors
     }

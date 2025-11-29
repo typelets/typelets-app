@@ -19,7 +19,7 @@ export function useSignout() {
 
     // Perform the actual signout
     await signOut();
-  }, [signOut, user?.id]);
+  }, [signOut, user]);
 
   return { signOut: handleSignout };
 }
