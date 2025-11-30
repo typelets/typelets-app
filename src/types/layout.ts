@@ -44,6 +44,7 @@ export interface FilesPanelProps {
   onCreateNote: (templateContent?: { title: string; content: string }) => void;
   onCreateDiagram?: (templateCode?: string) => void;
   onCreateCode?: (templateData?: { language: string; code: string }) => void;
+  onCreateSheets?: () => void;
   onToggleFolderPanel: () => void;
   onEmptyTrash: () => Promise<void>;
   onRefresh?: () => Promise<void>;

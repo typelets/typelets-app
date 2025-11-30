@@ -54,19 +54,15 @@ interface SheetsEditorProps {
   onDeleteNote?: (noteId: string) => void;
   onMoveNote?: (noteId: string, updates: { folderId: string | null }) => void;
   onPublishNote?: (noteId: string, authorName?: string) => Promise<unknown>;
-  onUnpublishNote?: (noteId: string) => Promise<void>;
+  onUnpublishNote?: (noteId: string) => Promise<boolean>;
   onToggleNotesPanel?: () => void;
   isNotesPanelOpen?: boolean;
   onDirtyChange?: (isDirty: boolean) => void;
   isReadOnly?: boolean;
 }
 
-interface WorkbookData {
-  id?: string;
-  name?: string;
-  sheetOrder?: string[];
-  sheets?: Record<string, unknown>;
-}
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type WorkbookData = any;
 
 const DEFAULT_WORKBOOK_DATA: WorkbookData = {
   id: 'workbook-1',
@@ -548,7 +544,7 @@ export function SheetsEditor({
         onClose={() => setIsMoveModalOpen(false)}
         onMove={handleMoveNote}
         folders={folders || []}
-        currentFolderId={folderId}
+        currentFolderId={folderId ?? null}
       />
 
       {/* Publish Note Modal */}

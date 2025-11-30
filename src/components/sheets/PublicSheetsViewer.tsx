@@ -13,12 +13,8 @@ interface PublicSheetsViewerProps {
 
 type LoadingState = 'loading' | 'ready' | 'error';
 
-interface WorkbookData {
-  id?: string;
-  name?: string;
-  sheetOrder?: string[];
-  sheets?: Record<string, unknown>;
-}
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type WorkbookData = any;
 
 const DEFAULT_WORKBOOK_DATA: WorkbookData = {
   id: 'workbook-1',
