@@ -48,6 +48,7 @@ export interface FilesPanelProps {
   onEmptyTrash: () => Promise<void>;
   onRefresh?: () => Promise<void>;
   creatingNote?: boolean;
+  loading?: boolean;
   isMobile?: boolean;
   onClose?: () => void;
 }

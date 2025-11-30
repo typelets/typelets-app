@@ -8,6 +8,10 @@ import { Highlight } from '@tiptap/extension-highlight';
 import { Dropcursor } from '@tiptap/extension-dropcursor';
 import { Color } from '@tiptap/extension-color';
 import { TextStyle } from '@tiptap/extension-text-style';
+import { Table } from '@tiptap/extension-table';
+import { TableRow } from '@tiptap/extension-table-row';
+import { TableCell } from '@tiptap/extension-table-cell';
+import { TableHeader } from '@tiptap/extension-table-header';
 import { TableOfContents } from '../extensions/TableOfContents';
 import { ResizableImage } from '../extensions/ResizableImage';
 import { ExecutableCodeBlock } from '../extensions/ExecutableCodeBlock';
@@ -120,5 +124,26 @@ export function createEditorExtensions(options: EditorExtensionsOptions = {}) {
     }),
     TextStyle,
     Color,
+    Table.configure({
+      resizable: true,
+      HTMLAttributes: {
+        class: 'border-collapse table-auto w-full',
+      },
+    }),
+    TableRow.configure({
+      HTMLAttributes: {
+        class: '',
+      },
+    }),
+    TableHeader.configure({
+      HTMLAttributes: {
+        class: 'border border-border bg-muted px-3 py-2 text-left font-semibold',
+      },
+    }),
+    TableCell.configure({
+      HTMLAttributes: {
+        class: 'border border-border px-3 py-2',
+      },
+    }),
   ];
 }

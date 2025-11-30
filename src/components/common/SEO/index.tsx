@@ -11,7 +11,7 @@ interface SEOProps {
 
 export default function Index({
   title,
-  description = 'Secure encrypted notes with zero-knowledge privacy and integrated code execution for developers. Available on iOS, Android, and Web.',
+  description = 'Secure encrypted workspace with documents, spreadsheets, diagrams, and code execution. Zero-knowledge privacy. Available on iOS, Android, and Web.',
   image = '/og-image.jpg',
   url,
   type = 'website',
@@ -30,7 +30,7 @@ export default function Index({
     'encrypted storage',
   ],
 }: SEOProps) {
-  const siteTitle = 'Secure Encrypted Notes - Typelets | iOS, Android & Web | Zero-Knowledge AES-256';
+  const siteTitle = 'Typelets Secure Workspace | iOS, Android & Web | Zero-Knowledge AES-256';
   const fullTitle = title ? `${title} | Typelets` : siteTitle;
   const currentUrl =
     url ?? (typeof window !== 'undefined' ? window.location.href : '');

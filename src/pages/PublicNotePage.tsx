@@ -1,7 +1,11 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, lazy, Suspense } from 'react';
 import { Calendar, User, AlertCircle, Sun, Moon, ArrowUp } from 'lucide-react';
 import type { ApiPublicNoteResponse } from '@/lib/api/api';
 import DOMPurify from 'dompurify';
+
+// Lazy load the sheets viewer to avoid loading Univer for non-sheet notes
+const PublicSheetsViewer = lazy(() => import('@/components/sheets/PublicSheetsViewer'));
+import { SheetsErrorBoundary } from '@/components/sheets/SheetsErrorBoundary';
 import hljs from 'highlight.js/lib/core';
 import javascript from 'highlight.js/lib/languages/javascript';
 import typescript from 'highlight.js/lib/languages/typescript';
@@ -40,6 +44,18 @@ type Theme = 'light' | 'dark';
 
 // Note: Public notes API endpoint doesn't require authentication
 const VITE_API_URL = import.meta.env.VITE_API_URL as string;
+
+// Helper to detect if content is a sheets workbook
+function isWorkbookContent(content: string): boolean {
+  if (!content) return false;
+  try {
+    const parsed = JSON.parse(content);
+    // Check for typical workbook structure
+    return parsed && (parsed.sheets || parsed.sheetOrder || parsed.id?.startsWith?.('workbook'));
+  } catch {
+    return false;
+  }
+}
 
 // TipTap content styles for proper rendering
 const tiptapContentStyles = `
@@ -574,6 +590,65 @@ const tiptapContentStyles = `
 .dark .tiptap-content .toc-empty-message {
   color: #9ca3af;
 }
+
+/* Table Styles */
+.tiptap-content table {
+  width: 100%;
+  max-width: 100%;
+  border-collapse: collapse;
+  margin: 16px 0;
+  display: block;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.tiptap-content table tbody,
+.tiptap-content table thead {
+  display: table;
+  width: 100%;
+  table-layout: fixed;
+}
+
+.tiptap-content table th,
+.tiptap-content table td {
+  border: 1px solid #d1d5db;
+  padding: 8px 12px;
+  text-align: left;
+  vertical-align: top;
+  min-width: 80px;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.dark .tiptap-content table th,
+.dark .tiptap-content table td {
+  border-color: #4b5563;
+}
+
+.tiptap-content table th {
+  background-color: #f3f4f6;
+  font-weight: 600;
+}
+
+.dark .tiptap-content table th {
+  background-color: #374151;
+}
+
+.tiptap-content table tr:nth-child(even) td {
+  background-color: #f9fafb;
+}
+
+.dark .tiptap-content table tr:nth-child(even) td {
+  background-color: #1f2937;
+}
+
+.tiptap-content table tr:hover td {
+  background-color: #f3f4f6;
+}
+
+.dark .tiptap-content table tr:hover td {
+  background-color: #374151;
+}
 `;
 
 async function fetchPublicNote(slug: string): Promise<ApiPublicNoteResponse> {
@@ -920,7 +995,12 @@ export default function PublicNotePage() {
   };
 
   const ThemeIcon = () => {
-    return theme === 'light' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />;
+    return (
+      <>
+        <Sun className="h-4 w-4 scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90" />
+        <Moon className="absolute h-4 w-4 scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0" />
+      </>
+    );
   };
 
   const formatDate = (dateString: string) => {
@@ -939,7 +1019,7 @@ export default function PublicNotePage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-gray-900">
+      <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-black">
         <div className="text-center">
           <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent" />
           <p className="text-gray-600 dark:text-gray-400">Loading note...</p>
@@ -950,7 +1030,7 @@ export default function PublicNotePage() {
 
   if (error || !note) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-gray-900">
+      <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-black">
         <div className="max-w-md text-center">
           <AlertCircle className="mx-auto mb-4 h-12 w-12 text-red-500" />
           <h1 className="mb-2 text-2xl font-bold text-gray-900 dark:text-white">
@@ -966,17 +1046,83 @@ export default function PublicNotePage() {
     );
   }
 
+  // Determine if this is a sheet
+  const isSheet = note.type === 'sheets' || isWorkbookContent(note.content);
+
+  // For sheets, use a full-screen layout with header
+  if (isSheet) {
+    return (
+      <div className="flex h-screen flex-col bg-gray-50 dark:bg-black">
+        {/* Header with title and meta */}
+        <header className="flex-shrink-0 border-b border-gray-200 bg-white px-4 py-3 dark:border-gray-800 dark:bg-black">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-lg font-bold text-gray-900 dark:text-white">
+                {note.title || 'Untitled Sheet'}
+              </h1>
+              <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                {note.authorName && (
+                  <>
+                    <div className="flex items-center gap-1">
+                      <User className="h-3 w-3" />
+                      <span>{note.authorName}</span>
+                    </div>
+                    <span>•</span>
+                  </>
+                )}
+                <div className="flex items-center gap-1">
+                  <Calendar className="h-3 w-3" />
+                  <span>Published {formatDate(note.publishedAt)}</span>
+                </div>
+                {note.updatedAt !== note.publishedAt && (
+                  <span>(Updated {formatDate(note.updatedAt)})</span>
+                )}
+                <span>•</span>
+                <span className="text-orange-600 dark:text-orange-400">Read-only</span>
+                <span>•</span>
+                <span>
+                  Shared via <a href="https://typelets.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">Typelets</a>
+                </span>
+              </div>
+            </div>
+            <button
+              onClick={toggleTheme}
+              className="relative flex h-8 w-8 items-center justify-center rounded-md border border-gray-200 bg-white text-gray-500 hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 transition-colors"
+              title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+              aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+            >
+              <ThemeIcon />
+            </button>
+          </div>
+        </header>
+
+        {/* Sheet content - takes remaining height */}
+        <div className="flex-1 overflow-hidden">
+          <SheetsErrorBoundary fallbackTitle="Failed to load spreadsheet">
+            <Suspense fallback={
+              <div className="flex h-full items-center justify-center bg-white dark:bg-black">
+                <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent" />
+              </div>
+            }>
+              <PublicSheetsViewer content={note.content} darkMode={theme === 'dark'} />
+            </Suspense>
+          </SheetsErrorBoundary>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-white dark:bg-black">
       {/* Header */}
-      <header className="sticky top-0 z-10 border-b border-gray-200 bg-white/80 backdrop-blur dark:border-gray-800 dark:bg-gray-900/80">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3 sm:py-4">
+      <header className="sticky top-0 z-10 border-b border-gray-200 bg-white/80 backdrop-blur dark:border-gray-800 dark:bg-black/80">
+        <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-3 sm:py-4">
           <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
             <a href="https://typelets.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition-colors">Typelets</a> Shared Note
           </span>
           <button
             onClick={toggleTheme}
-            className="rounded-md p-2 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800 transition-colors"
+            className="relative flex h-8 w-8 items-center justify-center rounded-md border border-gray-200 bg-white text-gray-500 hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 transition-colors"
             title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
             aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
           >
@@ -986,15 +1132,15 @@ export default function PublicNotePage() {
       </header>
 
       {/* Content */}
-      <main className="mx-auto max-w-5xl px-3 sm:px-4 py-4 sm:py-8">
-        <article className="rounded-lg bg-white p-4 sm:p-6 md:p-8 shadow-sm dark:bg-gray-800">
+      <main className="mx-auto max-w-3xl px-4 py-8 sm:py-12">
+        <article>
           {/* Title */}
           <h1 className="mb-3 sm:mb-4 text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
             {note.title || 'Untitled Note'}
           </h1>
 
           {/* Meta */}
-          <div className="mb-6 sm:mb-8 flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+          <div className="mb-8 sm:mb-10 flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-gray-500 dark:text-gray-400">
             {note.authorName && (
               <div className="flex items-center gap-1">
                 <User className="h-4 w-4" />
@@ -1023,13 +1169,6 @@ export default function PublicNotePage() {
 
       {/* TipTap content styles */}
       <style dangerouslySetInnerHTML={{ __html: tiptapContentStyles }} />
-
-      {/* Footer */}
-      <footer className="border-t border-gray-200 py-6 sm:py-8 dark:border-gray-800">
-        <div className="mx-auto max-w-5xl px-4 text-center text-xs sm:text-sm text-gray-500 dark:text-gray-400">
-          <p>Shared via <a href="https://typelets.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">Typelets</a></p>
-        </div>
-      </footer>
 
       {/* Scroll to top FAB - hidden on mobile */}
       {showScrollTop && (

@@ -20,7 +20,7 @@ export const FOLDER_COLORS = [
 export const SPECIAL_VIEWS = [
   {
     id: 'all' as ViewMode,
-    label: 'All Notes',
+    label: 'All Files',
     icon: FileText,
   },
   {

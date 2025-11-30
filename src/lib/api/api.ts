@@ -38,7 +38,7 @@ export interface ApiNote {
   createdAt: string;
   updatedAt: string;
   attachmentCount?: number;
-  type?: 'note' | 'diagram';
+  type?: 'note' | 'diagram' | 'code' | 'sheets';
   // Public note fields (from JOIN with public_notes table)
   isPublished?: boolean;
   publicSlug?: string | null;
@@ -82,7 +82,7 @@ export interface ApiPublicNote {
   userId: string;
   title: string;
   content: string; // Plaintext HTML (not encrypted)
-  type?: 'note' | 'diagram' | 'code';
+  type?: 'note' | 'diagram' | 'code' | 'sheets';
   authorName?: string;
   publishedAt: string;
   updatedAt: string;
@@ -93,7 +93,7 @@ export interface ApiPublicNoteResponse {
   slug: string;
   title: string;
   content: string;
-  type?: 'note' | 'diagram' | 'code';
+  type?: 'note' | 'diagram' | 'code' | 'sheets';
   authorName?: string;
   publishedAt: string;
   updatedAt: string;
@@ -389,7 +389,7 @@ class ClerkEncryptedApiService {
     folderId?: string | null;
     starred?: boolean;
     tags?: string[];
-    type?: 'note' | 'diagram' | 'code';
+    type?: 'note' | 'diagram' | 'code' | 'sheets';
   }): Promise<ApiNote> {
     const title = noteData.title ?? 'Untitled';
     const content = noteData.content ?? '';
@@ -682,7 +682,7 @@ class ClerkEncryptedApiService {
     noteId: string;
     title: string;
     content: string;
-    type?: 'note' | 'diagram' | 'code';
+    type?: 'note' | 'diagram' | 'code' | 'sheets';
     authorName?: string;
   }): Promise<ApiPublicNote> {
     return this.request<ApiPublicNote>('/public-notes', {

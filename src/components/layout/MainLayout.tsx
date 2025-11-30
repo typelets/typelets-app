@@ -34,7 +34,6 @@ export default function MainLayout() {
   const [activeTabId, setActiveTabId] = useState<string | null>(null);
 
   // Sync responsive panel states with local states for desktop
-  /* eslint-disable react-hooks/set-state-in-effect -- Sync external state to local state */
   useEffect(() => {
     if (!isMobile) {
       if (folderSidebarOpen !== responsiveFolderPanel.isOpen) {
@@ -45,7 +44,6 @@ export default function MainLayout() {
       }
     }
   }, [isMobile, responsiveFolderPanel.isOpen, responsiveNotesPanel.isOpen, folderSidebarOpen, filesPanelOpen]);
-  /* eslint-enable react-hooks/set-state-in-effect */
 
   const {
     notes,
@@ -55,6 +53,7 @@ export default function MainLayout() {
     selectedFolder,
     currentView,
     searchQuery,
+    loading,
     notesCount,
     starredCount,
     archivedCount,
@@ -91,8 +90,21 @@ export default function MainLayout() {
   } = useNotes();
 
   const handleCreateNote = useCallback(
-    (templateContent?: { title: string; content: string }) => {
-      void createNote(undefined, templateContent);
+    async (templateContent?: { title: string; content: string }) => {
+      const newNote = await createNote(undefined, templateContent);
+      if (newNote) {
+        // Open the new note in a tab
+        const newTab: Tab = {
+          id: `tab-${newNote.id}-${Date.now()}`,
+          noteId: newNote.id,
+          title: newNote.title || 'Untitled',
+          type: newNote.type || 'note',
+          isDirty: false,
+          isPublished: newNote.isPublished,
+        };
+        setOpenTabs(prev => [...prev, newTab]);
+        setActiveTabId(newTab.id);
+      }
       if (!filesPanelOpen) setFilesPanelOpen(true);
     },
     [createNote, filesPanelOpen]
@@ -103,11 +115,25 @@ export default function MainLayout() {
       // If templateCode is provided, use it; otherwise create blank diagram
       const content = templateCode || '';
 
-      await createNote(undefined, {
+      const newNote = await createNote(undefined, {
         title: 'Untitled Diagram',
         content,
         type: 'diagram'
       });
+
+      if (newNote) {
+        // Open the new diagram in a tab
+        const newTab: Tab = {
+          id: `tab-${newNote.id}-${Date.now()}`,
+          noteId: newNote.id,
+          title: newNote.title || 'Untitled Diagram',
+          type: 'diagram',
+          isDirty: false,
+          isPublished: newNote.isPublished,
+        };
+        setOpenTabs(prev => [...prev, newTab]);
+        setActiveTabId(newTab.id);
+      }
 
       if (!filesPanelOpen) setFilesPanelOpen(true);
     } catch (error) {
@@ -124,15 +150,73 @@ export default function MainLayout() {
       // Store both language and code in content as JSON
       const content = JSON.stringify({ language, code });
 
-      await createNote(undefined, {
+      const newNote = await createNote(undefined, {
         title: 'Untitled Code',
         content,
         type: 'code'
       });
 
+      if (newNote) {
+        // Open the new code note in a tab
+        const newTab: Tab = {
+          id: `tab-${newNote.id}-${Date.now()}`,
+          noteId: newNote.id,
+          title: newNote.title || 'Untitled Code',
+          type: 'code',
+          isDirty: false,
+          isPublished: newNote.isPublished,
+        };
+        setOpenTabs(prev => [...prev, newTab]);
+        setActiveTabId(newTab.id);
+      }
+
       if (!filesPanelOpen) setFilesPanelOpen(true);
     } catch (error) {
       console.error('Failed to create code note:', error);
+    }
+  }, [createNote, filesPanelOpen]);
+
+  const handleCreateSheets = useCallback(async () => {
+    try {
+      // Create blank spreadsheet with default workbook data
+      const defaultWorkbook = {
+        id: 'workbook-1',
+        name: 'Untitled Spreadsheet',
+        sheets: {
+          'sheet-1': {
+            id: 'sheet-1',
+            name: 'Sheet1',
+            rowCount: 100,
+            columnCount: 26,
+            cellData: {},
+          },
+        },
+        sheetOrder: ['sheet-1'],
+      };
+
+      const newNote = await createNote(undefined, {
+        title: 'Untitled Spreadsheet',
+        content: JSON.stringify(defaultWorkbook),
+        type: 'sheets'
+      });
+
+      if (newNote) {
+        // Open the new spreadsheet in a tab
+        const newTab: Tab = {
+          id: `tab-${newNote.id}-${Date.now()}`,
+          noteId: newNote.id,
+          title: newNote.title || 'Untitled Spreadsheet',
+          type: 'sheets',
+          isDirty: false,
+          isPublished: newNote.isPublished,
+        };
+        setOpenTabs(prev => [...prev, newTab]);
+        setActiveTabId(newTab.id);
+      }
+
+      if (!filesPanelOpen) setFilesPanelOpen(true);
+    } catch (error) {
+      console.error('Failed to create spreadsheet:', error);
     }
   }, [createNote, filesPanelOpen]);
 
@@ -286,7 +370,6 @@ export default function MainLayout() {
   }, [selectedNote]);
 
   // Update tab properties when note changes
-  /* eslint-disable react-hooks/set-state-in-effect -- Sync note properties to tab state */
   useEffect(() => {
     if (selectedNote?.id) {
       setOpenTabs(tabs =>
@@ -298,7 +381,6 @@ export default function MainLayout() {
       );
     }
   }, [selectedNote?.id, selectedNote?.title, selectedNote?.type, selectedNote?.isPublished]);
-  /* eslint-enable react-hooks/set-state-in-effect */
 
   const handlePasswordChange = useCallback(() => {
     setSelectedNote(null);
@@ -399,10 +481,12 @@ export default function MainLayout() {
     onCreateNote: handleCreateNote,
     onCreateDiagram: handleCreateDiagram,
     onCreateCode: handleCreateCode,
+    onCreateSheets: handleCreateSheets,
     onToggleFolderPanel: handleToggleFolderPanel,
     onEmptyTrash: handleEmptyTrash,
     onRefresh: refetch,
     creatingNote,
+    loading,
   };
 
   const editorProps: EditorProps = {

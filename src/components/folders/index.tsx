@@ -1,6 +1,18 @@
 import { useState, useCallback, useMemo } from 'react';
 import { UserButton, useUser } from '@clerk/clerk-react';
-import { Plus, Search } from 'lucide-react';
+import {
+  DndContext,
+  DragOverlay,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { Plus, Search, GripVertical } from 'lucide-react';
 import CreateFolderModal from '@/components/folders/modals/CreateFolderModal';
 import FolderDeleteModal from '@/components/folders/modals/FolderDeleteModal';
 import EditFolderModal from '@/components/folders/modals/EditFolderModal';
@@ -101,15 +113,26 @@ export default function FolderPanel({
     [folderTree, expandedFolders]
   );
 
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    })
+  );
+
   const {
-    dragState,
+    activeFolder,
     handleDragStart,
     handleDragOver,
-    handleDragEnter,
-    handleDragLeave,
-    handleDrop,
     handleDragEnd,
+    handleDragCancel,
   } = useDragAndDrop(displayFolders, folders, onReorderFolders);
+
+  const folderIds = useMemo(
+    () => displayFolders.map((f) => f.id),
+    [displayFolders]
+  );
 
   const handleFolderSelect = useCallback(
     (folder: FolderType) => {
@@ -187,25 +210,6 @@ export default function FolderPanel({
     window.location.reload();
   }, []);
 
-  const dragHandlers = useMemo(
-    () => ({
-      onDragStart: handleDragStart,
-      onDragOver: handleDragOver,
-      onDragEnter: handleDragEnter,
-      onDragLeave: handleDragLeave,
-      onDrop: handleDrop,
-      onDragEnd: handleDragEnd,
-    }),
-    [
-      handleDragStart,
-      handleDragOver,
-      handleDragEnter,
-      handleDragLeave,
-      handleDrop,
-      handleDragEnd,
-    ]
-  );
-
   if (!isOpen) {
     return (
       <div className="h-full w-0 overflow-hidden transition-all duration-300" />
@@ -214,7 +218,7 @@ export default function FolderPanel({
 
   return (
     <>
-      <div className="border-border bg-background flex h-full w-full flex-col overflow-hidden border-r transition-all duration-300 md:w-64 md:max-w-80 md:min-w-64">
+      <div className="border-border bg-background flex h-full w-full flex-col overflow-hidden border-r transition-all duration-300 md:w-70 md:max-w-80 md:min-w-70">
         <div className="border-border h-17 shrink-0 border-b p-3">
           <div className="flex items-center justify-between">
             <h3 className="text-foreground text-lg font-semibold">Folders</h3>
@@ -269,28 +273,55 @@ export default function FolderPanel({
                 <Plus className="h-3 w-3" />
               </Button>
             </div>
-            <div className="space-y-1">
-              {displayFolders.map((folder, index) => (
-                <FolderItem
-                  key={folder.id}
-                  folder={folder}
-                  folders={folders}
-                  index={index}
-                  isSelected={selectedFolder?.id === folder.id}
-                  isDropdownOpen={openDropdownId === folder.id}
-                  isDraggedOver={dragState.dragOverIndex === index}
-                  isDragged={dragState.draggedIndex === index}
-                  onSelect={handleFolderSelect}
-                  onToggleExpansion={onToggleFolderExpansion}
-                  onOpenDropdown={setOpenDropdownId}
-                  onEditFolder={handleEditFolder}
-                  onMoveFolder={handleMoveFolder}
-                  onDeleteFolder={handleDeleteFolderAction}
-                  onCreateSubfolder={handleCreateSubfolder}
-                  dragHandlers={dragHandlers}
-                />
-              ))}
-            </div>
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragStart={handleDragStart}
+              onDragOver={handleDragOver}
+              onDragEnd={handleDragEnd}
+              onDragCancel={handleDragCancel}
+            >
+              <SortableContext
+                items={folderIds}
+                strategy={verticalListSortingStrategy}
+              >
+                <div className="space-y-1">
+                  {displayFolders.map((folder) => (
+                    <FolderItem
+                      key={folder.id}
+                      folder={folder}
+                      folders={folders}
+                      isSelected={selectedFolder?.id === folder.id}
+                      isDropdownOpen={openDropdownId === folder.id}
+                      onSelect={handleFolderSelect}
+                      onToggleExpansion={onToggleFolderExpansion}
+                      onOpenDropdown={setOpenDropdownId}
+                      onEditFolder={handleEditFolder}
+                      onMoveFolder={handleMoveFolder}
+                      onDeleteFolder={handleDeleteFolderAction}
+                      onCreateSubfolder={handleCreateSubfolder}
+                    />
+                  ))}
+                </div>
+              </SortableContext>
+              <DragOverlay>
+                {activeFolder ? (
+                  <div
+                    className="flex items-center gap-1 rounded-md bg-accent px-1 py-2 text-sm shadow-lg"
+                    style={{ marginLeft: `${(activeFolder.depth ?? 0) * 16}px` }}
+                  >
+                    <div className="p-1 opacity-50">
+                      <GripVertical className="h-3 w-3" />
+                    </div>
+                    <div
+                      className="h-3 w-3 shrink-0 rounded-sm"
+                      style={{ backgroundColor: activeFolder.color ?? '#6b7280' }}
+                    />
+                    <span className="truncate">{activeFolder.name}</span>
+                  </div>
+                ) : null}
+              </DragOverlay>
+            </DndContext>
           </div>
         </div>
 

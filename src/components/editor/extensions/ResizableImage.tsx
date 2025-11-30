@@ -24,11 +24,9 @@ const ImageComponent = (props: {
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Sync width with node attrs
-  /* eslint-disable react-hooks/set-state-in-effect -- Sync external prop to local state */
   useEffect(() => {
     setWidth(node.attrs.width || 'auto');
   }, [node.attrs.width]);
-  /* eslint-enable react-hooks/set-state-in-effect */
 
   const handleResize = (e: React.MouseEvent) => {
     e.preventDefault();

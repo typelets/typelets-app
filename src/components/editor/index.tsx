@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
+import { useState, useCallback, useEffect, useRef, useMemo, lazy, Suspense } from 'react';
 import {
   Star,
   Archive,
@@ -50,6 +50,20 @@ import { BacklinksPanel } from '@/components/editor/Editor/BacklinksPanel';
 import { fileService } from '@/services/fileService';
 import DiagramEditor from '@/components/diagrams/DiagramEditor';
 import CodeEditor from '@/components/code/CodeEditor';
+
+// Lazy load SheetsEditor to avoid loading Univer bundle for non-sheets notes
+const SheetsEditor = lazy(() => import('@/components/sheets/SheetsEditor'));
+import { SheetsErrorBoundary } from '@/components/sheets/SheetsErrorBoundary';
+
+// Loading fallback for SheetsEditor
+const SheetsEditorFallback = () => (
+  <div className="flex h-full w-full items-center justify-center bg-background">
+    <div className="flex flex-col items-center gap-3">
+      <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      <span className="text-sm text-muted-foreground">Loading spreadsheet editor...</span>
+    </div>
+  </div>
+);
 import type { Note, Folder as FolderType, FileAttachment } from '@/types/note';
 import type { WebSocketStatus } from '@/types/websocket';
 
@@ -943,6 +957,57 @@ export default function Index({
         isNotesPanelOpen={isNotesPanelOpen}
         onDirtyChange={onDirtyChange}
       />
+    );
+  }
+
+  // Show sheets editor if this is a sheets note
+  if (note.type === 'sheets') {
+    const handleUpdateSheets = async (data: string, title: string) => {
+      // Only update if content or title actually changed
+      if (data !== note.content || title !== note.title) {
+        await onUpdateNote(note.id, { content: data, title });
+      }
+    };
+
+    const handleMoveNoteSheets = (noteId: string, updates: { folderId: string | null }) => {
+      onUpdateNote(noteId, updates);
+    };
+
+    return (
+      <SheetsErrorBoundary fallbackTitle="Failed to load spreadsheet editor">
+        <Suspense fallback={<SheetsEditorFallback />}>
+          <SheetsEditor
+            key={`sheets-${note.id}`}
+            noteId={note.id}
+            initialData={note.content}
+            initialTitle={note.title}
+            createdAt={note.createdAt}
+            updatedAt={note.updatedAt}
+            starred={note.starred}
+            hidden={note.hidden}
+            isPublished={note.isPublished}
+            publicSlug={note.publicSlug}
+            folders={folders}
+            folderId={note.folderId}
+            onSave={handleUpdateSheets}
+            onToggleStar={onToggleStar}
+            starringStar={starringStar}
+            onHideNote={onHideNote}
+            onUnhideNote={onUnhideNote}
+            hidingNote={hidingNote}
+            onRefreshNote={onRefreshNote}
+            onArchiveNote={onArchiveNote}
+            onDeleteNote={onDeleteNote}
+            onMoveNote={handleMoveNoteSheets}
+            onPublishNote={onPublishNote}
+            onUnpublishNote={onUnpublishNote}
+            onToggleNotesPanel={onToggleNotesPanel}
+            isNotesPanelOpen={isNotesPanelOpen}
+            onDirtyChange={onDirtyChange}
+            isReadOnly={false}
+          />
+        </Suspense>
+      </SheetsErrorBoundary>
     );
   }
 

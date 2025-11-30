@@ -6,10 +6,11 @@ import {
   Filter,
   FilterX,
   ChevronDown,
-  Network,
-  Code2,
   RefreshCw,
+  SquareCode,
 } from 'lucide-react';
+import Icon from '@mdi/react';
+import { mdiTextBoxOutline, mdiFileTableBoxOutline, mdiVectorSquare } from '@mdi/js';
 import NotesList from '@/components/notes/NotesPanel/NotesList.tsx';
 import { Button } from '@/components/ui/button.tsx';
 import { ButtonGroup } from '@/components/ui/button-group';
@@ -39,6 +40,7 @@ interface FilterConfig {
   showAttachmentsOnly: boolean;
   showCodeOnly: boolean;
   showDiagramsOnly: boolean;
+  showSheetsOnly: boolean;
   showHiddenOnly: boolean;
   showPublicOnly: boolean;
   showStarredOnly: boolean;
@@ -57,10 +59,12 @@ interface FilesPanelProps {
   onCreateNote: (templateContent?: { title: string; content: string; type?: string }) => void;
   onCreateDiagram?: (templateCode?: string) => void;
   onCreateCode?: (templateData?: { language: string; code: string }) => void;
+  onCreateSheets?: () => void;
   onToggleFolderPanel: () => void;
   onEmptyTrash?: () => Promise<void>;
   onRefresh?: () => Promise<void>;
   creatingNote?: boolean;
+  loading?: boolean;
   isMobile?: boolean;
   onClose?: () => void;
 }
@@ -78,10 +82,12 @@ export default function FilesPanel({
   onCreateNote,
   onCreateDiagram,
   onCreateCode,
+  onCreateSheets,
   onToggleFolderPanel,
   onEmptyTrash,
   onRefresh,
   creatingNote = false,
+  loading = false,
   isMobile = false,
   onClose,
 }: FilesPanelProps) {
@@ -94,6 +100,7 @@ export default function FilesPanel({
     showAttachmentsOnly: false,
     showCodeOnly: false,
     showDiagramsOnly: false,
+    showSheetsOnly: false,
     showHiddenOnly: false,
     showPublicOnly: false,
     showStarredOnly: false,
@@ -143,11 +150,12 @@ export default function FilesPanel({
       const excludeByAttachments = config.showAttachmentsOnly && !hasAttachments;
       const excludeByCode = config.showCodeOnly && note.type !== 'code';
       const excludeByDiagrams = config.showDiagramsOnly && note.type !== 'diagram';
+      const excludeBySheets = config.showSheetsOnly && note.type !== 'sheets';
       const excludeByHidden = config.showHiddenOnly && !note.hidden;
       const excludeByPublic = config.showPublicOnly && !note.isPublished;
       const excludeByStarred = config.showStarredOnly && !note.starred;
 
-      return !(excludeByAttachments || excludeByCode || excludeByDiagrams || excludeByHidden || excludeByPublic || excludeByStarred);
+      return !(excludeByAttachments || excludeByCode || excludeByDiagrams || excludeBySheets || excludeByHidden || excludeByPublic || excludeByStarred);
     });
   };
 
@@ -172,6 +180,7 @@ export default function FilesPanel({
     if (filterConfig.showAttachmentsOnly) activeFilters.push('Attachments');
     if (filterConfig.showCodeOnly) activeFilters.push('Code');
     if (filterConfig.showDiagramsOnly) activeFilters.push('Diagrams');
+    if (filterConfig.showSheetsOnly) activeFilters.push('Sheets');
     if (filterConfig.showHiddenOnly) activeFilters.push('Hidden');
     if (filterConfig.showPublicOnly) activeFilters.push('Public');
     if (filterConfig.showStarredOnly) activeFilters.push('Starred');
@@ -184,6 +193,7 @@ export default function FilesPanel({
     filterConfig.showAttachmentsOnly ||
     filterConfig.showCodeOnly ||
     filterConfig.showDiagramsOnly ||
+    filterConfig.showSheetsOnly ||
     filterConfig.showHiddenOnly ||
     filterConfig.showPublicOnly ||
     filterConfig.showStarredOnly;
@@ -195,15 +205,15 @@ export default function FilesPanel({
 
     switch (currentView) {
       case 'starred':
-        return 'Starred Notes';
+        return 'Starred Files';
       case 'archived':
-        return 'Archived Notes';
+        return 'Archived Files';
       case 'trash':
         return 'Trash';
       case 'public':
-        return 'Public Notes';
+        return 'Public Files';
       default:
-        return 'All Notes';
+        return 'All Files';
     }
   };
 
@@ -283,7 +293,7 @@ export default function FilesPanel({
                 />
               )}
               <span className="text-[11px] opacity-80">
-                {sortedNotes.length} note{sortedNotes.length !== 1 ? 's' : ''}
+                {sortedNotes.length} file{sortedNotes.length !== 1 ? 's' : ''}
                 {sortedNotes.length !== notes.length &&
                   ` (${notes.length} total)`}
               </span>
@@ -363,6 +373,17 @@ export default function FilesPanel({
                 onClick={() =>
                   setFilterConfig((prev) => ({
                     ...prev,
+                    showSheetsOnly: !prev.showSheetsOnly,
+                  }))
+                }
+                className={`${filterConfig.showSheetsOnly ? 'bg-accent' : ''} mb-1`}
+              >
+                {filterConfig.showSheetsOnly ? '✓' : '○'} Sheets
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() =>
+                  setFilterConfig((prev) => ({
+                    ...prev,
                     showHiddenOnly: !prev.showHiddenOnly,
                   }))
                 }
@@ -400,6 +421,7 @@ export default function FilesPanel({
                       showAttachmentsOnly: false,
                       showCodeOnly: false,
                       showDiagramsOnly: false,
+                      showSheetsOnly: false,
                       showHiddenOnly: false,
                       showPublicOnly: false,
                       showStarredOnly: false,
@@ -473,31 +495,26 @@ export default function FilesPanel({
                   )}
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-64" sideOffset={8}>
+              <DropdownMenuContent align="end" className="w-48" sideOffset={8}>
                 {/* Blank Note */}
                 <DropdownMenuItem
                   onClick={() => onCreateNote()}
-                  className="flex flex-col items-start gap-1 py-2"
+                  className="flex items-center gap-2"
                 >
-                  <div className="font-medium">Blank Note</div>
-                  <div className="text-muted-foreground text-xs">
-                    Start with an empty note
-                  </div>
+                  <Icon path={mdiTextBoxOutline} style={{ width: "16px", height: "16px" }} className="text-blue-500" />
+                  <span>Note</span>
                 </DropdownMenuItem>
+
+                <DropdownMenuSeparator />
 
                 {/* Blank Diagram */}
                 {onCreateDiagram && (
                   <DropdownMenuItem
                     onClick={() => onCreateDiagram()}
-                    className="flex flex-col items-start gap-1 py-2"
+                    className="flex items-center gap-2"
                   >
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium">Blank Diagram</span>
-                      <Network className="h-3.5 w-3.5 text-cyan-500" />
-                    </div>
-                    <div className="text-muted-foreground text-xs">
-                      Start with an empty diagram
-                    </div>
+                    <Icon path={mdiVectorSquare} style={{ width: "14px", height: "14px" }} className="text-purple-500" />
+                    <span>Diagram</span>
                   </DropdownMenuItem>
                 )}
 
@@ -505,15 +522,23 @@ export default function FilesPanel({
                 {onCreateCode && (
                   <DropdownMenuItem
                     onClick={() => onCreateCode()}
-                    className="flex flex-col items-start gap-1 py-2"
+                    className="flex items-center gap-2"
                   >
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium">Blank Code</span>
-                      <Code2 className="h-3.5 w-3.5 text-green-500" />
-                    </div>
-                    <div className="text-muted-foreground text-xs">
-                      Start with an executable code note
-                    </div>
+                    <SquareCode className="h-[14px] w-[14px] text-gray-800 dark:text-gray-300" />
+                    <span>Code</span>
+                  </DropdownMenuItem>
+                )}
+
+                <DropdownMenuSeparator />
+
+                {/* Blank Spreadsheet */}
+                {onCreateSheets && (
+                  <DropdownMenuItem
+                    onClick={() => onCreateSheets()}
+                    className="flex items-center gap-2"
+                  >
+                    <Icon path={mdiFileTableBoxOutline} style={{ width: "16px", height: "16px" }} className="text-green-500" />
+                    <span>Spreadsheet</span>
                   </DropdownMenuItem>
                 )}
 
@@ -709,6 +734,7 @@ export default function FilesPanel({
           onEmptyTrash={onEmptyTrash}
           emptyMessage={getEmptyMessage()}
           folders={folders}
+          loading={loading}
         />
       </div>
     </div>

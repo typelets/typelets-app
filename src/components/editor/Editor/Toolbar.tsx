@@ -27,6 +27,13 @@ import {
   Copy,
   Smile,
   Codesandbox,
+  Table,
+  Plus,
+  Trash2,
+  ArrowLeftRight,
+  ArrowUpDown,
+  Combine,
+  SplitSquareVertical,
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button.tsx';
@@ -473,6 +480,103 @@ function ToolbarComponent({ editor }: ToolbarProps) {
       >
         <FileText className="h-4 w-4" />
       </Button>
+
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant={editor.isActive('table') ? 'default' : 'ghost'}
+            size="sm"
+            className="gap-1"
+            title="Table"
+          >
+            <Table className="h-4 w-4" />
+            <ChevronDown className="h-3 w-3" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-48">
+          {!editor.isActive('table') ? (
+            <DropdownMenuItem
+              onClick={() =>
+                editor
+                  .chain()
+                  .focus()
+                  .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
+                  .run()
+              }
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Insert Table
+            </DropdownMenuItem>
+          ) : (
+            <>
+              <DropdownMenuItem
+                onClick={() => editor.chain().focus().addColumnBefore().run()}
+              >
+                <ArrowLeftRight className="mr-2 h-4 w-4" />
+                Add Column Before
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => editor.chain().focus().addColumnAfter().run()}
+              >
+                <ArrowLeftRight className="mr-2 h-4 w-4" />
+                Add Column After
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => editor.chain().focus().deleteColumn().run()}
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete Column
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={() => editor.chain().focus().addRowBefore().run()}
+              >
+                <ArrowUpDown className="mr-2 h-4 w-4" />
+                Add Row Before
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => editor.chain().focus().addRowAfter().run()}
+              >
+                <ArrowUpDown className="mr-2 h-4 w-4" />
+                Add Row After
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => editor.chain().focus().deleteRow().run()}
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete Row
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={() => editor.chain().focus().mergeCells().run()}
+              >
+                <Combine className="mr-2 h-4 w-4" />
+                Merge Cells
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => editor.chain().focus().splitCell().run()}
+              >
+                <SplitSquareVertical className="mr-2 h-4 w-4" />
+                Split Cell
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={() => editor.chain().focus().toggleHeaderRow().run()}
+              >
+                <Table className="mr-2 h-4 w-4" />
+                Toggle Header Row
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => editor.chain().focus().deleteTable().run()}
+                className="text-destructive"
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete Table
+              </DropdownMenuItem>
+            </>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
 
       <Button
         variant="ghost"
