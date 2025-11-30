@@ -545,6 +545,7 @@ export function SheetsEditor({
         onMove={handleMoveNote}
         folders={folders || []}
         currentFolderId={folderId ?? null}
+        noteTitle={title}
       />
 
       {/* Publish Note Modal */}
