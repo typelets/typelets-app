@@ -9,17 +9,6 @@ overrides:
   glob: '>=11.1.0'
   js-yaml: '>=4.1.1'
 
-patchedDependencies:
-  '@univerjs/sheets-ui@0.12.2':
-    hash: ysj56io6fgancc6c5wyydtxarm
-    path: patches/@univerjs__sheets-ui@0.12.2.patch
-  '@univerjs/sheets@0.12.2':
-    hash: vctqbjuwjhtmft7uhq7vvb47cu
-    path: patches/@univerjs__sheets@0.12.2.patch
-  '@univerjs/sheets@0.12.3':
-    hash: nagn74djjrxvqhaaszaodluk7u
-    path: patches/@univerjs__sheets@0.12.3.patch
-
 importers:
 
   .:
