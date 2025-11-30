@@ -1,3 +1,17 @@
+# [1.45.0](https://github.com/typelets/typelets-app/compare/v1.44.0...v1.45.0) (2025-11-30)
+
+
+### Bug Fixes
+
+* remove stale patchedDependencies from lockfile ([01927ca](https://github.com/typelets/typelets-app/commit/01927cafc71e322f059efe554c5b3c45971ce5ae))
+* resolve CI build errors for spreadsheet feature ([e8f2c43](https://github.com/typelets/typelets-app/commit/e8f2c436fd3824e7005a9a85e6484e7f14ade53c))
+* resolve TypeScript build errors for sheets feature ([736f2e4](https://github.com/typelets/typelets-app/commit/736f2e4c5d50c4cc3d01d88b1f78b3b6a19e2fed))
+
+
+### Features
+
+* add spreadsheet support with Excel-like editing ([a24ad3e](https://github.com/typelets/typelets-app/commit/a24ad3e30481571d43ec24f7b5330d57ce094343))
+
 # [1.44.0](https://github.com/typelets/typelets-app/compare/v1.43.0...v1.44.0) (2025-11-29)
 
 
