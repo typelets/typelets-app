@@ -5,7 +5,7 @@
 [![Version](https://img.shields.io/github/v/release/typelets/typelets-app)](https://github.com/typelets/typelets-app/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![CI](https://github.com/typelets/typelets-app/actions/workflows/release.yml/badge.svg)](https://github.com/typelets/typelets-app/actions)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/typelets/typelets-app/pulls)
 [![React](https://img.shields.io/badge/React-19-blue?logo=react)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue?logo=typescript)](https://www.typescriptlang.org/)
 [![Vite](https://img.shields.io/badge/Vite-7-646CFF?logo=vite)](https://vitejs.dev/)
@@ -31,13 +31,13 @@ Available on iOS and Android with the same powerful features and encryption.
 - [Download on the App Store](https://apps.apple.com/us/app/typelets/id6753926295)
 - [Get it on Google Play](https://play.google.com/store/apps/details?id=com.typelets.notes&pcampaignid=web_share)
 
-<p align="center">
+<div align="center">
   <img src="https://typelets.com/assets/images/mobile/screenshot-1.png" width="250" alt="Mobile Screenshot 1"/>
   &nbsp;&nbsp;
   <img src="https://typelets.com/assets/images/mobile/screenshot-2.png" width="250" alt="Mobile Screenshot 2"/>
   &nbsp;&nbsp;
   <img src="https://typelets.com/assets/images/mobile/screenshot-3.png" width="250" alt="Mobile Screenshot 3"/>
-</p>
+</div>
 
 
 - 📱 Native iOS and Android apps
@@ -118,7 +118,19 @@ Available on iOS and Android with the same powerful features and encryption.
 - 🔒 **Secure Sandboxed Execution** - Code runs in isolated environments via Piston API on EC2
 - 📋 **Error Handling** - Clear error messages and compilation details for debugging
 
-### 📊 Diagram Support
+### 📊 Spreadsheet Support
+
+Create powerful spreadsheets directly in your notes:
+
+- 📊 **Excel-like editing** - Full spreadsheet functionality with formulas, formatting, and cell styling
+- 🔢 **Formula support** - Use familiar spreadsheet formulas for calculations
+- 📋 **Multiple sheets** - Organize data across multiple worksheets
+- 🎨 **Cell formatting** - Bold, colors, borders, alignment, and number formats
+- 🔒 **Encrypted storage** - Spreadsheet data is encrypted like all your notes
+- 🌐 **Public sharing** - Share spreadsheets publicly with read-only access
+- 🚀 **Quick create** - Use the "New Spreadsheet" button to get started
+
+### 📈 Diagram Support
 
 ![Create Diagram Demo](https://github.com/typelets/typelets-app/blob/main/assets/diagram-demo.gif)
 

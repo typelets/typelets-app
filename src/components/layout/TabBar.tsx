@@ -1,4 +1,6 @@
-import { X, Network, Code2, ChevronDown, Globe } from 'lucide-react';
+import { X, ChevronDown, Globe, SquareCode } from 'lucide-react';
+import Icon from '@mdi/react';
+import { mdiTextBoxOutline, mdiFileTableBoxOutline, mdiVectorSquare } from '@mdi/js';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -13,7 +15,7 @@ export interface Tab {
   id: string;
   noteId: string;
   title: string;
-  type: 'note' | 'diagram' | 'code';
+  type: 'note' | 'diagram' | 'code' | 'sheets';
   isDirty: boolean;
   isPublished?: boolean;
 }
@@ -27,14 +29,18 @@ interface TabBarProps {
 }
 
 const TabIcon = ({ type, isPublished }: { type: Tab['type']; isPublished?: boolean }) => {
+  const iconSize = "14px";
   const typeIcon = (() => {
     switch (type) {
       case 'code':
-        return <Code2 className="h-3.5 w-3.5 text-green-500" />;
+        return <SquareCode className="h-[12px] w-[12px] text-gray-800 dark:text-gray-300" />;
       case 'diagram':
-        return <Network className="h-3.5 w-3.5 text-cyan-500" />;
+        return <Icon path={mdiVectorSquare} style={{ width: "12px", height: "12px" }} className="text-purple-500" />;
+      case 'sheets':
+        return <Icon path={mdiFileTableBoxOutline} style={{ width: iconSize, height: iconSize }} className="text-green-500" />;
+      case 'note':
       default:
-        return null;
+        return <Icon path={mdiTextBoxOutline} style={{ width: iconSize, height: iconSize }} className="text-blue-500" />;
     }
   })();
 
@@ -42,13 +48,13 @@ const TabIcon = ({ type, isPublished }: { type: Tab['type']; isPublished?: boole
     return (
       <div className="flex items-center gap-1">
         {typeIcon}
-        <Globe className="h-3 w-3 text-emerald-500" />
+        <Globe className="h-3 w-3 text-orange-500" />
       </div>
     );
   }
 
   if (isPublished) {
-    return <Globe className="h-3.5 w-3.5 text-emerald-500" />;
+    return <Globe className="h-3.5 w-3.5 text-orange-500" />;
   }
 
   return typeIcon;

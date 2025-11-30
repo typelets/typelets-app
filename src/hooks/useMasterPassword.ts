@@ -7,7 +7,6 @@ export function useMasterPassword() {
   const [needsUnlock, setNeedsUnlock] = useState(false);
   const [isChecking, setIsChecking] = useState(true);
 
-  /* eslint-disable react-hooks/set-state-in-effect -- Check encryption status on user change */
   useEffect(() => {
     if (!user) {
       setIsChecking(false);
@@ -27,7 +26,6 @@ export function useMasterPassword() {
 
     checkMasterPassword();
   }, [user]);
-  /* eslint-enable react-hooks/set-state-in-effect */
 
   const handleUnlockSuccess = () => {
     setNeedsUnlock(false);

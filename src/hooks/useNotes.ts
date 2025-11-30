@@ -502,7 +502,9 @@ export function useNotes() {
 
       // Auto-sync public note if published and content/title changed
       if (updates.title !== undefined || updates.content !== undefined) {
-        const note = notes.find(n => n.id === noteId);
+        // Use selectedNote if it matches (most common case - editing the selected note)
+        // Fall back to finding in notes array for edge cases
+        const note = selectedNote?.id === noteId ? selectedNote : notes.find(n => n.id === noteId);
         if (note?.isPublished && note?.publicSlug) {
           // Sync in background without blocking the save
           void api.updatePublicNote(note.publicSlug, {
@@ -514,7 +516,7 @@ export function useNotes() {
         }
       }
     },
-    [restNotesOperations, notes]
+    [restNotesOperations, notes, selectedNote]
   );
 
   const deleteNote = async (noteId: string) => {
@@ -567,9 +569,35 @@ export function useNotes() {
   };
 
   const reorderFolders = async (folderId: string, newIndex: number) => {
+    // Optimistic update - reorder locally first
+    const previousFolders = [...folders];
+
+    setFolders((currentFolders) => {
+      const folderToMove = currentFolders.find((f) => f.id === folderId);
+      if (!folderToMove) return currentFolders;
+
+      // Get siblings (folders with same parent)
+      const parentId = folderToMove.parentId;
+      const siblings = currentFolders.filter((f) => f.parentId === parentId);
+      const nonSiblings = currentFolders.filter((f) => f.parentId !== parentId);
+
+      // Remove the folder from its current position
+      const siblingsWithoutFolder = siblings.filter((f) => f.id !== folderId);
+
+      // Insert at new position
+      const reorderedSiblings = [
+        ...siblingsWithoutFolder.slice(0, newIndex),
+        folderToMove,
+        ...siblingsWithoutFolder.slice(newIndex),
+      ];
+
+      return [...nonSiblings, ...reorderedSiblings];
+    });
+
     try {
       await api.reorderFolder(folderId, newIndex);
 
+      // Fetch fresh data in background to ensure consistency
       const newFolders = await fetchAllFolders();
       setFolders(newFolders);
 
@@ -586,6 +614,8 @@ export function useNotes() {
       //   }
       // }
     } catch (error) {
+      // Rollback on error
+      setFolders(previousFolders);
       secureLogger.error('Folder reordering failed', error);
       setError('Failed to reorder folders');
     }

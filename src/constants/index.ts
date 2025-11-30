@@ -43,8 +43,8 @@ export const SEO_CONFIG = {
     ],
   },
   signedIn: {
-    title: 'Secure Encrypted Notes',
-    description: 'Secure encrypted notes with zero-knowledge privacy and integrated code execution for developers. Available on iOS, Android, and Web.',
+    title: 'Workspace',
+    description: 'Secure encrypted workspace with documents, spreadsheets, diagrams, and code execution. Zero-knowledge privacy. Available on iOS, Android, and Web.',
     keywords: [
       'dashboard',
       'encrypted notes',

@@ -12,7 +12,7 @@ export interface Note {
   id: string;
   title: string;
   content: string;
-  type?: 'note' | 'diagram' | 'code'; // Type of note: regular note, diagram, or code
+  type?: 'note' | 'diagram' | 'code' | 'sheets'; // Type of note: regular note, diagram, code, or sheets
   createdAt: Date;
   updatedAt: Date;
   starred: boolean;
@@ -41,7 +41,7 @@ export interface PublicNote {
   userId: string;
   title: string;
   content: string; // Plaintext HTML (not encrypted)
-  type?: 'note' | 'diagram' | 'code';
+  type?: 'note' | 'diagram' | 'code' | 'sheets';
   authorName?: string;
   publishedAt: Date;
   updatedAt: Date;
@@ -52,7 +52,7 @@ export interface PublicNoteResponse {
   slug: string;
   title: string;
   content: string;
-  type?: 'note' | 'diagram' | 'code';
+  type?: 'note' | 'diagram' | 'code' | 'sheets';
   authorName?: string;
   publishedAt: Date;
   updatedAt: Date;

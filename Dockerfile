@@ -1,5 +1,5 @@
 # Multi-stage build for React app
-FROM node:20-alpine AS builder
+FROM node:22-alpine AS builder
 
 # Install pnpm
 RUN corepack enable && corepack prepare pnpm@9.15.0 --activate

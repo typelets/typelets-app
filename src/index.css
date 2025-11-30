@@ -163,3 +163,64 @@
     background: #777;
   }
 }
+
+/* TipTap Table Styles */
+.ProseMirror table {
+  border-collapse: collapse;
+  table-layout: fixed;
+  width: 100%;
+  margin: 1rem 0;
+  overflow: hidden;
+}
+
+.ProseMirror td,
+.ProseMirror th {
+  min-width: 1em;
+  border: 1px solid var(--border);
+  padding: 0.5rem 0.75rem;
+  vertical-align: top;
+  box-sizing: border-box;
+  position: relative;
+}
+
+.ProseMirror th {
+  font-weight: 600;
+  text-align: left;
+  background-color: var(--muted);
+}
+
+.ProseMirror .selectedCell:after {
+  z-index: 2;
+  position: absolute;
+  content: "";
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  background: oklch(0.488 0.243 264.376 / 20%);
+  pointer-events: none;
+}
+
+.ProseMirror .column-resize-handle {
+  position: absolute;
+  right: -2px;
+  top: 0;
+  bottom: -2px;
+  width: 4px;
+  background-color: oklch(0.488 0.243 264.376);
+  pointer-events: none;
+}
+
+.ProseMirror.resize-cursor {
+  cursor: col-resize;
+}
+
+/* Table grip for selection */
+.ProseMirror .tableWrapper {
+  padding: 1rem 0;
+  overflow-x: auto;
+}
+
+.ProseMirror table p {
+  margin: 0;
+}

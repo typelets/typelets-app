@@ -1,4 +1,6 @@
 import { memo } from 'react';
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import {
   MoreHorizontal,
   ChevronRight,
@@ -7,6 +9,7 @@ import {
   FolderInput,
   Trash2,
   FolderPlus,
+  GripVertical,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -21,11 +24,8 @@ import type { Folder } from '@/types/note';
 interface FolderItemProps {
   folder: Folder;
   folders: Folder[];
-  index: number;
   isSelected: boolean;
   isDropdownOpen: boolean;
-  isDraggedOver: boolean;
-  isDragged: boolean;
   onSelect: (folder: Folder) => void;
   onToggleExpansion: (folderId: string) => void;
   onOpenDropdown: (folderId: string | null) => void;
@@ -33,23 +33,12 @@ interface FolderItemProps {
   onMoveFolder: (folder: Folder) => void;
   onDeleteFolder: (folder: Folder) => void;
   onCreateSubfolder: (parentId: string) => void;
-  dragHandlers: {
-    onDragStart: (e: React.DragEvent, index: number) => void;
-    onDragOver: (e: React.DragEvent, index: number) => void;
-    onDragEnter: (e: React.DragEvent) => void;
-    onDragLeave: (e: React.DragEvent) => void;
-    onDrop: (e: React.DragEvent, index: number) => void;
-    onDragEnd: (e: React.DragEvent) => void;
-  };
 }
 
 function FolderItem({
   folder,
-  index,
   isSelected,
   isDropdownOpen,
-  isDraggedOver,
-  isDragged,
   onSelect,
   onToggleExpansion,
   onOpenDropdown,
@@ -57,35 +46,45 @@ function FolderItem({
   onMoveFolder,
   onDeleteFolder,
   onCreateSubfolder,
-  dragHandlers,
 }: FolderItemProps) {
   const hasChildren = folder.hasChildren;
   const isExpanded = folder.isExpanded;
 
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: folder.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition: transition ?? 'transform 200ms ease',
+    marginLeft: `${(folder.depth ?? 0) * 16}px`,
+    opacity: isDragging ? 0 : 1,
+  };
+
   return (
     <div
-      draggable
-      onClick={() => !isDragged && onSelect(folder)}
-      onDragStart={(e) => dragHandlers.onDragStart(e, index)}
-      onDragOver={(e) => dragHandlers.onDragOver(e, index)}
-      onDragEnter={dragHandlers.onDragEnter}
-      onDragLeave={dragHandlers.onDragLeave}
-      onDrop={(e) => dragHandlers.onDrop(e, index)}
-      onDragEnd={dragHandlers.onDragEnd}
-      className={`group relative flex cursor-pointer items-center justify-between rounded-md px-3 py-2 text-sm transition-all duration-200 ${
+      ref={setNodeRef}
+      style={style}
+      onClick={() => !isDragging && onSelect(folder)}
+      className={`group relative flex cursor-default items-center justify-between rounded-md px-1 py-2 text-sm ${
         isSelected || isDropdownOpen
           ? 'bg-accent text-accent-foreground'
           : 'text-muted-foreground hover:bg-accent/50 hover:text-accent-foreground'
-      } ${
-        isDraggedOver && !isDragged
-          ? 'border-accent-foreground/40 bg-accent/50 border-2 border-dashed'
-          : ''
-      } ${isDragged ? 'scale-[0.98] opacity-50 shadow-lg' : ''}`}
-      style={{
-        marginLeft: `${(folder.depth ?? 0) * 16}px`,
-      }}
+      }`}
     >
-      <div className="flex min-w-0 flex-1 items-center gap-2 pointer-events-none">
+      <div className="flex min-w-0 flex-1 items-center gap-1">
+        <div
+          {...attributes}
+          {...listeners}
+          className="cursor-grab touch-none p-1 opacity-0 group-hover:opacity-50 hover:!opacity-100 transition-opacity"
+        >
+          <GripVertical className="h-3 w-3" />
+        </div>
         <div
           className="h-3 w-3 shrink-0 rounded-sm"
           style={{ backgroundColor: folder.color ?? '#6b7280' }}
@@ -109,12 +108,12 @@ function FolderItem({
               variant="ghost"
               size="sm"
               className={`h-6 w-6 shrink-0 p-0 transition-opacity duration-200 ${
-                isDragged
+                isDragging
                   ? 'pointer-events-none opacity-20'
                   : 'opacity-0 group-hover:opacity-100'
               } ${isSelected || isDropdownOpen ? '!opacity-100' : ''}`}
               onClick={(e) => e.stopPropagation()}
-              disabled={isDragged}
+              disabled={isDragging}
             >
               <MoreHorizontal className="h-3 w-3" />
             </Button>

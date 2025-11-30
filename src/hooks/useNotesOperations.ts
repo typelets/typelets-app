@@ -49,7 +49,7 @@ export function useNotesOperations({
   const createNote = useCallback(
     async (
       folderId?: string,
-      templateContent?: { title: string; content: string; type?: 'note' | 'diagram' | 'code' }
+      templateContent?: { title: string; content: string; type?: 'note' | 'diagram' | 'code' | 'sheets' }
     ) => {
       let showSpinner = false;
       const spinnerTimeout = setTimeout(() => {
@@ -200,6 +200,10 @@ export function useNotesOperations({
           });
 
           const updatedNote = convertApiNote(apiNote);
+
+          // Check if API actually returned isPublished (before conversion defaults it to false)
+          const apiHasPublishedField = apiNote.isPublished !== undefined;
+
           setNotes((prev) =>
             prev.map((note) => {
               if (note.id !== noteId) return note;
@@ -214,6 +218,9 @@ export function useNotesOperations({
                 attachments: note.attachments,
                 folder: newFolder,
                 isNew: updates.title !== undefined ? false : note.isNew,
+                // Preserve isPublished if not returned by API
+                isPublished: apiHasPublishedField ? updatedNote.isPublished : note.isPublished,
+                publicSlug: apiNote.publicSlug !== undefined ? updatedNote.publicSlug : note.publicSlug,
               };
             })
           );
@@ -229,6 +236,9 @@ export function useNotesOperations({
               attachments: selectedNote.attachments,
               folder: newFolder,
               isNew: updates.title !== undefined ? false : selectedNote.isNew,
+              // Preserve isPublished if not returned by API
+              isPublished: apiHasPublishedField ? updatedNote.isPublished : selectedNote.isPublished,
+              publicSlug: apiNote.publicSlug !== undefined ? updatedNote.publicSlug : selectedNote.publicSlug,
             });
           }
 
@@ -310,6 +320,8 @@ export function useNotesOperations({
       selectedNote?.id,
       selectedNote?.attachments,
       selectedNote?.isNew,
+      selectedNote?.isPublished,
+      selectedNote?.publicSlug,
       folders,
       loadData,
       convertApiNote,
@@ -352,6 +364,9 @@ export function useNotesOperations({
         const apiNote = await api.toggleStarNote(noteId);
         const updatedNote = convertApiNote(apiNote);
 
+        // Check if API actually returned isPublished (before conversion defaults it to false)
+        const apiHasPublishedField = apiNote.isPublished !== undefined;
+
         setNotes((prev) =>
           prev.map((note) =>
             note.id === noteId
@@ -359,6 +374,9 @@ export function useNotesOperations({
                   ...updatedNote,
                   attachments: note.attachments,
                   folder: note.folder,
+                  // Preserve isPublished if not returned by API
+                  isPublished: apiHasPublishedField ? updatedNote.isPublished : note.isPublished,
+                  publicSlug: apiNote.publicSlug !== undefined ? updatedNote.publicSlug : note.publicSlug,
                 }
               : note
           )
@@ -369,6 +387,9 @@ export function useNotesOperations({
             ...updatedNote,
             attachments: selectedNote.attachments,
             folder: selectedNote.folder,
+            // Preserve isPublished if not returned by API
+            isPublished: apiHasPublishedField ? updatedNote.isPublished : selectedNote.isPublished,
+            publicSlug: apiNote.publicSlug !== undefined ? updatedNote.publicSlug : selectedNote.publicSlug,
           });
         }
 
@@ -417,8 +438,20 @@ export function useNotesOperations({
         const apiNote = await api.restoreNote(noteId);
         const restoredNote = convertApiNote(apiNote);
 
+        // Check if API actually returned isPublished (before conversion defaults it to false)
+        const apiHasPublishedField = apiNote.isPublished !== undefined;
+
         setNotes((prev) =>
-          prev.map((note) => (note.id === noteId ? restoredNote : note))
+          prev.map((note) =>
+            note.id === noteId
+              ? {
+                  ...restoredNote,
+                  // Preserve isPublished if not returned by API
+                  isPublished: apiHasPublishedField ? restoredNote.isPublished : note.isPublished,
+                  publicSlug: apiNote.publicSlug !== undefined ? restoredNote.publicSlug : note.publicSlug,
+                }
+              : note
+          )
         );
 
         // BACKLOG: WebSocket update moved to upcoming release
@@ -448,6 +481,9 @@ export function useNotesOperations({
         const apiNote = await api.hideNote(noteId);
         const hiddenNote = convertApiNote(apiNote);
 
+        // Check if API actually returned isPublished (before conversion defaults it to false)
+        const apiHasPublishedField = apiNote.isPublished !== undefined;
+
         setNotes((prev) =>
           prev.map((note) =>
             note.id === noteId
@@ -455,6 +491,9 @@ export function useNotesOperations({
                   ...hiddenNote,
                   attachments: note.attachments,
                   folder: note.folder,
+                  // Preserve isPublished if not returned by API
+                  isPublished: apiHasPublishedField ? hiddenNote.isPublished : note.isPublished,
+                  publicSlug: apiNote.publicSlug !== undefined ? hiddenNote.publicSlug : note.publicSlug,
                 }
               : note
           )
@@ -465,6 +504,9 @@ export function useNotesOperations({
             ...hiddenNote,
             attachments: selectedNote.attachments,
             folder: selectedNote.folder,
+            // Preserve isPublished if not returned by API
+            isPublished: apiHasPublishedField ? hiddenNote.isPublished : selectedNote.isPublished,
+            publicSlug: apiNote.publicSlug !== undefined ? hiddenNote.publicSlug : selectedNote.publicSlug,
           });
         }
 
@@ -503,6 +545,9 @@ export function useNotesOperations({
         const apiNote = await api.unhideNote(noteId);
         const unhiddenNote = convertApiNote(apiNote);
 
+        // Check if API actually returned isPublished (before conversion defaults it to false)
+        const apiHasPublishedField = apiNote.isPublished !== undefined;
+
         setNotes((prev) =>
           prev.map((note) =>
             note.id === noteId
@@ -510,6 +555,9 @@ export function useNotesOperations({
                   ...unhiddenNote,
                   attachments: note.attachments,
                   folder: note.folder,
+                  // Preserve isPublished if not returned by API
+                  isPublished: apiHasPublishedField ? unhiddenNote.isPublished : note.isPublished,
+                  publicSlug: apiNote.publicSlug !== undefined ? unhiddenNote.publicSlug : note.publicSlug,
                 }
               : note
           )
@@ -520,6 +568,9 @@ export function useNotesOperations({
             ...unhiddenNote,
             attachments: selectedNote.attachments,
             folder: selectedNote.folder,
+            // Preserve isPublished if not returned by API
+            isPublished: apiHasPublishedField ? unhiddenNote.isPublished : selectedNote.isPublished,
+            publicSlug: apiNote.publicSlug !== undefined ? unhiddenNote.publicSlug : selectedNote.publicSlug,
           });
         }
 
