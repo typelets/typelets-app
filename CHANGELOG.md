@@ -1,3 +1,10 @@
+## [1.45.1](https://github.com/typelets/typelets-app/compare/v1.45.0...v1.45.1) (2025-12-01)
+
+
+### Bug Fixes
+
+* update icon colors for notes and published indicator ([27f536f](https://github.com/typelets/typelets-app/commit/27f536f0ff91bf2c40ab0727315ca14133d71f2b))
+
 # [1.45.0](https://github.com/typelets/typelets-app/compare/v1.44.0...v1.45.0) (2025-11-30)
 
 
