@@ -10,7 +10,7 @@ import {
   SquareCode,
 } from 'lucide-react';
 import Icon from '@mdi/react';
-import { mdiTextBoxOutline, mdiFileTableBoxOutline, mdiVectorSquare } from '@mdi/js';
+import { mdiNoteTextOutline, mdiFileTableBoxOutline, mdiVectorSquare } from '@mdi/js';
 import NotesList from '@/components/notes/NotesPanel/NotesList.tsx';
 import { Button } from '@/components/ui/button.tsx';
 import { ButtonGroup } from '@/components/ui/button-group';
@@ -501,7 +501,7 @@ export default function FilesPanel({
                   onClick={() => onCreateNote()}
                   className="flex items-center gap-2"
                 >
-                  <Icon path={mdiTextBoxOutline} style={{ width: "16px", height: "16px" }} className="text-blue-500" />
+                  <Icon path={mdiNoteTextOutline} style={{ width: "16px", height: "16px" }} className="text-rose-500" />
                   <span>Note</span>
                 </DropdownMenuItem>
 

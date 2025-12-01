@@ -139,12 +139,12 @@ export function UsageSection({ className }: UsageSectionProps) {
           )}
         </div>
 
-        {/* Notes Count */}
+        {/* Files Count */}
         <div className="space-y-3 rounded-lg border p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <FileText className="text-muted-foreground h-4 w-4" />
-              <span className="font-medium">Notes</span>
+              <span className="font-medium">Files</span>
             </div>
             <span className="text-muted-foreground text-sm">
               {usage.notes.count} / {usage.notes.limit}
@@ -159,7 +159,7 @@ export function UsageSection({ className }: UsageSectionProps) {
                 ? `${usage.notes.usagePercent.toFixed(2)}% used`
                 : `${usage.notes.usagePercent.toFixed(1)}% used`}
             </span>
-            <span>{usage.notes.limit - usage.notes.count} notes remaining</span>
+            <span>{usage.notes.limit - usage.notes.count} files remaining</span>
           </div>
 
           {usage.notes.usagePercent >= 80 && (
@@ -172,8 +172,8 @@ export function UsageSection({ className }: UsageSectionProps) {
               )}
             >
               {usage.notes.usagePercent >= 95
-                ? '⚠️ Note limit almost reached. Consider upgrading soon.'
-                : '📝 Approaching note limit.'}
+                ? '⚠️ File limit almost reached. Consider upgrading soon.'
+                : '📝 Approaching file limit.'}
             </div>
           )}
         </div>
@@ -187,7 +187,7 @@ export function UsageSection({ className }: UsageSectionProps) {
             usage.notes.usagePercent >= 80) && (
             <span>
               {' '}
-              Consider upgrading for more storage and unlimited notes.
+              Consider upgrading for more storage and unlimited files.
             </span>
           )}
         </p>

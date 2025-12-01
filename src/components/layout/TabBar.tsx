@@ -1,6 +1,6 @@
 import { X, ChevronDown, Globe, SquareCode } from 'lucide-react';
 import Icon from '@mdi/react';
-import { mdiTextBoxOutline, mdiFileTableBoxOutline, mdiVectorSquare } from '@mdi/js';
+import { mdiNoteTextOutline, mdiFileTableBoxOutline, mdiVectorSquare } from '@mdi/js';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -40,7 +40,7 @@ const TabIcon = ({ type, isPublished }: { type: Tab['type']; isPublished?: boole
         return <Icon path={mdiFileTableBoxOutline} style={{ width: iconSize, height: iconSize }} className="text-green-500" />;
       case 'note':
       default:
-        return <Icon path={mdiTextBoxOutline} style={{ width: iconSize, height: iconSize }} className="text-blue-500" />;
+        return <Icon path={mdiNoteTextOutline} style={{ width: iconSize, height: iconSize }} className="text-rose-500" />;
     }
   })();
 
@@ -48,13 +48,13 @@ const TabIcon = ({ type, isPublished }: { type: Tab['type']; isPublished?: boole
     return (
       <div className="flex items-center gap-1">
         {typeIcon}
-        <Globe className="h-3 w-3 text-orange-500" />
+        <Globe className="h-3 w-3 text-amber-500" />
       </div>
     );
   }
 
   if (isPublished) {
-    return <Globe className="h-3.5 w-3.5 text-orange-500" />;
+    return <Globe className="h-3.5 w-3.5 text-amber-500" />;
   }
 
   return typeIcon;
