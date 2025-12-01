@@ -1,13 +1,13 @@
 /* eslint-disable react-refresh/only-export-components */
 import { Star, Archive, Trash2, Globe } from 'lucide-react';
-import { mdiNoteTextOutline } from '@mdi/js';
+import { mdiTextBoxOutline } from '@mdi/js';
 import Icon from '@mdi/react';
 
 import type { ViewMode } from '@/types/note';
 
 // MDI icon wrapper component for consistent sizing
 const NoteIcon = ({ className }: { className?: string }) => (
-  <Icon path={mdiNoteTextOutline} size="1rem" className={className} />
+  <Icon path={mdiTextBoxOutline} size="1rem" className={className} />
 );
 
 export const FOLDER_COLORS = [

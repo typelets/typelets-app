@@ -1,7 +1,7 @@
 import { memo, useMemo } from 'react';
 import { Star, Paperclip, Codesandbox, Globe, SquareCode } from 'lucide-react';
 import Icon from '@mdi/react';
-import { mdiNoteTextOutline, mdiFileTableBoxOutline, mdiVectorSquare } from '@mdi/js';
+import { mdiTextBoxOutline, mdiFileTableBoxOutline, mdiVectorSquare } from '@mdi/js';
 import type { Note, Folder as FolderType } from '@/types/note.ts';
 
 interface NoteCardProps {
@@ -119,7 +119,7 @@ function NoteCard({
         return <Icon path={mdiFileTableBoxOutline} style={{ width: iconSize, height: iconSize }} className="text-green-500" />;
       case 'note':
       default:
-        return <Icon path={mdiNoteTextOutline} style={{ width: iconSize, height: iconSize }} className="text-rose-500" />;
+        return <Icon path={mdiTextBoxOutline} style={{ width: iconSize, height: iconSize }} className="text-rose-500" />;
     }
   };
 
