@@ -1,3 +1,10 @@
+## [1.45.2](https://github.com/typelets/typelets-app/compare/v1.45.1...v1.45.2) (2025-12-01)
+
+
+### Bug Fixes
+
+* update note icon to mdiTextBoxOutline with rose color ([e712c77](https://github.com/typelets/typelets-app/commit/e712c77beaaa5c9d656f91777922327bfc36a73f))
+
 ## [1.45.1](https://github.com/typelets/typelets-app/compare/v1.45.0...v1.45.1) (2025-12-01)
 
 
