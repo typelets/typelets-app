@@ -138,7 +138,7 @@ export function UsageBottomSheet({ sheetRef, snapPoints }: UsageBottomSheetProps
               {usage.storage.usagePercent >= 95 && (
                 <View style={[styles.warningBox, styles.errorWarning]}>
                   <Text style={styles.warningText}>
-                    ⚠️ Storage nearly full. Delete some notes to free up space.
+                    ⚠️ Storage nearly full. Delete some files to free up space.
                   </Text>
                 </View>
               )}
@@ -151,10 +151,10 @@ export function UsageBottomSheet({ sheetRef, snapPoints }: UsageBottomSheetProps
               )}
             </View>
 
-            {/* Notes Count */}
+            {/* Files Count */}
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>Notes</Text>
+                <Text style={styles.sectionTitle}>Files</Text>
                 <Text style={styles.sectionValue}>
                   {usage.notes.count.toLocaleString()} / {usage.notes.limit.toLocaleString()}
                 </Text>
@@ -179,14 +179,14 @@ export function UsageBottomSheet({ sheetRef, snapPoints }: UsageBottomSheetProps
               {usage.notes.usagePercent >= 95 && (
                 <View style={[styles.warningBox, styles.errorWarning]}>
                   <Text style={styles.warningText}>
-                    ⚠️ Note limit nearly reached. Delete some notes to create new ones.
+                    ⚠️ Typelet limit nearly reached. Delete some to create new ones.
                   </Text>
                 </View>
               )}
               {usage.notes.usagePercent >= 80 && usage.notes.usagePercent < 95 && (
                 <View style={[styles.warningBox, styles.cautionWarning]}>
                   <Text style={styles.warningText}>
-                    ⚠️ Approaching note limit
+                    ⚠️ Approaching typelet limit
                   </Text>
                 </View>
               )}

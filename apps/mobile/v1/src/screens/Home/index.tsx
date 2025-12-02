@@ -10,6 +10,7 @@ import React, { useCallback,useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Animated, Dimensions, Image, Keyboard, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { CreateFileSheet, CreateFileSheetRef } from '../../components/CreateFileSheet';
 import { OfflineIndicator } from '../../components/OfflineIndicator';
 import { ACTION_BUTTON, FOLDER_CARD, FOLDER_COLORS, GLASS_BUTTON } from '../../constants/ui';
 import { useNetworkStatus } from '../../hooks/useNetworkStatus';
@@ -25,7 +26,7 @@ const FOLDER_GRID_ITEM_WIDTH = (SCREEN_WIDTH - 32 - 12) / 2;
 const SPECIAL_VIEWS = [
   {
     id: 'all',
-    label: 'All Notes',
+    label: 'All Files',
     icon: 'document-text' as const,
   },
   {
@@ -89,8 +90,9 @@ export default function HomeScreen() {
   const [isCreatingFolder, setIsCreatingFolder] = useState(false);
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid');
 
-  // Bottom sheet ref
+  // Bottom sheet refs
   const createFolderSheetRef = useRef<BottomSheetModal>(null);
+  const createFileSheetRef = useRef<CreateFileSheetRef>(null);
 
   // Scroll tracking
   const scrollY = useRef(new Animated.Value(0)).current;
@@ -384,13 +386,13 @@ export default function HomeScreen() {
 
             {/* Quick Actions */}
             <View style={styles.quickActionsSection}>
-              <TouchableOpacity onPress={() => router.push('/edit-note')}>
+              <TouchableOpacity onPress={() => createFileSheetRef.current?.present()}>
                 <GlassView glassEffectStyle="regular" style={[styles.glassActionButton, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]} pointerEvents="none">
                   <View style={styles.newNoteAction}>
                     <View style={styles.actionIcon}>
                       <Ionicons name="add" size={16} color={theme.colors.primary} />
                     </View>
-                    <Text style={[styles.actionText, { color: theme.colors.foreground }]}>Start writing</Text>
+                    <Text style={[styles.actionText, { color: theme.colors.foreground }]}>Start Writing</Text>
                   </View>
                 </GlassView>
               </TouchableOpacity>
@@ -739,6 +741,12 @@ export default function HomeScreen() {
             </View>
         </BottomSheetView>
       </BottomSheetModal>
+
+      {/* Create File Type Sheet */}
+      <CreateFileSheet
+        ref={createFileSheetRef}
+        onCreateNote={() => router.push('/edit-note')}
+      />
     </SafeAreaView>
   );
 }

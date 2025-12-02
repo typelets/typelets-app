@@ -634,7 +634,20 @@ export function createNotesApi(getToken: AuthTokenGetter, getUserId: () => strin
 
         // Decrypt note if we have a user ID
         if (userId) {
-          return await decryptNote(note, userId);
+          const decryptedNote = await decryptNote(note, userId);
+
+          // Cache the note locally for quick access (especially important for sheets)
+          try {
+            await storeCachedNotes([decryptedNote], { storeDecrypted: true });
+            if (__DEV__) {
+              console.log(`[API] ✅ Cached note ${noteId} for quick access`);
+            }
+          } catch (cacheError) {
+            // Don't fail if cache write fails
+            console.warn('[API] Failed to cache note:', cacheError);
+          }
+
+          return decryptedNote;
         }
 
         return note;

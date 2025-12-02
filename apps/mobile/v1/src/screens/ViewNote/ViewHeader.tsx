@@ -17,6 +17,7 @@ interface ViewHeaderProps {
   showAttachments: boolean;
   isOffline?: boolean;
   isTempNote?: boolean;
+  isEditDisabled?: boolean;
   insets?: { top: number; bottom: number; left: number; right: number };
   onBack: () => void;
   onToggleStar: () => void;
@@ -48,6 +49,7 @@ export function ViewHeader({
   showAttachments,
   isOffline = false,
   isTempNote = false,
+  isEditDisabled = false,
   insets,
   onBack,
   onToggleStar,
@@ -173,17 +175,19 @@ export function ViewHeader({
               </GlassView>
             </TouchableOpacity>
 
-            <TouchableOpacity
-              onPress={onEdit}
-              disabled={isOffline && !isTempNote}
-              style={{ opacity: (isOffline && !isTempNote) ? 0.4 : 1 }}
-            >
-              <GlassView glassEffectStyle="regular" style={[styles.glassButton, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]} pointerEvents="none">
-                <View style={styles.iconButton}>
-                  <Ionicons name="create-outline" size={20} color={theme.colors.foreground} />
-                </View>
-              </GlassView>
-            </TouchableOpacity>
+            {!isEditDisabled && (
+              <TouchableOpacity
+                onPress={onEdit}
+                disabled={isOffline && !isTempNote}
+                style={{ opacity: (isOffline && !isTempNote) ? 0.4 : 1 }}
+              >
+                <GlassView glassEffectStyle="regular" style={[styles.glassButton, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]} pointerEvents="none">
+                  <View style={styles.iconButton}>
+                    <Ionicons name="create-outline" size={20} color={theme.colors.foreground} />
+                  </View>
+                </GlassView>
+              </TouchableOpacity>
+            )}
           </View>
         </View>
       </View>

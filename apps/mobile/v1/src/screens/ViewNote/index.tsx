@@ -40,8 +40,14 @@ export default function ViewNoteScreen() {
   const { note, loading, htmlContent, handleEdit: handleEditInternal, handleToggleStar, handleToggleHidden, refresh, updateNoteLocally } = useViewNote(noteId as string);
   const [refreshing, setRefreshing] = useState(false);
 
-  // Wrap handleEdit with offline check (allow editing temp notes created offline)
+  // Wrap handleEdit with offline check and sheets check
   const handleEdit = () => {
+    // Show coming soon message for sheets
+    if (note?.type === 'sheets') {
+      Alert.alert('Coming Soon', 'Spreadsheet editing is coming in a future update. Stay tuned!');
+      return;
+    }
+
     const isTempNote = (noteId as string).startsWith('temp_');
     if (!isOnline && !isTempNote) {
       Alert.alert('Offline', 'You cannot edit synced notes while offline. Please connect to the internet and try again.');
@@ -192,9 +198,9 @@ export default function ViewNoteScreen() {
       <Animated.ScrollView
         ref={scrollViewRef}
         style={{ flex: 1 }}
-        contentContainerStyle={{ paddingTop: (insets.top || 0) + 58 }}
+        contentContainerStyle={note.type === 'sheets' ? { paddingTop: (insets.top || 0) + 58, flex: 1 } : { paddingTop: (insets.top || 0) + 58 }}
         showsVerticalScrollIndicator={false}
-        scrollEnabled={note.type !== 'diagram'}
+        scrollEnabled={note.type !== 'diagram' && note.type !== 'sheets'}
         onScroll={Animated.event(
           [{ nativeEvent: { contentOffset: { y: scrollY } } }],
           { useNativeDriver: false }
@@ -271,6 +277,7 @@ export default function ViewNoteScreen() {
           scrollY={scrollY}
           scrollViewRef={scrollViewRef}
           showTitle={false}
+          bottomInset={insets.bottom}
           theme={theme}
         />
       </Animated.ScrollView>
@@ -286,6 +293,7 @@ export default function ViewNoteScreen() {
         showAttachments={showAttachments}
         isOffline={!isOnline}
         isTempNote={(noteId as string).startsWith('temp_')}
+        isEditDisabled={false}
         insets={insets}
         onBack={() => router.back()}
         onToggleStar={handleToggleStar}

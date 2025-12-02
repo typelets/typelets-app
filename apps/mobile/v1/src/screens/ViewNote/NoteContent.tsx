@@ -2,6 +2,7 @@ import React, { useRef, useState, useMemo } from 'react';
 import { Animated, Dimensions, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { WebView } from 'react-native-webview';
 
+import { SheetsViewer } from '../../components/SheetsViewer';
 import type { Note } from '../../services/api';
 
 interface NoteContentProps {
@@ -10,6 +11,7 @@ interface NoteContentProps {
   scrollY: Animated.Value;
   scrollViewRef: React.RefObject<ScrollView | null>;
   showTitle?: boolean;
+  bottomInset?: number;
   theme: {
     colors: {
       foreground: string;
@@ -31,6 +33,7 @@ export function NoteContent({
   note,
   htmlContent,
   showTitle = true,
+  bottomInset = 0,
   theme,
 }: NoteContentProps) {
   const webViewRef = useRef<WebView>(null);
@@ -42,8 +45,9 @@ export function NoteContent({
   // Calculate hairline width for CSS (equivalent to StyleSheet.hairlineWidth)
   const cssHairlineWidth = `${StyleSheet.hairlineWidth}px`;
 
-  // Check if this is a diagram note
+  // Check note type
   const isDiagram = note.type === 'diagram';
+  const isSheet = note.type === 'sheets';
 
   // Enhanced HTML with optional title and metadata
   // Memoized to prevent expensive re-generation on every render
@@ -411,6 +415,25 @@ ${note.content}
     cssHairlineWidth, // Re-generate if hairline width changes (rare)
   ]);
 
+  // For sheets, render the SheetsViewer component
+  if (isSheet) {
+    return (
+      <View style={[styles.sheetsContainer, {}]}>
+        {note.hidden ? (
+          <View style={styles.hiddenContainer}>
+            <Text
+              style={[styles.hiddenText, { color: theme.colors.mutedForeground }]}
+            >
+              [HIDDEN]
+            </Text>
+          </View>
+        ) : (
+          <SheetsViewer content={note.content} theme={theme} />
+        )}
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       {note.hidden ? (
@@ -471,6 +494,9 @@ ${note.content}
 const styles = StyleSheet.create({
   container: {
     // No flex needed - inside ScrollView
+  },
+  sheetsContainer: {
+    flex: 1,
   },
   webview: {
     backgroundColor: 'transparent',

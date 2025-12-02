@@ -31,7 +31,7 @@ export interface Note {
   id: string;
   title: string;
   content: string;
-  type?: 'note' | 'diagram' | 'code'; // Type of note: regular note, diagram, or code
+  type?: 'note' | 'diagram' | 'code' | 'sheets'; // Type of note: regular note, diagram, code, or spreadsheet
   folderId?: string;
   userId: string;
   starred: boolean;
@@ -63,7 +63,7 @@ export interface ApiPublicNote {
   userId: string;
   title: string;
   content: string;
-  type?: 'note' | 'diagram' | 'code';
+  type?: 'note' | 'diagram' | 'code' | 'sheets';
   authorName?: string;
   publishedAt: string;
   updatedAt: string;

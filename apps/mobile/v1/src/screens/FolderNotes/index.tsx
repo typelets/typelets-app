@@ -19,12 +19,12 @@ import NotesList from './components/NotesList';
 
 function getViewTitle(viewType: string): string {
   switch (viewType) {
-    case 'all': return 'All Notes';
+    case 'all': return 'All Files';
     case 'starred': return 'Starred';
     case 'public': return 'Public';
     case 'archived': return 'Archived';
     case 'trash': return 'Trash';
-    default: return 'Notes';
+    default: return 'Files';
   }
 }
 
@@ -98,7 +98,7 @@ export default function FolderNotesScreen({ folderId, folderName, viewType }: Fo
   useEffect(() => {
     const buildBreadcrumbs = async () => {
       if (!folderId && !viewType) {
-        setBreadcrumbs(['Notes']);
+        setBreadcrumbs(['Files']);
         // Still fetch folders for navigation menu
         try {
           const folders = await api.getFolders();
@@ -147,7 +147,7 @@ export default function FolderNotesScreen({ folderId, folderName, viewType }: Fo
         setAllFolders(folders);
       } catch (error) {
         console.error('Failed to build breadcrumbs:', error);
-        setBreadcrumbs([folderName || 'Notes']);
+        setBreadcrumbs([folderName || 'Files']);
         setBreadcrumbFolders([]);
         setAllFolders([]);
       }
@@ -159,7 +159,7 @@ export default function FolderNotesScreen({ folderId, folderName, viewType }: Fo
 
   // Format breadcrumbs for display
   const formatBreadcrumbs = (crumbs: string[]): string => {
-    if (crumbs.length === 0) return 'Notes';
+    if (crumbs.length === 0) return 'Files';
     return crumbs.join(' / ');
   };
 
@@ -410,7 +410,7 @@ export default function FolderNotesScreen({ folderId, folderName, viewType }: Fo
             {isSearchVisible && (
               <View style={styles.searchBar}>
                 <Input
-                  placeholder="Search notes..."
+                  placeholder="Search files..."
                   value={searchQuery}
                   onChangeText={setSearchQuery}
                   style={[styles.searchInput, {
