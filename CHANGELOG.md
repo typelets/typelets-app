@@ -1,3 +1,11 @@
+## [1.46.2](https://github.com/typelets/typelets-app/compare/v1.46.1...v1.46.2) (2025-12-02)
+
+
+### Bug Fixes
+
+* adjust header gradient in note view for smoother fade ([fc1f881](https://github.com/typelets/typelets-app/commit/fc1f881cd2292f3bc1a59634379c96d831e7d2eb))
+* normalize table rendering in note view ([d6775e7](https://github.com/typelets/typelets-app/commit/d6775e7c2170d540a2940281e4af62e8b1b637e9))
+
 ## [1.46.1](https://github.com/typelets/typelets-app/compare/v1.46.0...v1.46.1) (2025-12-02)
 
 
