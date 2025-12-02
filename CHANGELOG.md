@@ -1,3 +1,10 @@
+## [1.46.1](https://github.com/typelets/typelets-app/compare/v1.46.0...v1.46.1) (2025-12-02)
+
+
+### Bug Fixes
+
+* improve public notes SSR and sheets viewer mobile support ([400a9d0](https://github.com/typelets/typelets-app/commit/400a9d020932cd57ce9c1c2d4379c19d66bae793))
+
 # [1.46.0](https://github.com/typelets/typelets-app/compare/v1.45.2...v1.46.0) (2025-12-02)
 
 
