@@ -511,6 +511,18 @@ export function SheetsEditor({
             display: none !important;
           }
 
+          /* Disable virtual keyboard on mobile for cell editing */
+          @media (max-width: 768px), (pointer: coarse) {
+            .sheets-editor-container input:not(.sheets-title-input),
+            .sheets-editor-container textarea,
+            .sheets-editor-container [contenteditable="true"] {
+              opacity: 0 !important;
+              pointer-events: none !important;
+              position: absolute !important;
+              left: -9999px !important;
+            }
+          }
+
           /*
            * Univer Dark Mode Color Picker Fix
            *

@@ -14,7 +14,7 @@ interface PublicNote {
   slug: string;
   title: string;
   content: string;
-  type?: 'note' | 'diagram' | 'code';
+  type?: 'note' | 'diagram' | 'code' | 'sheets';
   authorName?: string;
   publishedAt: string;
   updatedAt: string;
@@ -55,6 +55,11 @@ export default {
       }
 
       const note: PublicNote = await apiResponse.json();
+
+      // For sheets, pass through to the SPA - it needs React to render the spreadsheet
+      if (note.type === 'sheets') {
+        return fetch(request);
+      }
 
       // Generate full HTML page
       const html = generateHTML(note, url.origin);
@@ -127,13 +132,16 @@ function formatDate(dateString: string): string {
 
 function generateHTML(note: PublicNote, origin: string): string {
   const title = note.title ? `${escapeHtml(note.title)} - Typelets` : 'Typelets - Shared Note';
-  const description = note.content
-    ? escapeHtml(stripHtmlTags(note.content).slice(0, 160).trim()) + '...'
-    : 'A note shared via Typelets';
+  const isSheets = note.type === 'sheets';
+  const description = isSheets
+    ? 'A spreadsheet shared via Typelets'
+    : note.content
+      ? escapeHtml(stripHtmlTags(note.content).slice(0, 160).trim()) + '...'
+      : 'A note shared via Typelets';
   const noteUrl = `${origin}/p/${note.slug}`;
 
   // Extract first image from content, or use default OG image
-  const contentImage = note.content ? extractFirstImage(note.content) : null;
+  const contentImage = !isSheets && note.content ? extractFirstImage(note.content) : null;
   const ogImage = contentImage || `${origin}/og-image.png`;
   // Use summary_large_image if note has an image, otherwise summary (square) for logo fallback
   const twitterCardType = contentImage ? 'summary_large_image' : 'summary';
@@ -142,6 +150,20 @@ function generateHTML(note: PublicNote, origin: string): string {
   let processedContent = note.content || '';
   processedContent = processedContent.replace(/data-note-id="[^"]*"/gi, '');
   processedContent = processedContent.replace(/data-note-link="[^"]*"/gi, '');
+
+  // For sheets, show a placeholder - the SPA will render the actual spreadsheet
+  const contentHtml = isSheets
+    ? `<div class="sheets-placeholder">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color: #22c55e; margin-bottom: 16px;">
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+          <line x1="3" y1="9" x2="21" y2="9"></line>
+          <line x1="3" y1="15" x2="21" y2="15"></line>
+          <line x1="9" y1="3" x2="9" y2="21"></line>
+          <line x1="15" y1="3" x2="15" y2="21"></line>
+        </svg>
+        <p style="color: #6b7280; margin: 0;">Loading spreadsheet...</p>
+      </div>`
+    : processedContent;
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -236,83 +258,99 @@ function generateHTML(note: PublicNote, origin: string): string {
 <body>
   <div id="root">
     <div class="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <!-- Header -->
-      <header class="sticky-header">
-        <div class="header-content">
-          <span class="header-text">
-            <a href="https://typelets.com" target="_blank" rel="noopener noreferrer" class="header-link">Typelets</a> Shared Note
-          </span>
-          <button id="theme-toggle" class="theme-button" title="Toggle theme">
-            <svg class="sun-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="5"></circle>
-              <line x1="12" y1="1" x2="12" y2="3"></line>
-              <line x1="12" y1="21" x2="12" y2="23"></line>
-              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-              <line x1="1" y1="12" x2="3" y2="12"></line>
-              <line x1="21" y1="12" x2="23" y2="12"></line>
-              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-            </svg>
-            <svg class="moon-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-            </svg>
-          </button>
-        </div>
-      </header>
-
       <!-- Content -->
       <main class="main-content">
-        <article class="article">
+        <article>
           <h1 class="article-title">${escapeHtml(note.title || 'Untitled Note')}</h1>
 
           <div class="article-meta">
-            ${note.authorName ? `
-            <div class="meta-item">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                <circle cx="12" cy="7" r="4"></circle>
-              </svg>
-              <span>${escapeHtml(note.authorName)}</span>
-            </div>
-            ` : ''}
-            <div class="meta-item">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                <line x1="16" y1="2" x2="16" y2="6"></line>
-                <line x1="8" y1="2" x2="8" y2="6"></line>
-                <line x1="3" y1="10" x2="21" y2="10"></line>
-              </svg>
-              <span>Published ${formatDate(note.publishedAt)}</span>
+            <div class="meta-row">
+              ${note.authorName ? `
+              <span class="meta-item">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+                ${escapeHtml(note.authorName)}
+              </span>
+              <span class="meta-separator">•</span>
+              ` : ''}
+              <span class="meta-item">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                  <line x1="16" y1="2" x2="16" y2="6"></line>
+                  <line x1="8" y1="2" x2="8" y2="6"></line>
+                  <line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+                Published ${formatDate(note.publishedAt)}
+              </span>
             </div>
             ${note.updatedAt !== note.publishedAt ? `
-            <span class="meta-updated">(Updated ${formatDate(note.updatedAt)})</span>
+            <div class="meta-row">
+              <span class="meta-updated">Updated ${formatDate(note.updatedAt)}</span>
+            </div>
             ` : ''}
+            <div class="meta-row">
+              <span class="meta-item read-only">Read-only</span>
+              <span class="meta-separator">•</span>
+              <span class="meta-item">Shared via <a href="https://typelets.com" target="_blank" rel="noopener noreferrer" class="meta-link">Typelets</a></span>
+            </div>
           </div>
 
           <div class="tiptap-content">
-            ${processedContent}
+            ${contentHtml}
           </div>
         </article>
       </main>
-
-      <!-- Footer -->
-      <footer class="footer">
-        <div class="footer-content">
-          <p>Shared via <a href="https://typelets.com" target="_blank" rel="noopener noreferrer" class="footer-link">Typelets</a></p>
-        </div>
-      </footer>
     </div>
   </div>
 
+  <!-- FAB Group -->
+  <div class="fab-group">
+    <button id="scroll-top" class="fab-button" aria-label="Scroll to top">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="18 15 12 9 6 15"></polyline>
+      </svg>
+    </button>
+    <button id="theme-toggle" class="fab-button" aria-label="Toggle theme">
+      <svg class="sun-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="5"></circle>
+        <line x1="12" y1="1" x2="12" y2="3"></line>
+        <line x1="12" y1="21" x2="12" y2="23"></line>
+        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+        <line x1="1" y1="12" x2="3" y2="12"></line>
+        <line x1="21" y1="12" x2="23" y2="12"></line>
+        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+      </svg>
+      <svg class="moon-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+      </svg>
+    </button>
+  </div>
+
   <script>
-    // Theme toggle
     document.getElementById('theme-toggle').addEventListener('click', function() {
       const html = document.documentElement;
       const isDark = html.classList.contains('dark');
       html.classList.remove('dark', 'light');
       html.classList.add(isDark ? 'light' : 'dark');
       localStorage.setItem('typelets-ui-theme', isDark ? 'light' : 'dark');
+    });
+    document.getElementById('scroll-top').addEventListener('click', function() {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+    // Wrap tables in scrollable container and normalize font sizes
+    document.querySelectorAll('.tiptap-content table').forEach(function(table) {
+      var wrapper = document.createElement('div');
+      wrapper.className = 'table-wrapper';
+      table.parentNode.insertBefore(wrapper, table);
+      wrapper.appendChild(table);
+      // Remove inline font-size styles from all elements in the table
+      table.querySelectorAll('*[style]').forEach(function(el) {
+        el.style.fontSize = '';
+      });
     });
   </script>
 </body>
@@ -322,129 +360,129 @@ function generateHTML(note: PublicNote, origin: string): string {
 function getStyles(): string {
   return `<style>
     /* Base */
-    .min-h-screen { min-height: 100vh; }
-    .bg-gray-50 { background-color: #f9fafb; }
-    .dark .bg-gray-50, html.dark .bg-gray-50 { background-color: #111827; }
+    html, body {
+      background-color: oklch(0.145 0 0);
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
+    }
+    html.light, html.light body {
+      background-color: #ffffff;
+    }
+    .min-h-screen { min-height: 100vh; overflow-x: hidden; }
+    .bg-gray-50 { background-color: #ffffff; }
+    html.dark .bg-gray-50 { background-color: oklch(0.145 0 0); }
 
-    /* Header */
-    .sticky-header {
-      position: sticky;
-      top: 0;
-      z-index: 10;
-      border-bottom: 1px solid #e5e7eb;
-      background-color: rgba(255, 255, 255, 0.8);
-      backdrop-filter: blur(8px);
+    /* Article Title & Meta */
+    .article-title {
+      font-size: 28px;
+      font-weight: 700;
+      color: #111827;
+      margin: 0 0 16px 0;
+      line-height: 1.2;
     }
-    html.dark .sticky-header {
-      border-bottom-color: #1f2937;
-      background-color: rgba(17, 24, 39, 0.8);
-    }
-    .header-content {
-      max-width: 64rem;
-      margin: 0 auto;
+    @media (min-width: 640px) { .article-title { font-size: 32px; } }
+    html.dark .article-title { color: white; }
+    .article-meta {
       display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 13px;
+      color: #6b7280;
+      margin-bottom: 24px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    html.dark .article-meta {
+      color: #9ca3af;
+      border-bottom-color: #374151;
+    }
+    .meta-row {
+      display: flex;
+      flex-wrap: wrap;
       align-items: center;
-      justify-content: space-between;
-      padding: 12px 16px;
+      gap: 6px;
     }
-    @media (min-width: 640px) { .header-content { padding: 16px; } }
-    .header-text {
-      font-size: 14px;
-      font-weight: 500;
-      color: #4b5563;
+    .meta-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
     }
-    html.dark .header-text { color: #d1d5db; }
-    .header-link {
+    .meta-separator {
+      color: #9ca3af;
+    }
+    html.dark .meta-separator { color: #6b7280; }
+    .meta-updated {
+      color: #9ca3af;
+    }
+    html.dark .meta-updated { color: #6b7280; }
+    .read-only {
+      color: #ea580c;
+    }
+    html.dark .read-only {
+      color: #fb923c;
+    }
+    .meta-link {
       color: #2563eb;
+      text-decoration: none;
       transition: color 0.15s;
     }
-    .header-link:hover { color: #1d4ed8; }
-    html.dark .header-link { color: #60a5fa; }
-    html.dark .header-link:hover { color: #93c5fd; }
-    .theme-button {
-      padding: 8px;
-      border-radius: 6px;
-      color: #4b5563;
-      background: none;
-      border: none;
-      cursor: pointer;
-      transition: background-color 0.15s;
+    .meta-link:hover { color: #1d4ed8; }
+    html.dark .meta-link { color: #60a5fa; }
+    html.dark .meta-link:hover { color: #93c5fd; }
+
+    /* FAB Group */
+    .fab-group {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      display: inline-flex;
+      border-radius: 8px;
+      border: 1px solid #e5e7eb;
+      background-color: #ffffff;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+      z-index: 50;
     }
-    .theme-button:hover { background-color: #f3f4f6; }
-    html.dark .theme-button { color: #d1d5db; }
-    html.dark .theme-button:hover { background-color: #1f2937; }
+    html.dark .fab-group {
+      background-color: #27272a;
+      border-color: #3f3f46;
+    }
+    .fab-button {
+      width: 40px;
+      height: 40px;
+      border: none;
+      border-right: 1px solid #e5e7eb;
+      background-color: transparent;
+      color: #4b5563;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background-color 0.15s ease;
+    }
+    .fab-button:last-child {
+      border-right: none;
+    }
+    .fab-button:hover {
+      background-color: #f3f4f6;
+    }
+    html.dark .fab-button {
+      border-right-color: #3f3f46;
+      color: #d1d5db;
+    }
+    html.dark .fab-button:hover {
+      background-color: #3f3f46;
+    }
     html.light .moon-icon { display: none; }
     html.dark .sun-icon { display: none; }
 
     /* Main */
     .main-content {
-      max-width: 64rem;
+      max-width: 1024px;
       margin: 0 auto;
-      padding: 16px 12px;
+      padding: 32px 16px;
     }
-    @media (min-width: 640px) { .main-content { padding: 32px 16px; } }
-    .article {
-      background-color: white;
-      padding: 16px;
-      border-radius: 8px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    }
-    @media (min-width: 640px) { .article { padding: 24px; } }
-    @media (min-width: 768px) { .article { padding: 32px; } }
-    html.dark .article { background-color: #1f2937; }
-    .article-title {
-      margin-bottom: 12px;
-      font-size: 24px;
-      font-weight: 700;
-      color: #111827;
-    }
-    @media (min-width: 640px) {
-      .article-title { font-size: 30px; margin-bottom: 16px; }
-    }
-    html.dark .article-title { color: white; }
-    .article-meta {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 24px;
-      font-size: 12px;
-      color: #6b7280;
-    }
-    @media (min-width: 640px) {
-      .article-meta { gap: 16px; font-size: 14px; margin-bottom: 32px; }
-    }
-    html.dark .article-meta { color: #9ca3af; }
-    .meta-item {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-    .meta-updated { font-size: 12px; }
-
-    /* Footer */
-    .footer {
-      border-top: 1px solid #e5e7eb;
-      padding: 24px 0;
-    }
-    @media (min-width: 640px) { .footer { padding: 32px 0; } }
-    html.dark .footer { border-top-color: #1f2937; }
-    .footer-content {
-      max-width: 64rem;
-      margin: 0 auto;
-      padding: 0 16px;
-      text-align: center;
-      font-size: 12px;
-      color: #6b7280;
-    }
-    @media (min-width: 640px) { .footer-content { font-size: 14px; } }
-    html.dark .footer-content { color: #9ca3af; }
-    .footer-link {
-      color: #2563eb;
-    }
-    .footer-link:hover { color: #1d4ed8; }
-    html.dark .footer-link { color: #60a5fa; }
-    html.dark .footer-link:hover { color: #93c5fd; }
+    @media (min-width: 640px) { .main-content { padding: 32px 24px; } }
 
     /* TipTap Content Styles */
     .tiptap-content {
@@ -506,7 +544,9 @@ function getStyles(): string {
     html.dark .tiptap-content a:hover { color: #93c5fd; }
     .tiptap-content hr { border: none; border-top: 1px solid #d1d5db; margin: 24px 0; }
     html.dark .tiptap-content hr { border-top-color: #4b5563; }
-    .tiptap-content img { max-width: 100%; height: auto; border-radius: 8px; margin: 16px 0; }
+    .tiptap-content img { max-width: 100%; border-radius: 8px; margin: 16px 0; }
+    .tiptap-content img:not([style*="width"]):not([width]) { height: auto; }
+    .tiptap-content img[style*="width"], .tiptap-content img[width] { height: auto; }
     .tiptap-content strong { font-weight: bold; }
     .tiptap-content em { font-style: italic; }
     .tiptap-content mark { background-color: #fef08a; padding: 1px 4px; border-radius: 2px; }
@@ -516,6 +556,91 @@ function getStyles(): string {
     .tiptap-content ul[data-type="taskList"] { list-style: none; padding-left: 0; }
     .tiptap-content li[data-type="taskItem"] { display: flex; align-items: flex-start; gap: 8px; }
     .tiptap-content li[data-type="taskItem"][data-checked="true"] > div { text-decoration: line-through; opacity: 0.6; }
+
+    /* Table Styles */
+    .table-wrapper {
+      width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior-x: contain;
+      margin: 16px 0;
+    }
+    .tiptap-content table {
+      width: max-content;
+      min-width: 100%;
+      border-collapse: collapse;
+      margin: 0;
+    }
+    .tiptap-content table th,
+    .tiptap-content table td {
+      border: 1px solid #d1d5db;
+      padding: 8px 12px;
+      text-align: left;
+      vertical-align: top;
+      min-width: 80px;
+      white-space: nowrap;
+    }
+    /* Reset any inline font sizes in table cells */
+    .tiptap-content table th,
+    .tiptap-content table td,
+    .tiptap-content table th *,
+    .tiptap-content table td *,
+    .tiptap-content table th p,
+    .tiptap-content table td p,
+    .tiptap-content table th span,
+    .tiptap-content table td span,
+    .tiptap-content table th span[style],
+    .tiptap-content table td span[style],
+    .tiptap-content table th p[style],
+    .tiptap-content table td p[style] {
+      font-size: 14px !important;
+    }
+    .tiptap-content table th p,
+    .tiptap-content table td p {
+      margin: 0;
+    }
+    html.dark .tiptap-content table th,
+    html.dark .tiptap-content table td {
+      border-color: #4b5563;
+    }
+    .tiptap-content table th,
+    .tiptap-content table .bg-muted {
+      background-color: #f3f4f6;
+      font-weight: 600;
+    }
+    html.dark .tiptap-content table th,
+    html.dark .tiptap-content table .bg-muted {
+      background-color: #374151;
+    }
+    .tiptap-content table tr:nth-child(even) td {
+      background-color: #f9fafb;
+    }
+    html.dark .tiptap-content table tr:nth-child(even) td {
+      background-color: #1f2937;
+    }
+    .tiptap-content table tr:hover td {
+      background-color: #f3f4f6;
+    }
+    html.dark .tiptap-content table tr:hover td {
+      background-color: #374151;
+    }
+    /* TipTap Tailwind class overrides */
+    .tiptap-content .border-border { border-color: #d1d5db; }
+    html.dark .tiptap-content .border-border { border-color: #4b5563; }
+    .tiptap-content .px-3 { padding-left: 12px; padding-right: 12px; }
+    .tiptap-content .py-2 { padding-top: 8px; padding-bottom: 8px; }
+
+    /* Sheets placeholder */
+    .sheets-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 200px;
+      padding: 32px;
+      text-align: center;
+    }
+    html.dark .sheets-placeholder p { color: #9ca3af; }
   </style>`;
 }
 

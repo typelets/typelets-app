@@ -2,7 +2,11 @@ import { useEffect, useRef, useState, useId } from 'react';
 import { createUniver, LocaleType, mergeLocales } from '@univerjs/presets';
 import { UniverSheetsCorePreset } from '@univerjs/preset-sheets-core';
 import UniverPresetSheetsCoreEnUS from '@univerjs/preset-sheets-core/locales/en-US';
-import { WorkbookEditablePermission } from '@univerjs/sheets';
+import {
+  WorkbookEditablePermission,
+  WorksheetSelectProtectedCellsPermission,
+  WorksheetSelectUnProtectedCellsPermission,
+} from '@univerjs/sheets';
 
 import '@univerjs/preset-sheets-core/lib/index.css';
 
@@ -129,12 +133,21 @@ export function PublicSheetsViewer({ content, darkMode = false }: PublicSheetsVi
       // Create workbook with initial data
       const workbook = univerAPI.createWorkbook(workbookData);
 
-      // Set workbook to read-only mode
+      // Set workbook to read-only mode and disable cell selection
       if (workbook) {
         const unitId = workbook.getId();
         const permission = univerAPI.getPermission();
         if (permission && unitId) {
+          // Disable editing
           permission.setWorkbookPermissionPoint(unitId, WorkbookEditablePermission, false);
+
+          // Disable cell selection for all worksheets
+          const sheets = workbook.getSheets();
+          sheets.forEach((sheet) => {
+            const sheetId = sheet.getSheetId();
+            permission.setWorksheetPermissionPoint(unitId, sheetId, WorksheetSelectProtectedCellsPermission, false);
+            permission.setWorksheetPermissionPoint(unitId, sheetId, WorksheetSelectUnProtectedCellsPermission, false);
+          });
         }
       }
 
@@ -180,6 +193,75 @@ export function PublicSheetsViewer({ content, darkMode = false }: PublicSheetsVi
     };
   }, [instanceId]);
 
+  // Check if mobile/touch device
+  const isMobile = typeof window !== 'undefined' &&
+    ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+
+  // Mobile readonly mode: disable pointer events and implement custom touch scroll
+  // Based on: https://github.com/dream-num/univer/discussions/2198
+  useEffect(() => {
+    if (!isMobile || state !== 'ready') return;
+
+    const container = containerRef.current;
+    const instance = viewerInstances.get(instanceId);
+    if (!container || !instance) return;
+
+    const { univerAPI } = instance.univer;
+    const workbook = univerAPI.getActiveWorkbook();
+    if (!workbook) return;
+
+    // Disable pointer events on the Univer container to prevent keyboard
+    container.style.pointerEvents = 'none';
+
+    // Track touch state for scrolling
+    let lastX = 0;
+    let lastY = 0;
+
+    const handleTouchStart = (e: TouchEvent) => {
+      const touch = e.touches[0];
+      lastX = touch.clientX;
+      lastY = touch.clientY;
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      const touch = e.touches[0];
+      const deltaX = lastX - touch.clientX;
+      const deltaY = lastY - touch.clientY;
+      lastX = touch.clientX;
+      lastY = touch.clientY;
+
+      // Execute scroll command
+      try {
+        const activeSheet = workbook.getActiveSheet();
+        if (activeSheet) {
+          univerAPI.executeCommand('sheet.operation.set-scroll', {
+            unitId: workbook.getId(),
+            sheetId: activeSheet.getSheetId(),
+            offsetX: deltaX,
+            offsetY: deltaY,
+          });
+        }
+      } catch {
+        // Ignore scroll errors
+      }
+    };
+
+    // Add touch handlers to the parent (which still has pointer events)
+    const parent = container.parentElement;
+    if (parent) {
+      parent.addEventListener('touchstart', handleTouchStart, { passive: true });
+      parent.addEventListener('touchmove', handleTouchMove, { passive: true });
+    }
+
+    return () => {
+      container.style.pointerEvents = '';
+      if (parent) {
+        parent.removeEventListener('touchstart', handleTouchStart);
+        parent.removeEventListener('touchmove', handleTouchMove);
+      }
+    };
+  }, [isMobile, state, instanceId]);
+
   if (state === 'error') {
     return (
       <div className="flex h-full w-full items-center justify-center bg-red-50 dark:bg-red-900/20">
@@ -216,6 +298,16 @@ export function PublicSheetsViewer({ content, darkMode = false }: PublicSheetsVi
           display: none !important;
           visibility: hidden !important;
           pointer-events: none !important;
+        }
+
+        /* Mobile readonly mode - disable all pointer events on Univer internals */
+        @media (pointer: coarse) {
+          .sheets-viewer-container .univer-app,
+          .sheets-viewer-container .univer-container,
+          .sheets-viewer-container [class*="univer-"],
+          .sheets-viewer-container canvas {
+            pointer-events: none !important;
+          }
         }
       `}</style>
       <div className={`sheets-viewer-container relative h-full w-full overflow-hidden`}>
