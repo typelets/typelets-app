@@ -82,7 +82,7 @@ export function ViewHeader({
             theme.isDark ? 'rgba(10, 10, 10, 0.05)' : 'rgba(250, 250, 250, 0.05)',
             theme.isDark ? 'rgba(0, 0, 0, 0)' : 'rgba(250, 250, 250, 0)',
           ]}
-          locations={[0, 0.35, 0.45, 0.53, 0.60, 0.66, 0.72, 0.77, 0.82, 0.87, 1]}
+          locations={[0, 0.25, 0.40, 0.50, 0.58, 0.66, 0.72, 0.77, 0.82, 0.87, 1]}
           style={styles.gradient}
         />
         <View style={styles.header}>
@@ -202,7 +202,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     zIndex: 100,
-    paddingBottom: 35,
+    paddingBottom: 10,
   },
   gradient: {
     position: 'absolute',
