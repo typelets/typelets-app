@@ -25,6 +25,42 @@ export function generateNoteHtml(
           document.querySelectorAll('pre code').forEach((block) => {
             hljs.highlightElement(block);
           });
+
+          // Fix tables: wrap in scrollable div and normalize styling
+          document.querySelectorAll('table').forEach((table) => {
+            if (!table.parentElement.classList.contains('table-wrapper')) {
+              const wrapper = document.createElement('div');
+              wrapper.className = 'table-wrapper';
+              table.parentNode.insertBefore(wrapper, table);
+              wrapper.appendChild(table);
+            }
+            table.removeAttribute('style');
+            table.querySelectorAll('col').forEach((col) => {
+              col.removeAttribute('style');
+              col.removeAttribute('width');
+            });
+          });
+
+          // Fix table cell alignment and remove fixed widths
+          document.querySelectorAll('th, td').forEach((cell) => {
+            cell.removeAttribute('colwidth');
+            const style = cell.getAttribute('style') || '';
+            const alignMatch = style.match(/text-align:\\s*(left|center|right|justify)/i);
+            cell.removeAttribute('style');
+            if (alignMatch) {
+              const alignment = alignMatch[1];
+              cell.style.textAlign = alignment;
+              cell.querySelectorAll('p').forEach((p) => {
+                p.style.textAlign = alignment;
+              });
+            }
+            cell.querySelectorAll('*').forEach((el) => {
+              if (el.style) {
+                el.style.fontSize = '';
+                el.style.width = '';
+              }
+            });
+          });
         });
       </script>
       <style>
@@ -189,6 +225,54 @@ export function generateNoteHtml(
           color: #cc6600 !important;
         }
         ` : ''}
+
+        /* Table wrapper for horizontal scroll */
+        .table-wrapper {
+          overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
+          margin: 16px 0;
+        }
+
+        /* Tables */
+        table {
+          border-collapse: collapse;
+          width: auto;
+          min-width: 100%;
+          table-layout: auto;
+        }
+
+        th, td {
+          border: 1px solid ${themeColors.muted} !important;
+          padding: 8px 12px !important;
+          text-align: left;
+          vertical-align: top;
+          font-size: 16px !important;
+          white-space: nowrap;
+        }
+
+        /* Allow text wrapping for cells with longer content */
+        td p, th p {
+          white-space: normal;
+          min-width: 120px;
+        }
+
+        th {
+          background-color: ${themeColors.muted} !important;
+          font-weight: 600;
+        }
+
+        /* Force consistent font-size inside table cells */
+        th *, td *,
+        th p, td p,
+        th span, td span {
+          font-size: 16px !important;
+          margin: 0 !important;
+        }
+
+        /* Remove default margins from p inside table cells and inherit alignment */
+        th p, td p {
+          text-align: inherit !important;
+        }
 
         /* Scrollbar styling */
         pre::-webkit-scrollbar {

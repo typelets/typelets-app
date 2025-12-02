@@ -248,6 +248,55 @@ export function NoteContent({
           border-radius: 3px;
         }
 
+        /* Table wrapper for horizontal scroll */
+        .table-wrapper {
+          overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
+          margin: 12px 0;
+        }
+
+        /* Tables */
+        table {
+          border-collapse: collapse;
+          width: auto;
+          min-width: 100%;
+          table-layout: auto;
+        }
+
+        th, td {
+          border: 1px solid ${theme.colors.border} !important;
+          padding: 8px 12px !important;
+          vertical-align: top;
+          font-size: 16px !important;
+          white-space: nowrap;
+        }
+
+        /* Allow text wrapping for cells with longer content */
+        td p, th p {
+          white-space: normal;
+          min-width: 120px;
+        }
+
+        th {
+          background-color: ${theme.isDark ? 'rgba(255, 255, 255, 0.05)' : theme.colors.muted} !important;
+          font-weight: 600;
+        }
+
+        /* Force consistent font-size inside table cells */
+        th *, td *,
+        th p, td p,
+        th span, td span {
+          font-size: 16px !important;
+          margin: 0 !important;
+        }
+
+        /* Remove p margins inside table cells and force inherit alignment */
+        th p, td p,
+        th > p, td > p,
+        table th p, table td p {
+          text-align: inherit !important;
+        }
+
         .note-header {
           padding: 8px 16px 0 16px;
         }
@@ -358,6 +407,56 @@ ${note.content}
         // Syntax highlighting for code blocks
         document.querySelectorAll('pre code').forEach((block) => {
           hljs.highlightElement(block);
+        });
+
+        // Fix tables: wrap in scrollable div and normalize styling
+        document.querySelectorAll('table').forEach((table) => {
+          // Wrap table in scrollable div if not already wrapped
+          if (!table.parentElement.classList.contains('table-wrapper')) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'table-wrapper';
+            table.parentNode.insertBefore(wrapper, table);
+            wrapper.appendChild(table);
+          }
+
+          // Remove inline styles from table
+          table.removeAttribute('style');
+
+          // Remove colgroup widths
+          table.querySelectorAll('col').forEach((col) => {
+            col.removeAttribute('style');
+            col.removeAttribute('width');
+          });
+        });
+
+        // Fix table cell alignment and remove fixed widths
+        document.querySelectorAll('th, td').forEach((cell) => {
+          // Remove colwidth attribute
+          cell.removeAttribute('colwidth');
+
+          // Get alignment before removing style
+          const style = cell.getAttribute('style') || '';
+          const alignMatch = style.match(/text-align:\\s*(left|center|right|justify)/i);
+
+          // Remove all inline styles (including width)
+          cell.removeAttribute('style');
+
+          // Re-apply alignment if it was set
+          if (alignMatch) {
+            const alignment = alignMatch[1];
+            cell.style.textAlign = alignment;
+            cell.querySelectorAll('p').forEach((p) => {
+              p.style.textAlign = alignment;
+            });
+          }
+
+          // Remove inline styles from all child elements
+          cell.querySelectorAll('*').forEach((el) => {
+            if (el.style) {
+              el.style.fontSize = '';
+              el.style.width = '';
+            }
+          });
         });
         `}
 
@@ -480,6 +579,8 @@ ${note.content}
                 }
               } else if (data.type === 'error') {
                 console.error('WebView error:', data.error);
+              } else if (data.type === 'debug') {
+                console.log('DEBUG TABLE HTML:', data.table);
               }
             } catch {
               // Ignore parse errors
