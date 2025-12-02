@@ -1,3 +1,10 @@
+# [1.46.0](https://github.com/typelets/typelets-app/compare/v1.45.2...v1.46.0) (2025-12-02)
+
+
+### Features
+
+* **mobile:** add file type selection sheet for creating new files ([676a38c](https://github.com/typelets/typelets-app/commit/676a38c5db868755a21974e9c47f78f44f4d7aaf))
+
 ## [1.45.2](https://github.com/typelets/typelets-app/compare/v1.45.1...v1.45.2) (2025-12-01)
 
 
