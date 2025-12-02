@@ -81,7 +81,7 @@ export const NotesHeader: React.FC<NotesHeaderProps> = ({
             >
               <Ionicons name="add" size={16} color={theme.colors.primary} style={{ marginRight: 12 }} />
               <Text style={[styles.buttonText, { color: theme.colors.foreground }]}>
-                Create Note
+                Start Writing
               </Text>
             </Pressable>
           </GlassView>

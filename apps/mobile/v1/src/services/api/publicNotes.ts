@@ -10,7 +10,7 @@ export interface PublishNoteParams {
   noteId: string;
   title: string;
   content: string;
-  type?: 'note' | 'diagram' | 'code';
+  type?: 'note' | 'diagram' | 'code' | 'sheets';
   authorName?: string;
 }
 
@@ -18,7 +18,7 @@ export interface PublishNoteResponse {
   slug: string;
   title: string;
   content: string;
-  type?: 'note' | 'diagram' | 'code';
+  type?: 'note' | 'diagram' | 'code' | 'sheets';
   authorName?: string;
   publishedAt: string;
   updatedAt: string;

@@ -5,7 +5,7 @@
 
 import type { Note } from '@/src/services/api';
 
-export type NoteType = 'diagram' | 'code' | 'note';
+export type NoteType = 'diagram' | 'code' | 'sheets' | 'note';
 
 /**
  * Detects if content contains diagram syntax
@@ -52,9 +52,27 @@ export function isCodeContent(content: string): boolean {
 }
 
 /**
+ * Detects if content is a Univer workbook (spreadsheet)
+ */
+export function isWorkbookContent(content: string): boolean {
+  if (!content) return false;
+
+  try {
+    const parsed = JSON.parse(content);
+    return (
+      parsed.sheets !== undefined ||
+      parsed.sheetOrder !== undefined ||
+      (parsed.id && typeof parsed.id === 'string' && parsed.id.startsWith('workbook'))
+    );
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Detects the type of a note based on its content
  * @param note - The note to analyze
- * @returns The detected note type: 'diagram', 'code', or 'note'
+ * @returns The detected note type: 'diagram', 'code', 'sheets', or 'note'
  */
 export function detectNoteType(note: Note): NoteType {
   // If type is already set, use it
@@ -67,7 +85,12 @@ export function detectNoteType(note: Note): NoteType {
     return 'note';
   }
 
-  // Check for diagrams first (more specific)
+  // Check for spreadsheets first
+  if (isWorkbookContent(note.content)) {
+    return 'sheets';
+  }
+
+  // Check for diagrams (more specific)
   if (isDiagramContent(note.content)) {
     return 'diagram';
   }

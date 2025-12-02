@@ -161,7 +161,7 @@ export default function SettingsScreen({ onLogout }: Props) {
   const handleClearCache = async () => {
     Alert.alert(
       'Clear Cache',
-      'This will clear all cached data. Your notes and folders will be synced from the server on next load.',
+      'This will clear all cached data. Your files and folders will be synced from the server on next load.',
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -201,7 +201,7 @@ export default function SettingsScreen({ onLogout }: Props) {
   const handleRefreshCache = async () => {
     Alert.alert(
       'Refresh Cache',
-      'This will clear your cache and reload all notes from the server. This may take a few moments.',
+      'This will clear your cache and reload all files from the server. This may take a few moments.',
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -333,13 +333,13 @@ export default function SettingsScreen({ onLogout }: Props) {
       items: [
         {
           title: 'Usage & Limits',
-          subtitle: 'View storage and note limits',
+          subtitle: 'View storage and typelet limits',
           icon: 'pie-chart-outline',
           onPress: () => usageSheetRef.current?.present(),
         },
         {
           title: 'Cache Status',
-          subtitle: `${cacheStats.noteCount} notes, ${cacheStats.folderCount} folders • ${cacheStats.cacheSizeMB} MB • ${cacheDecrypted ? 'Decrypted' : 'Encrypted'}`,
+          subtitle: `${cacheStats.noteCount} files, ${cacheStats.folderCount} folders • ${cacheStats.cacheSizeMB} MB • ${cacheDecrypted ? 'Decrypted' : 'Encrypted'}`,
           icon: 'server-outline',
           onPress: undefined,
         },
@@ -351,7 +351,7 @@ export default function SettingsScreen({ onLogout }: Props) {
         },
         {
           title: 'Refresh Cache',
-          subtitle: 'Re-download all notes from server',
+          subtitle: 'Re-download all files from server',
           icon: 'refresh-outline',
           onPress: handleRefreshCache,
         },
@@ -635,13 +635,13 @@ export default function SettingsScreen({ onLogout }: Props) {
               {
                 value: true,
                 title: 'Cache Decrypted',
-                subtitle: 'Store decrypted notes locally for instant loading. Requires master password on app start.',
+                subtitle: 'Store decrypted files locally for instant loading. Requires master password on app start.',
                 icon: 'flash'
               },
               {
                 value: false,
                 title: 'Cache Encrypted',
-                subtitle: 'Only store encrypted notes. Slightly slower but maximum security.',
+                subtitle: 'Only store encrypted files. Slightly slower but maximum security.',
                 icon: 'shield-checkmark'
               }
             ] as const).map((option) => (
@@ -667,8 +667,8 @@ export default function SettingsScreen({ onLogout }: Props) {
                   Alert.alert(
                     'Cache Preference Updated',
                     newValue
-                      ? 'Decrypted notes will be cached for instant loading. Close and reopen the app to see the effect.'
-                      : 'Only encrypted notes will be cached. Decrypted cache has been cleared.',
+                      ? 'Decrypted files will be cached for instant loading. Close and reopen the app to see the effect.'
+                      : 'Only encrypted files will be cached. Decrypted cache has been cleared.',
                     [{ text: 'OK' }]
                   );
                 }}
@@ -848,7 +848,7 @@ export default function SettingsScreen({ onLogout }: Props) {
                   </Text>
                 </View>
                 <Text style={[styles.securityFeatureDescription, { color: theme.colors.mutedForeground }]}>
-                  Your notes are encrypted with AES-256 encryption using your master password. We never have access to your decryption key or unencrypted data.
+                  Your files are encrypted with AES-256 encryption using your master password. We never have access to your decryption key or unencrypted data.
                 </Text>
               </View>
 
@@ -860,7 +860,7 @@ export default function SettingsScreen({ onLogout }: Props) {
                   </Text>
                 </View>
                 <Text style={[styles.securityFeatureDescription, { color: theme.colors.mutedForeground }]}>
-                  {`Your master password is the only key to decrypt your notes. It's never stored on our servers and cannot be recovered if lost.`}
+                  {`Your master password is the only key to decrypt your files. It's never stored on our servers and cannot be recovered if lost.`}
                 </Text>
               </View>
 
@@ -884,7 +884,7 @@ export default function SettingsScreen({ onLogout }: Props) {
                   </Text>
                 </View>
                 <Text style={[styles.securityFeatureDescription, { color: theme.colors.mutedForeground }]}>
-                  {`We can't read your notes, recover your password, or access your data. Your privacy is guaranteed by design.`}
+                  {`We can't read your files, recover your password, or access your data. Your privacy is guaranteed by design.`}
                 </Text>
               </View>
 
@@ -896,7 +896,7 @@ export default function SettingsScreen({ onLogout }: Props) {
                   </Text>
                 </View>
                 <Text style={[styles.securityFeatureDescription, { color: theme.colors.mutedForeground }]}>
-                  Notes are cached encrypted by default - decrypted only when viewed. Enable &ldquo;Cache Decrypted&rdquo; for instant loading at the cost of storing decrypted data locally.
+                  Typelets are cached encrypted by default - decrypted only when viewed. Enable &ldquo;Cache Decrypted&rdquo; for instant loading at the cost of storing decrypted data locally.
                 </Text>
               </View>
             </View>
@@ -1000,7 +1000,7 @@ export default function SettingsScreen({ onLogout }: Props) {
                   </Text>
                 </View>
                 <Text style={[styles.securityFeatureDescription, { color: theme.colors.mutedForeground }]}>
-                  Deleting your account will permanently remove all your notes, folders, and data. This action cannot be undone.
+                  Deleting your account will permanently remove all your files, folders, and data. This action cannot be undone.
                 </Text>
               </View>
 

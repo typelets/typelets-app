@@ -1,6 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import { GlassView } from 'expo-glass-effect';
-import { Code2, Globe, Network } from 'lucide-react-native';
+import { Globe, SquareCode } from 'lucide-react-native';
+
+import { MdiIcon, mdiFileTableBoxOutline, mdiTextBoxOutline, mdiVectorSquare } from '@/src/components/MdiIcon';
 import React, { useMemo, useRef } from 'react';
 import { ActivityIndicator, Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
@@ -70,6 +72,7 @@ const NoteListItemComponent: React.FC<NoteListItemProps> = ({
   const noteType = useMemo(() => detectNoteType(note), [note]);
   const isDiagram = noteType === 'diagram';
   const isCode = noteType === 'code';
+  const isSheet = noteType === 'sheets';
 
   // Check if note is still encrypted (loading skeleton)
   const noteIsEncrypted = note.title === '[ENCRYPTED]' || note.content === '[ENCRYPTED]';
@@ -237,62 +240,72 @@ const NoteListItemComponent: React.FC<NoteListItemProps> = ({
           style={[styles.noteListItem, { backgroundColor, paddingHorizontal: 16 }]}
           android_ripple={{ color: mutedColor }}
         >
-          <View style={styles.noteListContent}>
-          <View style={styles.noteListHeader}>
-            <Text
-              style={[styles.noteListTitle, { color: foregroundColor }]}
-              numberOfLines={1}
-              ellipsizeMode="tail"
-            >
-              {String(note.title || 'Untitled')}
-            </Text>
-            <View style={styles.noteListMeta}>
-              {isDiagram && (
-                <Network size={12} color="#06b6d4" style={{ marginRight: 8 }} />
+          <View style={styles.noteListRow}>
+            {/* Note type icon on the left */}
+            <View style={styles.noteTypeIconContainer}>
+              {isDiagram ? (
+                <MdiIcon path={mdiVectorSquare} size={20} color="#a855f7" />
+              ) : isCode ? (
+                <SquareCode size={20} color={mutedForegroundColor} />
+              ) : isSheet ? (
+                <MdiIcon path={mdiFileTableBoxOutline} size={20} color="#22c55e" />
+              ) : (
+                <MdiIcon path={mdiTextBoxOutline} size={20} color="#f43f5e" />
               )}
-              {isCode && (
-                <Code2 size={12} color="#22c55e" style={{ marginRight: 8 }} />
-              )}
-              {note.isPublished && (
-                <Globe size={12} color="#8b5cf6" style={{ marginRight: 8 }} />
-              )}
-              {((note.attachments?.length ?? 0) > 0 || (note.attachmentCount ?? 0) > 0) && (
-                <View style={styles.attachmentBadge}>
-                  <View style={{ transform: [{ rotate: '45deg' }] }}>
-                    <Ionicons name="attach-outline" size={14} color="#3b82f6" />
-                  </View>
-                  <Text style={[styles.attachmentCount, { color: '#3b82f6' }]}>
-                    {note.attachments?.length || note.attachmentCount || 0}
+            </View>
+
+            {/* Content on the right */}
+            <View style={styles.noteListContent}>
+              <View style={styles.noteListHeader}>
+                <Text
+                  style={[styles.noteListTitle, { color: foregroundColor }]}
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                >
+                  {String(note.title || 'Untitled')}
+                </Text>
+                <View style={styles.noteListMeta}>
+                  {note.isPublished && (
+                    <Globe size={12} color="#f59e0b" style={{ marginRight: 8 }} />
+                  )}
+                  {((note.attachments?.length ?? 0) > 0 || (note.attachmentCount ?? 0) > 0) && (
+                    <View style={styles.attachmentBadge}>
+                      <View style={{ transform: [{ rotate: '45deg' }] }}>
+                        <Ionicons name="attach-outline" size={14} color="#3b82f6" />
+                      </View>
+                      <Text style={[styles.attachmentCount, { color: '#3b82f6' }]}>
+                        {note.attachments?.length || note.attachmentCount || 0}
+                      </Text>
+                    </View>
+                  )}
+                  {note.starred && (
+                    <Ionicons name="star" size={14} color="#f59e0b" style={{ marginRight: 8 }} />
+                  )}
+                  <Text style={[styles.noteListTime, { color: mutedForegroundColor }]}>
+                    {enhancedData?.formattedDate || ''}
+                  </Text>
+                </View>
+              </View>
+              <Text
+                style={[styles.noteListPreview, { color: mutedForegroundColor }]}
+                numberOfLines={2}
+              >
+                {enhancedData?.preview || ''}
+              </Text>
+              {!folderId && folderPath && (
+                <View style={styles.noteListFolderInfo}>
+                  <View style={[styles.noteListFolderDot, { backgroundColor: noteFolder?.color || '#6b7280' }]} />
+                  <Text style={[styles.noteListFolderPath, { color: mutedForegroundColor }]} numberOfLines={1}>
+                    {folderPath}
                   </Text>
                 </View>
               )}
-              {note.starred && (
-                <Ionicons name="star" size={14} color="#f59e0b" style={{ marginRight: 8 }} />
-              )}
-              <Text style={[styles.noteListTime, { color: mutedForegroundColor }]}>
-                {enhancedData?.formattedDate || ''}
-              </Text>
             </View>
           </View>
-          <Text
-            style={[styles.noteListPreview, { color: mutedForegroundColor }]}
-            numberOfLines={2}
-          >
-            {enhancedData?.preview || ''}
-          </Text>
-          {!folderId && folderPath && (
-            <View style={styles.noteListFolderInfo}>
-              <View style={[styles.noteListFolderDot, { backgroundColor: noteFolder?.color || '#6b7280' }]} />
-              <Text style={[styles.noteListFolderPath, { color: mutedForegroundColor }]} numberOfLines={1}>
-                {folderPath}
-              </Text>
-            </View>
-          )}
-        </View>
       </Pressable>
       </Swipeable>
 
-      {!isLastItem && <View style={[styles.noteListDivider, { backgroundColor: borderColor }]} />}
+      {!isLastItem && <View style={[styles.noteListDivider, { backgroundColor: borderColor, marginLeft: 48 }]} />}
     </View>
   );
 };
@@ -306,8 +319,16 @@ const styles = StyleSheet.create({
   },
   noteListItem: {
   },
-  noteListContent: {
+  noteListRow: {
+    flexDirection: 'row',
     paddingVertical: 12,
+  },
+  noteTypeIconContainer: {
+    marginRight: 12,
+    paddingTop: 2,
+  },
+  noteListContent: {
+    flex: 1,
     paddingHorizontal: 0,
   },
   noteListHeader: {
@@ -364,7 +385,7 @@ const styles = StyleSheet.create({
   noteListDivider: {
     // StyleSheet.hairlineWidth is intentionally used for height (ultra-thin divider)
     height: StyleSheet.hairlineWidth,
-    marginHorizontal: 16,
+    marginRight: 16,
     marginVertical: 0,
   },
   deleteAction: {

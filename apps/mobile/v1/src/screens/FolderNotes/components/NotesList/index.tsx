@@ -17,6 +17,8 @@ import { type Folder, type Note, useApiService } from '@/src/services/api';
 import { useTheme } from '@/src/theme';
 import { stripHtmlTags } from '@/src/utils/noteUtils';
 
+import { CreateFileSheet, CreateFileSheetRef } from '@/src/components/CreateFileSheet';
+
 import { CreateFolderSheet } from './CreateFolderSheet';
 import { EmptyState } from './EmptyState';
 import { FilterConfig, FilterSortSheet, SortConfig } from './FilterSortSheet';
@@ -114,6 +116,7 @@ export default function NotesList({ navigation, route, renderHeader, scrollY: pa
   const createFolderSheetRef = useRef<BottomSheetModal>(null);
   const filterSortSheetRef = useRef<BottomSheetModal>(null);
   const noteActionsSheetRef = useRef<NoteActionsSheetRef>(null);
+  const createFileSheetRef = useRef<CreateFileSheetRef>(null);
   const flatListRef = useRef<FlashListType<Note>>(null);
   const createNoteButtonRef = useRef<View>(null);
 
@@ -678,13 +681,13 @@ export default function NotesList({ navigation, route, renderHeader, scrollY: pa
           viewType={viewType}
           subfoldersCount={subfolders.length}
           onFilterPress={() => filterSortSheetRef.current?.present()}
-          onCreateNotePress={() => navigation?.navigate('CreateNote', { folderId: route?.params?.folderId })}
+          onCreateNotePress={() => createFileSheetRef.current?.present()}
           onEmptyTrashPress={handleEmptyTrash}
           createNoteButtonRef={createNoteButtonRef}
         />
       </>
     );
-  }, [loading, notes.length, renderHeader, viewType, subfolders, viewMode, filteredNotes.length, hasActiveFilters, handleEmptyTrash, navigation, route?.params?.folderId, filterSortSheetRef]);
+  }, [loading, notes.length, renderHeader, viewType, subfolders, viewMode, filteredNotes.length, hasActiveFilters, handleEmptyTrash, filterSortSheetRef]);
 
   // Render empty state
   const renderEmptyComponent = useCallback(() => {
@@ -774,7 +777,7 @@ export default function NotesList({ navigation, route, renderHeader, scrollY: pa
               right: 20,
             }
           ]}
-          onPress={() => navigation?.navigate('CreateNote', { folderId: route?.params?.folderId })}
+          onPress={() => createFileSheetRef.current?.present()}
         >
           <GlassView glassEffectStyle="regular" style={styles.fabGlass} pointerEvents="none">
             <View style={[styles.fabButton, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]}>
@@ -783,6 +786,12 @@ export default function NotesList({ navigation, route, renderHeader, scrollY: pa
           </GlassView>
         </Pressable>
       )}
+
+      {/* Create File Type Sheet */}
+      <CreateFileSheet
+        ref={createFileSheetRef}
+        onCreateNote={() => navigation?.navigate('CreateNote', { folderId: route?.params?.folderId })}
+      />
     </View>
   );
 }
