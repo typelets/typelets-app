@@ -1,3 +1,10 @@
+## [1.46.3](https://github.com/typelets/typelets-app/compare/v1.46.2...v1.46.3) (2025-12-03)
+
+
+### Bug Fixes
+
+* improve sheet scrolling to feel more native ([ca04123](https://github.com/typelets/typelets-app/commit/ca041238c422581cdd43b496566cf6f48e8930d3))
+
 ## [1.46.2](https://github.com/typelets/typelets-app/compare/v1.46.1...v1.46.2) (2025-12-02)
 
 
