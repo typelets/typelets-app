@@ -400,12 +400,19 @@ export function SheetsViewer({ content, theme }: SheetsViewerProps) {
               let scrollY = 0;
               let velocityX = 0;
               let velocityY = 0;
+              let lastX = 0;
+              let lastY = 0;
               let lastTime = 0;
               let momentumId = null;
+              let isTracking = false;
 
               // Pinch zoom state
               let initialPinchDistance = 0;
               let currentZoom = 1;
+
+              // iOS-like deceleration rate (0.998 is close to UIScrollView)
+              const DECELERATION = 0.985;
+              const MIN_VELOCITY = 0.1;
 
               function doScroll() {
                 const sheetId = getSheetId();
@@ -424,13 +431,15 @@ export function SheetsViewer({ content, theme }: SheetsViewerProps) {
               }
 
               function momentumScroll() {
-                if (Math.abs(velocityX) < 0.5 && Math.abs(velocityY) < 0.5) {
+                if (Math.abs(velocityX) < MIN_VELOCITY && Math.abs(velocityY) < MIN_VELOCITY) {
                   momentumId = null;
                   return;
                 }
 
-                velocityX *= 0.95;
-                velocityY *= 0.95;
+                // Apply iOS-like deceleration
+                velocityX *= DECELERATION;
+                velocityY *= DECELERATION;
+
                 scrollX = Math.max(0, scrollX + velocityX);
                 scrollY = Math.max(0, scrollY + velocityY);
                 doScroll();
@@ -444,41 +453,53 @@ export function SheetsViewer({ content, theme }: SheetsViewerProps) {
               }
 
               overlay.addEventListener('touchstart', function(e) {
+                // Stop any ongoing momentum
                 if (momentumId) {
                   cancelAnimationFrame(momentumId);
                   momentumId = null;
                 }
 
                 if (e.touches.length === 1) {
+                  isTracking = true;
                   startX = e.touches[0].pageX;
                   startY = e.touches[0].pageY;
-                  lastTime = Date.now();
+                  lastX = startX;
+                  lastY = startY;
+                  lastTime = performance.now();
                   velocityX = 0;
                   velocityY = 0;
                 } else if (e.touches.length === 2) {
+                  isTracking = false;
                   initialPinchDistance = getPinchDistance(e.touches);
                 }
               }, { passive: true });
 
               overlay.addEventListener('touchmove', function(e) {
-                if (e.touches.length === 1) {
+                if (e.touches.length === 1 && isTracking) {
                   const currentX = e.touches[0].pageX;
                   const currentY = e.touches[0].pageY;
-                  const now = Date.now();
-                  const dt = Math.max(1, now - lastTime);
+                  const now = performance.now();
+                  const dt = now - lastTime;
 
-                  const deltaX = (startX - currentX) * 1.5;
-                  const deltaY = (startY - currentY) * 1.5;
+                  // Direct 1:1 scrolling during drag
+                  const deltaX = lastX - currentX;
+                  const deltaY = lastY - currentY;
 
-                  velocityX = deltaX * (16 / dt);
-                  velocityY = deltaY * (16 / dt);
+                  // Track velocity with time-weighted smoothing
+                  if (dt > 0) {
+                    const newVelX = (deltaX / dt) * 16; // normalize to ~60fps
+                    const newVelY = (deltaY / dt) * 16;
+                    // Smooth velocity to prevent jitter
+                    velocityX = velocityX * 0.4 + newVelX * 0.6;
+                    velocityY = velocityY * 0.4 + newVelY * 0.6;
+                  }
 
                   scrollX = Math.max(0, scrollX + deltaX);
                   scrollY = Math.max(0, scrollY + deltaY);
                   doScroll();
 
-                  startX = currentX;
-                  startY = currentY;
+                  lastX = currentX;
+                  lastY = currentY;
                   lastTime = now;
                 } else if (e.touches.length === 2 && initialPinchDistance > 0) {
                   const newDistance = getPinchDistance(e.touches);
@@ -498,10 +519,25 @@ export function SheetsViewer({ content, theme }: SheetsViewerProps) {
               }, { passive: true });
 
               overlay.addEventListener('touchend', function(e) {
-                if (e.touches.length === 0 && (Math.abs(velocityX) > 1 || Math.abs(velocityY) > 1)) {
-                  momentumId = requestAnimationFrame(momentumScroll);
+                if (e.touches.length === 0 && isTracking) {
+                  isTracking = false;
+                  // Only start momentum if we have meaningful velocity
+                  if (Math.abs(velocityX) > 0.5 || Math.abs(velocityY) > 0.5) {
+                    momentumId = requestAnimationFrame(momentumScroll);
+                  }
                 }
-                initialPinchDistance = 0;
+                if (e.touches.length < 2) {
+                  initialPinchDistance = 0;
+                }
+              }, { passive: true });
+
+              // Handle touch cancel (e.g., incoming call)
+              overlay.addEventListener('touchcancel', function(e) {
+                isTracking = false;
+                if (momentumId) {
+                  cancelAnimationFrame(momentumId);
+                  momentumId = null;
+                }
               }, { passive: true });
             }, 800);
 
