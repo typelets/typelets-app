@@ -149,6 +149,24 @@ export async function invalidateCache(
 // ============================================================================
 
 /**
+ * Get the type of a note from cache (quick lookup for loading UI)
+ * Returns 'note', 'diagram', 'sheets', etc. or null if not found
+ */
+export async function getCachedNoteType(noteId: string): Promise<string | null> {
+  try {
+    const db = getDatabase();
+    const result = await db.getFirstAsync<{ type: string | null }>(
+      'SELECT type FROM notes WHERE id = ?',
+      [noteId]
+    );
+    return result?.type || null;
+  } catch (error) {
+    // Silently fail - this is just an optimization
+    return null;
+  }
+}
+
+/**
  * Get cached notes from database
  */
 export async function getCachedNotes(filters?: {

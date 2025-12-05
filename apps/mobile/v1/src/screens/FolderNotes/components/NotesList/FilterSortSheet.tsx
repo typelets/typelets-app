@@ -8,11 +8,13 @@ import { useTheme } from '@/src/theme';
 
 export interface FilterConfig {
   showAttachmentsOnly: boolean;
-  showStarredOnly: boolean;
-  showHiddenOnly: boolean;
   showCodeOnly: boolean;
   showDiagramOnly: boolean;
+  showHiddenOnly: boolean;
+  showNoteOnly: boolean;
   showPublicOnly: boolean;
+  showSheetOnly: boolean;
+  showStarredOnly: boolean;
 }
 
 export interface SortConfig {
@@ -75,7 +77,7 @@ export const FilterSortSheet = forwardRef<BottomSheetModal, FilterSortSheetProps
               <Text style={[styles.inputLabel, { color: theme.colors.mutedForeground }]}>FILTER</Text>
               <TouchableOpacity
                 style={[styles.viewModeButton, { backgroundColor: theme.colors.muted, opacity: hasActiveFilters ? 1 : 0 }]}
-                onPress={() => setFilterConfig({ showAttachmentsOnly: false, showStarredOnly: false, showHiddenOnly: false, showCodeOnly: false, showDiagramOnly: false, showPublicOnly: false })}
+                onPress={() => setFilterConfig({ showAttachmentsOnly: false, showCodeOnly: false, showDiagramOnly: false, showHiddenOnly: false, showNoteOnly: false, showPublicOnly: false, showSheetOnly: false, showStarredOnly: false })}
                 activeOpacity={0.7}
                 disabled={!hasActiveFilters}
               >
@@ -83,77 +85,104 @@ export const FilterSortSheet = forwardRef<BottomSheetModal, FilterSortSheetProps
               </TouchableOpacity>
             </View>
 
-            <TouchableOpacity
-              style={[styles.filterOption, { backgroundColor: filterConfig.showAttachmentsOnly ? 'rgba(59, 130, 246, 0.1)' : 'transparent' }]}
-              onPress={() => setFilterConfig(prev => ({ ...prev, showAttachmentsOnly: !prev.showAttachmentsOnly }))}
-            >
-              <Ionicons
-                name={filterConfig.showAttachmentsOnly ? "checkbox" : "square-outline"}
-                size={24}
-                color={filterConfig.showAttachmentsOnly ? theme.colors.primary : theme.colors.mutedForeground}
-              />
-              <Text style={[styles.filterOptionText, { color: theme.colors.foreground }]}>Attachment</Text>
-            </TouchableOpacity>
+            {/* 2x2 grid layout - Alphabetically ordered */}
+            <View style={styles.filterGrid}>
+              <TouchableOpacity
+                style={[styles.filterOptionGrid, { backgroundColor: filterConfig.showAttachmentsOnly ? 'rgba(59, 130, 246, 0.1)' : 'transparent', borderColor: theme.colors.border }]}
+                onPress={() => setFilterConfig(prev => ({ ...prev, showAttachmentsOnly: !prev.showAttachmentsOnly }))}
+              >
+                <Ionicons
+                  name={filterConfig.showAttachmentsOnly ? "checkbox" : "square-outline"}
+                  size={20}
+                  color={filterConfig.showAttachmentsOnly ? theme.colors.primary : theme.colors.mutedForeground}
+                />
+                <Text style={[styles.filterOptionTextGrid, { color: theme.colors.foreground }]}>Attachment</Text>
+              </TouchableOpacity>
 
-            <TouchableOpacity
-              style={[styles.filterOption, { backgroundColor: filterConfig.showStarredOnly ? 'rgba(59, 130, 246, 0.1)' : 'transparent' }]}
-              onPress={() => setFilterConfig(prev => ({ ...prev, showStarredOnly: !prev.showStarredOnly }))}
-            >
-              <Ionicons
-                name={filterConfig.showStarredOnly ? "checkbox" : "square-outline"}
-                size={24}
-                color={filterConfig.showStarredOnly ? theme.colors.primary : theme.colors.mutedForeground}
-              />
-              <Text style={[styles.filterOptionText, { color: theme.colors.foreground }]}>Starred</Text>
-            </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.filterOptionGrid, { backgroundColor: filterConfig.showCodeOnly ? 'rgba(59, 130, 246, 0.1)' : 'transparent', borderColor: theme.colors.border }]}
+                onPress={() => setFilterConfig(prev => ({ ...prev, showCodeOnly: !prev.showCodeOnly }))}
+              >
+                <Ionicons
+                  name={filterConfig.showCodeOnly ? "checkbox" : "square-outline"}
+                  size={20}
+                  color={filterConfig.showCodeOnly ? theme.colors.primary : theme.colors.mutedForeground}
+                />
+                <Text style={[styles.filterOptionTextGrid, { color: theme.colors.foreground }]}>Code</Text>
+              </TouchableOpacity>
 
-            <TouchableOpacity
-              style={[styles.filterOption, { backgroundColor: filterConfig.showHiddenOnly ? 'rgba(59, 130, 246, 0.1)' : 'transparent' }]}
-              onPress={() => setFilterConfig(prev => ({ ...prev, showHiddenOnly: !prev.showHiddenOnly }))}
-            >
-              <Ionicons
-                name={filterConfig.showHiddenOnly ? "checkbox" : "square-outline"}
-                size={24}
-                color={filterConfig.showHiddenOnly ? theme.colors.primary : theme.colors.mutedForeground}
-              />
-              <Text style={[styles.filterOptionText, { color: theme.colors.foreground }]}>Hidden</Text>
-            </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.filterOptionGrid, { backgroundColor: filterConfig.showDiagramOnly ? 'rgba(59, 130, 246, 0.1)' : 'transparent', borderColor: theme.colors.border }]}
+                onPress={() => setFilterConfig(prev => ({ ...prev, showDiagramOnly: !prev.showDiagramOnly }))}
+              >
+                <Ionicons
+                  name={filterConfig.showDiagramOnly ? "checkbox" : "square-outline"}
+                  size={20}
+                  color={filterConfig.showDiagramOnly ? theme.colors.primary : theme.colors.mutedForeground}
+                />
+                <Text style={[styles.filterOptionTextGrid, { color: theme.colors.foreground }]}>Diagram</Text>
+              </TouchableOpacity>
 
-            <TouchableOpacity
-              style={[styles.filterOption, { backgroundColor: filterConfig.showCodeOnly ? 'rgba(59, 130, 246, 0.1)' : 'transparent' }]}
-              onPress={() => setFilterConfig(prev => ({ ...prev, showCodeOnly: !prev.showCodeOnly }))}
-            >
-              <Ionicons
-                name={filterConfig.showCodeOnly ? "checkbox" : "square-outline"}
-                size={24}
-                color={filterConfig.showCodeOnly ? theme.colors.primary : theme.colors.mutedForeground}
-              />
-              <Text style={[styles.filterOptionText, { color: theme.colors.foreground }]}>Code</Text>
-            </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.filterOptionGrid, { backgroundColor: filterConfig.showHiddenOnly ? 'rgba(59, 130, 246, 0.1)' : 'transparent', borderColor: theme.colors.border }]}
+                onPress={() => setFilterConfig(prev => ({ ...prev, showHiddenOnly: !prev.showHiddenOnly }))}
+              >
+                <Ionicons
+                  name={filterConfig.showHiddenOnly ? "checkbox" : "square-outline"}
+                  size={20}
+                  color={filterConfig.showHiddenOnly ? theme.colors.primary : theme.colors.mutedForeground}
+                />
+                <Text style={[styles.filterOptionTextGrid, { color: theme.colors.foreground }]}>Hidden</Text>
+              </TouchableOpacity>
 
-            <TouchableOpacity
-              style={[styles.filterOption, { backgroundColor: filterConfig.showDiagramOnly ? 'rgba(59, 130, 246, 0.1)' : 'transparent' }]}
-              onPress={() => setFilterConfig(prev => ({ ...prev, showDiagramOnly: !prev.showDiagramOnly }))}
-            >
-              <Ionicons
-                name={filterConfig.showDiagramOnly ? "checkbox" : "square-outline"}
-                size={24}
-                color={filterConfig.showDiagramOnly ? theme.colors.primary : theme.colors.mutedForeground}
-              />
-              <Text style={[styles.filterOptionText, { color: theme.colors.foreground }]}>Diagram</Text>
-            </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.filterOptionGrid, { backgroundColor: filterConfig.showNoteOnly ? 'rgba(59, 130, 246, 0.1)' : 'transparent', borderColor: theme.colors.border }]}
+                onPress={() => setFilterConfig(prev => ({ ...prev, showNoteOnly: !prev.showNoteOnly }))}
+              >
+                <Ionicons
+                  name={filterConfig.showNoteOnly ? "checkbox" : "square-outline"}
+                  size={20}
+                  color={filterConfig.showNoteOnly ? theme.colors.primary : theme.colors.mutedForeground}
+                />
+                <Text style={[styles.filterOptionTextGrid, { color: theme.colors.foreground }]}>Note</Text>
+              </TouchableOpacity>
 
-            <TouchableOpacity
-              style={[styles.filterOption, { backgroundColor: filterConfig.showPublicOnly ? 'rgba(59, 130, 246, 0.1)' : 'transparent' }]}
-              onPress={() => setFilterConfig(prev => ({ ...prev, showPublicOnly: !prev.showPublicOnly }))}
-            >
-              <Ionicons
-                name={filterConfig.showPublicOnly ? "checkbox" : "square-outline"}
-                size={24}
-                color={filterConfig.showPublicOnly ? theme.colors.primary : theme.colors.mutedForeground}
-              />
-              <Text style={[styles.filterOptionText, { color: theme.colors.foreground }]}>Public</Text>
-            </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.filterOptionGrid, { backgroundColor: filterConfig.showPublicOnly ? 'rgba(59, 130, 246, 0.1)' : 'transparent', borderColor: theme.colors.border }]}
+                onPress={() => setFilterConfig(prev => ({ ...prev, showPublicOnly: !prev.showPublicOnly }))}
+              >
+                <Ionicons
+                  name={filterConfig.showPublicOnly ? "checkbox" : "square-outline"}
+                  size={20}
+                  color={filterConfig.showPublicOnly ? theme.colors.primary : theme.colors.mutedForeground}
+                />
+                <Text style={[styles.filterOptionTextGrid, { color: theme.colors.foreground }]}>Public</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.filterOptionGrid, { backgroundColor: filterConfig.showSheetOnly ? 'rgba(59, 130, 246, 0.1)' : 'transparent', borderColor: theme.colors.border }]}
+                onPress={() => setFilterConfig(prev => ({ ...prev, showSheetOnly: !prev.showSheetOnly }))}
+              >
+                <Ionicons
+                  name={filterConfig.showSheetOnly ? "checkbox" : "square-outline"}
+                  size={20}
+                  color={filterConfig.showSheetOnly ? theme.colors.primary : theme.colors.mutedForeground}
+                />
+                <Text style={[styles.filterOptionTextGrid, { color: theme.colors.foreground }]}>Sheet</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.filterOptionGrid, { backgroundColor: filterConfig.showStarredOnly ? 'rgba(59, 130, 246, 0.1)' : 'transparent', borderColor: theme.colors.border }]}
+                onPress={() => setFilterConfig(prev => ({ ...prev, showStarredOnly: !prev.showStarredOnly }))}
+              >
+                <Ionicons
+                  name={filterConfig.showStarredOnly ? "checkbox" : "square-outline"}
+                  size={20}
+                  color={filterConfig.showStarredOnly ? theme.colors.primary : theme.colors.mutedForeground}
+                />
+                <Text style={[styles.filterOptionTextGrid, { color: theme.colors.foreground }]}>Starred</Text>
+              </TouchableOpacity>
+            </View>
 
             <Text style={[styles.inputLabel, { color: theme.colors.mutedForeground, marginTop: 24 }]}>SORT BY</Text>
 
@@ -256,6 +285,25 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  filterGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  filterOptionGrid: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    width: '48%',
+    gap: 8,
+  },
+  filterOptionTextGrid: {
+    fontSize: 14,
+    flex: 1,
   },
   filterOption: {
     flexDirection: 'row',

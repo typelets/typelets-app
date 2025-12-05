@@ -40,9 +40,18 @@ export function useNotesFiltering(
         const isDiagram = note.type === 'diagram' || (note.content && isDiagramContent(note.content));
         if (!isDiagram) return false;
       }
+      // Check for note filter (regular notes, not code/diagram/sheets)
+      if (filterConfig.showNoteOnly) {
+        const isRegularNote = note.type === 'note' || (!note.type && !isCodeContent(note.content || '') && !isDiagramContent(note.content || ''));
+        if (!isRegularNote) return false;
+      }
       // Check for public filter
       if (filterConfig.showPublicOnly && !note.isPublished) {
         return false;
+      }
+      // Check for sheet filter
+      if (filterConfig.showSheetOnly) {
+        if (note.type !== 'sheets') return false;
       }
       return true;
     });

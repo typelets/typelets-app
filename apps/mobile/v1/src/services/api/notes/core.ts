@@ -14,6 +14,7 @@ import { apiCache, CACHE_KEYS, CACHE_TTL } from '../cache';
 import { AuthTokenGetter, createHttpClient, NotModifiedError } from '../client';
 import {
   getCachedNotes,
+  getCachedNoteType,
   getCacheMetadata,
   invalidateCache,
   setCacheMetadata,
@@ -654,6 +655,14 @@ export function createNotesApi(getToken: AuthTokenGetter, getUserId: () => strin
       } catch (error) {
         return handleApiError(error, 'getNote');
       }
+    },
+
+    /**
+     * Get just the note type from cache (fast lookup for loading UI)
+     * Returns 'note', 'diagram', 'sheets', or null if not cached
+     */
+    async getNoteType(noteId: string): Promise<string | null> {
+      return getCachedNoteType(noteId);
     },
 
     /**

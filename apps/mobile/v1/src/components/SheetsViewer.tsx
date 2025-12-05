@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from 'react';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import React, { useEffect, useMemo, useState } from 'react';
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { WebView } from 'react-native-webview';
 
 interface SheetsViewerProps {
@@ -13,14 +13,48 @@ interface SheetsViewerProps {
     };
     isDark: boolean;
   };
+  onLoaded?: () => void;
+  hideLoadingOverlay?: boolean;
 }
 
 /**
  * SheetsViewer - Read-only spreadsheet viewer for mobile
  * Uses Univer library via WebView to render spreadsheets exactly as they appear on web
  */
-export function SheetsViewer({ content, theme }: SheetsViewerProps) {
+// Fun loading messages that appear progressively
+const LOADING_MESSAGES = [
+  'Loading Sheet',
+  'Crunching numbers',
+  'Almost there',
+  'Worth the wait',
+];
+
+export function SheetsViewer({ content, theme, onLoaded, hideLoadingOverlay }: SheetsViewerProps) {
   const [loading, setLoading] = useState(true);
+  const [messageIndex, setMessageIndex] = useState(0);
+
+  // Progress through loading messages
+  useEffect(() => {
+    if (!loading) return;
+
+    const timers: ReturnType<typeof setTimeout>[] = [];
+
+    // After 1 second, show second message
+    timers.push(setTimeout(() => setMessageIndex(1), 1000));
+    // After 2 seconds, show third message
+    timers.push(setTimeout(() => setMessageIndex(2), 2000));
+    // After 3.5 seconds, show fourth message
+    timers.push(setTimeout(() => setMessageIndex(3), 3500));
+
+    return () => timers.forEach(clearTimeout);
+  }, [loading]);
+
+  // Reset message index when loading starts
+  useEffect(() => {
+    if (loading) {
+      setMessageIndex(0);
+    }
+  }, [loading]);
 
   // Escape content for safe inclusion in HTML
   const escapedContent = useMemo(() => {
@@ -565,9 +599,12 @@ export function SheetsViewer({ content, theme }: SheetsViewerProps) {
 
   return (
     <View style={styles.container}>
-      {loading && (
+      {loading && !hideLoadingOverlay && (
         <View style={styles.loadingOverlay}>
           <ActivityIndicator size="large" color={theme.colors.mutedForeground} />
+          <Text style={[styles.loadingText, { color: theme.colors.mutedForeground }]}>
+            {LOADING_MESSAGES[messageIndex]}
+          </Text>
         </View>
       )}
       <WebView
@@ -589,15 +626,20 @@ export function SheetsViewer({ content, theme }: SheetsViewerProps) {
         // @ts-ignore - iOS specific - require user action to show keyboard
         keyboardDisplayRequiresUserAction={true}
         onLoadEnd={() => {
-          setTimeout(() => setLoading(false), 1000);
+          setTimeout(() => {
+            setLoading(false);
+            onLoaded?.();
+          }, 1000);
         }}
         onMessage={(event) => {
           try {
             const data = JSON.parse(event.nativeEvent.data);
             if (data.type === 'loaded') {
               setLoading(false);
+              onLoaded?.();
             } else if (data.type === 'error') {
               setLoading(false);
+              onLoaded?.();
               console.error('SheetsViewer error:', data.message);
             } else if (data.type === 'debug') {
               console.log('SheetsViewer debug:', JSON.stringify(data, null, 2));
@@ -620,15 +662,15 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   loadingOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
+    ...StyleSheet.absoluteFillObject,
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 1,
-    paddingBottom: 60, // Account for header
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 16,
+    fontWeight: '500',
   },
 });
 

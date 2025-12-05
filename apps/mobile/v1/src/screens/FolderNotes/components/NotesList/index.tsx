@@ -72,11 +72,13 @@ export default function NotesList({ navigation, route, renderHeader, scrollY: pa
   // Filter and sort state
   const [filterConfig, setFilterConfig] = useState<FilterConfig>({
     showAttachmentsOnly: false,
-    showStarredOnly: false,
-    showHiddenOnly: false,
     showCodeOnly: false,
     showDiagramOnly: false,
+    showHiddenOnly: false,
+    showNoteOnly: false,
     showPublicOnly: false,
+    showSheetOnly: false,
+    showStarredOnly: false,
   });
   const [sortConfig, setSortConfig] = useState<SortConfig>({
     option: 'created',

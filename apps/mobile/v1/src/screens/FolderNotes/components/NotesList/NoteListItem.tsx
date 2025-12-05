@@ -10,7 +10,7 @@ import Reanimated, { useAnimatedStyle } from 'react-native-reanimated';
 
 import type { Folder, Note } from '@/src/services/api';
 import { detectNoteType } from '@/src/utils/noteTypeDetection';
-import { stripHtmlTags } from '@/src/utils/noteUtils';
+import { getSheetPreview, stripHtmlTags } from '@/src/utils/noteUtils';
 
 import { NoteSkeletonItem } from './NoteSkeletonItem';
 
@@ -84,14 +84,18 @@ const NoteListItemComponent: React.FC<NoteListItemProps> = ({
 
   // Lazy calculation - strip HTML and format date only when rendered
   // Use cache version if available, otherwise create minimal version
+  // For sheets, always regenerate to ensure proper preview format
   let enhancedData = enhancedDataCache.current.get(note.id);
-  if (!enhancedData) {
+  if (!enhancedData || isSheet) {
     let preview: string;
     if (note.hidden) {
       preview = '[HIDDEN]';
     } else if (!note.content || note.content.trim() === '') {
       // Empty content - just show blank
       preview = '';
+    } else if (isSheet) {
+      // Parse sheet content and generate meaningful preview
+      preview = getSheetPreview(note.content);
     } else {
       // Content is already stripped HTML from cache or freshly decrypted
       // Only strip HTML if it contains tags (cached notes are pre-stripped)

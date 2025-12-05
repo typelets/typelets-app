@@ -22,6 +22,7 @@ interface NoteContentProps {
     };
     isDark: boolean;
   };
+  onSheetLoaded?: () => void;
 }
 
 /**
@@ -35,6 +36,7 @@ export function NoteContent({
   showTitle = true,
   bottomInset = 0,
   theme,
+  onSheetLoaded,
 }: NoteContentProps) {
   const webViewRef = useRef<WebView>(null);
   // For diagrams, use screen height; for regular notes, use dynamic height
@@ -527,7 +529,7 @@ ${note.content}
             </Text>
           </View>
         ) : (
-          <SheetsViewer content={note.content} theme={theme} />
+          <SheetsViewer content={note.content} theme={theme} onLoaded={onSheetLoaded} hideLoadingOverlay />
         )}
       </View>
     );

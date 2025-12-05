@@ -1,5 +1,4 @@
 import { Ionicons } from '@expo/vector-icons';
-import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { useFocusEffect,useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback,useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Animated, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -10,9 +9,18 @@ import { useNetworkStatus } from '../../hooks/useNetworkStatus';
 import { useViewNote } from '../../hooks/useViewNote';
 import { logger } from '../../lib/logger';
 import { type FileAttachment,useApiService } from '../../services/api';
+import { getCachedNoteType } from '../../services/api/databaseCache';
 import { useTheme } from '../../theme';
 import { NoteContent } from './NoteContent';
 import { ViewHeader } from './ViewHeader';
+
+// Progressive loading messages for sheets
+const SHEET_LOADING_MESSAGES = [
+  'Loading Sheet',
+  'Crunching numbers',
+  'Almost there',
+  'Worth the wait',
+];
 
 export default function ViewNoteScreen() {
   const theme = useTheme();
@@ -39,6 +47,51 @@ export default function ViewNoteScreen() {
 
   const { note, loading, htmlContent, handleEdit: handleEditInternal, handleToggleStar, handleToggleHidden, refresh, updateNoteLocally } = useViewNote(noteId as string);
   const [refreshing, setRefreshing] = useState(false);
+  const [sheetLoaded, setSheetLoaded] = useState(false);
+
+  // Cached note type for early "Loading Sheet" display (checked synchronously via state initialization)
+  const [cachedType, setCachedType] = useState<string | null>(null);
+  const [cachedTypeChecked, setCachedTypeChecked] = useState(false);
+  const [loadingMessageIndex, setLoadingMessageIndex] = useState(0);
+
+  // Check cached note type immediately on mount for instant "Loading Sheet" display
+  useEffect(() => {
+    let cancelled = false;
+
+    // Reset states when noteId changes
+    setSheetLoaded(false);
+    setCachedType(null);
+    setCachedTypeChecked(false);
+    setLoadingMessageIndex(0);
+
+    if (noteId) {
+      getCachedNoteType(noteId as string).then((type) => {
+        if (!cancelled) {
+          setCachedType(type);
+          setCachedTypeChecked(true);
+        }
+      });
+    } else {
+      setCachedTypeChecked(true);
+    }
+
+    return () => { cancelled = true; };
+  }, [noteId]);
+
+  // Determine if this is a sheet (from cache or actual note)
+  const isSheetType = note?.type === 'sheets' || cachedType === 'sheets';
+
+  // Progressive loading messages for sheets
+  useEffect(() => {
+    if (!isSheetType || sheetLoaded) return;
+
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    timers.push(setTimeout(() => setLoadingMessageIndex(1), 1000));
+    timers.push(setTimeout(() => setLoadingMessageIndex(2), 2000));
+    timers.push(setTimeout(() => setLoadingMessageIndex(3), 3500));
+
+    return () => timers.forEach(clearTimeout);
+  }, [isSheetType, sheetLoaded]);
 
   // Wrap handleEdit with offline check and sheets check
   const handleEdit = () => {
@@ -169,21 +222,21 @@ export default function ViewNoteScreen() {
     }
   };
 
-  if (loading) {
-    return (
-      <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
-        <View style={styles.loadingContainer}>
-          <Text style={[styles.loadingText, { color: theme.colors.mutedForeground }]}>
-            Loading note...
-          </Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
+  // Loading message - use cached type for early "Loading Sheet" display
+  const loadingMessage = isSheetType
+    ? SHEET_LOADING_MESSAGES[loadingMessageIndex]
+    : 'Loading';
 
-  if (!note) {
+  // Single loading state - show loading overlay for:
+  // 1. Checking cached type (very brief)
+  // 2. Fetching note from API
+  // 3. For sheets: while WebView is loading
+  const showLoading = !cachedTypeChecked || loading || (isSheetType && !sheetLoaded);
+
+  // Note not found state
+  if (!loading && cachedTypeChecked && !note) {
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]} edges={['left', 'right']}>
         <View style={styles.loadingContainer}>
           <Text style={[styles.loadingText, { color: theme.colors.mutedForeground }]}>
             Note not found
@@ -195,132 +248,153 @@ export default function ViewNoteScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]} edges={['left', 'right']}>
-      <Animated.ScrollView
-        ref={scrollViewRef}
-        style={{ flex: 1 }}
-        contentContainerStyle={note.type === 'sheets' ? { paddingTop: (insets.top || 0) + 58, flex: 1 } : { paddingTop: (insets.top || 0) + 58 }}
-        showsVerticalScrollIndicator={false}
-        scrollEnabled={note.type !== 'diagram' && note.type !== 'sheets'}
-        onScroll={Animated.event(
-          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-          { useNativeDriver: false }
-        )}
-        scrollEventThrottle={16}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={handleRefresh}
-            tintColor={theme.isDark ? '#666666' : '#999999'}
-            colors={[theme.isDark ? '#666666' : '#999999']}
+      {/* Content - hidden while loading (but rendered so WebView can preload) */}
+      {note && (
+        <>
+          <Animated.ScrollView
+            ref={scrollViewRef}
+            style={[{ flex: 1 }, showLoading && styles.hiddenContent]}
+            contentContainerStyle={note.type === 'sheets' ? { paddingTop: (insets.top || 0) + 58, flex: 1 } : { paddingTop: (insets.top || 0) + 58 }}
+            showsVerticalScrollIndicator={false}
+            scrollEnabled={note.type !== 'diagram' && note.type !== 'sheets'}
+            onScroll={Animated.event(
+              [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+              { useNativeDriver: false }
+            )}
+            scrollEventThrottle={16}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={handleRefresh}
+                tintColor={theme.isDark ? '#666666' : '#999999'}
+                colors={[theme.isDark ? '#666666' : '#999999']}
+              />
+            }
+          >
+            {/* Hide title for sheets until loaded */}
+            {(note.type !== 'sheets' || sheetLoaded) && (
+              <View style={styles.titleContainer}>
+                <Text style={[styles.noteTitle, { color: theme.colors.foreground }]}>
+                  {note.title}
+                </Text>
+                <Text style={[styles.noteMetadata, { color: theme.colors.mutedForeground }]}>
+                  Created {new Date(note.createdAt).toLocaleDateString()}
+                  {note.updatedAt !== note.createdAt && ` • Updated ${new Date(note.updatedAt).toLocaleDateString()}`}
+                </Text>
+              </View>
+            )}
+
+            {showAttachments && attachments.length > 0 && (
+              <View style={[styles.attachmentsContainer, { backgroundColor: theme.colors.card, borderBottomColor: theme.colors.border }]}>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.attachmentsScroll}>
+                  {loadingAttachments ? (
+                    <ActivityIndicator size="small" color={theme.colors.primary} style={{ marginHorizontal: 16 }} />
+                  ) : (
+                    attachments.map((attachment) => {
+                      const isDownloading = downloadingId === attachment.id;
+                      return (
+                        <TouchableOpacity
+                          key={attachment.id}
+                          style={[
+                            styles.attachmentItem,
+                            {
+                              backgroundColor: theme.colors.muted,
+                              borderColor: theme.colors.border,
+                              opacity: isDownloading ? 0.6 : 1,
+                            }
+                          ]}
+                          onPress={() => handleDownloadAttachment(attachment)}
+                          disabled={isDownloading || !!downloadingId}
+                        >
+                          <View style={styles.attachmentIcon}>
+                            <Text style={styles.attachmentEmoji}>{api.getFileIcon(attachment.mimeType)}</Text>
+                          </View>
+                          <View style={styles.attachmentInfo}>
+                            <Text style={[styles.attachmentName, { color: theme.colors.foreground }]} numberOfLines={1}>
+                              {attachment.originalName}
+                            </Text>
+                            <Text style={[styles.attachmentSize, { color: theme.colors.mutedForeground }]}>
+                              {api.formatFileSize(attachment.size)}
+                            </Text>
+                          </View>
+                          {isDownloading ? (
+                            <ActivityIndicator size="small" color={theme.colors.primary} />
+                          ) : (
+                            <Ionicons name="download-outline" size={18} color={theme.colors.primary} />
+                          )}
+                        </TouchableOpacity>
+                      );
+                    })
+                  )}
+                </ScrollView>
+              </View>
+            )}
+
+            <NoteContent
+              note={note}
+              htmlContent={htmlContent}
+              scrollY={scrollY}
+              scrollViewRef={scrollViewRef}
+              showTitle={false}
+              bottomInset={insets.bottom}
+              theme={theme}
+              onSheetLoaded={() => setSheetLoaded(true)}
+            />
+          </Animated.ScrollView>
+
+          {/* Floating Header - hide while loading */}
+          {!showLoading && (
+            <ViewHeader
+              isStarred={note.starred}
+              isHidden={note.hidden}
+              isPublished={note.isPublished}
+              title={note.title}
+              scrollY={scrollY}
+              attachmentsCount={attachments.length}
+              showAttachments={showAttachments}
+              isOffline={!isOnline}
+              isTempNote={(noteId as string).startsWith('temp_')}
+              isEditDisabled={false}
+              insets={insets}
+              onBack={() => router.back()}
+              onToggleStar={handleToggleStar}
+              onToggleHidden={handleToggleHidden}
+              onToggleAttachments={() => setShowAttachments(!showAttachments)}
+              onEdit={handleEdit}
+              onPublish={() => {
+                publishSheetRef.current?.present(note);
+              }}
+              theme={theme}
+            />
+          )}
+
+          {/* Publish Note Bottom Sheet */}
+          <PublishNoteSheet
+            ref={publishSheetRef}
+            onPublishStateChange={(noteId, isPublished, slug) => {
+              updateNoteLocally({
+                isPublished,
+                publicSlug: slug || null,
+                publishedAt: isPublished ? new Date().toISOString() : null,
+                publicUpdatedAt: isPublished ? new Date().toISOString() : null,
+              });
+            }}
           />
-        }
-      >
-        <View style={styles.titleContainer}>
-          <Text style={[styles.noteTitle, { color: theme.colors.foreground }]}>
-            {note.title}
-          </Text>
-          <Text style={[styles.noteMetadata, { color: theme.colors.mutedForeground }]}>
-            Created {new Date(note.createdAt).toLocaleDateString()}
-            {note.updatedAt !== note.createdAt && ` • Updated ${new Date(note.updatedAt).toLocaleDateString()}`}
+        </>
+      )}
+
+      {/* Single loading overlay - always same position */}
+      {showLoading && (
+        <View style={[styles.loadingOverlay, { backgroundColor: theme.colors.background }]}>
+          <ActivityIndicator size="large" color={theme.colors.mutedForeground} />
+          <Text style={[styles.loadingText, { color: theme.colors.mutedForeground }]}>
+            {loadingMessage}
           </Text>
         </View>
-
-        {showAttachments && attachments.length > 0 && (
-          <View style={[styles.attachmentsContainer, { backgroundColor: theme.colors.card, borderBottomColor: theme.colors.border }]}>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.attachmentsScroll}>
-              {loadingAttachments ? (
-                <ActivityIndicator size="small" color={theme.colors.primary} style={{ marginHorizontal: 16 }} />
-              ) : (
-                attachments.map((attachment) => {
-                  const isDownloading = downloadingId === attachment.id;
-                  return (
-                    <TouchableOpacity
-                      key={attachment.id}
-                      style={[
-                        styles.attachmentItem,
-                        {
-                          backgroundColor: theme.colors.muted,
-                          borderColor: theme.colors.border,
-                          opacity: isDownloading ? 0.6 : 1,
-                        }
-                      ]}
-                      onPress={() => handleDownloadAttachment(attachment)}
-                      disabled={isDownloading || !!downloadingId}
-                    >
-                      <View style={styles.attachmentIcon}>
-                        <Text style={styles.attachmentEmoji}>{api.getFileIcon(attachment.mimeType)}</Text>
-                      </View>
-                      <View style={styles.attachmentInfo}>
-                        <Text style={[styles.attachmentName, { color: theme.colors.foreground }]} numberOfLines={1}>
-                          {attachment.originalName}
-                        </Text>
-                        <Text style={[styles.attachmentSize, { color: theme.colors.mutedForeground }]}>
-                          {api.formatFileSize(attachment.size)}
-                        </Text>
-                      </View>
-                      {isDownloading ? (
-                        <ActivityIndicator size="small" color={theme.colors.primary} />
-                      ) : (
-                        <Ionicons name="download-outline" size={18} color={theme.colors.primary} />
-                      )}
-                    </TouchableOpacity>
-                  );
-                })
-              )}
-            </ScrollView>
-          </View>
-        )}
-
-        <NoteContent
-          note={note}
-          htmlContent={htmlContent}
-          scrollY={scrollY}
-          scrollViewRef={scrollViewRef}
-          showTitle={false}
-          bottomInset={insets.bottom}
-          theme={theme}
-        />
-      </Animated.ScrollView>
-
-      {/* Floating Header */}
-      <ViewHeader
-        isStarred={note.starred}
-        isHidden={note.hidden}
-        isPublished={note.isPublished}
-        title={note.title}
-        scrollY={scrollY}
-        attachmentsCount={attachments.length}
-        showAttachments={showAttachments}
-        isOffline={!isOnline}
-        isTempNote={(noteId as string).startsWith('temp_')}
-        isEditDisabled={false}
-        insets={insets}
-        onBack={() => router.back()}
-        onToggleStar={handleToggleStar}
-        onToggleHidden={handleToggleHidden}
-        onToggleAttachments={() => setShowAttachments(!showAttachments)}
-        onEdit={handleEdit}
-        onPublish={() => {
-          publishSheetRef.current?.present(note);
-        }}
-        theme={theme}
-      />
-
-      {/* Publish Note Bottom Sheet */}
-      <PublishNoteSheet
-        ref={publishSheetRef}
-        onPublishStateChange={(noteId, isPublished, slug) => {
-          updateNoteLocally({
-            isPublished,
-            publicSlug: slug || null,
-            publishedAt: isPublished ? new Date().toISOString() : null,
-            publicUpdatedAt: isPublished ? new Date().toISOString() : null,
-          });
-        }}
-      />
+      )}
 
       {/* Refresh indicator - rendered after header so it appears on top */}
-      {refreshing && (
+      {refreshing && !showLoading && (
         <View style={[styles.refreshIndicator, { top: (insets.top || 0) + 70 }]}>
           <ActivityIndicator size="large" color={theme.isDark ? '#ffffff' : '#000000'} />
         </View>
@@ -333,6 +407,20 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  hiddenContent: {
+    opacity: 0,
+  },
+  loadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 100,
+  },
+  loadingContainer: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   refreshIndicator: {
     position: 'absolute',
     left: 0,
@@ -340,13 +428,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     zIndex: 200,
   },
-  loadingContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   loadingText: {
     fontSize: 16,
+    marginTop: 12,
+    fontWeight: '500',
   },
   titleContainer: {
     paddingHorizontal: 16,

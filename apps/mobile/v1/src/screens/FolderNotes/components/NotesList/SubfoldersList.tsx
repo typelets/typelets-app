@@ -77,19 +77,24 @@ export const SubfoldersList: React.FC<SubfoldersListProps> = ({
       <View style={viewMode === 'grid' ? styles.subfoldersGrid : styles.subfoldersList}>
         {/* Create Folder Button */}
         <Pressable
-          style={[
-            viewMode === 'grid' ? styles.subfolderItemGrid : styles.subfolderItem,
-            { backgroundColor: theme.isDark ? theme.colors.card : theme.colors.secondary, borderColor: theme.colors.border }
-          ]}
           onPress={onCreateFolderPress}
           android_ripple={{ color: theme.colors.muted }}
         >
-          <View style={viewMode === 'grid' ? styles.subfolderContentGrid : styles.subfolderContent}>
-            <Ionicons name="add" size={viewMode === 'grid' ? 24 : 16} color={theme.colors.primary} style={{ marginRight: viewMode === 'grid' ? 0 : 12, marginBottom: viewMode === 'grid' ? 8 : 0 }} />
-            <Text style={[styles.subfolderName, { color: theme.colors.foreground }]}>
-              Create Folder
-            </Text>
-          </View>
+          <GlassView
+            glassEffectStyle="regular"
+            style={[
+              viewMode === 'grid' ? styles.subfolderItemGrid : styles.subfolderItem,
+              { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)', borderColor: theme.colors.border }
+            ]}
+            pointerEvents="none"
+          >
+            <View style={viewMode === 'grid' ? styles.subfolderContentGrid : styles.subfolderContent}>
+              <Ionicons name="add" size={viewMode === 'grid' ? 24 : 16} color={theme.colors.primary} style={{ marginRight: viewMode === 'grid' ? 0 : 12, marginBottom: viewMode === 'grid' ? 8 : 0 }} />
+              <Text style={[styles.subfolderName, { color: theme.colors.foreground }]}>
+                Create Folder
+              </Text>
+            </View>
+          </GlassView>
         </Pressable>
 
         {subfolders.map((subfolder) => (

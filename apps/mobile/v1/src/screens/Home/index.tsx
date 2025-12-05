@@ -730,13 +730,21 @@ export default function HomeScreen() {
 
             <View style={styles.modalFooter}>
               <TouchableOpacity
-                style={[styles.createButton, { backgroundColor: theme.colors.primary }]}
                 onPress={handleCreateFolder}
                 disabled={isCreatingFolder}
+                style={{ opacity: isCreatingFolder ? 0.6 : 1 }}
               >
-                <Text style={[styles.createButtonText, { color: theme.colors.primaryForeground }]}>
-                  {isCreatingFolder ? 'Creating...' : 'Create'}
-                </Text>
+                <GlassView
+                  glassEffectStyle="regular"
+                  style={[styles.glassCreateButton, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]}
+                  pointerEvents="none"
+                >
+                  <View style={[styles.createButton, { backgroundColor: theme.colors.primary }]}>
+                    <Text style={[styles.createButtonText, { color: theme.colors.primaryForeground }]}>
+                      {isCreatingFolder ? 'Creating...' : 'Create'}
+                    </Text>
+                  </View>
+                </GlassView>
               </TouchableOpacity>
             </View>
         </BottomSheetView>
@@ -1125,10 +1133,14 @@ const styles = StyleSheet.create({
   modalFooter: {
     paddingHorizontal: 20,
   },
+  glassCreateButton: {
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
   createButton: {
     width: '100%',
     padding: 14,
-    borderRadius: 8,
+    borderRadius: 12,
     alignItems: 'center',
   },
   createButtonText: {

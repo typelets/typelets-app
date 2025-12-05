@@ -46,6 +46,7 @@ export const useApiService = () => {
     getCounts: notesApi.getCounts,
     getNotes: notesApi.getNotes,
     getNote: notesApi.getNote,
+    getNoteType: notesApi.getNoteType,
     createNote: notesApi.createNote,
     updateNote: notesApi.updateNote,
     deleteNote: notesApi.deleteNote,
