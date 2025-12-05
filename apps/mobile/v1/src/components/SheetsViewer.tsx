@@ -316,7 +316,14 @@ export function SheetsViewer({ content, theme, onLoaded, hideLoadingOverlay }: S
                     sheetBar: true,      // Keep sheet tabs for switching
                     statisticBar: false, // Hide statistics
                     menus: false,        // Hide bottom menus (gridlines button etc)
-                    zoomSlider: true     // Keep zoom controls
+                    zoomSlider: false    // Hide zoom slider
+                  },
+                  sheets: {
+                    scrollConfig: {
+                      barSize: 0,
+                      enableHorizontal: false,
+                      enableVertical: false
+                    }
                   }
                 }),
               ],
@@ -399,37 +406,29 @@ export function SheetsViewer({ content, theme, onLoaded, hideLoadingOverlay }: S
               throw new Error('Read-only');
             });
 
-            // After Univer renders, disable pointer events on canvas and add touch scroll
+            // After Univer renders, add hybrid touch handling (tap to select, swipe to scroll)
             setTimeout(() => {
-              // Find and disable the canvas
+              // Get the canvas element for forwarding tap events
               const canvas = document.querySelector('canvas');
-              if (canvas) {
-                canvas.style.pointerEvents = 'none';
-              }
 
               // Prevent keyboard from appearing on footer button clicks
               const footer = document.querySelector('footer');
               if (footer) {
                 footer.addEventListener('click', (e) => {
-                  // Blur any focused element to dismiss keyboard
                   if (document.activeElement && document.activeElement !== document.body) {
                     document.activeElement.blur();
                   }
                 }, true);
               }
 
-
-
-
-              // Create touch overlay for scrolling (only covers the sheet area, not status bar)
+              // Create touch overlay for hybrid gesture handling
               const overlay = document.createElement('div');
               overlay.id = 'touch-overlay';
               overlay.style.cssText = 'position:absolute;top:0;left:0;right:0;bottom:80px;z-index:50;';
               appEl.style.position = 'relative';
               appEl.appendChild(overlay);
 
-              let startX = 0;
-              let startY = 0;
+              // Scroll state
               let scrollX = 0;
               let scrollY = 0;
               let velocityX = 0;
@@ -438,15 +437,31 @@ export function SheetsViewer({ content, theme, onLoaded, hideLoadingOverlay }: S
               let lastY = 0;
               let lastTime = 0;
               let momentumId = null;
-              let isTracking = false;
+
+              // Gesture detection state
+              let touchStartX = 0;
+              let touchStartY = 0;
+              let touchStartTime = 0;
+              let hasMoved = false;
+              let gestureMode = null; // 'tap', 'scroll', 'pinch'
 
               // Pinch zoom state
               let initialPinchDistance = 0;
               let currentZoom = 1;
 
-              // iOS-like deceleration rate (0.998 is close to UIScrollView)
-              const DECELERATION = 0.985;
-              const MIN_VELOCITY = 0.1;
+              // Thresholds for gesture detection
+              const TAP_MAX_DURATION = 300; // ms - max time for a tap
+              const TAP_MAX_DISTANCE = 10;  // px - max movement for a tap
+
+              // iOS-like scroll physics
+              const DECELERATION = 0.97;           // Faster deceleration for snappier feel
+              const MIN_VELOCITY = 0.5;            // Higher threshold to stop momentum
+              const MOMENTUM_VELOCITY_THRESHOLD = 2.5; // Must be moving this fast to trigger momentum
+              const VELOCITY_DECAY_ON_SLOW = 0.7;  // How much to reduce velocity when moving slow
+
+              // Track velocity samples for better release velocity calculation
+              let velocitySamples = [];
+              const MAX_SAMPLES = 5;
 
               function doScroll() {
                 const sheetId = getSheetId();
@@ -469,21 +484,115 @@ export function SheetsViewer({ content, theme, onLoaded, hideLoadingOverlay }: S
                   momentumId = null;
                   return;
                 }
-
-                // Apply iOS-like deceleration
                 velocityX *= DECELERATION;
                 velocityY *= DECELERATION;
-
                 scrollX = Math.max(0, scrollX + velocityX);
                 scrollY = Math.max(0, scrollY + velocityY);
                 doScroll();
                 momentumId = requestAnimationFrame(momentumScroll);
               }
 
+              // Calculate release velocity from recent samples (like iOS does)
+              function getReleaseVelocity() {
+                if (velocitySamples.length < 2) return { vx: 0, vy: 0 };
+
+                // Use weighted average of recent samples, favoring more recent ones
+                let totalWeight = 0;
+                let vx = 0;
+                let vy = 0;
+
+                for (let i = 0; i < velocitySamples.length; i++) {
+                  const weight = (i + 1); // More recent = higher weight
+                  vx += velocitySamples[i].vx * weight;
+                  vy += velocitySamples[i].vy * weight;
+                  totalWeight += weight;
+                }
+
+                return {
+                  vx: vx / totalWeight,
+                  vy: vy / totalWeight
+                };
+              }
+
               function getPinchDistance(touches) {
                 const dx = touches[0].pageX - touches[1].pageX;
                 const dy = touches[0].pageY - touches[1].pageY;
                 return Math.sqrt(dx * dx + dy * dy);
+              }
+
+              // Forward tap to canvas by temporarily hiding overlay
+              function forwardTapToCanvas(x, y) {
+                // Temporarily hide overlay to let the tap through
+                overlay.style.pointerEvents = 'none';
+
+                // Find element at tap position and simulate click
+                const elementAtPoint = document.elementFromPoint(x, y);
+                if (elementAtPoint) {
+                  // Dispatch touch events
+                  const touchObj = new Touch({
+                    identifier: Date.now(),
+                    target: elementAtPoint,
+                    clientX: x,
+                    clientY: y,
+                    pageX: x,
+                    pageY: y,
+                    radiusX: 2.5,
+                    radiusY: 2.5,
+                    rotationAngle: 0,
+                    force: 1
+                  });
+
+                  const touchStartEvent = new TouchEvent('touchstart', {
+                    bubbles: true,
+                    cancelable: true,
+                    touches: [touchObj],
+                    targetTouches: [touchObj],
+                    changedTouches: [touchObj]
+                  });
+
+                  const touchEndEvent = new TouchEvent('touchend', {
+                    bubbles: true,
+                    cancelable: true,
+                    touches: [],
+                    targetTouches: [],
+                    changedTouches: [touchObj]
+                  });
+
+                  elementAtPoint.dispatchEvent(touchStartEvent);
+                  setTimeout(() => {
+                    elementAtPoint.dispatchEvent(touchEndEvent);
+                    // Also try mouse events as fallback
+                    const mouseDown = new MouseEvent('mousedown', {
+                      bubbles: true,
+                      cancelable: true,
+                      clientX: x,
+                      clientY: y,
+                      view: window
+                    });
+                    const mouseUp = new MouseEvent('mouseup', {
+                      bubbles: true,
+                      cancelable: true,
+                      clientX: x,
+                      clientY: y,
+                      view: window
+                    });
+                    const click = new MouseEvent('click', {
+                      bubbles: true,
+                      cancelable: true,
+                      clientX: x,
+                      clientY: y,
+                      view: window
+                    });
+                    elementAtPoint.dispatchEvent(mouseDown);
+                    elementAtPoint.dispatchEvent(mouseUp);
+                    elementAtPoint.dispatchEvent(click);
+                  }, 10);
+                }
+
+                // Re-enable overlay after a short delay
+                setTimeout(() => {
+                  overlay.style.pointerEvents = 'auto';
+                }, 100);
               }
 
               overlay.addEventListener('touchstart', function(e) {
@@ -493,81 +602,199 @@ export function SheetsViewer({ content, theme, onLoaded, hideLoadingOverlay }: S
                   momentumId = null;
                 }
 
-                if (e.touches.length === 1) {
-                  isTracking = true;
-                  startX = e.touches[0].pageX;
-                  startY = e.touches[0].pageY;
-                  lastX = startX;
-                  lastY = startY;
-                  lastTime = performance.now();
+                if (e.touches.length === 2) {
+                  // Two fingers - pinch zoom
+                  gestureMode = 'pinch';
+                  hasMoved = true; // Prevent tap on pinch end
+                  initialPinchDistance = getPinchDistance(e.touches);
+                  // Store initial zoom when pinch starts
+                  initialZoom = currentZoom;
+                } else if (e.touches.length === 1 && gestureMode !== 'pinch') {
+                  // Single finger - could be tap or scroll
+                  touchStartX = e.touches[0].pageX;
+                  touchStartY = e.touches[0].pageY;
+                  touchStartTime = performance.now();
+                  lastX = touchStartX;
+                  lastY = touchStartY;
+                  lastTime = touchStartTime;
+                  hasMoved = false;
+                  gestureMode = null;
                   velocityX = 0;
                   velocityY = 0;
-                } else if (e.touches.length === 2) {
-                  isTracking = false;
-                  initialPinchDistance = getPinchDistance(e.touches);
+                  velocitySamples = []; // Reset velocity samples
                 }
               }, { passive: true });
 
+              // Track initial zoom for pinch
+              let initialZoom = 1;
+
+              // Helper function to set zoom using multiple approaches
+              function setZoom(zoomRatio) {
+                console.log('Setting zoom to:', zoomRatio);
+
+                // Try Facade API first
+                try {
+                  const activeSheet = workbook.getActiveSheet();
+                  if (activeSheet) {
+                    if (typeof activeSheet.zoom === 'function') {
+                      activeSheet.zoom(zoomRatio);
+                      console.log('Zoom via facade.zoom() succeeded');
+                      return true;
+                    }
+                    if (typeof activeSheet.setZoom === 'function') {
+                      activeSheet.setZoom(zoomRatio);
+                      console.log('Zoom via facade.setZoom() succeeded');
+                      return true;
+                    }
+                  }
+                } catch(e) {
+                  console.log('Zoom via facade failed:', e.message);
+                }
+
+                // Try command API
+                try {
+                  univerAPI.executeCommand('sheet.operation.set-zoom-ratio', {
+                    unitId: unitId,
+                    zoomRatio: zoomRatio
+                  });
+                  console.log('Zoom via command succeeded');
+                  return true;
+                } catch(e) {
+                  console.log('Zoom via command failed:', e.message);
+                }
+
+                // CSS transform fallback (visual only)
+                if (canvas) {
+                  canvas.style.transform = 'scale(' + zoomRatio + ')';
+                  canvas.style.transformOrigin = 'top left';
+                  console.log('Zoom via CSS transform');
+                  return true;
+                }
+
+                return false;
+              }
+
               overlay.addEventListener('touchmove', function(e) {
-                if (e.touches.length === 1 && isTracking) {
+                if (e.touches.length === 2) {
+                  // Pinch zoom - always handle when 2 fingers
+                  console.log('Pinch detected, touches:', e.touches.length);
+
+                  if (gestureMode !== 'pinch') {
+                    gestureMode = 'pinch';
+                    initialPinchDistance = getPinchDistance(e.touches);
+                    initialZoom = currentZoom;
+                    console.log('Pinch start, distance:', initialPinchDistance, 'zoom:', initialZoom);
+                  }
+
+                  if (initialPinchDistance > 0) {
+                    const newDistance = getPinchDistance(e.touches);
+                    const scale = newDistance / initialPinchDistance;
+                    const newZoom = Math.min(4, Math.max(0.25, initialZoom * scale));
+
+                    console.log('Pinch move, scale:', scale.toFixed(2), 'newZoom:', newZoom.toFixed(2));
+
+                    if (Math.abs(newZoom - currentZoom) > 0.02) {
+                      if (setZoom(newZoom)) {
+                        currentZoom = newZoom;
+                      }
+                    }
+                  }
+                  hasMoved = true;
+                } else if (e.touches.length === 1 && gestureMode !== 'pinch') {
                   const currentX = e.touches[0].pageX;
                   const currentY = e.touches[0].pageY;
                   const now = performance.now();
                   const dt = now - lastTime;
 
-                  // Direct 1:1 scrolling during drag
-                  const deltaX = lastX - currentX;
-                  const deltaY = lastY - currentY;
+                  // Calculate total distance moved from start
+                  const totalDx = Math.abs(currentX - touchStartX);
+                  const totalDy = Math.abs(currentY - touchStartY);
+                  const totalDistance = Math.sqrt(totalDx * totalDx + totalDy * totalDy);
 
-                  // Track velocity with time-weighted smoothing
-                  if (dt > 0) {
-                    const newVelX = (deltaX / dt) * 16; // normalize to ~60fps
-                    const newVelY = (deltaY / dt) * 16;
-                    // Smooth velocity to prevent jitter
-                    velocityX = velocityX * 0.4 + newVelX * 0.6;
-                    velocityY = velocityY * 0.4 + newVelY * 0.6;
+                  // If moved beyond tap threshold, switch to scroll mode
+                  if (totalDistance > TAP_MAX_DISTANCE) {
+                    hasMoved = true;
+                    gestureMode = 'scroll';
                   }
 
-                  scrollX = Math.max(0, scrollX + deltaX);
-                  scrollY = Math.max(0, scrollY + deltaY);
-                  doScroll();
+                  // Only scroll if in scroll mode
+                  if (gestureMode === 'scroll') {
+                    const deltaX = lastX - currentX;
+                    const deltaY = lastY - currentY;
+
+                    // Track velocity with samples for better release calculation
+                    if (dt > 0 && dt < 100) { // Ignore samples with too much time gap
+                      const instantVelX = (deltaX / dt) * 16;
+                      const instantVelY = (deltaY / dt) * 16;
+
+                      // Add to velocity samples
+                      velocitySamples.push({ vx: instantVelX, vy: instantVelY, time: now });
+                      if (velocitySamples.length > MAX_SAMPLES) {
+                        velocitySamples.shift();
+                      }
+
+                      // Update current velocity (for display/feedback)
+                      velocityX = instantVelX;
+                      velocityY = instantVelY;
+                    }
+
+                    scrollX = Math.max(0, scrollX + deltaX);
+                    scrollY = Math.max(0, scrollY + deltaY);
+                    doScroll();
+                  }
 
                   lastX = currentX;
                   lastY = currentY;
                   lastTime = now;
-                } else if (e.touches.length === 2 && initialPinchDistance > 0) {
-                  const newDistance = getPinchDistance(e.touches);
-                  const scale = newDistance / initialPinchDistance;
-                  const newZoom = Math.min(2, Math.max(0.5, currentZoom * scale));
-
-                  try {
-                    univerAPI.executeCommand('sheet.operation.set-zoom-ratio', {
-                      unitId: unitId,
-                      zoomRatio: newZoom
-                    });
-                  } catch(e) {}
-
-                  initialPinchDistance = newDistance;
-                  currentZoom = newZoom;
                 }
               }, { passive: true });
 
               overlay.addEventListener('touchend', function(e) {
-                if (e.touches.length === 0 && isTracking) {
-                  isTracking = false;
-                  // Only start momentum if we have meaningful velocity
-                  if (Math.abs(velocityX) > 0.5 || Math.abs(velocityY) > 0.5) {
-                    momentumId = requestAnimationFrame(momentumScroll);
+                if (e.touches.length === 0) {
+                  const touchEndTime = performance.now();
+                  const touchDuration = touchEndTime - touchStartTime;
+
+                  // Check if this was a tap (quick touch with minimal movement)
+                  if (!hasMoved && touchDuration < TAP_MAX_DURATION && gestureMode !== 'pinch') {
+                    // It's a tap - forward to canvas for cell selection
+                    forwardTapToCanvas(touchStartX, touchStartY);
+                  } else if (gestureMode === 'scroll') {
+                    // Calculate release velocity from samples
+                    const releaseVel = getReleaseVelocity();
+                    const speed = Math.sqrt(releaseVel.vx * releaseVel.vx + releaseVel.vy * releaseVel.vy);
+
+                    // Only apply momentum if moving fast enough (like a flick)
+                    if (speed > MOMENTUM_VELOCITY_THRESHOLD) {
+                      velocityX = releaseVel.vx;
+                      velocityY = releaseVel.vy;
+                      momentumId = requestAnimationFrame(momentumScroll);
+                    }
+                    // If slow movement, just stop where finger lifted - no momentum
                   }
-                }
-                if (e.touches.length < 2) {
+
+                  // Reset state
+                  gestureMode = null;
+                  hasMoved = false;
                   initialPinchDistance = 0;
+                }
+
+                // If going from 2 fingers to 1, don't reset pinch yet
+                if (e.touches.length === 1 && gestureMode === 'pinch') {
+                  // Transitioning out of pinch - reset for potential scroll
+                  gestureMode = null;
+                  initialPinchDistance = 0;
+                  touchStartX = e.touches[0].pageX;
+                  touchStartY = e.touches[0].pageY;
+                  lastX = touchStartX;
+                  lastY = touchStartY;
+                  lastTime = performance.now();
                 }
               }, { passive: true });
 
-              // Handle touch cancel (e.g., incoming call)
               overlay.addEventListener('touchcancel', function(e) {
-                isTracking = false;
+                gestureMode = null;
+                hasMoved = false;
+                initialPinchDistance = 0;
                 if (momentumId) {
                   cancelAnimationFrame(momentumId);
                   momentumId = null;
