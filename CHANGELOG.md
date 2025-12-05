@@ -1,3 +1,10 @@
+## [1.46.4](https://github.com/typelets/typelets-app/compare/v1.46.3...v1.46.4) (2025-12-05)
+
+
+### Bug Fixes
+
+* improve sheet loading UX and add Liquid Glass buttons ([fd840b8](https://github.com/typelets/typelets-app/commit/fd840b876a9643b446aea51f4765552d8d76e062))
+
 ## [1.46.3](https://github.com/typelets/typelets-app/compare/v1.46.2...v1.46.3) (2025-12-03)
 
 
