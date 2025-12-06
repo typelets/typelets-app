@@ -1,6 +1,7 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { WebView } from 'react-native-webview';
+import type { WebView as WebViewType } from 'react-native-webview';
 
 interface SheetsViewerProps {
   content: string;
@@ -15,6 +16,7 @@ interface SheetsViewerProps {
   };
   onLoaded?: () => void;
   hideLoadingOverlay?: boolean;
+  bottomInset?: number;
 }
 
 /**
@@ -29,9 +31,48 @@ const LOADING_MESSAGES = [
   'Worth the wait',
 ];
 
-export function SheetsViewer({ content, theme, onLoaded, hideLoadingOverlay }: SheetsViewerProps) {
+export function SheetsViewer({ content, theme, onLoaded, hideLoadingOverlay, bottomInset = 0 }: SheetsViewerProps) {
   const [loading, setLoading] = useState(true);
   const [messageIndex, setMessageIndex] = useState(0);
+  const webViewRef = useRef<WebViewType>(null);
+  const [sheetNames, setSheetNames] = useState<string[]>([]);
+  const [sheetIds, setSheetIds] = useState<string[]>([]);
+  const [activeSheetIndex, setActiveSheetIndex] = useState(0);
+
+  // Parse sheet names and IDs from content on mount
+  useEffect(() => {
+    try {
+      const data = JSON.parse(content);
+      const sheets = data.sheets || {};
+      const sheetOrder = data.sheetOrder || Object.keys(sheets);
+      const names = sheetOrder.map((id: string) => sheets[id]?.name || 'Sheet');
+      setSheetNames(names);
+      setSheetIds(sheetOrder);
+    } catch {
+      setSheetNames(['Sheet1']);
+      setSheetIds(['sheet1']);
+    }
+  }, [content]);
+
+  // Switch sheet in WebView
+  const switchSheet = (index: number) => {
+    if (index === activeSheetIndex) return;
+    setActiveSheetIndex(index);
+    const sheetId = sheetIds[index];
+    if (!sheetId) return;
+
+    webViewRef.current?.injectJavaScript(`
+      (function() {
+        try {
+          window.univerAPI?.executeCommand('sheet.command.set-worksheet-activate', {
+            unitId: window.workbook?.getId(),
+            subUnitId: '${sheetId}'
+          });
+        } catch(e) {}
+      })();
+      true;
+    `);
+  };
 
   // Progress through loading messages
   useEffect(() => {
@@ -82,14 +123,13 @@ export function SheetsViewer({ content, theme, onLoaded, hideLoadingOverlay }: S
           width: 100%;
           height: 100%;
           overflow: hidden;
-          background-color: ${theme.isDark ? 'rgb(27, 28, 31)' : '#f3f3f3'};
+          background-color: ${theme.isDark ? '#1b1c1f' : '#ffffff'};
         }
         body {
           width: 100%;
-          height: calc(100% - 24px);
+          height: 100%;
           overflow: hidden;
-          background-color: ${theme.isDark ? '#0a0a0a' : '#ffffff'};
-          margin-bottom: 24px;
+          background-color: ${theme.isDark ? '#1b1c1f' : '#ffffff'};
         }
         #app {
           width: 100%;
@@ -114,12 +154,19 @@ export function SheetsViewer({ content, theme, onLoaded, hideLoadingOverlay }: S
           padding: 20px;
           text-align: center;
         }
-        /* Hide toolbar and formula bar */
+        /* Hide toolbar and formula bar completely in read-only mode */
         .univer-toolbar,
         .univer-formula-bar,
         [class*="toolbar"],
-        [class*="formula-bar"] {
+        [class*="Toolbar"],
+        [class*="formula-bar"],
+        [class*="formulaBar"],
+        [class*="FormulaBar"] {
           display: none !important;
+          height: 0 !important;
+          min-height: 0 !important;
+          max-height: 0 !important;
+          overflow: hidden !important;
         }
         /* Hide zoom controls and status bar */
         [class*="zoom-slider"],
@@ -197,36 +244,12 @@ export function SheetsViewer({ content, theme, onLoaded, hideLoadingOverlay }: S
           z-index: 1000 !important;
           pointer-events: auto !important;
         }
-        /* Ensure sheet bar (bottom tabs) is visible with safe area padding */
+        /* Hide Univer's footer completely - we use our own native sheet selector */
+        footer,
         .univer-sheet-bar,
         [class*="sheet-bar"],
         [class*="sheetbar"] {
-          display: flex !important;
-          visibility: visible !important;
-          margin-bottom: 0 !important;
-          padding-bottom: 16px !important;
-          min-height: 44px !important;
-          box-sizing: content-box !important;
-        }
-        /* Hide add sheet button and sheet menu button in view mode */
-        [class*="add-sheet"],
-        [class*="addSheet"] {
           display: none !important;
-        }
-        /* Make footer buttons bigger for touch */
-        footer button {
-          min-height: 40px !important;
-          min-width: 40px !important;
-          font-size: 14px !important;
-        }
-        footer button svg {
-          width: 24px !important;
-          height: 24px !important;
-        }
-        /* Make arrow buttons bigger */
-        footer button svg.univerjs-icon-more-icon {
-          width: 28px !important;
-          height: 28px !important;
         }
         /* Prevent keyboard from appearing */
         input, textarea, [contenteditable] {
@@ -239,40 +262,6 @@ export function SheetsViewer({ content, theme, onLoaded, hideLoadingOverlay }: S
           -webkit-user-select: none !important;
           user-select: none !important;
           -webkit-tap-highlight-color: transparent !important;
-        }
-        /* Make sheet tabs bigger and centered */
-        [data-u-comp="slide-tab-item"] {
-          min-height: 40px !important;
-          font-size: 16px !important;
-          align-items: center !important;
-          justify-content: center !important;
-        }
-        [data-u-comp="slide-tab-item"] span {
-          font-size: 16px !important;
-        }
-        [data-u-comp="slide-tab-bar"] {
-          align-items: center !important;
-          height: 100% !important;
-        }
-        /* Make footer section taller to fit bigger buttons */
-        footer section[data-range-selector] {
-          height: 48px !important;
-          min-height: 48px !important;
-        }
-        /* Hide non-functional dropdown buttons (sheet menu and zoom percentage) */
-        [data-slot="dropdown-menu-trigger"] {
-          display: none !important;
-        }
-        /* Hide add sheet button (the one with plus/increase icon) */
-        footer button:has(.univerjs-icon-increase-icon):first-of-type {
-          display: none !important;
-        }
-        footer button .univerjs-icon-increase-icon {
-          /* Target the add button specifically by checking parent context */
-        }
-        /* More specific: hide first button in the left section of footer */
-        footer > section > div:first-child > div:first-child > button:first-child {
-          display: none !important;
         }
       </style>
     </head>
@@ -312,8 +301,10 @@ export function SheetsViewer({ content, theme, onLoaded, hideLoadingOverlay }: S
               presets: [
                 UniverSheetsCorePreset({
                   container: appEl,
+                  header: false,         // Hide top header/toolbar completely
+                  toolbar: false,        // Disable toolbar
                   footer: {
-                    sheetBar: true,      // Keep sheet tabs for switching
+                    sheetBar: false,     // We use our own native sheet tabs
                     statisticBar: false, // Hide statistics
                     menus: false,        // Hide bottom menus (gridlines button etc)
                     zoomSlider: false    // Hide zoom slider
@@ -333,6 +324,10 @@ export function SheetsViewer({ content, theme, onLoaded, hideLoadingOverlay }: S
 
             // Create workbook with the data
             const workbook = univerAPI.createWorkbook(workbookData);
+
+            // Store globally for sheet switching from React Native
+            window.univerAPI = univerAPI;
+            window.workbook = workbook;
 
             // Prevent keyboard from appearing - blur any focused elements and disable all inputs
             function preventKeyboard() {
@@ -377,9 +372,6 @@ export function SheetsViewer({ content, theme, onLoaded, hideLoadingOverlay }: S
 
             // Block ALL commands except scrolling, zoom, and sheet switching - true read-only
             univerAPI.onBeforeCommandExecute((command) => {
-              // Log command for debugging
-              console.log('Command:', command.id);
-
               // Allow scroll, zoom, sheet switching, and menu operations
               if (command.id === 'sheet.operation.set-scroll' ||
                   command.id === 'sheet.operation.set-zoom-ratio' ||
@@ -411,20 +403,10 @@ export function SheetsViewer({ content, theme, onLoaded, hideLoadingOverlay }: S
               // Get the canvas element for forwarding tap events
               const canvas = document.querySelector('canvas');
 
-              // Prevent keyboard from appearing on footer button clicks
-              const footer = document.querySelector('footer');
-              if (footer) {
-                footer.addEventListener('click', (e) => {
-                  if (document.activeElement && document.activeElement !== document.body) {
-                    document.activeElement.blur();
-                  }
-                }, true);
-              }
-
               // Create touch overlay for hybrid gesture handling
               const overlay = document.createElement('div');
               overlay.id = 'touch-overlay';
-              overlay.style.cssText = 'position:absolute;top:0;left:0;right:0;bottom:80px;z-index:50;';
+              overlay.style.cssText = 'position:absolute;top:0;left:0;right:0;bottom:0;z-index:50;';
               appEl.style.position = 'relative';
               appEl.appendChild(overlay);
 
@@ -630,26 +612,20 @@ export function SheetsViewer({ content, theme, onLoaded, hideLoadingOverlay }: S
 
               // Helper function to set zoom using multiple approaches
               function setZoom(zoomRatio) {
-                console.log('Setting zoom to:', zoomRatio);
-
                 // Try Facade API first
                 try {
                   const activeSheet = workbook.getActiveSheet();
                   if (activeSheet) {
                     if (typeof activeSheet.zoom === 'function') {
                       activeSheet.zoom(zoomRatio);
-                      console.log('Zoom via facade.zoom() succeeded');
                       return true;
                     }
                     if (typeof activeSheet.setZoom === 'function') {
                       activeSheet.setZoom(zoomRatio);
-                      console.log('Zoom via facade.setZoom() succeeded');
                       return true;
                     }
                   }
-                } catch(e) {
-                  console.log('Zoom via facade failed:', e.message);
-                }
+                } catch(e) {}
 
                 // Try command API
                 try {
@@ -657,17 +633,13 @@ export function SheetsViewer({ content, theme, onLoaded, hideLoadingOverlay }: S
                     unitId: unitId,
                     zoomRatio: zoomRatio
                   });
-                  console.log('Zoom via command succeeded');
                   return true;
-                } catch(e) {
-                  console.log('Zoom via command failed:', e.message);
-                }
+                } catch(e) {}
 
                 // CSS transform fallback (visual only)
                 if (canvas) {
                   canvas.style.transform = 'scale(' + zoomRatio + ')';
                   canvas.style.transformOrigin = 'top left';
-                  console.log('Zoom via CSS transform');
                   return true;
                 }
 
@@ -677,21 +649,16 @@ export function SheetsViewer({ content, theme, onLoaded, hideLoadingOverlay }: S
               overlay.addEventListener('touchmove', function(e) {
                 if (e.touches.length === 2) {
                   // Pinch zoom - always handle when 2 fingers
-                  console.log('Pinch detected, touches:', e.touches.length);
-
                   if (gestureMode !== 'pinch') {
                     gestureMode = 'pinch';
                     initialPinchDistance = getPinchDistance(e.touches);
                     initialZoom = currentZoom;
-                    console.log('Pinch start, distance:', initialPinchDistance, 'zoom:', initialZoom);
                   }
 
                   if (initialPinchDistance > 0) {
                     const newDistance = getPinchDistance(e.touches);
                     const scale = newDistance / initialPinchDistance;
                     const newZoom = Math.min(4, Math.max(0.25, initialZoom * scale));
-
-                    console.log('Pinch move, scale:', scale.toFixed(2), 'newZoom:', newZoom.toFixed(2));
 
                     if (Math.abs(newZoom - currentZoom) > 0.02) {
                       if (setZoom(newZoom)) {
@@ -822,10 +789,51 @@ export function SheetsViewer({ content, theme, onLoaded, hideLoadingOverlay }: S
       </script>
     </body>
     </html>
-  `, [escapedContent, theme.isDark, theme.colors.mutedForeground]);
+  `, [escapedContent, theme.isDark, theme.colors.mutedForeground, bottomInset]);
+
+  const hasMultipleSheets = sheetNames.length > 1;
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.isDark ? '#1b1c1f' : '#ffffff' }]}>
+      {/* Sheet tabs - shadcn/ui style - only show when multiple sheets exist */}
+      {hasMultipleSheets && !loading && (
+        <View style={[styles.tabsWrapper, { backgroundColor: theme.colors.muted }]}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.tabsContent}
+          >
+            {sheetNames.map((name, index) => {
+              const isActive = index === activeSheetIndex;
+              return (
+                <Pressable
+                  key={index}
+                  style={[
+                    styles.tab,
+                    isActive && [
+                      styles.tabActive,
+                      { backgroundColor: theme.isDark ? '#1b1c1f' : '#ffffff' },
+                    ],
+                  ]}
+                  onPress={() => switchSheet(index)}
+                >
+                  <Text
+                    style={[
+                      styles.tabText,
+                      { color: isActive ? theme.colors.foreground : theme.colors.mutedForeground },
+                      isActive && styles.tabTextActive,
+                    ]}
+                    numberOfLines={1}
+                  >
+                    {name}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+        </View>
+      )}
+
       {loading && !hideLoadingOverlay && (
         <View style={styles.loadingOverlay}>
           <ActivityIndicator size="large" color={theme.colors.mutedForeground} />
@@ -835,6 +843,7 @@ export function SheetsViewer({ content, theme, onLoaded, hideLoadingOverlay }: S
         </View>
       )}
       <WebView
+        ref={webViewRef}
         source={{ html: fullHtml }}
         style={[styles.webview, { opacity: loading ? 0 : 1 }]}
         scrollEnabled={false}
@@ -867,9 +876,6 @@ export function SheetsViewer({ content, theme, onLoaded, hideLoadingOverlay }: S
             } else if (data.type === 'error') {
               setLoading(false);
               onLoaded?.();
-              console.error('SheetsViewer error:', data.message);
-            } else if (data.type === 'debug') {
-              console.log('SheetsViewer debug:', JSON.stringify(data, null, 2));
             }
           } catch {
             // Ignore parse errors
@@ -898,6 +904,37 @@ const styles = StyleSheet.create({
     marginTop: 12,
     fontSize: 16,
     fontWeight: '500',
+  },
+  tabsWrapper: {
+    flexDirection: 'row',
+    paddingHorizontal: 4,
+    paddingTop: 8,
+    paddingBottom: 8,
+  },
+  tabsContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 4,
+    gap: 2,
+  },
+  tab: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 6,
+  },
+  tabActive: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  tabText: {
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  tabTextActive: {
+    fontWeight: '600',
   },
 });
 

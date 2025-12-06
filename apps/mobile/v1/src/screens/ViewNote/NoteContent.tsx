@@ -519,7 +519,7 @@ ${note.content}
   // For sheets, render the SheetsViewer component
   if (isSheet) {
     return (
-      <View style={[styles.sheetsContainer, {}]}>
+      <View style={[styles.sheetsContainer, { backgroundColor: theme.isDark ? '#1b1c1f' : '#ffffff' }]}>
         {note.hidden ? (
           <View style={styles.hiddenContainer}>
             <Text
@@ -529,7 +529,7 @@ ${note.content}
             </Text>
           </View>
         ) : (
-          <SheetsViewer content={note.content} theme={theme} onLoaded={onSheetLoaded} hideLoadingOverlay />
+          <SheetsViewer content={note.content} theme={theme} onLoaded={onSheetLoaded} hideLoadingOverlay bottomInset={bottomInset} />
         )}
       </View>
     );
