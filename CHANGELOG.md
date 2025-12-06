@@ -1,3 +1,11 @@
+## [1.47.1](https://github.com/typelets/typelets-app/compare/v1.47.0...v1.47.1) (2025-12-06)
+
+
+### Bug Fixes
+
+* **mobile:** add folder path toggle in notes list ([5f8ab14](https://github.com/typelets/typelets-app/commit/5f8ab14eb3b1b13ee4f1bb07a487f0682f0ea136))
+* **mobile:** prevent auth screen flash and improve filter performance ([9053dda](https://github.com/typelets/typelets-app/commit/9053ddab55566ac3a5cc5d011227b4604e35e65d))
+
 # [1.47.0](https://github.com/typelets/typelets-app/compare/v1.46.4...v1.47.0) (2025-12-06)
 
 
