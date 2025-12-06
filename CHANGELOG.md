@@ -1,3 +1,15 @@
+# [1.47.0](https://github.com/typelets/typelets-app/compare/v1.46.4...v1.47.0) (2025-12-06)
+
+
+### Bug Fixes
+
+* **mobile:** add native-feeling touch gestures for SheetsViewer ([93a910f](https://github.com/typelets/typelets-app/commit/93a910f9efcbc1eca2cf0695108dcb5bb4455e8b))
+
+
+### Features
+
+* **mobile:** replace Univer footer with native sheet tabs ([6c8ab92](https://github.com/typelets/typelets-app/commit/6c8ab927a112e4a2f1bb845ab12d58b063fb24be))
+
 ## [1.46.4](https://github.com/typelets/typelets-app/compare/v1.46.3...v1.46.4) (2025-12-05)
 
 
