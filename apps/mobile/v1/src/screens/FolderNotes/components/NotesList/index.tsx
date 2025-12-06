@@ -65,6 +65,7 @@ export default function NotesList({ navigation, route, renderHeader, scrollY: pa
   const [archivingNoteId, setArchivingNoteId] = useState<string | null>(null);
   const [closeSwipeables, setCloseSwipeables] = useState(0);
   const [showLoading, setShowLoading] = useState(false);
+  const [showFolderPaths, setShowFolderPaths] = useState(false);
 
   // Performance tracking
   const screenFocusTime = useRef<number>(0);
@@ -650,9 +651,10 @@ export default function NotesList({ navigation, route, renderHeader, scrollY: pa
         isDeleting={deletingNoteId === note.id}
         isArchiving={archivingNoteId === note.id}
         closeSwipeables={closeSwipeables}
+        showFolderPaths={showFolderPaths}
       />
     );
-  }, [filteredNotes.length, folderId, handleNotePress, handleNoteLongPress, handleDeleteNote, handleArchiveNote, folderPathsMap, foldersMap, skeletonOpacity, notesEnhancedDataCache, foregroundColor, mutedForegroundColor, mutedColor, borderColor, backgroundColor, deletingNoteId, archivingNoteId, closeSwipeables]);
+  }, [filteredNotes.length, folderId, handleNotePress, handleNoteLongPress, handleDeleteNote, handleArchiveNote, folderPathsMap, foldersMap, skeletonOpacity, notesEnhancedDataCache, foregroundColor, mutedForegroundColor, mutedColor, borderColor, backgroundColor, deletingNoteId, archivingNoteId, closeSwipeables, showFolderPaths]);
 
   // Render list header (subfolders and create note button)
   const renderListHeader = useCallback(() => {
@@ -686,10 +688,12 @@ export default function NotesList({ navigation, route, renderHeader, scrollY: pa
           onCreateNotePress={() => createFileSheetRef.current?.present()}
           onEmptyTrashPress={handleEmptyTrash}
           createNoteButtonRef={createNoteButtonRef}
+          showFolderPaths={showFolderPaths}
+          onToggleFolderPaths={() => setShowFolderPaths(prev => !prev)}
         />
       </>
     );
-  }, [loading, notes.length, renderHeader, viewType, subfolders, viewMode, filteredNotes.length, hasActiveFilters, handleEmptyTrash, filterSortSheetRef]);
+  }, [loading, notes.length, renderHeader, viewType, subfolders, viewMode, filteredNotes.length, hasActiveFilters, handleEmptyTrash, filterSortSheetRef, showFolderPaths]);
 
   // Render empty state
   const renderEmptyComponent = useCallback(() => {

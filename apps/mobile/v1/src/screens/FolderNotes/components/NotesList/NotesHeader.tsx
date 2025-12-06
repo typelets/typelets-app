@@ -16,6 +16,8 @@ interface NotesHeaderProps {
   onCreateNotePress: () => void;
   onEmptyTrashPress: () => void;
   createNoteButtonRef?: React.RefObject<View>;
+  showFolderPaths: boolean;
+  onToggleFolderPaths: () => void;
 }
 
 export const NotesHeader: React.FC<NotesHeaderProps> = ({
@@ -28,6 +30,8 @@ export const NotesHeader: React.FC<NotesHeaderProps> = ({
   onCreateNotePress,
   onEmptyTrashPress,
   createNoteButtonRef,
+  showFolderPaths,
+  onToggleFolderPaths,
 }) => {
   const theme = useTheme();
 
@@ -38,19 +42,37 @@ export const NotesHeader: React.FC<NotesHeaderProps> = ({
           NOTES ({String(filteredNotesCount || 0)})
           {viewType !== 'public' && filteredNotesCount !== totalNotesCount && ` (${totalNotesCount} total)`}
         </Text>
-        <GlassView glassEffectStyle="regular" style={[styles.squareButtonGlass, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]}>
-          <TouchableOpacity
-            style={styles.squareButton}
-            onPress={onFilterPress}
-            activeOpacity={0.7}
-          >
-            <Ionicons
-              name={hasActiveFilters ? "funnel" : "funnel-outline"}
-              size={16}
-              color={hasActiveFilters ? theme.colors.primary : theme.colors.foreground}
-            />
-          </TouchableOpacity>
-        </GlassView>
+        <View style={styles.headerButtons}>
+          {/* Folder path toggle - only show in views without a specific folder */}
+          {(viewType === 'all' || viewType === 'starred' || viewType === 'archived') && (
+            <GlassView glassEffectStyle="regular" style={[styles.squareButtonGlass, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)', marginRight: 8 }]}>
+              <TouchableOpacity
+                style={styles.squareButton}
+                onPress={onToggleFolderPaths}
+                activeOpacity={0.7}
+              >
+                <Ionicons
+                  name={showFolderPaths ? "folder" : "folder-outline"}
+                  size={16}
+                  color={showFolderPaths ? theme.colors.primary : theme.colors.foreground}
+                />
+              </TouchableOpacity>
+            </GlassView>
+          )}
+          <GlassView glassEffectStyle="regular" style={[styles.squareButtonGlass, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]}>
+            <TouchableOpacity
+              style={styles.squareButton}
+              onPress={onFilterPress}
+              activeOpacity={0.7}
+            >
+              <Ionicons
+                name={hasActiveFilters ? "funnel" : "funnel-outline"}
+                size={16}
+                color={hasActiveFilters ? theme.colors.primary : theme.colors.foreground}
+              />
+            </TouchableOpacity>
+          </GlassView>
+        </View>
       </View>
 
       {/* Create Note Button / Empty Trash Button - Full width to match note list */}
@@ -106,6 +128,10 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '500',
     letterSpacing: 0.8,
+  },
+  headerButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   squareButtonGlass: {
     borderRadius: GLASS_BUTTON.BORDER_RADIUS,

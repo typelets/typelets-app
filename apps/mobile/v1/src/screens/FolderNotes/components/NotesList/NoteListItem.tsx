@@ -35,6 +35,7 @@ interface NoteListItemProps {
   isDeleting?: boolean;
   isArchiving?: boolean;
   closeSwipeables?: number; // Increment this to close all swipeables
+  showFolderPaths?: boolean;
 }
 
 const NoteListItemComponent: React.FC<NoteListItemProps> = ({
@@ -57,6 +58,7 @@ const NoteListItemComponent: React.FC<NoteListItemProps> = ({
   isDeleting = false,
   isArchiving = false,
   closeSwipeables = 0,
+  showFolderPaths = true,
 }) => {
   const swipeableRef = useRef<Swipeable>(null);
 
@@ -296,7 +298,7 @@ const NoteListItemComponent: React.FC<NoteListItemProps> = ({
               >
                 {enhancedData?.preview || ''}
               </Text>
-              {!folderId && folderPath && (
+              {!folderId && folderPath && showFolderPaths && (
                 <View style={styles.noteListFolderInfo}>
                   <View style={[styles.noteListFolderDot, { backgroundColor: noteFolder?.color || '#6b7280' }]} />
                   <Text style={[styles.noteListFolderPath, { color: mutedForegroundColor }]} numberOfLines={1}>
