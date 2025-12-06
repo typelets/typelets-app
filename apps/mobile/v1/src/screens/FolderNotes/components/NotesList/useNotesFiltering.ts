@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 
 import type { Note } from '@/src/services/api';
-import { isCodeContent, isDiagramContent } from '@/src/utils/noteTypeDetection';
+import { isCodeContent, isDiagramContent, isWorkbookContent } from '@/src/utils/noteTypeDetection';
 
 import type { FilterConfig, SortConfig } from './FilterSortSheet';
 
@@ -42,7 +42,8 @@ export function useNotesFiltering(
       }
       // Check for note filter (regular notes, not code/diagram/sheets)
       if (filterConfig.showNoteOnly) {
-        const isRegularNote = note.type === 'note' || (!note.type && !isCodeContent(note.content || '') && !isDiagramContent(note.content || ''));
+        const isRegularNote = note.type === 'note' ||
+          (!note.type && !isCodeContent(note.content || '') && !isDiagramContent(note.content || '') && !isWorkbookContent(note.content || ''));
         if (!isRegularNote) return false;
       }
       // Check for public filter
@@ -51,7 +52,8 @@ export function useNotesFiltering(
       }
       // Check for sheet filter
       if (filterConfig.showSheetOnly) {
-        if (note.type !== 'sheets') return false;
+        const isSheet = note.type === 'sheets' || (note.content && isWorkbookContent(note.content));
+        if (!isSheet) return false;
       }
       return true;
     });
