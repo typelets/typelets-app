@@ -1,9 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect,useLocalSearchParams, useRouter } from 'expo-router';
+import { GlassView } from 'expo-glass-effect';
 import React, { useCallback,useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Animated, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Animated, AppState, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { GLASS_BG_DARK, GLASS_BG_LIGHT } from '../../components/NativeSheetsViewer';
 import { PublishNoteSheet, PublishNoteSheetRef } from '../../components/PublishNoteSheet';
 import { useNetworkStatus } from '../../hooks/useNetworkStatus';
 import { useViewNote } from '../../hooks/useViewNote';
@@ -11,7 +13,7 @@ import { logger } from '../../lib/logger';
 import { type FileAttachment,useApiService } from '../../services/api';
 import { getCachedNoteType } from '../../services/api/databaseCache';
 import { useTheme } from '../../theme';
-import { NoteContent } from './NoteContent';
+import { NoteContent, SheetControlsData } from './NoteContent';
 import { ViewHeader } from './ViewHeader';
 
 // Progressive loading messages for sheets
@@ -48,6 +50,11 @@ export default function ViewNoteScreen() {
   const { note, loading, htmlContent, handleEdit: handleEditInternal, handleToggleStar, handleToggleHidden, refresh, updateNoteLocally } = useViewNote(noteId as string);
   const [refreshing, setRefreshing] = useState(false);
   const [sheetLoaded, setSheetLoaded] = useState(false);
+
+  // Sheet controls for rendering glass buttons outside ScrollView
+  const [sheetControls, setSheetControls] = useState<SheetControlsData | null>(null);
+  // Key to force remount of GlassView when app returns from background
+  const [glassKey, setGlassKey] = useState(0);
 
   // Cached note type for early "Loading Sheet" display (checked synchronously via state initialization)
   const [cachedType, setCachedType] = useState<string | null>(null);
@@ -92,6 +99,22 @@ export default function ViewNoteScreen() {
 
     return () => timers.forEach(clearTimeout);
   }, [isSheetType, sheetLoaded]);
+
+  // Listen for app state changes to restore liquid glass effect on sheet controls
+  useEffect(() => {
+    if (!isSheetType) return;
+
+    const subscription = AppState.addEventListener('change', (nextAppState) => {
+      if (nextAppState === 'active') {
+        // Small delay to ensure app is fully visible before remounting glass controls
+        setTimeout(() => {
+          setGlassKey(k => k + 1);
+        }, 100);
+      }
+    });
+
+    return () => subscription.remove();
+  }, [isSheetType]);
 
   // Wrap handleEdit with offline check and sheets check
   const handleEdit = () => {
@@ -342,6 +365,7 @@ export default function ViewNoteScreen() {
               bottomInset={insets.bottom}
               theme={theme}
               onSheetLoaded={() => setSheetLoaded(true)}
+              onSheetControlsReady={setSheetControls}
             />
           </Animated.ScrollView>
 
@@ -369,6 +393,86 @@ export default function ViewNoteScreen() {
               }}
               theme={theme}
             />
+          )}
+
+          {/* Sheet controls - rendered outside ScrollView for proper liquid glass effect */}
+          {!showLoading && sheetControls && (
+            <>
+              {/* Zoom controls */}
+              <View key={`zoom-${glassKey}`} style={[sheetStyles.zoomControls, { bottom: sheetControls.tabBarHeight + 16 }]}>
+                <TouchableOpacity onPress={sheetControls.onZoomOut}>
+                  <GlassView
+                    glassEffectStyle="regular"
+                    style={[sheetStyles.glassButton, { backgroundColor: theme.isDark ? GLASS_BG_DARK : GLASS_BG_LIGHT }]}
+                    pointerEvents="none"
+                  >
+                    <View style={sheetStyles.zoomButtonInner}>
+                      <Text style={[sheetStyles.zoomButtonText, { color: theme.colors.foreground }]}>−</Text>
+                    </View>
+                  </GlassView>
+                </TouchableOpacity>
+                <GlassView
+                  glassEffectStyle="regular"
+                  style={[sheetStyles.glassLabelContainer, { backgroundColor: theme.isDark ? GLASS_BG_DARK : GLASS_BG_LIGHT }]}
+                >
+                  <View style={sheetStyles.zoomLabelInner}>
+                    <Text style={[sheetStyles.zoomLabel, { color: theme.colors.foreground }]}>
+                      {Math.round(sheetControls.zoom * 100)}%
+                    </Text>
+                  </View>
+                </GlassView>
+                <TouchableOpacity onPress={sheetControls.onZoomIn}>
+                  <GlassView
+                    glassEffectStyle="regular"
+                    style={[sheetStyles.glassButton, { backgroundColor: theme.isDark ? GLASS_BG_DARK : GLASS_BG_LIGHT }]}
+                    pointerEvents="none"
+                  >
+                    <View style={sheetStyles.zoomButtonInner}>
+                      <Text style={[sheetStyles.zoomButtonText, { color: theme.colors.foreground }]}>+</Text>
+                    </View>
+                  </GlassView>
+                </TouchableOpacity>
+              </View>
+
+              {/* Sheet tabs */}
+              {sheetControls.hasMultipleSheets && (
+                <View
+                  key={`tabs-${glassKey}`}
+                  style={[
+                    sheetStyles.tabBar,
+                    {
+                      backgroundColor: theme.colors.background,
+                      borderTopColor: theme.isDark ? '#444' : '#ddd',
+                      paddingBottom: insets.bottom,
+                    },
+                  ]}
+                >
+                  <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={sheetStyles.tabScrollContent}
+                  >
+                    {sheetControls.sheetNames.map((name, index) => (
+                      <TouchableOpacity
+                        key={`sheet-tab-${name}`}
+                        onPress={() => sheetControls.onSelectSheet(index)}
+                        style={{ opacity: index === sheetControls.activeSheetIndex ? 1 : 0.6 }}
+                      >
+                        <GlassView
+                          glassEffectStyle="regular"
+                          style={[sheetStyles.glassTab, { backgroundColor: theme.isDark ? GLASS_BG_DARK : GLASS_BG_LIGHT }]}
+                          pointerEvents="none"
+                        >
+                          <View style={sheetStyles.tabInner}>
+                            <Text style={[sheetStyles.tabText, { color: theme.colors.foreground }]}>{name}</Text>
+                          </View>
+                        </GlassView>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                </View>
+              )}
+            </>
           )}
 
           {/* Publish Note Bottom Sheet */}
@@ -489,5 +593,75 @@ const styles = StyleSheet.create({
   },
   attachmentSize: {
     fontSize: 12,
+  },
+});
+
+// Styles for sheet controls (zoom and tabs)
+const sheetStyles = StyleSheet.create({
+  zoomControls: {
+    position: 'absolute',
+    right: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    zIndex: 20,
+    gap: 8,
+  },
+  glassButton: {
+    borderRadius: 19,
+    overflow: 'hidden',
+  },
+  glassLabelContainer: {
+    borderRadius: 19,
+    overflow: 'hidden',
+  },
+  zoomButtonInner: {
+    width: 38,
+    height: 38,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  zoomButtonText: {
+    fontSize: 22,
+    fontWeight: '500',
+  },
+  zoomLabelInner: {
+    height: 38,
+    paddingHorizontal: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  zoomLabel: {
+    fontSize: 15,
+    fontWeight: '600',
+    minWidth: 44,
+    textAlign: 'center',
+  },
+  tabBar: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    borderTopWidth: StyleSheet.hairlineWidth,
+    paddingTop: 10,
+    paddingHorizontal: 8,
+  },
+  tabScrollContent: {
+    gap: 8,
+    paddingHorizontal: 8,
+  },
+  glassTab: {
+    borderRadius: 19,
+    overflow: 'hidden',
+  },
+  tabInner: {
+    height: 38,
+    paddingHorizontal: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  tabText: {
+    fontSize: 15,
+    fontWeight: '500',
   },
 });

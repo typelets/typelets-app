@@ -1,21 +1,18 @@
-import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Animated,
   Dimensions,
   NativeScrollEvent,
   NativeSyntheticEvent,
-  ScrollView,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from 'react-native';
-import { GlassView } from 'expo-glass-effect';
 
-// Background colors for glass effect based on theme
-const GLASS_BG_DARK = 'rgba(255, 255, 255, 0.01)';
-const GLASS_BG_LIGHT = 'rgba(0, 0, 0, 0.01)';
+// Background colors for glass effect - exported for parent to use
+export const GLASS_BG_DARK = 'rgba(255, 255, 255, 0.01)';
+export const GLASS_BG_LIGHT = 'rgba(0, 0, 0, 0.01)';
 
 // Excel date serial number range (1900-2099)
 const MIN_DATE_SERIAL = 1;
@@ -48,32 +45,6 @@ const getTextAlign = (ht?: number): 'left' | 'center' | 'right' => {
     default: return 'left';
   }
 };
-
-/**
- * Memoized glass button for sheet tabs.
- * Prevents re-render on parent state changes to preserve iOS liquid glass effect.
- */
-const GlassTabButton = memo(function GlassTabButton({
-  name,
-  isDark,
-  textColor,
-}: {
-  name: string;
-  isDark: boolean;
-  textColor: string;
-}) {
-  return (
-    <GlassView
-      glassEffectStyle="regular"
-      style={[styles.glassTab, { backgroundColor: isDark ? GLASS_BG_DARK : GLASS_BG_LIGHT }]}
-      pointerEvents="none"
-    >
-      <View style={styles.tabInner}>
-        <Text style={[styles.tabText, { color: textColor }]}>{name}</Text>
-      </View>
-    </GlassView>
-  );
-});
 
 // Types based on Univer's data structure
 interface ICellData {
@@ -136,6 +107,19 @@ interface IWorkbookData {
   styles?: { [styleId: string]: IStyleData | null };
 }
 
+export interface SheetControlsData {
+  zoom: number;
+  minZoom: number;
+  maxZoom: number;
+  sheetNames: string[];
+  activeSheetIndex: number;
+  hasMultipleSheets: boolean;
+  tabBarHeight: number;
+  onZoomIn: () => void;
+  onZoomOut: () => void;
+  onSelectSheet: (index: number) => void;
+}
+
 interface NativeSheetsViewerProps {
   content: string;
   theme: {
@@ -151,6 +135,8 @@ interface NativeSheetsViewerProps {
   onLoaded?: () => void;
   hideLoadingOverlay?: boolean;
   bottomInset?: number;
+  /** Callback to provide sheet controls data to parent for rendering outside ScrollView */
+  onControlsReady?: (controls: SheetControlsData) => void;
 }
 
 // Constants - match typical Excel/Sheets defaults (these are only used as last resort)
@@ -280,6 +266,7 @@ export function NativeSheetsViewer({
   onLoaded,
   hideLoadingOverlay,
   bottomInset = 0,
+  onControlsReady,
 }: NativeSheetsViewerProps) {
   const [loading, setLoading] = useState(true);
   const [activeSheetIndex, setActiveSheetIndex] = useState(0);
@@ -453,6 +440,19 @@ export function NativeSheetsViewer({
     return label;
   };
 
+  // Zoom control handlers
+  const handleZoomIn = useCallback(() => {
+    setZoom(z => Math.min(MAX_ZOOM, z + 0.25));
+  }, []);
+
+  const handleZoomOut = useCallback(() => {
+    setZoom(z => Math.max(MIN_ZOOM, z - 0.25));
+  }, []);
+
+  const handleSelectSheet = useCallback((index: number) => {
+    setActiveSheetIndex(index);
+  }, []);
+
   useEffect(() => {
     if (currentSheet) {
       setLoading(false);
@@ -465,6 +465,24 @@ export function NativeSheetsViewer({
   const headerBg = theme.isDark ? '#252629' : '#f5f5f5';
   const cellBg = theme.colors.background;
   const tabBarHeight = hasMultipleSheets ? 48 + bottomInset : 0;
+
+  // Notify parent about controls data so it can render glass controls outside ScrollView
+  useEffect(() => {
+    if (currentSheet && onControlsReady) {
+      onControlsReady({
+        zoom,
+        minZoom: MIN_ZOOM,
+        maxZoom: MAX_ZOOM,
+        sheetNames: sheetInfo.names,
+        activeSheetIndex,
+        hasMultipleSheets,
+        tabBarHeight,
+        onZoomIn: handleZoomIn,
+        onZoomOut: handleZoomOut,
+        onSelectSheet: handleSelectSheet,
+      });
+    }
+  }, [currentSheet, onControlsReady, zoom, sheetInfo.names, activeSheetIndex, hasMultipleSheets, tabBarHeight, handleZoomIn, handleZoomOut, handleSelectSheet]);
 
   if (!workbook || !currentSheet) {
     return (
@@ -833,72 +851,7 @@ export function NativeSheetsViewer({
         </Animated.ScrollView>
       </View>
 
-      {/* Zoom controls */}
-      <View style={[styles.zoomControls, { bottom: tabBarHeight + 16 }]}>
-        <TouchableOpacity onPress={() => setZoom(z => Math.max(MIN_ZOOM, z - 0.25))}>
-          <GlassView
-            glassEffectStyle="regular"
-            style={[styles.glassButton, { backgroundColor: theme.isDark ? GLASS_BG_DARK : GLASS_BG_LIGHT }]}
-            pointerEvents="none"
-          >
-            <View style={styles.zoomButtonInner}>
-              <Text style={[styles.zoomButtonText, { color: theme.colors.foreground }]}>−</Text>
-            </View>
-          </GlassView>
-        </TouchableOpacity>
-        <GlassView
-          glassEffectStyle="regular"
-          style={[styles.glassLabelContainer, { backgroundColor: theme.isDark ? GLASS_BG_DARK : GLASS_BG_LIGHT }]}
-        >
-          <View style={styles.zoomLabelInner}>
-            <Text style={[styles.zoomLabel, { color: theme.colors.foreground }]}>
-              {Math.round(zoom * 100)}%
-            </Text>
-          </View>
-        </GlassView>
-        <TouchableOpacity onPress={() => setZoom(z => Math.min(MAX_ZOOM, z + 0.25))}>
-          <GlassView
-            glassEffectStyle="regular"
-            style={[styles.glassButton, { backgroundColor: theme.isDark ? GLASS_BG_DARK : GLASS_BG_LIGHT }]}
-            pointerEvents="none"
-          >
-            <View style={styles.zoomButtonInner}>
-              <Text style={[styles.zoomButtonText, { color: theme.colors.foreground }]}>+</Text>
-            </View>
-          </GlassView>
-        </TouchableOpacity>
-      </View>
-
-
-      {/* Sheet tabs */}
-      {hasMultipleSheets && (
-        <View
-          style={[
-            styles.tabBar,
-            {
-              backgroundColor: cellBg,
-              borderTopColor: borderColor,
-              paddingBottom: bottomInset,
-            },
-          ]}
-        >
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.tabScrollContent}
-          >
-            {sheetInfo.names.map((name, index) => (
-              <TouchableOpacity
-                key={`sheet-tab-${name}`}
-                onPress={() => setActiveSheetIndex(index)}
-                style={{ opacity: index === activeSheetIndex ? 1 : 0.6 }}
-              >
-                <GlassTabButton name={name} isDark={theme.isDark} textColor={theme.colors.foreground} />
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </View>
-      )}
+      {/* Glass controls (zoom, tabs) are rendered by parent outside ScrollView for proper liquid glass */}
     </View>
   );
 }
@@ -961,72 +914,6 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
   headerText: {
-    fontWeight: '500',
-  },
-  zoomControls: {
-    position: 'absolute',
-    right: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    zIndex: 20,
-    gap: 8,
-  },
-  glassButton: {
-    borderRadius: 19,
-    overflow: 'hidden',
-  },
-  glassLabelContainer: {
-    borderRadius: 19,
-    overflow: 'hidden',
-  },
-  zoomButtonInner: {
-    width: 38,
-    height: 38,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  zoomButtonText: {
-    fontSize: 22,
-    fontWeight: '500',
-  },
-  zoomLabelInner: {
-    height: 38,
-    paddingHorizontal: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  zoomLabel: {
-    fontSize: 15,
-    fontWeight: '600',
-    minWidth: 44,
-    textAlign: 'center',
-  },
-  tabBar: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    flexDirection: 'row',
-    borderTopWidth: StyleSheet.hairlineWidth,
-    paddingTop: 10,
-    paddingHorizontal: 8,
-  },
-  tabScrollContent: {
-    gap: 8,
-    paddingHorizontal: 8,
-  },
-  glassTab: {
-    borderRadius: 19,
-    overflow: 'hidden',
-  },
-  tabInner: {
-    height: 38,
-    paddingHorizontal: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  tabText: {
-    fontSize: 15,
     fontWeight: '500',
   },
 });

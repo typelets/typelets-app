@@ -2,7 +2,7 @@ import React, { useRef, useState, useMemo } from 'react';
 import { Animated, Dimensions, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { WebView } from 'react-native-webview';
 
-import { NativeSheetsViewer } from '../../components/NativeSheetsViewer';
+import { NativeSheetsViewer, SheetControlsData } from '../../components/NativeSheetsViewer';
 import type { Note } from '../../services/api';
 
 interface NoteContentProps {
@@ -23,7 +23,12 @@ interface NoteContentProps {
     isDark: boolean;
   };
   onSheetLoaded?: () => void;
+  /** Callback when sheet controls data is ready for parent to render */
+  onSheetControlsReady?: (controls: SheetControlsData) => void;
 }
+
+// Re-export for parent component
+export type { SheetControlsData };
 
 /**
  * Note content component that displays note in a WebView
@@ -37,6 +42,7 @@ export function NoteContent({
   bottomInset = 0,
   theme,
   onSheetLoaded,
+  onSheetControlsReady,
 }: NoteContentProps) {
   const webViewRef = useRef<WebView>(null);
   // For diagrams, use screen height; for regular notes, use dynamic height
@@ -529,7 +535,7 @@ ${note.content}
             </Text>
           </View>
         ) : (
-          <NativeSheetsViewer content={note.content} theme={theme} onLoaded={onSheetLoaded} hideLoadingOverlay bottomInset={bottomInset} />
+          <NativeSheetsViewer content={note.content} theme={theme} onLoaded={onSheetLoaded} hideLoadingOverlay bottomInset={bottomInset} onControlsReady={onSheetControlsReady} />
         )}
       </View>
     );
