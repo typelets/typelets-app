@@ -2,7 +2,7 @@ import React, { useRef, useState, useMemo } from 'react';
 import { Animated, Dimensions, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { WebView } from 'react-native-webview';
 
-import { SheetsViewer } from '../../components/SheetsViewer';
+import { NativeSheetsViewer } from '../../components/NativeSheetsViewer';
 import type { Note } from '../../services/api';
 
 interface NoteContentProps {
@@ -519,7 +519,7 @@ ${note.content}
   // For sheets, render the SheetsViewer component
   if (isSheet) {
     return (
-      <View style={[styles.sheetsContainer, { backgroundColor: theme.isDark ? '#1b1c1f' : '#ffffff' }]}>
+      <View style={[styles.sheetsContainer, { backgroundColor: theme.colors.background }]}>
         {note.hidden ? (
           <View style={styles.hiddenContainer}>
             <Text
@@ -529,7 +529,7 @@ ${note.content}
             </Text>
           </View>
         ) : (
-          <SheetsViewer content={note.content} theme={theme} onLoaded={onSheetLoaded} hideLoadingOverlay bottomInset={bottomInset} />
+          <NativeSheetsViewer content={note.content} theme={theme} onLoaded={onSheetLoaded} hideLoadingOverlay bottomInset={bottomInset} />
         )}
       </View>
     );
