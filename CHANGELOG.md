@@ -1,3 +1,10 @@
+## [1.48.1](https://github.com/typelets/typelets-app/compare/v1.48.0...v1.48.1) (2025-12-08)
+
+
+### Bug Fixes
+
+* **mobile:** move sheet glass controls to ViewNote level for proper liquid glass effect ([60eff62](https://github.com/typelets/typelets-app/commit/60eff621ce829b592540c9bb3dd56addd52e5342))
+
 # [1.48.0](https://github.com/typelets/typelets-app/compare/v1.47.1...v1.48.0) (2025-12-08)
 
 
