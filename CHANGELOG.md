@@ -1,3 +1,10 @@
+# [1.48.0](https://github.com/typelets/typelets-app/compare/v1.47.1...v1.48.0) (2025-12-08)
+
+
+### Features
+
+* **mobile:** add native spreadsheet viewer with virtualization ([ab63501](https://github.com/typelets/typelets-app/commit/ab635013e29273ea3dc91e194baaaa8306682107))
+
 ## [1.47.1](https://github.com/typelets/typelets-app/compare/v1.47.0...v1.47.1) (2025-12-06)
 
 
