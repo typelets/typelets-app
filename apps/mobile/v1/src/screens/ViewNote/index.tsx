@@ -246,9 +246,8 @@ export default function ViewNoteScreen() {
     );
   }
 
-  // Use footer color for sheets to match the toolbar background (white in light mode)
-  const sheetBgColor = theme.isDark ? '#1b1c1f' : '#ffffff';
-  const bgColor = isSheetType ? sheetBgColor : theme.colors.background;
+  // Use theme background for sheets
+  const bgColor = theme.colors.background;
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: bgColor }]} edges={['left', 'right']}>
