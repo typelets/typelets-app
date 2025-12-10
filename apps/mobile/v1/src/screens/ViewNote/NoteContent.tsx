@@ -12,6 +12,8 @@ interface NoteContentProps {
   scrollViewRef: React.RefObject<ScrollView | null>;
   showTitle?: boolean;
   bottomInset?: number;
+  /** Extra top inset for sheet tabs when present */
+  sheetTopInset?: number;
   theme: {
     colors: {
       foreground: string;
@@ -19,6 +21,7 @@ interface NoteContentProps {
       border: string;
       muted: string;
       primary: string;
+      background: string;
     };
     isDark: boolean;
   };
@@ -40,6 +43,7 @@ export function NoteContent({
   htmlContent,
   showTitle = true,
   bottomInset = 0,
+  sheetTopInset = 0,
   theme,
   onSheetLoaded,
   onSheetControlsReady,
@@ -535,7 +539,7 @@ ${note.content}
             </Text>
           </View>
         ) : (
-          <NativeSheetsViewer content={note.content} theme={theme} onLoaded={onSheetLoaded} hideLoadingOverlay bottomInset={bottomInset} onControlsReady={onSheetControlsReady} />
+          <NativeSheetsViewer content={note.content} theme={theme} onLoaded={onSheetLoaded} hideLoadingOverlay topInset={sheetTopInset} onControlsReady={onSheetControlsReady} />
         )}
       </View>
     );

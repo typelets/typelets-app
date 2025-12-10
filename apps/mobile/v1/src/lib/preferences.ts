@@ -12,6 +12,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const PREFERENCE_KEYS = {
   CACHE_DECRYPTED_CONTENT: 'cache_decrypted_content',
+  DEFAULT_SHEET_ZOOM: 'default_sheet_zoom',
 };
 
 /**
@@ -76,5 +77,51 @@ export async function clearDecryptedCache(): Promise<void> {
     console.log('[Preferences] Cleared decrypted cache from SQLite');
   } catch (error) {
     console.error('[Preferences] Failed to clear decrypted cache:', error);
+  }
+}
+
+/**
+ * Get the default zoom level for sheets
+ * @returns Zoom level as a decimal (e.g., 1.0 = 100%, 0.75 = 75%)
+ */
+export async function getDefaultSheetZoomPreference(): Promise<number> {
+  try {
+    const value = await AsyncStorage.getItem(PREFERENCE_KEYS.DEFAULT_SHEET_ZOOM);
+
+    // Default to 100% if not set
+    if (value === null) {
+      return 1.0;
+    }
+
+    const zoom = parseFloat(value);
+    // Validate zoom is within reasonable bounds (50% - 300%)
+    if (isNaN(zoom) || zoom < 0.5 || zoom > 3.0) {
+      return 1.0;
+    }
+
+    return zoom;
+  } catch (error) {
+    console.error('[Preferences] Failed to get sheet zoom preference:', error);
+    return 1.0; // Default to 100% on error
+  }
+}
+
+/**
+ * Set the default zoom level for sheets
+ * @param zoom Zoom level as a decimal (e.g., 1.0 = 100%, 0.75 = 75%)
+ */
+export async function setDefaultSheetZoomPreference(zoom: number): Promise<void> {
+  try {
+    // Clamp zoom to valid range
+    const clampedZoom = Math.max(0.5, Math.min(3.0, zoom));
+
+    await AsyncStorage.setItem(
+      PREFERENCE_KEYS.DEFAULT_SHEET_ZOOM,
+      clampedZoom.toString()
+    );
+
+    console.log(`[Preferences] Default sheet zoom: ${Math.round(clampedZoom * 100)}%`);
+  } catch (error) {
+    console.error('[Preferences] Failed to set sheet zoom preference:', error);
   }
 }
