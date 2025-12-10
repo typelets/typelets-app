@@ -1,3 +1,10 @@
+## [1.48.2](https://github.com/typelets/typelets-app/compare/v1.48.1...v1.48.2) (2025-12-10)
+
+
+### Bug Fixes
+
+* **mobile:** add sheet tabs at top and default zoom preference ([b49bd12](https://github.com/typelets/typelets-app/commit/b49bd1290842f50970f356e4f315491fee1a03e3))
+
 ## [1.48.1](https://github.com/typelets/typelets-app/compare/v1.48.0...v1.48.1) (2025-12-08)
 
 
