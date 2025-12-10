@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { getDefaultSheetZoomPreference } from '../lib/preferences';
 import {
   ActivityIndicator,
   Animated,
@@ -13,6 +14,10 @@ import {
 // Background colors for glass effect - exported for parent to use
 export const GLASS_BG_DARK = 'rgba(255, 255, 255, 0.01)';
 export const GLASS_BG_LIGHT = 'rgba(0, 0, 0, 0.01)';
+
+// Sheet header background colors - exported for parent to match tab bar
+export const SHEET_HEADER_BG_DARK = '#252629';
+export const SHEET_HEADER_BG_LIGHT = '#f5f5f5';
 
 // Excel date serial number range (1900-2099)
 const MIN_DATE_SERIAL = 1;
@@ -117,6 +122,7 @@ export interface SheetControlsData {
   tabBarHeight: number;
   onZoomIn: () => void;
   onZoomOut: () => void;
+  onZoomReset: () => void;
   onSelectSheet: (index: number) => void;
 }
 
@@ -134,7 +140,8 @@ interface NativeSheetsViewerProps {
   };
   onLoaded?: () => void;
   hideLoadingOverlay?: boolean;
-  bottomInset?: number;
+  /** Extra top inset for sheet tabs when present */
+  topInset?: number;
   /** Callback to provide sheet controls data to parent for rendering outside ScrollView */
   onControlsReady?: (controls: SheetControlsData) => void;
 }
@@ -146,7 +153,7 @@ const BASE_ROW_HEADER_WIDTH = 36;
 const BASE_COLUMN_HEADER_HEIGHT = 20;
 const HEADER_FONT_SIZE = 10;
 const BUFFER = 30;
-const MIN_ZOOM = 0.5;
+const MIN_ZOOM = 0.50;
 const MAX_ZOOM = 3.0;
 const DEFAULT_ZOOM = 1.0;
 
@@ -265,12 +272,28 @@ export function NativeSheetsViewer({
   theme,
   onLoaded,
   hideLoadingOverlay,
-  bottomInset = 0,
+  topInset = 0,
   onControlsReady,
 }: NativeSheetsViewerProps) {
   const [loading, setLoading] = useState(true);
   const [activeSheetIndex, setActiveSheetIndex] = useState(0);
   const [zoom, setZoom] = useState(DEFAULT_ZOOM);
+
+  // Load saved zoom preference on mount
+  useEffect(() => {
+    const loadZoomPreference = async () => {
+      try {
+        const savedZoom = await getDefaultSheetZoomPreference();
+        setZoom(savedZoom);
+      } catch (error) {
+        // Keep default zoom on error
+        if (__DEV__) {
+          console.error('Failed to load sheet zoom preference:', error);
+        }
+      }
+    };
+    loadZoomPreference();
+  }, []);
 
   // Track scroll for virtualization only (not for header sync)
   const scrollXRef = useRef(0);
@@ -340,8 +363,9 @@ export function NativeSheetsViewer({
     }
 
     // Ensure minimum visible area for empty or small sheets
+    // Add 10 extra rows beyond the data
     return {
-      maxRow: Math.max(MIN_ROWS, maxRow + 3),
+      maxRow: Math.max(MIN_ROWS, maxRow + 10),
       maxCol: Math.max(MIN_COLS, maxCol + 2)
     };
   }, [currentSheet?.cellData]);
@@ -449,6 +473,10 @@ export function NativeSheetsViewer({
     setZoom(z => Math.max(MIN_ZOOM, z - 0.25));
   }, []);
 
+  const handleZoomReset = useCallback(() => {
+    setZoom(DEFAULT_ZOOM);
+  }, []);
+
   const handleSelectSheet = useCallback((index: number) => {
     setActiveSheetIndex(index);
   }, []);
@@ -464,7 +492,8 @@ export function NativeSheetsViewer({
   const borderColor = theme.isDark ? '#444' : '#ddd';
   const headerBg = theme.isDark ? '#252629' : '#f5f5f5';
   const cellBg = theme.colors.background;
-  const tabBarHeight = hasMultipleSheets ? 48 + bottomInset : 0;
+  // Tabs are now at top (rendered by parent), so no bottom space needed
+  const tabBarHeight = 0;
 
   // Notify parent about controls data so it can render glass controls outside ScrollView
   useEffect(() => {
@@ -479,10 +508,11 @@ export function NativeSheetsViewer({
         tabBarHeight,
         onZoomIn: handleZoomIn,
         onZoomOut: handleZoomOut,
+        onZoomReset: handleZoomReset,
         onSelectSheet: handleSelectSheet,
       });
     }
-  }, [currentSheet, onControlsReady, zoom, sheetInfo.names, activeSheetIndex, hasMultipleSheets, tabBarHeight, handleZoomIn, handleZoomOut, handleSelectSheet]);
+  }, [currentSheet, onControlsReady, zoom, sheetInfo.names, activeSheetIndex, hasMultipleSheets, tabBarHeight, handleZoomIn, handleZoomOut, handleZoomReset, handleSelectSheet]);
 
   if (!workbook || !currentSheet) {
     return (
@@ -779,6 +809,7 @@ export function NativeSheetsViewer({
         style={[
           styles.corner,
           {
+            top: topInset,
             width: ROW_HEADER_WIDTH,
             height: COLUMN_HEADER_HEIGHT,
             backgroundColor: headerBg,
@@ -789,7 +820,7 @@ export function NativeSheetsViewer({
       />
 
       {/* Column headers - synced via Animated transform */}
-      <View style={[styles.columnHeaderWrapper, { left: ROW_HEADER_WIDTH, height: COLUMN_HEADER_HEIGHT }]}>
+      <View style={[styles.columnHeaderWrapper, { top: topInset, left: ROW_HEADER_WIDTH, height: COLUMN_HEADER_HEIGHT }]}>
         <Animated.View
           style={{
             flexDirection: 'row',
@@ -801,7 +832,7 @@ export function NativeSheetsViewer({
       </View>
 
       {/* Row headers - synced via Animated transform */}
-      <View style={[styles.rowHeaderWrapper, { top: COLUMN_HEADER_HEIGHT, bottom: tabBarHeight, width: ROW_HEADER_WIDTH }]}>
+      <View style={[styles.rowHeaderWrapper, { top: topInset + COLUMN_HEADER_HEIGHT, bottom: tabBarHeight, width: ROW_HEADER_WIDTH }]}>
         <Animated.View
           style={{
             transform: [{ translateY: Animated.multiply(scrollYAnim, -1) }],
@@ -812,7 +843,7 @@ export function NativeSheetsViewer({
       </View>
 
       {/* Main scrollable grid */}
-      <View style={[styles.gridContainer, { top: COLUMN_HEADER_HEIGHT, left: ROW_HEADER_WIDTH, bottom: tabBarHeight }]}>
+      <View style={[styles.gridContainer, { top: topInset + COLUMN_HEADER_HEIGHT, left: ROW_HEADER_WIDTH, bottom: tabBarHeight }]}>
         <Animated.ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -877,7 +908,6 @@ const styles = StyleSheet.create({
   },
   corner: {
     position: 'absolute',
-    top: 0,
     left: 0,
     zIndex: 10,
     borderRightWidth: StyleSheet.hairlineWidth,
@@ -885,7 +915,6 @@ const styles = StyleSheet.create({
   },
   columnHeaderWrapper: {
     position: 'absolute',
-    top: 0,
     right: 0,
     zIndex: 5,
     overflow: 'hidden',

@@ -5,7 +5,7 @@ import React, { useCallback,useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Animated, AppState, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { GLASS_BG_DARK, GLASS_BG_LIGHT } from '../../components/NativeSheetsViewer';
+import { GLASS_BG_DARK, GLASS_BG_LIGHT, SHEET_HEADER_BG_DARK, SHEET_HEADER_BG_LIGHT } from '../../components/NativeSheetsViewer';
 import { PublishNoteSheet, PublishNoteSheetRef } from '../../components/PublishNoteSheet';
 import { useNetworkStatus } from '../../hooks/useNetworkStatus';
 import { useViewNote } from '../../hooks/useViewNote';
@@ -20,8 +20,11 @@ import { ViewHeader } from './ViewHeader';
 const SHEET_LOADING_MESSAGES = [
   'Loading Sheet',
   'Crunching numbers',
+  'Wrangling cells',
   'Almost there',
   'Worth the wait',
+  'Any second now',
+  'Still on it',
 ];
 
 export default function ViewNoteScreen() {
@@ -95,7 +98,10 @@ export default function ViewNoteScreen() {
     const timers: ReturnType<typeof setTimeout>[] = [];
     timers.push(setTimeout(() => setLoadingMessageIndex(1), 1000));
     timers.push(setTimeout(() => setLoadingMessageIndex(2), 2000));
-    timers.push(setTimeout(() => setLoadingMessageIndex(3), 3500));
+    timers.push(setTimeout(() => setLoadingMessageIndex(3), 3000));
+    timers.push(setTimeout(() => setLoadingMessageIndex(4), 4000));
+    timers.push(setTimeout(() => setLoadingMessageIndex(5), 5000));
+    timers.push(setTimeout(() => setLoadingMessageIndex(6), 6500));
 
     return () => timers.forEach(clearTimeout);
   }, [isSheetType, sheetLoaded]);
@@ -363,6 +369,7 @@ export default function ViewNoteScreen() {
               scrollViewRef={scrollViewRef}
               showTitle={false}
               bottomInset={insets.bottom}
+              sheetTopInset={sheetControls?.hasMultipleSheets ? 42 : 0}
               theme={theme}
               onSheetLoaded={() => setSheetLoaded(true)}
               onSheetControlsReady={setSheetControls}
@@ -399,7 +406,7 @@ export default function ViewNoteScreen() {
           {!showLoading && sheetControls && (
             <>
               {/* Zoom controls */}
-              <View key={`zoom-${glassKey}`} style={[sheetStyles.zoomControls, { bottom: sheetControls.tabBarHeight + 16 }]}>
+              <View key={`zoom-${glassKey}`} style={[sheetStyles.zoomControls, { bottom: insets.bottom - 10, right: 18 }]}>
                 <TouchableOpacity onPress={sheetControls.onZoomOut}>
                   <GlassView
                     glassEffectStyle="regular"
@@ -411,16 +418,19 @@ export default function ViewNoteScreen() {
                     </View>
                   </GlassView>
                 </TouchableOpacity>
-                <GlassView
-                  glassEffectStyle="regular"
-                  style={[sheetStyles.glassLabelContainer, { backgroundColor: theme.isDark ? GLASS_BG_DARK : GLASS_BG_LIGHT }]}
-                >
-                  <View style={sheetStyles.zoomLabelInner}>
-                    <Text style={[sheetStyles.zoomLabel, { color: theme.colors.foreground }]}>
-                      {Math.round(sheetControls.zoom * 100)}%
-                    </Text>
-                  </View>
-                </GlassView>
+                <TouchableOpacity onPress={sheetControls.onZoomReset}>
+                  <GlassView
+                    glassEffectStyle="regular"
+                    style={[sheetStyles.glassLabelContainer, { backgroundColor: theme.isDark ? GLASS_BG_DARK : GLASS_BG_LIGHT }]}
+                    pointerEvents="none"
+                  >
+                    <View style={sheetStyles.zoomLabelInner}>
+                      <Text style={[sheetStyles.zoomLabel, { color: theme.colors.foreground }]}>
+                        {Math.round(sheetControls.zoom * 100)}%
+                      </Text>
+                    </View>
+                  </GlassView>
+                </TouchableOpacity>
                 <TouchableOpacity onPress={sheetControls.onZoomIn}>
                   <GlassView
                     glassEffectStyle="regular"
@@ -434,16 +444,15 @@ export default function ViewNoteScreen() {
                 </TouchableOpacity>
               </View>
 
-              {/* Sheet tabs */}
+              {/* Sheet tabs - positioned at top, connected to sheet headers */}
               {sheetControls.hasMultipleSheets && (
                 <View
                   key={`tabs-${glassKey}`}
                   style={[
                     sheetStyles.tabBar,
                     {
-                      backgroundColor: theme.colors.background,
-                      borderTopColor: theme.isDark ? '#444' : '#ddd',
-                      paddingBottom: insets.bottom,
+                      top: (insets.top || 0) + 58 + 72,
+                      backgroundColor: theme.isDark ? SHEET_HEADER_BG_DARK : SHEET_HEADER_BG_LIGHT,
                     },
                   ]}
                 >
@@ -452,23 +461,32 @@ export default function ViewNoteScreen() {
                     showsHorizontalScrollIndicator={false}
                     contentContainerStyle={sheetStyles.tabScrollContent}
                   >
-                    {sheetControls.sheetNames.map((name, index) => (
-                      <TouchableOpacity
-                        key={`sheet-tab-${name}`}
-                        onPress={() => sheetControls.onSelectSheet(index)}
-                        style={{ opacity: index === sheetControls.activeSheetIndex ? 1 : 0.6 }}
-                      >
-                        <GlassView
-                          glassEffectStyle="regular"
-                          style={[sheetStyles.glassTab, { backgroundColor: theme.isDark ? GLASS_BG_DARK : GLASS_BG_LIGHT }]}
-                          pointerEvents="none"
+                    {sheetControls.sheetNames.map((name, index) => {
+                      const isActive = index === sheetControls.activeSheetIndex;
+                      return (
+                        <TouchableOpacity
+                          key={`sheet-tab-${name}`}
+                          onPress={() => sheetControls.onSelectSheet(index)}
+                          style={sheetStyles.tabButton}
                         >
-                          <View style={sheetStyles.tabInner}>
-                            <Text style={[sheetStyles.tabText, { color: theme.colors.foreground }]}>{name}</Text>
-                          </View>
-                        </GlassView>
-                      </TouchableOpacity>
-                    ))}
+                          <Text style={[
+                            sheetStyles.tabText,
+                            {
+                              color: theme.colors.foreground,
+                              opacity: isActive ? 1 : 0.6,
+                            }
+                          ]}>
+                            {name}
+                          </Text>
+                          {isActive && (
+                            <View style={[
+                              sheetStyles.tabIndicator,
+                              { backgroundColor: theme.colors.primary }
+                            ]} />
+                          )}
+                        </TouchableOpacity>
+                      );
+                    })}
                   </ScrollView>
                 </View>
               )}
@@ -638,30 +656,32 @@ const sheetStyles = StyleSheet.create({
   },
   tabBar: {
     position: 'absolute',
-    bottom: 0,
     left: 0,
     right: 0,
+    height: 44,
     flexDirection: 'row',
-    borderTopWidth: StyleSheet.hairlineWidth,
-    paddingTop: 10,
-    paddingHorizontal: 8,
+    zIndex: 20,
   },
   tabScrollContent: {
-    gap: 8,
-    paddingHorizontal: 8,
+    paddingHorizontal: 12,
+    alignItems: 'flex-end',
   },
-  glassTab: {
-    borderRadius: 19,
-    overflow: 'hidden',
-  },
-  tabInner: {
-    height: 38,
+  tabButton: {
+    height: 44,
     paddingHorizontal: 16,
     justifyContent: 'center',
     alignItems: 'center',
   },
   tabText: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '500',
+  },
+  tabIndicator: {
+    position: 'absolute',
+    bottom: 10,
+    left: 16,
+    right: 16,
+    height: 2,
+    borderRadius: 1,
   },
 });

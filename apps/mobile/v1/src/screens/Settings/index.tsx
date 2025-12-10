@@ -7,7 +7,7 @@ import { GlassView } from 'expo-glass-effect';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect,useMemo, useRef, useState } from 'react';
-import { Alert, Animated,Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Animated, Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { UsageBottomSheet } from '../../components/settings/UsageBottomSheet';
@@ -16,7 +16,7 @@ import { APP_VERSION } from '../../constants/version';
 import { NOTE_CARD } from '../../constants/ui';
 import { forceGlobalMasterPasswordRefresh } from '../../hooks/useMasterPassword';
 import { clearUserEncryptionData } from '../../lib/encryption';
-import { clearDecryptedCache,getCacheDecryptedContentPreference, setCacheDecryptedContentPreference } from '../../lib/preferences';
+import { clearDecryptedCache,getCacheDecryptedContentPreference, setCacheDecryptedContentPreference, getDefaultSheetZoomPreference, setDefaultSheetZoomPreference } from '../../lib/preferences';
 import { apiCache } from '../../services/api/cache';
 import { type CacheStats,clearAllCacheMetadata, clearCachedFolders, clearCachedNotes, getCacheStats } from '../../services/api/databaseCache';
 import { useTheme } from '../../theme';
@@ -53,6 +53,7 @@ export default function SettingsScreen({ onLogout }: Props) {
   const viewModeSheetRef = useRef<BottomSheetModal>(null);
   const usageSheetRef = useRef<BottomSheetModal>(null);
   const cachePreferenceSheetRef = useRef<BottomSheetModal>(null);
+  const sheetZoomSheetRef = useRef<BottomSheetModal>(null);
 
   // Scroll tracking
   const scrollY = useRef(new Animated.Value(0)).current;
@@ -62,6 +63,9 @@ export default function SettingsScreen({ onLogout }: Props) {
 
   // Cache decrypted content preference state
   const [cacheDecrypted, setCacheDecrypted] = useState<boolean>(true);
+
+  // Default sheet zoom preference state
+  const [defaultSheetZoom, setDefaultSheetZoom] = useState<number>(1.0);
 
   // Cache stats state
   const [cacheStats, setCacheStats] = useState<CacheStats>({
@@ -80,6 +84,7 @@ export default function SettingsScreen({ onLogout }: Props) {
   const viewModeSnapPoints = useMemo(() => ['40%'], []);
   const usageSnapPoints = useMemo(() => ['50%'], []);
   const cachePreferenceSnapPoints = useMemo(() => ['45%'], []);
+  const sheetZoomSnapPoints = useMemo(() => ['45%'], []);
 
   // Backdrop component with theme-aware styling
   const renderBackdrop = useCallback(
@@ -130,6 +135,21 @@ export default function SettingsScreen({ onLogout }: Props) {
     loadCachePreference();
   }, []);
 
+  // Load default sheet zoom preference
+  useEffect(() => {
+    const loadSheetZoomPreference = async () => {
+      try {
+        const zoom = await getDefaultSheetZoomPreference();
+        setDefaultSheetZoom(zoom);
+      } catch (error) {
+        if (__DEV__) {
+          console.error('Failed to load sheet zoom preference:', error);
+        }
+      }
+    };
+    loadSheetZoomPreference();
+  }, []);
+
   const loadCacheStats = useCallback(async () => {
     try {
       const stats = await getCacheStats();
@@ -155,6 +175,16 @@ export default function SettingsScreen({ onLogout }: Props) {
     } catch (error) {
       if (__DEV__) console.error('Failed to save view mode:', error);
       Alert.alert('Error', 'Failed to save view mode preference');
+    }
+  };
+
+  const saveSheetZoom = async (zoom: number) => {
+    try {
+      setDefaultSheetZoom(zoom);
+      await setDefaultSheetZoomPreference(zoom);
+    } catch (error) {
+      if (__DEV__) console.error('Failed to save sheet zoom:', error);
+      Alert.alert('Error', 'Failed to save sheet zoom preference');
     }
   };
 
@@ -365,6 +395,12 @@ export default function SettingsScreen({ onLogout }: Props) {
           subtitle: viewMode === 'list' ? 'List' : 'Grid',
           icon: viewMode === 'list' ? 'list-outline' : 'grid-outline',
           onPress: () => viewModeSheetRef.current?.present(),
+        },
+        {
+          title: 'Sheet Zoom',
+          subtitle: `${Math.round(defaultSheetZoom * 100)}%`,
+          icon: 'search-outline',
+          onPress: () => sheetZoomSheetRef.current?.present(),
         },
         {
           title: 'Theme Mode',
@@ -963,6 +999,82 @@ export default function SettingsScreen({ onLogout }: Props) {
         </BottomSheetView>
       </BottomSheetModal>
 
+      {/* Sheet Zoom Selection Bottom Sheet */}
+      <BottomSheetModal
+        ref={sheetZoomSheetRef}
+        snapPoints={sheetZoomSnapPoints}
+        backdropComponent={renderBackdrop}
+        backgroundStyle={{ backgroundColor: theme.colors.card }}
+        handleIndicatorStyle={{ backgroundColor: theme.colors.border }}
+        topInset={45}
+        enableDynamicSizing={false}
+        enablePanDownToClose={true}
+        enableContentPanningGesture={false}
+      >
+        <BottomSheetView>
+          <View style={styles.bottomSheetHeader}>
+            <Text style={[styles.bottomSheetTitle, { color: theme.colors.foreground }]}>
+              Default Sheet Zoom
+            </Text>
+            <GlassView glassEffectStyle="regular" style={[styles.glassButton, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]}>
+              <TouchableOpacity
+                style={styles.iconButton}
+                onPress={() => sheetZoomSheetRef.current?.dismiss()}
+              >
+                <Ionicons name="close" size={20} color={theme.colors.foreground} />
+              </TouchableOpacity>
+            </GlassView>
+          </View>
+          <View style={[styles.divider, { backgroundColor: theme.colors.border }]} />
+          <View style={[styles.bottomSheetContent, { paddingTop: 24, paddingBottom: 32 }]}>
+            {/* Zoom percentage display */}
+            <View style={styles.zoomDisplay}>
+              <Text style={[styles.zoomValue, { color: theme.colors.foreground }]}>
+                {Math.round(defaultSheetZoom * 100)}%
+              </Text>
+              <Text style={[styles.zoomLabelText, { color: theme.colors.mutedForeground }]}>
+                {defaultSheetZoom <= 0.6 ? 'Compact' : defaultSheetZoom <= 0.9 ? 'Small' : defaultSheetZoom <= 1.1 ? 'Default' : defaultSheetZoom <= 1.4 ? 'Large' : 'Extra Large'}
+              </Text>
+            </View>
+
+            {/* Zoom buttons */}
+            <View style={styles.zoomGrid}>
+              {[
+                { zoom: 0.5, label: '50%' },
+                { zoom: 0.75, label: '75%' },
+                { zoom: 1.0, label: '100%' },
+                { zoom: 1.25, label: '125%' },
+                { zoom: 1.5, label: '150%' },
+                { zoom: 1.75, label: '175%' },
+                { zoom: 2.0, label: '200%' },
+              ].map((option) => {
+                const isSelected = defaultSheetZoom === option.zoom;
+                return (
+                  <TouchableOpacity
+                    key={option.zoom}
+                    style={[
+                      styles.zoomGridButton,
+                      {
+                        backgroundColor: isSelected ? theme.colors.primary : theme.colors.muted,
+                        borderColor: isSelected ? theme.colors.primary : theme.colors.border,
+                      }
+                    ]}
+                    onPress={() => saveSheetZoom(option.zoom)}
+                  >
+                    <Text style={[
+                      styles.zoomGridButtonText,
+                      { color: isSelected ? (theme.isDark ? '#000000' : '#ffffff') : theme.colors.foreground }
+                    ]}>
+                      {option.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+        </BottomSheetView>
+      </BottomSheetModal>
+
       {/* Delete Account Bottom Sheet */}
       <BottomSheetModal
         ref={deleteAccountSheetRef}
@@ -1362,5 +1474,36 @@ const styles = StyleSheet.create({
     letterSpacing: 0.8,
     marginBottom: 12,
     marginTop: 8,
+  },
+  // Sheet zoom styles
+  zoomDisplay: {
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  zoomValue: {
+    fontSize: 48,
+    fontWeight: '700',
+  },
+  zoomLabelText: {
+    fontSize: 14,
+    marginTop: 4,
+  },
+  zoomGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+    justifyContent: 'center',
+  },
+  zoomGridButton: {
+    width: 72,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+  },
+  zoomGridButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
   },
 });
