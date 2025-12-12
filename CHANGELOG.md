@@ -1,3 +1,10 @@
+## [1.48.3](https://github.com/typelets/typelets-app/compare/v1.48.2...v1.48.3) (2025-12-12)
+
+
+### Bug Fixes
+
+* **mobile:** support text wrapping in sheet cells ([de36f49](https://github.com/typelets/typelets-app/commit/de36f49bfa701bfee796439a0139d39ac55273f7))
+
 ## [1.48.2](https://github.com/typelets/typelets-app/compare/v1.48.1...v1.48.2) (2025-12-10)
 
 
