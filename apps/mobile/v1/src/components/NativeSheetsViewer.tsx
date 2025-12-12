@@ -650,6 +650,14 @@ export function NativeSheetsViewer({
       }
     }
 
+    // Check if text wrapping is enabled
+    // Univer enum: 1=OVERFLOW, 2=WRAP, 3=CLIP (but some versions use different values)
+    // Your data shows tb:3 for wrapped text, so check for both 2 and 3
+    const isWrapped = style?.tb === 2 || style?.tb === 3;
+
+    // Calculate available text width (cell width minus padding)
+    const textWidth = cellWidth - 8; // 4px padding on each side
+
     return (
       <View
         key={`${row}-${col}`}
@@ -667,23 +675,44 @@ export function NativeSheetsViewer({
             justifyContent: getVerticalAlign(style?.vt),
             alignItems: getHorizontalAlign(style?.ht),
             zIndex: mergeInfo ? 2 : 0, // Merged cells on top
+            overflow: 'hidden',
+            paddingHorizontal: 4,
+            paddingVertical: 2,
           },
         ]}
       >
-        <Text
-          style={{
-            fontSize,
-            color: textColor,
-            fontWeight: style?.bl === 1 ? 'bold' : 'normal',
-            fontStyle: style?.it === 1 ? 'italic' : 'normal',
-            fontFamily: style?.ff || undefined,
-            textAlign: getTextAlign(style?.ht),
-            textDecorationLine: style?.ul?.s === 1 ? 'underline' : style?.st?.s === 1 ? 'line-through' : 'none',
-          }}
-          numberOfLines={style?.tb === 2 ? undefined : 1}
-        >
-          {value}
-        </Text>
+        {isWrapped ? (
+          <Text
+            style={{
+              fontSize,
+              color: textColor,
+              fontWeight: style?.bl === 1 ? 'bold' : 'normal',
+              fontStyle: style?.it === 1 ? 'italic' : 'normal',
+              fontFamily: style?.ff || undefined,
+              textAlign: getTextAlign(style?.ht),
+              textDecorationLine: style?.ul?.s === 1 ? 'underline' : style?.st?.s === 1 ? 'line-through' : 'none',
+              width: textWidth,
+            }}
+          >
+            {value}
+          </Text>
+        ) : (
+          <Text
+            style={{
+              fontSize,
+              color: textColor,
+              fontWeight: style?.bl === 1 ? 'bold' : 'normal',
+              fontStyle: style?.it === 1 ? 'italic' : 'normal',
+              fontFamily: style?.ff || undefined,
+              textAlign: getTextAlign(style?.ht),
+              textDecorationLine: style?.ul?.s === 1 ? 'underline' : style?.st?.s === 1 ? 'line-through' : 'none',
+            }}
+            numberOfLines={1}
+            ellipsizeMode="tail"
+          >
+            {value}
+          </Text>
+        )}
       </View>
     );
   };
