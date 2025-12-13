@@ -1,3 +1,19 @@
+## [1.48.4](https://github.com/typelets/typelets-app/compare/v1.48.3...v1.48.4) (2025-12-13)
+
+
+### Bug Fixes
+
+* **mobile:** correct paragraph spacing in note view ([4030243](https://github.com/typelets/typelets-app/commit/4030243599e2b574847bb88522ad089edbe41fdd))
+* **mobile:** improve attachment badge visibility on dark theme ([1de39df](https://github.com/typelets/typelets-app/commit/1de39df1d88b7af7e719ddedbe4c593bfc43d022))
+* **mobile:** improve file upload reliability with real progress tracking ([2dad747](https://github.com/typelets/typelets-app/commit/2dad747f5680ed179742e5f3c080f938560d109d))
+* **mobile:** reload attachments when returning to view screen ([ded3ad9](https://github.com/typelets/typelets-app/commit/ded3ad9fa290386f608d31329dbf32404dfd0d75))
+* **mobile:** update progressive loading messages for notes ([2c9f14a](https://github.com/typelets/typelets-app/commit/2c9f14a6651f14690f20a42b53c5c79f3799b47f))
+
+
+### Performance Improvements
+
+* **mobile:** improve filter checkbox responsiveness ([d388ba5](https://github.com/typelets/typelets-app/commit/d388ba51d69974397f1661b45ee2267f428023e6))
+
 ## [1.48.3](https://github.com/typelets/typelets-app/compare/v1.48.2...v1.48.3) (2025-12-12)
 
 
