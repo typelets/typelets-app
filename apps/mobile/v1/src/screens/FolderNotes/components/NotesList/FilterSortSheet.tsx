@@ -1,7 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import { BottomSheetBackdrop, BottomSheetBackdropProps, BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
 import { GlassView } from 'expo-glass-effect';
-import React, { forwardRef, memo, useCallback, useMemo } from 'react';
+import * as Haptics from 'expo-haptics';
+import React, { forwardRef, memo, startTransition, useCallback, useEffect, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { useTheme } from '@/src/theme';
@@ -30,7 +31,7 @@ interface FilterSortSheetProps {
   hasActiveFilters: boolean;
 }
 
-// Memoized filter checkbox component for faster toggling
+// Memoized filter checkbox component with optimistic local state for instant feedback
 const FilterCheckbox = memo(function FilterCheckbox({
   label,
   isActive,
@@ -48,25 +49,42 @@ const FilterCheckbox = memo(function FilterCheckbox({
   foregroundColor: string;
   borderColor: string;
 }) {
+  // Optimistic local state for instant visual feedback
+  const [localActive, setLocalActive] = useState(isActive);
+
+  // Sync with parent state when it catches up
+  useEffect(() => {
+    setLocalActive(isActive);
+  }, [isActive]);
+
+  const handlePress = useCallback(() => {
+    // Instant visual update
+    setLocalActive(prev => !prev);
+    // Haptic feedback
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    // Trigger actual state update (deferred)
+    onToggle();
+  }, [onToggle]);
+
   return (
     <Pressable
       style={[
         styles.filterOptionGrid,
-        { backgroundColor: isActive ? 'rgba(59, 130, 246, 0.1)' : 'transparent', borderColor },
+        { backgroundColor: localActive ? 'rgba(59, 130, 246, 0.1)' : 'transparent', borderColor },
       ]}
-      onPress={onToggle}
+      onPress={handlePress}
     >
       <Ionicons
-        name={isActive ? 'checkbox' : 'square-outline'}
+        name={localActive ? 'checkbox' : 'square-outline'}
         size={20}
-        color={isActive ? primaryColor : mutedColor}
+        color={localActive ? primaryColor : mutedColor}
       />
       <Text style={[styles.filterOptionTextGrid, { color: foregroundColor }]}>{label}</Text>
     </Pressable>
   );
 });
 
-// Memoized sort radio button component
+// Memoized sort radio button component with optimistic local state
 const SortRadio = memo(function SortRadio({
   label,
   isActive,
@@ -82,15 +100,32 @@ const SortRadio = memo(function SortRadio({
   mutedColor: string;
   foregroundColor: string;
 }) {
+  // Optimistic local state for instant visual feedback
+  const [localActive, setLocalActive] = useState(isActive);
+
+  // Sync with parent state when it catches up
+  useEffect(() => {
+    setLocalActive(isActive);
+  }, [isActive]);
+
+  const handlePress = useCallback(() => {
+    // Instant visual update
+    setLocalActive(true);
+    // Haptic feedback
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    // Trigger actual state update (deferred)
+    onSelect();
+  }, [onSelect]);
+
   return (
     <Pressable
-      style={[styles.filterOption, { backgroundColor: isActive ? 'rgba(59, 130, 246, 0.1)' : 'transparent' }]}
-      onPress={onSelect}
+      style={[styles.filterOption, { backgroundColor: localActive ? 'rgba(59, 130, 246, 0.1)' : 'transparent' }]}
+      onPress={handlePress}
     >
       <Ionicons
-        name={isActive ? 'radio-button-on' : 'radio-button-off'}
+        name={localActive ? 'radio-button-on' : 'radio-button-off'}
         size={24}
-        color={isActive ? primaryColor : mutedColor}
+        color={localActive ? primaryColor : mutedColor}
       />
       <Text style={[styles.filterOptionText, { color: foregroundColor }]}>{label}</Text>
     </Pressable>
@@ -116,22 +151,22 @@ export const FilterSortSheet = forwardRef<BottomSheetModal, FilterSortSheetProps
       []
     );
 
-    // Memoized toggle handlers
-    const toggleAttachments = useCallback(() => setFilterConfig(prev => ({ ...prev, showAttachmentsOnly: !prev.showAttachmentsOnly })), [setFilterConfig]);
-    const toggleCode = useCallback(() => setFilterConfig(prev => ({ ...prev, showCodeOnly: !prev.showCodeOnly })), [setFilterConfig]);
-    const toggleDiagram = useCallback(() => setFilterConfig(prev => ({ ...prev, showDiagramOnly: !prev.showDiagramOnly })), [setFilterConfig]);
-    const toggleHidden = useCallback(() => setFilterConfig(prev => ({ ...prev, showHiddenOnly: !prev.showHiddenOnly })), [setFilterConfig]);
-    const toggleNote = useCallback(() => setFilterConfig(prev => ({ ...prev, showNoteOnly: !prev.showNoteOnly })), [setFilterConfig]);
-    const togglePublic = useCallback(() => setFilterConfig(prev => ({ ...prev, showPublicOnly: !prev.showPublicOnly })), [setFilterConfig]);
-    const toggleSheet = useCallback(() => setFilterConfig(prev => ({ ...prev, showSheetOnly: !prev.showSheetOnly })), [setFilterConfig]);
-    const toggleStarred = useCallback(() => setFilterConfig(prev => ({ ...prev, showStarredOnly: !prev.showStarredOnly })), [setFilterConfig]);
-    const clearFilters = useCallback(() => setFilterConfig({ showAttachmentsOnly: false, showCodeOnly: false, showDiagramOnly: false, showHiddenOnly: false, showNoteOnly: false, showPublicOnly: false, showSheetOnly: false, showStarredOnly: false }), [setFilterConfig]);
+    // Memoized toggle handlers - wrapped in startTransition for responsive UI
+    const toggleAttachments = useCallback(() => startTransition(() => setFilterConfig(prev => ({ ...prev, showAttachmentsOnly: !prev.showAttachmentsOnly }))), [setFilterConfig]);
+    const toggleCode = useCallback(() => startTransition(() => setFilterConfig(prev => ({ ...prev, showCodeOnly: !prev.showCodeOnly }))), [setFilterConfig]);
+    const toggleDiagram = useCallback(() => startTransition(() => setFilterConfig(prev => ({ ...prev, showDiagramOnly: !prev.showDiagramOnly }))), [setFilterConfig]);
+    const toggleHidden = useCallback(() => startTransition(() => setFilterConfig(prev => ({ ...prev, showHiddenOnly: !prev.showHiddenOnly }))), [setFilterConfig]);
+    const toggleNote = useCallback(() => startTransition(() => setFilterConfig(prev => ({ ...prev, showNoteOnly: !prev.showNoteOnly }))), [setFilterConfig]);
+    const togglePublic = useCallback(() => startTransition(() => setFilterConfig(prev => ({ ...prev, showPublicOnly: !prev.showPublicOnly }))), [setFilterConfig]);
+    const toggleSheet = useCallback(() => startTransition(() => setFilterConfig(prev => ({ ...prev, showSheetOnly: !prev.showSheetOnly }))), [setFilterConfig]);
+    const toggleStarred = useCallback(() => startTransition(() => setFilterConfig(prev => ({ ...prev, showStarredOnly: !prev.showStarredOnly }))), [setFilterConfig]);
+    const clearFilters = useCallback(() => startTransition(() => setFilterConfig({ showAttachmentsOnly: false, showCodeOnly: false, showDiagramOnly: false, showHiddenOnly: false, showNoteOnly: false, showPublicOnly: false, showSheetOnly: false, showStarredOnly: false })), [setFilterConfig]);
 
-    // Memoized sort handlers
-    const sortByUpdated = useCallback(() => setSortConfig({ option: 'updated', direction: 'desc' }), [setSortConfig]);
-    const sortByCreated = useCallback(() => setSortConfig({ option: 'created', direction: 'desc' }), [setSortConfig]);
-    const sortByTitleAsc = useCallback(() => setSortConfig({ option: 'title', direction: 'asc' }), [setSortConfig]);
-    const sortByTitleDesc = useCallback(() => setSortConfig({ option: 'title', direction: 'desc' }), [setSortConfig]);
+    // Memoized sort handlers - wrapped in startTransition for responsive UI
+    const sortByUpdated = useCallback(() => startTransition(() => setSortConfig({ option: 'updated', direction: 'desc' })), [setSortConfig]);
+    const sortByCreated = useCallback(() => startTransition(() => setSortConfig({ option: 'created', direction: 'desc' })), [setSortConfig]);
+    const sortByTitleAsc = useCallback(() => startTransition(() => setSortConfig({ option: 'title', direction: 'asc' })), [setSortConfig]);
+    const sortByTitleDesc = useCallback(() => startTransition(() => setSortConfig({ option: 'title', direction: 'desc' })), [setSortConfig]);
 
     const dismissSheet = useCallback(() => (ref as React.RefObject<BottomSheetModal>).current?.dismiss(), [ref]);
 
