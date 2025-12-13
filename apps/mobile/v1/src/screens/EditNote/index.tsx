@@ -3,8 +3,16 @@ import * as Haptics from 'expo-haptics';
 import { useLocalSearchParams,useRouter } from 'expo-router';
 import { Code,Quote, Redo, Undo } from 'lucide-react-native';
 import React, { useEffect, useMemo,useRef, useState } from 'react';
-import { Alert, DeviceEventEmitter,Keyboard,ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, DeviceEventEmitter,Keyboard,ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
+// Progressive loading messages for notes
+const NOTE_LOADING_MESSAGES = [
+  'Loading',
+  'Fetching content',
+  'Almost there',
+  'Worth the wait',
+];
 
 import { Editor, type EditorColors,type EditorRef } from '@/editor/src';
 
@@ -32,6 +40,7 @@ export default function EditNoteScreen() {
   const [content, setContent] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [loadingMessageIndex, setLoadingMessageIndex] = useState(0);
   const [noteData, setNoteData] = useState<Note | null>(null);
   const [attachments, setAttachments] = useState<FileAttachment[]>([]);
   const [showAttachments, setShowAttachments] = useState(false);
@@ -109,6 +118,21 @@ export default function EditNoteScreen() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [noteId, isEditing]);
+
+  // Progressive loading messages
+  useEffect(() => {
+    if (!loading) {
+      setLoadingMessageIndex(0);
+      return;
+    }
+
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    timers.push(setTimeout(() => setLoadingMessageIndex(1), 800));
+    timers.push(setTimeout(() => setLoadingMessageIndex(2), 1600));
+    timers.push(setTimeout(() => setLoadingMessageIndex(3), 2500));
+
+    return () => timers.forEach(clearTimeout);
+  }, [loading]);
 
   const refreshAttachments = async () => {
     const currentNoteId = (noteId as string) || createdNoteId;
@@ -324,11 +348,13 @@ export default function EditNoteScreen() {
   };
 
   if (loading) {
+    const loadingMessage = NOTE_LOADING_MESSAGES[Math.min(loadingMessageIndex, NOTE_LOADING_MESSAGES.length - 1)];
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
         <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={theme.colors.mutedForeground} />
           <Text style={[styles.loadingText, { color: theme.colors.mutedForeground }]}>
-            Loading note...
+            {loadingMessage}
           </Text>
         </View>
       </SafeAreaView>
@@ -736,5 +762,7 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: 16,
+    marginTop: 12,
+    fontWeight: '500',
   },
 });

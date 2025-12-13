@@ -16,7 +16,14 @@ import { useTheme } from '../../theme';
 import { NoteContent, SheetControlsData } from './NoteContent';
 import { ViewHeader } from './ViewHeader';
 
-// Progressive loading messages for sheets
+// Progressive loading messages
+const NOTE_LOADING_MESSAGES = [
+  'Loading',
+  'Fetching content',
+  'Almost there',
+  'Worth the wait',
+];
+
 const SHEET_LOADING_MESSAGES = [
   'Loading Sheet',
   'Crunching numbers',
@@ -91,20 +98,34 @@ export default function ViewNoteScreen() {
   // Determine if this is a sheet (from cache or actual note)
   const isSheetType = note?.type === 'sheets' || cachedType === 'sheets';
 
-  // Progressive loading messages for sheets
+  // Progressive loading messages
   useEffect(() => {
-    if (!isSheetType || sheetLoaded) return;
+    // For sheets: show messages until sheet is loaded
+    // For notes: show messages while loading
+    const isStillLoading = isSheetType ? !sheetLoaded : loading;
+    if (!isStillLoading) {
+      setLoadingMessageIndex(0);
+      return;
+    }
 
     const timers: ReturnType<typeof setTimeout>[] = [];
-    timers.push(setTimeout(() => setLoadingMessageIndex(1), 1000));
-    timers.push(setTimeout(() => setLoadingMessageIndex(2), 2000));
-    timers.push(setTimeout(() => setLoadingMessageIndex(3), 3000));
-    timers.push(setTimeout(() => setLoadingMessageIndex(4), 4000));
-    timers.push(setTimeout(() => setLoadingMessageIndex(5), 5000));
-    timers.push(setTimeout(() => setLoadingMessageIndex(6), 6500));
+    if (isSheetType) {
+      // Sheet loading messages (longer sequence)
+      timers.push(setTimeout(() => setLoadingMessageIndex(1), 1000));
+      timers.push(setTimeout(() => setLoadingMessageIndex(2), 2000));
+      timers.push(setTimeout(() => setLoadingMessageIndex(3), 3000));
+      timers.push(setTimeout(() => setLoadingMessageIndex(4), 4000));
+      timers.push(setTimeout(() => setLoadingMessageIndex(5), 5000));
+      timers.push(setTimeout(() => setLoadingMessageIndex(6), 6500));
+    } else {
+      // Note loading messages (shorter sequence)
+      timers.push(setTimeout(() => setLoadingMessageIndex(1), 800));
+      timers.push(setTimeout(() => setLoadingMessageIndex(2), 1600));
+      timers.push(setTimeout(() => setLoadingMessageIndex(3), 2500));
+    }
 
     return () => timers.forEach(clearTimeout);
-  }, [isSheetType, sheetLoaded]);
+  }, [isSheetType, sheetLoaded, loading]);
 
   // Listen for app state changes to restore liquid glass effect on sheet controls
   useEffect(() => {
@@ -257,8 +278,8 @@ export default function ViewNoteScreen() {
 
   // Loading message - use cached type for early "Loading Sheet" display
   const loadingMessage = isSheetType
-    ? SHEET_LOADING_MESSAGES[loadingMessageIndex]
-    : 'Loading';
+    ? SHEET_LOADING_MESSAGES[Math.min(loadingMessageIndex, SHEET_LOADING_MESSAGES.length - 1)]
+    : NOTE_LOADING_MESSAGES[Math.min(loadingMessageIndex, NOTE_LOADING_MESSAGES.length - 1)];
 
   // Single loading state - show loading overlay for:
   // 1. Checking cached type (very brief)
