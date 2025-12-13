@@ -177,14 +177,65 @@ class FileService {
   }
 
   /**
-   * Upload a single file
+   * Upload data using XMLHttpRequest with real progress tracking
+   * Returns a promise that resolves with the response or rejects on error
+   */
+  private uploadWithProgress(
+    url: string,
+    headers: Record<string, string>,
+    body: string,
+    onProgress?: (loaded: number, total: number) => void,
+    timeoutMs: number = 5 * 60 * 1000 // 5 minute default timeout for uploads
+  ): Promise<{ ok: boolean; status: number; statusText: string; json: () => Promise<any> }> {
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable && onProgress) {
+          onProgress(event.loaded, event.total);
+        }
+      };
+
+      xhr.onload = () => {
+        resolve({
+          ok: xhr.status >= 200 && xhr.status < 300,
+          status: xhr.status,
+          statusText: xhr.statusText,
+          json: () => Promise.resolve(JSON.parse(xhr.responseText)),
+        });
+      };
+
+      xhr.onerror = () => {
+        reject(new Error('Network error during upload'));
+      };
+
+      xhr.ontimeout = () => {
+        reject(new Error('Upload timed out. Please check your connection and try again.'));
+      };
+
+      xhr.open('POST', url);
+      xhr.timeout = timeoutMs;
+
+      // Set headers
+      Object.entries(headers).forEach(([key, value]) => {
+        xhr.setRequestHeader(key, value);
+      });
+
+      xhr.send(body);
+    });
+  }
+
+  /**
+   * Upload a single file with retry logic
    */
   async uploadFile(
     noteId: string,
     file: PickedFile,
     userId: string,
-    onProgress?: (progress: UploadProgress) => void
+    onProgress?: (progress: UploadProgress) => void,
+    retryCount: number = 0
   ): Promise<FileAttachment> {
+    const MAX_RETRIES = 2;
     const fileSize = file.size || 0;
 
     // Check file size (10MB limit)
@@ -192,52 +243,81 @@ class FileService {
       throw new Error('File size exceeds 10MB limit');
     }
 
-    // Step 1: Reading file (0-20%)
-    onProgress?.({ loaded: 0, total: fileSize, percentage: 0 });
-    const base64Content = await FileSystem.readAsStringAsync(file.uri, {
-      encoding: 'base64' as any,
-    });
-    onProgress?.({ loaded: fileSize * 0.2, total: fileSize, percentage: 20 });
+    try {
+      // Step 1: Reading file (0-15%)
+      onProgress?.({ loaded: 0, total: fileSize, percentage: 0 });
+      const base64Content = await FileSystem.readAsStringAsync(file.uri, {
+        encoding: 'base64' as any,
+      });
+      onProgress?.({ loaded: fileSize * 0.15, total: fileSize, percentage: 15 });
 
-    // Step 2: Encrypting file (20-40%)
-    const encrypted = await this.encryptFile(base64Content, file.name, userId);
-    onProgress?.({ loaded: fileSize * 0.4, total: fileSize, percentage: 40 });
+      // Step 2: Encrypting file (15-30%)
+      const encrypted = await this.encryptFile(base64Content, file.name, userId);
+      onProgress?.({ loaded: fileSize * 0.3, total: fileSize, percentage: 30 });
 
-    const fileData = {
-      originalName: file.name,
-      mimeType: file.mimeType || 'application/octet-stream',
-      size: fileSize,
-      encryptedData: encrypted.encryptedData,
-      encryptedTitle: encrypted.encryptedTitle,
-      iv: encrypted.iv,
-      salt: encrypted.salt,
-    };
+      const fileData = {
+        originalName: file.name,
+        mimeType: file.mimeType || 'application/octet-stream',
+        size: fileSize,
+        encryptedData: encrypted.encryptedData,
+        encryptedTitle: encrypted.encryptedTitle,
+        iv: encrypted.iv,
+        salt: encrypted.salt,
+      };
 
-    // Step 3: Uploading (40-90%)
-    onProgress?.({ loaded: fileSize * 0.5, total: fileSize, percentage: 50 });
-    const response = await fetch(`${API_BASE_URL}/notes/${noteId}/files`, {
-      method: 'POST',
-      headers: await this.getAuthHeaders(),
-      body: JSON.stringify(fileData),
-    });
-    onProgress?.({ loaded: fileSize * 0.9, total: fileSize, percentage: 90 });
+      const body = JSON.stringify(fileData);
+      const headers = await this.getAuthHeaders();
 
-    if (!response.ok) {
-      if (response.status === 413) {
-        throw new Error('File too large. Maximum 10MB per file, 50MB total per note.');
+      // Step 3: Uploading with real progress (30-95%)
+      // The upload progress represents 30% to 95% of the total progress
+      const response = await this.uploadWithProgress(
+        `${API_BASE_URL}/notes/${noteId}/files`,
+        headers,
+        body,
+        (loaded, total) => {
+          // Map upload progress (0-100%) to overall progress (30-95%)
+          const uploadPercentage = total > 0 ? (loaded / total) * 100 : 0;
+          const overallPercentage = 30 + (uploadPercentage * 0.65);
+          onProgress?.({
+            loaded: fileSize * (overallPercentage / 100),
+            total: fileSize,
+            percentage: overallPercentage,
+          });
+        }
+      );
+
+      if (!response.ok) {
+        if (response.status === 413) {
+          throw new Error('File too large. Maximum 10MB per file, 50MB total per note.');
+        }
+        throw new Error(`Upload failed: ${response.statusText}`);
       }
-      throw new Error(`Upload failed: ${response.statusText}`);
+
+      // Step 4: Processing response (95-100%)
+      const result = await response.json();
+      onProgress?.({ loaded: fileSize, total: fileSize, percentage: 100 });
+
+      return result;
+    } catch (error) {
+      // Retry on network errors (not on validation or server errors)
+      const isRetryable = error instanceof Error &&
+        (error.message.includes('Network error') ||
+         error.message.includes('timed out') ||
+         error.message.includes('timeout'));
+
+      if (isRetryable && retryCount < MAX_RETRIES) {
+        console.log(`[FileService] Upload failed, retrying (${retryCount + 1}/${MAX_RETRIES})...`);
+        // Wait before retry with exponential backoff
+        await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)));
+        return this.uploadFile(noteId, file, userId, onProgress, retryCount + 1);
+      }
+
+      throw error;
     }
-
-    // Step 4: Processing response (90-100%)
-    const result = await response.json();
-    onProgress?.({ loaded: fileSize, total: fileSize, percentage: 100 });
-
-    return result;
   }
 
   /**
-   * Upload multiple files
+   * Upload multiple files with aggregated progress tracking
    */
   async uploadFiles(
     noteId: string,
@@ -245,11 +325,56 @@ class FileService {
     userId: string,
     onProgress?: (progress: UploadProgress) => void
   ): Promise<FileAttachment[]> {
-    const uploadPromises = files.map((file) =>
-      this.uploadFile(noteId, file, userId, onProgress)
-    );
+    if (files.length === 0) {
+      return [];
+    }
 
-    return await Promise.all(uploadPromises);
+    // For a single file, use the progress callback directly
+    if (files.length === 1) {
+      const result = await this.uploadFile(noteId, files[0], userId, onProgress);
+      return [result];
+    }
+
+    // For multiple files, track progress per file and aggregate
+    const totalSize = files.reduce((sum, f) => sum + (f.size || 0), 0);
+    const fileProgress: number[] = files.map(() => 0);
+
+    const updateAggregatedProgress = () => {
+      if (!onProgress || totalSize === 0) return;
+
+      const totalLoaded = fileProgress.reduce((sum, p) => sum + p, 0);
+      const percentage = (totalLoaded / totalSize) * 100;
+
+      onProgress({
+        loaded: totalLoaded,
+        total: totalSize,
+        percentage: Math.min(percentage, 100),
+      });
+    };
+
+    // Upload files sequentially to avoid overwhelming the connection
+    // and to provide smoother progress updates
+    const results: FileAttachment[] = [];
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const fileSize = file.size || 0;
+
+      const result = await this.uploadFile(
+        noteId,
+        file,
+        userId,
+        (progress) => {
+          // Track this file's contribution to total progress
+          fileProgress[i] = (progress.percentage / 100) * fileSize;
+          updateAggregatedProgress();
+        }
+      );
+
+      results.push(result);
+    }
+
+    return results;
   }
 
   /**
