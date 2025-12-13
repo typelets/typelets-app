@@ -202,14 +202,14 @@ export function NoteContent({
           margin-top: 0 !important;
         }
 
-        /* Paragraphs */
+        /* Paragraphs - no margin so single line breaks don't look like double */
         p {
-          margin: 0 0 8px 0;
+          margin: 0;
         }
 
         /* Empty paragraphs should show as spacing (Tiptap uses <p></p> for blank lines) */
         p:empty {
-          min-height: 1.6em;
+          min-height: 1em;
         }
 
         /* Headings */
