@@ -122,8 +122,8 @@ export function ViewHeader({
                         />
                       </View>
                       {attachmentsCount > 0 && (
-                        <View style={[styles.attachmentBadge, { backgroundColor: showAttachments ? theme.colors.primary : theme.colors.mutedForeground }]}>
-                          <Text style={[styles.attachmentBadgeText, { color: '#ffffff' }]}>
+                        <View style={[styles.attachmentBadge, { backgroundColor: theme.colors.primary }]}>
+                          <Text style={[styles.attachmentBadgeText, { color: theme.colors.primaryForeground }]}>
                             {attachmentsCount > 9 ? '9+' : attachmentsCount}
                           </Text>
                         </View>
