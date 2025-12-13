@@ -234,9 +234,13 @@ export default function ViewNoteScreen() {
       if (scrollViewRef.current) {
         scrollViewRef.current.scrollTo({ y: 0, animated: false });
       }
-      // Don't reload attachments on refocus - they're already loaded
+      // Reload attachments on focus to catch any uploads from EditNote
+      if (noteId && isOnline) {
+        lastLoadedNoteId.current = null; // Force reload
+        loadAttachments();
+      }
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [scrollY, noteId])
+    }, [scrollY, noteId, isOnline])
   );
 
   const handleRefresh = async () => {
