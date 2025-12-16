@@ -1,3 +1,10 @@
+## [1.48.6](https://github.com/typelets/typelets-app/compare/v1.48.5...v1.48.6) (2025-12-16)
+
+
+### Bug Fixes
+
+* **mobile:** improve button press feedback on Home and subfolder screens ([c7888d3](https://github.com/typelets/typelets-app/commit/c7888d34bd4e41afab20f16536884e1673fa1219))
+
 ## [1.48.5](https://github.com/typelets/typelets-app/compare/v1.48.4...v1.48.5) (2025-12-16)
 
 
