@@ -153,7 +153,7 @@ export function NoteContent({
           line-height: 1.6 !important;
         }
 
-        /* Code */
+        /* Code - inline code should wrap */
         code {
           background-color: ${theme.isDark ? 'rgba(255, 255, 255, 0.08)' : theme.colors.muted};
           color: ${theme.colors.foreground};
@@ -161,7 +161,8 @@ export function NoteContent({
           border-radius: 3px;
           font-family: 'Courier New', Courier, monospace;
           font-size: 14px;
-          white-space: pre;
+          white-space: pre-wrap;
+          word-break: break-word;
         }
 
         pre {
@@ -202,14 +203,20 @@ export function NoteContent({
           margin-top: 0 !important;
         }
 
-        /* Paragraphs - no margin so single line breaks don't look like double */
+        /* Paragraphs - small bottom margin for visual separation between blocks */
         p {
-          margin: 0;
+          margin: 0 0 0.4em 0;
+        }
+
+        /* Last paragraph shouldn't have bottom margin */
+        p:last-child {
+          margin-bottom: 0;
         }
 
         /* Empty paragraphs should show as spacing (Tiptap uses <p></p> for blank lines) */
         p:empty {
           min-height: 1em;
+          margin-bottom: 0;
         }
 
         /* Headings */

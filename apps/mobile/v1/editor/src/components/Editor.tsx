@@ -125,15 +125,21 @@ const createEditorHTML = (content: string, placeholder: string, isDark: boolean,
     h2 { font-size: 24px; line-height: 1.3; }
     h3 { font-size: 20px; line-height: 1.4; }
 
-    /* Paragraphs */
+    /* Paragraphs - small bottom margin for visual separation between blocks */
     p {
-      margin: 0;
+      margin: 0 0 0.4em 0;
       line-height: 1.6;
     }
 
-    /* Empty paragraphs should show as single line */
+    /* Last paragraph shouldn't have bottom margin */
+    p:last-child {
+      margin-bottom: 0;
+    }
+
+    /* Empty paragraphs should show as spacing */
     p:empty {
       min-height: 1em;
+      margin-bottom: 0;
     }
 
     /* First empty paragraph in editor gets slightly more height for better UX */
@@ -237,7 +243,7 @@ const createEditorHTML = (content: string, placeholder: string, isDark: boolean,
       border-radius: 3px;
     }
 
-    /* Code */
+    /* Code - inline code should wrap */
     code {
       background-color: ${editorColors.codeBackground};
       color: ${editorColors.foreground};
@@ -245,7 +251,8 @@ const createEditorHTML = (content: string, placeholder: string, isDark: boolean,
       border-radius: 3px;
       font-family: 'Courier New', Courier, monospace;
       font-size: 14px;
-      white-space: pre;
+      white-space: pre-wrap;
+      word-break: break-word;
     }
 
     pre {
