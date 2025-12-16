@@ -120,6 +120,9 @@ const NoteListItemComponent: React.FC<NoteListItemProps> = ({
   const folderPath = note.folderId ? folderPathsMap.get(note.folderId) || '' : '';
   const noteFolder = note.folderId ? foldersMap.get(note.folderId) : undefined;
 
+  // Check if swipe actions are needed
+  const hasSwipeActions = Boolean(onDelete || onArchive);
+
   // Render right swipe action (Delete - red)
   const renderRightActions = (prog: Reanimated.SharedValue<number>, drag: Reanimated.SharedValue<number>) => {
     // eslint-disable-next-line react-hooks/rules-of-hooks
@@ -216,6 +219,89 @@ const NoteListItemComponent: React.FC<NoteListItemProps> = ({
     );
   };
 
+  // Common note content JSX
+  const noteContent = (
+    <Pressable
+      onPress={() => onPress(note.id)}
+      onLongPress={() => onLongPress?.(note)}
+      style={[styles.noteListItem, { backgroundColor, paddingHorizontal: 16 }]}
+      android_ripple={{ color: mutedColor }}
+    >
+      <View style={styles.noteListRow}>
+        {/* Note type icon on the left */}
+        <View style={styles.noteTypeIconContainer}>
+          {isDiagram ? (
+            <MdiIcon path={mdiVectorSquare} size={20} color="#a855f7" />
+          ) : isCode ? (
+            <SquareCode size={20} color={mutedForegroundColor} />
+          ) : isSheet ? (
+            <MdiIcon path={mdiFileTableBoxOutline} size={20} color="#22c55e" />
+          ) : (
+            <MdiIcon path={mdiTextBoxOutline} size={20} color="#f43f5e" />
+          )}
+        </View>
+
+        {/* Content on the right */}
+        <View style={styles.noteListContent}>
+          <View style={styles.noteListHeader}>
+            <Text
+              style={[styles.noteListTitle, { color: foregroundColor }]}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
+              {String(note.title || 'Untitled')}
+            </Text>
+            <View style={styles.noteListMeta}>
+              {note.isPublished && (
+                <Globe size={12} color="#f59e0b" style={{ marginRight: 8 }} />
+              )}
+              {((note.attachments?.length ?? 0) > 0 || (note.attachmentCount ?? 0) > 0) && (
+                <View style={styles.attachmentBadge}>
+                  <View style={{ transform: [{ rotate: '45deg' }] }}>
+                    <Ionicons name="attach-outline" size={14} color="#3b82f6" />
+                  </View>
+                  <Text style={[styles.attachmentCount, { color: '#3b82f6' }]}>
+                    {note.attachments?.length || note.attachmentCount || 0}
+                  </Text>
+                </View>
+              )}
+              {note.starred && (
+                <Ionicons name="star" size={14} color="#f59e0b" style={{ marginRight: 8 }} />
+              )}
+              <Text style={[styles.noteListTime, { color: mutedForegroundColor }]}>
+                {enhancedData?.formattedDate || ''}
+              </Text>
+            </View>
+          </View>
+          <Text
+            style={[styles.noteListPreview, { color: mutedForegroundColor }]}
+            numberOfLines={2}
+          >
+            {enhancedData?.preview || ''}
+          </Text>
+          {!folderId && folderPath && showFolderPaths && (
+            <View style={styles.noteListFolderInfo}>
+              <View style={[styles.noteListFolderDot, { backgroundColor: noteFolder?.color || '#6b7280' }]} />
+              <Text style={[styles.noteListFolderPath, { color: mutedForegroundColor }]} numberOfLines={1}>
+                {folderPath}
+              </Text>
+            </View>
+          )}
+        </View>
+      </View>
+    </Pressable>
+  );
+
+  // If no swipe actions, render without Swipeable to avoid hooks issues
+  if (!hasSwipeActions) {
+    return (
+      <View style={styles.noteListItemWrapper}>
+        {noteContent}
+        {!isLastItem && <View style={[styles.noteListDivider, { backgroundColor: borderColor, marginLeft: 48 }]} />}
+      </View>
+    );
+  }
+
   return (
     <View style={styles.noteListItemWrapper}>
       <Swipeable
@@ -225,7 +311,7 @@ const NoteListItemComponent: React.FC<NoteListItemProps> = ({
         leftThreshold={100}
         overshootRight={true}
         overshootLeft={canArchive}
-        renderRightActions={renderRightActions}
+        renderRightActions={onDelete ? renderRightActions : undefined}
         renderLeftActions={canArchive ? renderLeftActions : undefined}
         onSwipeableOpen={(direction) => {
           // Auto-execute action when fully swiped through
@@ -240,75 +326,7 @@ const NoteListItemComponent: React.FC<NoteListItemProps> = ({
           }
         }}
       >
-        <Pressable
-          onPress={() => onPress(note.id)}
-          onLongPress={() => onLongPress?.(note)}
-          style={[styles.noteListItem, { backgroundColor, paddingHorizontal: 16 }]}
-          android_ripple={{ color: mutedColor }}
-        >
-          <View style={styles.noteListRow}>
-            {/* Note type icon on the left */}
-            <View style={styles.noteTypeIconContainer}>
-              {isDiagram ? (
-                <MdiIcon path={mdiVectorSquare} size={20} color="#a855f7" />
-              ) : isCode ? (
-                <SquareCode size={20} color={mutedForegroundColor} />
-              ) : isSheet ? (
-                <MdiIcon path={mdiFileTableBoxOutline} size={20} color="#22c55e" />
-              ) : (
-                <MdiIcon path={mdiTextBoxOutline} size={20} color="#f43f5e" />
-              )}
-            </View>
-
-            {/* Content on the right */}
-            <View style={styles.noteListContent}>
-              <View style={styles.noteListHeader}>
-                <Text
-                  style={[styles.noteListTitle, { color: foregroundColor }]}
-                  numberOfLines={1}
-                  ellipsizeMode="tail"
-                >
-                  {String(note.title || 'Untitled')}
-                </Text>
-                <View style={styles.noteListMeta}>
-                  {note.isPublished && (
-                    <Globe size={12} color="#f59e0b" style={{ marginRight: 8 }} />
-                  )}
-                  {((note.attachments?.length ?? 0) > 0 || (note.attachmentCount ?? 0) > 0) && (
-                    <View style={styles.attachmentBadge}>
-                      <View style={{ transform: [{ rotate: '45deg' }] }}>
-                        <Ionicons name="attach-outline" size={14} color="#3b82f6" />
-                      </View>
-                      <Text style={[styles.attachmentCount, { color: '#3b82f6' }]}>
-                        {note.attachments?.length || note.attachmentCount || 0}
-                      </Text>
-                    </View>
-                  )}
-                  {note.starred && (
-                    <Ionicons name="star" size={14} color="#f59e0b" style={{ marginRight: 8 }} />
-                  )}
-                  <Text style={[styles.noteListTime, { color: mutedForegroundColor }]}>
-                    {enhancedData?.formattedDate || ''}
-                  </Text>
-                </View>
-              </View>
-              <Text
-                style={[styles.noteListPreview, { color: mutedForegroundColor }]}
-                numberOfLines={2}
-              >
-                {enhancedData?.preview || ''}
-              </Text>
-              {!folderId && folderPath && showFolderPaths && (
-                <View style={styles.noteListFolderInfo}>
-                  <View style={[styles.noteListFolderDot, { backgroundColor: noteFolder?.color || '#6b7280' }]} />
-                  <Text style={[styles.noteListFolderPath, { color: mutedForegroundColor }]} numberOfLines={1}>
-                    {folderPath}
-                  </Text>
-                </View>
-              )}
-            </View>
-          </View>
-      </Pressable>
+        {noteContent}
       </Swipeable>
 
       {!isLastItem && <View style={[styles.noteListDivider, { backgroundColor: borderColor, marginLeft: 48 }]} />}

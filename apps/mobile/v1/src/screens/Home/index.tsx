@@ -662,7 +662,7 @@ export default function HomeScreen() {
             <GlassView glassEffectStyle="regular" style={[styles.glassAvatar, { marginRight: 12, backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]}>
               <TouchableOpacity
                 style={styles.avatarButton}
-                onPress={() => router.push('/folder-notes?viewType=all')}
+                onPress={() => router.push('/search')}
               >
                 <Ionicons name="search" size={20} color={theme.colors.foreground} />
               </TouchableOpacity>

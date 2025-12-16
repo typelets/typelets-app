@@ -145,6 +145,10 @@ function NavigationContent() {
                     name="settings"
                     options={{ contentStyle: { backgroundColor: theme.colors.background } }}
                   />
+                  <Stack.Screen
+                    name="search"
+                    options={{ contentStyle: { backgroundColor: theme.colors.background } }}
+                  />
                 </Stack>
               </AppWrapper>
             </ErrorBoundary>
