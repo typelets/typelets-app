@@ -1,3 +1,10 @@
+## [1.48.5](https://github.com/typelets/typelets-app/compare/v1.48.4...v1.48.5) (2025-12-16)
+
+
+### Bug Fixes
+
+* **mobile:** improve paragraph spacing and inline code wrapping ([92cb782](https://github.com/typelets/typelets-app/commit/92cb7823d7adc2d63324b6955e132184f7b3c188))
+
 ## [1.48.4](https://github.com/typelets/typelets-app/compare/v1.48.3...v1.48.4) (2025-12-13)
 
 
