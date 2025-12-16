@@ -7,7 +7,7 @@ import { GlassView } from 'expo-glass-effect';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useCallback,useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Animated, Dimensions, Image, Keyboard, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Animated, Dimensions, Image, Keyboard, Pressable, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { CreateFileSheet, CreateFileSheetRef } from '../../components/CreateFileSheet';
@@ -405,7 +405,7 @@ export default function HomeScreen() {
               </Text>
               <View style={styles.specialViewsList}>
                 {SPECIAL_VIEWS.map((view) => (
-                  <TouchableOpacity
+                  <Pressable
                     key={view.id}
                     onPress={() => {
                       router.push({
@@ -413,6 +413,10 @@ export default function HomeScreen() {
                         params: { viewType: view.id }
                       });
                     }}
+                    style={({ pressed }) => [
+                      styles.pressableItem,
+                      pressed && { opacity: 0.6 }
+                    ]}
                   >
                     <GlassView glassEffectStyle="regular" style={[styles.glassSpecialViewItem, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]} pointerEvents="none">
                       <View style={styles.specialViewItem}>
@@ -431,7 +435,7 @@ export default function HomeScreen() {
                         </View>
                       </View>
                     </GlassView>
-                  </TouchableOpacity>
+                  </Pressable>
                 ))}
               </View>
             </View>
@@ -494,7 +498,13 @@ export default function HomeScreen() {
               <View style={viewMode === 'grid' ? styles.foldersGrid : styles.foldersList}>
                 {/* Create Folder Button */}
                 {viewMode === 'grid' ? (
-                  <TouchableOpacity onPress={() => createFolderSheetRef.current?.present()}>
+                  <Pressable
+                    onPress={() => createFolderSheetRef.current?.present()}
+                    style={({ pressed }) => [
+                      styles.pressableItemGrid,
+                      pressed && { opacity: 0.7 }
+                    ]}
+                  >
                     <GlassView
                       glassEffectStyle="regular"
                       style={[
@@ -516,9 +526,15 @@ export default function HomeScreen() {
                         </View>
                       </View>
                     </GlassView>
-                  </TouchableOpacity>
+                  </Pressable>
                 ) : (
-                  <TouchableOpacity onPress={() => createFolderSheetRef.current?.present()}>
+                  <Pressable
+                    onPress={() => createFolderSheetRef.current?.present()}
+                    style={({ pressed }) => [
+                      styles.pressableItem,
+                      pressed && { opacity: 0.6 }
+                    ]}
+                  >
                     <GlassView
                       glassEffectStyle="regular"
                       style={[
@@ -536,19 +552,20 @@ export default function HomeScreen() {
                         </View>
                       </View>
                     </GlassView>
-                  </TouchableOpacity>
+                  </Pressable>
                 )}
 
                 {allFolders.map((folder) => (
                   viewMode === 'grid' ? (
-                    <TouchableOpacity
+                    <Pressable
                       key={folder.id}
-                      style={[
+                      style={({ pressed }) => [
                         styles.folderItemGrid,
                         {
                           backgroundColor: folder.color || '#000000',
                           borderColor: theme.colors.border
-                        }
+                        },
+                        pressed && { opacity: 0.7 }
                       ]}
                       onPress={() => {
                         router.push({
@@ -562,9 +579,9 @@ export default function HomeScreen() {
                           {folder.name}
                         </Text>
                       </View>
-                    </TouchableOpacity>
+                    </Pressable>
                   ) : (
-                    <TouchableOpacity
+                    <Pressable
                       key={folder.id}
                       onPress={() => {
                         router.push({
@@ -572,6 +589,10 @@ export default function HomeScreen() {
                           params: { folderId: folder.id, folderName: folder.name }
                         });
                       }}
+                      style={({ pressed }) => [
+                        styles.pressableItem,
+                        pressed && { opacity: 0.6 }
+                      ]}
                     >
                       <GlassView glassEffectStyle="regular" style={[styles.glassFolderItem, { backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.01)' : 'rgba(0, 0, 0, 0.01)' }]} pointerEvents="none">
                         <View style={styles.folderItem}>
@@ -588,7 +609,7 @@ export default function HomeScreen() {
                           </View>
                         </View>
                       </GlassView>
-                    </TouchableOpacity>
+                    </Pressable>
                   )
                 ))}
               </View>
@@ -762,6 +783,12 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  pressableItem: {
+    borderRadius: 12,
+  },
+  pressableItemGrid: {
+    borderRadius: 12,
   },
   loadingContainer: {
     position: 'absolute',

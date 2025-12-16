@@ -78,7 +78,10 @@ export const SubfoldersList: React.FC<SubfoldersListProps> = ({
         {/* Create Folder Button */}
         <Pressable
           onPress={onCreateFolderPress}
-          android_ripple={{ color: theme.colors.muted }}
+          style={({ pressed }) => [
+            viewMode === 'grid' ? styles.pressableItemGrid : styles.pressableItem,
+            pressed && { opacity: 0.6 }
+          ]}
         >
           <GlassView
             glassEffectStyle="regular"
@@ -100,15 +103,15 @@ export const SubfoldersList: React.FC<SubfoldersListProps> = ({
         {subfolders.map((subfolder) => (
           <Pressable
             key={subfolder.id}
-            style={[
+            style={({ pressed }) => [
               viewMode === 'grid' ? styles.subfolderItemGrid : styles.subfolderItem,
               {
                 backgroundColor: viewMode === 'grid' ? subfolder.color || '#000000' : theme.colors.card,
                 borderColor: theme.colors.border
-              }
+              },
+              pressed && { opacity: 0.6 }
             ]}
             onPress={() => onFolderPress(subfolder.id, subfolder.name)}
-            android_ripple={{ color: theme.colors.muted }}
           >
             <View style={viewMode === 'grid' ? styles.subfolderContentGrid : styles.subfolderContent}>
               {viewMode === 'list' && (
@@ -133,6 +136,12 @@ export const SubfoldersList: React.FC<SubfoldersListProps> = ({
 };
 
 const styles = StyleSheet.create({
+  pressableItem: {
+    borderRadius: 12,
+  },
+  pressableItemGrid: {
+    borderRadius: 12,
+  },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
