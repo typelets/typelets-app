@@ -1,3 +1,10 @@
+# [1.49.0](https://github.com/typelets/typelets-app/compare/v1.48.6...v1.49.0) (2025-12-16)
+
+
+### Features
+
+* **mobile:** add dedicated search screen with liquid glass UI ([18b45e0](https://github.com/typelets/typelets-app/commit/18b45e0db25f72a037cb4bb111c61156d54e6ba4))
+
 ## [1.48.6](https://github.com/typelets/typelets-app/compare/v1.48.5...v1.48.6) (2025-12-16)
 
 
