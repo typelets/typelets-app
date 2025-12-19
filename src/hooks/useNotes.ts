@@ -246,10 +246,16 @@ export function useNotes() {
     }
   }, [clerkUser]);
 
-  const fetchAllNotes = useCallback(async (): Promise<Note[]> => {
+  const fetchAllNotes = useCallback(async (folderId?: string): Promise<Note[]> => {
+    // Build params - optionally filter by folder
+    const baseParams: { page: number; limit: number; folderId?: string } = { page: 1, limit: 50 };
+    if (folderId) {
+      baseParams.folderId = folderId;
+    }
+
     // Fetch first page to determine total pages
     const firstPageResponse = await retryWithBackoff(() =>
-      api.getNotes({ page: 1, limit: 50 })
+      api.getNotes(baseParams)
     );
     const firstPageNotes = firstPageResponse.notes.map(convertApiNote);
 
@@ -269,7 +275,7 @@ export function useNotes() {
       const batchPromises = [];
       for (let page = i; page < i + batchSize && page <= Math.min(totalPages, 50); page++) {
         batchPromises.push(
-          retryWithBackoff(() => api.getNotes({ page, limit: 50 }))
+          retryWithBackoff(() => api.getNotes({ ...baseParams, page, limit: 50 }))
             .then(response => response.notes.map(convertApiNote))
         );
       }
@@ -328,6 +334,54 @@ export function useNotes() {
       setLoading(false);
     }
   }, [fetchAllFolders, fetchAllNotes]);
+
+  // Refresh only notes in the current folder (and subfolders) for better performance
+  const refreshCurrentFolder = useCallback(async () => {
+    if (!selectedFolder) {
+      // No folder selected, do full refresh
+      return loadData();
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Get all folder IDs to fetch (selected + descendants)
+      const folderIds = [selectedFolder.id, ...getDescendantIds(selectedFolder.id, folders)];
+
+      // Fetch notes for each folder in parallel
+      const folderNotesPromises = folderIds.map(folderId => fetchAllNotes(folderId));
+      const folderNotesArrays = await Promise.all(folderNotesPromises);
+      const fetchedNotes = folderNotesArrays.flat();
+
+      // Create a folder map for quick lookup
+      const folderMap = new Map(folders.map((f) => [f.id, f]));
+
+      // Process fetched notes
+      const processedNotes = fetchedNotes.map((note) => {
+        const folder = note.folderId ? folderMap.get(note.folderId) : undefined;
+        return {
+          ...note,
+          attachments: [],
+          attachmentCount: note.attachmentCount ?? 0,
+          folder
+        };
+      });
+
+      // Merge with existing notes: replace notes in the fetched folders, keep others
+      setNotes(prev => {
+        // Remove old notes from the fetched folders
+        const notesOutsideFolders = prev.filter(note => !folderIds.includes(note.folderId ?? ''));
+        // Add the freshly fetched notes
+        return [...notesOutsideFolders, ...processedNotes];
+      });
+    } catch (error) {
+      secureLogger.error('Folder refresh failed', error);
+      setError('Failed to refresh folder');
+    } finally {
+      setLoading(false);
+    }
+  }, [selectedFolder, folders, fetchAllNotes, loadData]);
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -426,19 +480,14 @@ export function useNotes() {
   //   }
   // }, [selectedNote?.id, webSocket.isAuthenticated, webSocket]);
 
-  // Refetch notes when switching folders to check for new notes from other devices/users
+  // REMOVED: Auto-refetch on folder change was causing performance issues for users with many notes
+  // Filtering now happens purely client-side. Use the refresh button to sync new notes from server.
+  // The isInitialFolderChange ref is kept for potential future use.
   useEffect(() => {
-    // Skip the initial mount to avoid duplicate fetches
     if (isInitialFolderChange.current) {
       isInitialFolderChange.current = false;
-      return;
     }
-
-    // Only refetch if a folder is selected and encryption is ready
-    if (selectedFolder?.id && encryptionReady) {
-      void loadData();
-    }
-  }, [selectedFolder?.id, encryptionReady, loadData]);
+  }, [selectedFolder?.id]);
 
   // Load attachments on-demand when a note is selected
   useEffect(() => {
@@ -828,7 +877,7 @@ export function useNotes() {
     setSearchQuery,
     setNotes,
     setFolders,
-    refetch: loadData,
+    refetch: refreshCurrentFolder,  // Smart refresh: folder-only when in folder, full refresh otherwise
     reinitialize: async () => {
       if (clerkUser) {
         await initializeUser();
