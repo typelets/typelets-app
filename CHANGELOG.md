@@ -1,3 +1,10 @@
+## [1.49.1](https://github.com/typelets/typelets-app/compare/v1.49.0...v1.49.1) (2025-12-19)
+
+
+### Bug Fixes
+
+* **perf:** remove auto-refetch on folder change, add smart folder refresh ([17ce398](https://github.com/typelets/typelets-app/commit/17ce398c8fcca862fea15d3f98739dbcee7c2c14))
+
 # [1.49.0](https://github.com/typelets/typelets-app/compare/v1.48.6...v1.49.0) (2025-12-16)
 
 
